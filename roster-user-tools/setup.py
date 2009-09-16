@@ -40,7 +40,7 @@ try:
 except ImportError:
   from distutils.core import setup
 
-current_verion = __version__
+current_version = __version__
 if( __version__.startswith('#') ):
   current_version = '0.1'
 
