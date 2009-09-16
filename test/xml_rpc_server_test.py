@@ -39,6 +39,7 @@ __version__ = '#TRUNK#'
 import datetime
 import time
 import unittest
+import os
 
 
 import roster_core

@@ -41,8 +41,9 @@ __version__ = '#TRUNK#'
 
 
 import unittest
-from roster_config_manager import zone_importer_lib
+import os
 
+from roster_config_manager import zone_importer_lib
 import roster_core
 
 

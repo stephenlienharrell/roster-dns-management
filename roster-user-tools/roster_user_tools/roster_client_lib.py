@@ -87,7 +87,7 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
     if( error_type == '_mysql_exceptions.IntegrityError' ):
       ## Can detect other certain cases of error_type later if needed
       error_string = eval(error_string)[1] # [0] is error code
-    cli_common_lib.DnsError(error_string, 1)
+    cli_common_lib.ServerError(error_string, 1)
 
   if( core_return == 'ERROR: Invalid Credentials' ):
     raise InvalidCredentials('Credential file is invalid.')

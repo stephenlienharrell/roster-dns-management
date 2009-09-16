@@ -42,6 +42,7 @@ __version__ = '#TRUNK#'
 
 import unittest
 import MySQLdb
+import os
 
 import roster_core
 from roster_core import data_validation
