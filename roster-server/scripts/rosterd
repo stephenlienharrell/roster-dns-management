@@ -1,0 +1,86 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""This daemon implements a standalone XMLRPC server, to export the core
+DnsMgmt API to networked clients.
+"""
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+from optparse import OptionParser
+import sys
+
+import roster_core
+import roster_server
+
+# This should go in a server config file
+CERTFILE=('/etc/ssl/certs/server.crt')
+KEYFILE=('/etc/ssl/certs/server.key')
+
+def main(args):
+  # Collect command-line args
+  parser = OptionParser()
+  parser.add_option('-F', '--foreground', action='store_true',
+                    dest='foreground', 
+                    help='Stay in foreground (don\'t daemonize)',
+                    default=False)
+  parser.add_option('-c', '--cert-file', action='store', dest='cert_file',
+                    help='SSL cert file path.', default=CERTFILE)
+  parser.add_option('-k', '--key-file', action='store', dest='key_file',
+                    help='SSL key file path.', default=KEYFILE)
+  parser.add_option('-d', '--debug', dest='debuglevel', metavar='<n>',
+                    help='Print debug messages, with <n> indicating level.',
+                    default=0)
+  parser.add_option('-f', '--file', dest='configfile', metavar='<file>',
+                    help='Use <file> as a config file, rather than default',
+                    default='~/.rosterrc') 
+  parser.add_option('-H', '--host', dest='host', metavar='<host>',
+                    help='Hostname of server to be created.',
+                    default=u'localhost')
+  (globals()['options'], args) = parser.parse_args(args)
+  if(options.debuglevel is not None):
+    foreground = True
+  if( not options.foreground ):
+    # daemonize here
+    pass
+  config_instance = roster_core.Config(options.configfile)
+  # Gotta work debuglevel into the config at some point.
+  daemon = roster_server.Server(config_instance, options.key_file,
+                                options.cert_file)
+  # This should probably be wrapped in a try/except, to catch signals
+  daemon.Serve(options.host)
+
+if __name__ == "__main__":
+  main(sys.argv[1:])
+
+# vi: set ai aw sw=2:

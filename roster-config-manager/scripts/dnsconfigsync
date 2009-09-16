@@ -1,0 +1,101 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Tree sync tool for Roster"""
+
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+import sys
+import os
+
+from optparse import OptionParser
+import ConfigParser
+
+def main(args):
+  """Collects command line arguments. Exports tree.
+
+  Inputs:
+    args: list of arguments from the command line
+  """
+  parser = OptionParser()
+
+  parser.add_option('-c', '--config-file', action='store', dest='config_file',
+                    help='Config File Location', metavar='<config-file>',
+                    default=None)
+  parser.add_option('-r', '--root-directory', action='store',
+                    dest='root_directory',
+                    help='Root directory to store configuration files.',
+                    default='./bind_config')
+  parser.add_option('-d', '--destination-directory',
+                    dest='destination_directory',
+                    help='Destination directory on dns servers.',
+                    metavar='<destination-directory>',
+                    default='/etc/named')
+  parser.add_option('-u', '--user-name', action='store', dest='user_name',
+                    help='Rsync username.', metavar='<user-name>',
+                    default=None)
+  parser.add_option('-p', '--port', action='store', dest='port',
+                    help='Rsync port number.', metavar='<port>',
+                    default=None)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  dns_server_sets = None
+  file_dict = {}
+  for server_set in os.listdir(options.root_directory):
+    config_parser = ConfigParser.SafeConfigParser()
+    config_file_handle = config_parser.read('%s/%s/%s' % (
+        options.root_directory, server_set,
+        server_set.replace('servers', 'config')))
+    for dns_server in config_parser.get(
+          'dns_server_set_parameters', 'dns_servers').split(','):
+      rsync_dir = '%s/%s/*' % (options.root_directory, server_set)
+      rsync_url_parts = []
+      if( options.user_name ):
+        rsync_url_parts.append('%s@' % options.user_name)
+      rsync_url_parts.append(dns_server)
+      if( options.port ):
+        rsync_url_parts.append(':%s' % options.port)
+      rsync_url_string = ''.join(rsync_url_parts)
+      rsync_string = 'rsync %s %s:%s -r' % (rsync_dir, rsync_url_string,
+                                            options.destination_directory)
+      handle = os.popen(rsync_string)
+      rsync_text = handle.read()
+      handle.close()
+
+      if( rsync_text != ''):
+        print rsync_text
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

@@ -1,0 +1,165 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""This script bootstraps the database so that the Roster core APIs can be used.
+"""
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+import sys
+import os
+import MySQLdb
+import MySQLdb.cursors
+from optparse import OptionParser
+import ConfigParser
+import getpass
+
+
+def main(args):
+  """Collects command line arguments. Sets up initial parameters.
+
+  Inputs:
+    args: arguments from the command line
+  """
+  linux_home_dir = os.path.expanduser('~')
+  parser = OptionParser()
+
+  parser.add_option('-c', '--config-file', action='store', dest='config_file',
+                    help='Location of the new config file.',
+                    metavar='<config-file>',
+                    default=os.path.join(linux_home_dir, '.rosterrc'))
+  parser.add_option('-s', '--schema-file', action='store', dest='schema_file',
+                    help='Location of the database schema file.',
+                    metavar='<schema-file>',
+                    default=None)
+  parser.add_option('-u', '--user-name', action='store', dest='user_name',
+                    help='MySQL username.', metavar='<user-name>',
+                    default=None)
+  parser.add_option('-U', '--roster-user-name', action='store',
+                    dest='roster_user_name',
+                    help='Initial admin username for roster.',
+                    default=None)
+  parser.add_option('-l', '--ldap-server', action='store', dest='ldap_server',
+                    help='URL of ldap server to authenticate with.',
+                    metavar='<ldap-server>', default=None)
+  parser.add_option('--infinite-renew-time', action='store',
+                    dest='infinite_renew_time', metavar='<time>',
+                    help='Time in seconds to renew infinite credentials.',
+                    default='43200')
+  parser.add_option('--core-die-time', action='store', dest='core_die_time',
+                    help='Time in seconds that a core instance will die.',
+                    metavar='<time>', default='1200')
+  parser.add_option('--get-credentials-wait-increment', action='store',
+                    dest='get_credentials_wait_increment', metavar='<int>',
+                    help='Seconds to add wait with incorrect password.',
+                    default='1')
+  parser.add_option('-b', '--binddn', action='store', dest='binddn',
+                    help='Binddn for ldap server.', metavar='<binddn>',
+                    default=None)
+  parser.add_option('--credential-expiry-time', action='store',
+                    dest='credential_expiry_time', metavar='<time>',
+                    help='Time in seconds for credentials to expire.',
+                    default='3600')
+  parser.add_option('-d', '--database', action='store', dest='database',
+                    help='MySQL database name.', metavar='<database>',
+                    default=None)
+  parser.add_option('-n', '--hostname', action='store', dest='hostname',
+                    help='MySQL database hostname.', metavar='<hostname>',
+                    default='localhost')
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  args_dict = {'-c/--config-file': options.config_file,
+               '-s/--schema-file': options.schema_file,
+               '-u/--user-name': options.user_name,
+               '-U/--roster-user-name': options.roster_user_name,
+               '-l/--ldap-server': options.ldap_server,
+               '-b/--binddn': options.binddn,
+               '-d/--database': options.database,
+               '-n/--hostname': options.hostname}
+
+  error = False
+  for arg in args_dict:
+    if( args_dict[arg] is None ):
+      print 'ERROR: %s must be specified.' % arg
+      error = True
+  if( error ):
+    parser.print_help()
+    sys.exit(1)
+
+  password = getpass.getpass('Enter password for %s: ' % options.user_name)
+  config_parser = ConfigParser.SafeConfigParser()
+  config_parser.add_section('database')
+  config_parser.set('database', 'server', options.hostname)
+  config_parser.set('database', 'login', options.user_name)
+  config_parser.set('database', 'database', options.database)
+  config_parser.set('database', 'passwd', password)
+
+  config_parser.add_section('server')
+  config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
+  config_parser.set('server', 'core_die_time', options.core_die_time)
+  config_parser.set('server', 'get_credentials_wait_increment',
+                    options.get_credentials_wait_increment)
+  config_parser.set('server', 'ldap_server', options.ldap_server)
+  config_parser.set('server', 'server_killswitch', 'on')
+
+  config_parser.add_section('credentials')
+  config_parser.set('credentials', 'binddn', options.binddn)
+  config_parser.set('credentials', 'exp_time', options.credential_expiry_time)
+  config_parser_file = open(options.config_file, 'wb')
+  config_parser.write(config_parser_file)
+
+  new_user_mysql = (
+      'INSERT INTO users (user_name, access_level) VALUES ("%s", 128)' % (
+          options.roster_user_name))
+
+  connection = MySQLdb.connect(host=options.hostname, user=options.user_name,
+                               passwd=password, db=options.database,
+                               use_unicode=True)
+  cursor = connection.cursor(MySQLdb.cursors.DictCursor)
+  try:
+    schema = open(options.schema_file, 'r').read()
+    cursor.execute(schema)
+  finally:
+    cursor.close()
+    connection.commit()
+
+  try:
+    cursor = connection.cursor()
+    cursor.execute(new_user_mysql)
+  finally:
+    cursor.close()
+    connection.commit()
+
+if __name__ == '__main__':
+  main(sys.argv[1:])

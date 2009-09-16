@@ -1,0 +1,427 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Update host tool for dnsimplest_matchanagement"""
+
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+import os
+import sys
+import re
+import getpass
+
+from optparse import OptionParser
+
+from roster_user_tools import cli_record_lib
+from roster_user_tools import cli_common_lib
+from roster_user_tools import roster_client_lib
+
+
+def MakeHostsFile(options):
+  """Makes a hosts file string
+
+  Inputs:
+    options: options object from optparse
+
+  Outputs:
+    string: string of hosts file
+  """
+  records_dict = roster_client_lib.RunFunction('ListRecordsByCIDRBlock',
+                                               options.username,
+                                               credfile=options.credfile,
+                                               server_name=options.server,
+                                               args=[options.range],
+                                               kwargs={'view_name':
+                                                 options.view_name})[
+                                                     'core_return']
+  if( records_dict == {} ):
+    cli_common_lib.DnsError('No records found.', 1)
+  zones_info = roster_client_lib.RunFunction(
+      'ListZones', options.username, credfile=options.credfile,
+      server_name=options.server,
+      kwargs={'view_name': options.view_name})['core_return']
+  ip_address_list = roster_client_lib.RunFunction('CIDRExpand',
+                                                  options.username,
+                                                  credfile=options.credfile,
+                                                  server_name=options.server,
+                                                  args=[options.range])[
+                                                      'core_return']
+  view_dependency = options.view_name
+  if( options.view_name != 'any' and options.view_name != None ):
+    view_dependency = '%s_dep' % options.view_name
+  file_contents = ('#:range:%s\n'
+                   '#:view_dependency:%s\n'
+                   '# Do not delete any lines in this file!\n'
+                   '# To remove a host, comment it out, to add a host,\n'
+                   '# uncomment the desired ip address and specify a\n'
+                   '# hostname. To change a hostname, edit the hostname\n'
+                   '# next to the desired ip address.\n%s' % (
+                       options.range, view_dependency,
+                       cli_common_lib.PrintHosts(
+                           records_dict, ip_address_list, zones_info,
+                           options.view_name)))
+  return file_contents
+
+def CheckIPV4(ip_address):
+  """Checks if IP address is valid IPV4
+
+  Inputs:
+    ip_address: string of ip address
+
+  Outputs:
+    boolean: whether or not ip address is valid
+  """
+  if( ip_address.startswith(':range:') ):
+    return False
+  ip_regex = re.search(r"\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\."
+                       r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\."
+                       r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\."
+                       r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b",
+                       ip_address)
+  if( ip_regex is None or len(ip_address.split('.')) != 4 ):
+    return False
+  else:
+    return True
+
+def CheckIPV6(ip_address):
+  """Checks if IP address is valid IPV6
+
+  Inputs:
+    ip_address: string of ip address
+
+  Outputs:
+    boolean: whether or not ip address is valid
+  """
+  # we will build an array of matches and then join them
+  matches = []
+  simplest_match = r'[0-9a-f]{1,4}'
+  for i in range(1,7):
+    matches.append(r'\A(%s:){1,%d}(:%s){1,%d}\Z' % (simplest_match, i,
+                                                    simplest_match, 7-i))
+  matches.append(r'\A((%s:){1,7}|:):\Z' % simplest_match)
+  matches.append(r'\A:(:%s){1,7}\Z' % simplest_match)
+  matches.append(r'\A((([0-9a-f]{1,4}:){6})(25[0-5]|2[0-4]\d|[0-1]?\d?\d)'
+                 r'(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3})\Z')
+  # support for embedded ipv4 addresses in the lower 32 bits
+  ipv4 = r'(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}'
+  matches.append(r'\A((%s:){5}%s:%s)\Z' % (simplest_match, simplest_match,
+                                           ipv4))
+  matches.append(r'\A(%s:){5}:%s:%s\Z' % (simplest_match, simplest_match, ipv4))
+  for i in range(1,5):
+    matches.append(r'\A(%s:){1,%d}(:%s){1,%d}:%s\Z' % (
+        simplest_match, i, simplest_match, 5-i, ipv4))
+  matches.append(r'\A((%s:){1,5}|:):%s\Z' % (simplest_match, ipv4))
+  matches.append(r'\A:(:%s){1,5}:%s\Z' % (simplest_match, ipv4))
+  bigre = "("+")|(".join(matches)+")"
+  bigre = re.compile(bigre, re.I)
+  return bigre.search(ip_address) and True
+
+def ReadHostsFile(options, hosts_file_contents):
+  """Reads a hosts file
+
+  Inputs:
+    hosts_file_contents: string of contents of hosts file
+
+  Outputs:
+    dict: dictionary of hosts file ex:
+          {'192.168.1.4/30': {'192.168.1.1': 'host1.university.edu'
+                              '192.168.1.2': None}
+  """
+  range_line = None
+  view_dependency_line = None
+  hosts_file_lines = hosts_file_contents.split('\n')
+  for line_number, line in enumerate(hosts_file_lines):
+    if( line.startswith('#:range:') ):
+      range_line = line_number
+    if( line.startswith('#:view_dependency:') ):
+      view_dependency_line = line_number
+    if( range_line and view_dependency_line ):
+      break
+  range = hosts_file_lines[range_line].split('#:range:', 1)[1].lstrip()
+  options.view_name = hosts_file_lines[view_dependency_line].split(
+      '#:view_dependency:', 1)[1].strip().rsplit('_dep', 1)[0]
+  ip_address_list = roster_client_lib.RunFunction('CIDRExpand',
+                                                  options.username,
+                                                  credfile=options.credfile,
+                                                  server_name=options.server,
+                                                  args=[range])[
+                                                      'core_return']
+  hosts_dict = {}
+  ip_list_index = 0
+  for line in hosts_file_contents.split('\n'):
+    line = line.strip()
+    if( line == '' ):
+      continue
+    if( line.startswith('#') ):
+      try:
+        ip_address = line.split('#')[1].split()[0].strip()
+        if( CheckIPV4(ip_address) or CheckIPV6(ip_address)):
+          if( ip_address != ip_address_list[ip_list_index] ):
+            cli_common_lib.DnsError('IP Address %s is out of order.' % (
+                ip_address), 1)
+          ip_list_index = ip_list_index + 1
+          hosts_dict[ip_address] = {'host': None, 'alias': None}
+        else:
+          continue
+      except IndexError:
+        # Pass over empty comments
+        continue
+    else:
+      line_array = line.split('#')[0].split()
+      if( len(line_array) != 3 ):
+        cli_common_lib.DnsError('Line "%s" is incorrectly formatted in '
+                                '"%s"' % (line, options.file), 1)
+      if( not CheckIPV4(line_array[0]) and not CheckIPV6(line_array[0]) ):
+        cli_common_lib.DnsError('Invalid ip address "%s" in file "%s"' % (
+            line_array[0], options.file), 1)
+      else:
+        if( line_array[0] != ip_address_list[ip_list_index] ):
+          cli_common_lib.DnsError('IP Address %s is out of order.' % (
+              line_array[0]), 1)
+        ip_list_index = ip_list_index + 1
+      hosts_dict[line_array[0]] = {'host': line_array[1],
+                                   'alias': line_array[2]}
+  return {'range': range, 'hosts':  hosts_dict}
+
+def main(args):
+  """Collects command line arguments, checks ip addresses and adds records.
+
+  Inputs:
+    args: list of arguments from the command line
+  """
+  parser = OptionParser()
+
+  parser.add_option('--commit', action='store_true', dest='commit',
+                    help='Commits changes of hosts file without confirmation.',
+                    default=False)
+  parser.add_option('--no-commit', action='store_true', dest='no_commit',
+                    help='Suppresses changes of hosts file.', default=False)
+  parser.add_option('-r', '--range', action='store', dest='range',
+                    help='CIDR block range of IP addresses. Assumes -l, will'
+                    'only print a list of ip addresses. Example:'
+                    '10.10.0.0/24', metavar='<range>', default=None)
+  parser.add_option('-f', '--file', action='store', dest='file',
+                    help='File name of hosts file to write to database.',
+                    metavar='<file-name>', default='hosts_out')
+  parser.add_option('--update', action='store_true', dest='update',
+                    help='Update changes to file to database.',
+                    default=False)
+  parser.add_option('-s', '--server', action='store', dest='server',
+                    help='XML RPC Server address.', metavar='<server>',
+                    default='https://localhost:8000')
+  parser.add_option('--ttl', action='store', dest='ttl',
+                    help='Time to live.', metavar='<ttl>', default=3600)
+  parser.add_option('-z', '--zone', action='store', dest='zone_name',
+                    help='String of the zone name.', metavar='<zone-name>',
+                    default=None)
+  parser.add_option('-v', '--view-name', action='store', dest='view_name',
+                    help=('String of the view name <view-name>. Example: '
+                    '"internal"'), metavar='<view-name>', default='any')
+  parser.add_option('-u', '--username', action='store', dest='username',
+                    help='Run as a different username.', metavar='<username>',
+                    default=unicode(getpass.getuser()))
+  parser.add_option('-p', '--password', action='store', dest='password',
+                    help='Password string, NOTE: It is insecure to use this '
+                    'flag on the command line.', metavar='<password>',
+                    default=None)
+  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
+                    help='Location of credential file.', metavar='<cred-file>',
+                    default=os.path.join(os.path.expanduser('~'), '.dnscred'))
+  parser.add_option('-e', '--edit', action='store_true', dest='edit',
+                    help='Edits file after creation, uses EDITOR from env.',
+                    default=False)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  cli_common_lib.CheckCredentials(options)
+  if( not options.update):
+    if( not options.range ):
+      cli_common_lib.DnsError('A range must be given if not updating.', 1)
+    if( options.edit and 'EDITOR' not in os.environ ):
+        cli_common.DnsError('EDITOR environment variable not set.')
+    file_contents = MakeHostsFile(options)
+    handle = open(options.file, 'w')
+    try:
+      handle.writelines(file_contents)
+    finally:
+      handle.close()
+    if( options.edit ):
+      temp_file = '.hosts_out'
+      file_number = 0
+      while( os.path.exists(temp_file) ):
+        temp_file = '%s%s' % (temp_file, i)
+        file_number += 1
+      options.file = temp_file
+      return_code = os.system('%s %s' % (os.environ['EDITOR'], options.file))
+      if( return_code == 0 ):
+        options.update = True
+      else:
+        cli_common_lib.DnsError('Error editing file.', 1)
+
+  if( options.update ):
+    new_hosts_file_handle = open(options.file, 'r')
+    try:
+      new_hosts_file_contents = new_hosts_file_handle.read()
+    finally:
+      new_hosts_file_handle.close()
+    new_hosts_dict = ReadHostsFile(options, new_hosts_file_contents)
+    options.range = new_hosts_dict['range']
+    new_hosts_dict = new_hosts_dict['hosts']
+    original_hosts_dict = {}
+    original_hosts_file_contents = MakeHostsFile(options)
+    original_hosts_dict = ReadHostsFile(options, original_hosts_file_contents)[
+        'hosts']
+    zone_info = roster_client_lib.RunFunction(
+        'ListZones', options.username, credfile=options.credfile,
+        server_name=options.server,
+        kwargs={'view_name': options.view_name})['core_return']
+    zone_origin_dict = {}
+    for zone in zone_info:
+      if( options.view_name in zone_info[zone] ):
+        if( zone_info[zone][options.view_name]['zone_origin'] not in
+                zone_origin_dict ):
+          zone_origin_dict[zone_info[zone][options.view_name][
+              'zone_origin']] = zone
+    update_hosts_dict = {}
+    for ip_address in new_hosts_dict:
+      try:
+        if( original_hosts_dict[ip_address] != new_hosts_dict[ip_address] ):
+          update_hosts_dict[ip_address] = new_hosts_dict[ip_address]
+      except KeyError:
+        cli_common_lib.DnsError('IP Address %s is not in CIDR block %s.' % (
+            ip_address, options.range), 1)
+    if( options.commit and options.no_commit ):
+      cli_common_lib.DnsError('--commit and --no-commit cannot be used '
+                              'together.', 1)
+    delete_list = []
+    add_list = []
+    for host in update_hosts_dict:
+      if( update_hosts_dict[host]['host'] is not None and
+            update_hosts_dict[host]['alias'] is not None ):
+        if( not update_hosts_dict[host]['host'].startswith(
+              update_hosts_dict[host]['alias']) ):
+          cli_common_lib.DnsError(
+              'Fully qualified domain name "%s" and alias "%s" do not match.' % (
+                  update_hosts_dict[host]['host'],
+                  update_hosts_dict[host]['alias']), 1)
+      reverse_ip = roster_client_lib.RunFunction(
+          'ReverseIP', options.username, credfile=options.credfile,
+          server_name=options.server, args=[host])[
+              'core_return']
+      reverse_zone_name = roster_client_lib.RunFunction(
+          'ListZoneByIPAddress', options.username, credfile=options.credfile,
+          server_name=options.server, args=[host])[
+              'core_return']
+      if( CheckIPV4(host) ):
+        record_type = u'a'
+      else:
+        record_type = u'aaaa'
+      if( update_hosts_dict[host]['host'] is None ):
+        print 'Host: %s with ip address %s will be REMOVED' % (
+            original_hosts_dict[host]['host'], host)
+        zone_origin = '%s.' % original_hosts_dict[host]['host'].split(
+            '%s.' % (original_hosts_dict[host]['alias']), 1)[1]
+        delete_list.append({'record_type': record_type,
+                            'record_target': original_hosts_dict[host]['alias'],
+                            'view_name': options.view_name,
+                            'record_zone_name': zone_origin_dict[zone_origin],
+                            'record_arguments': {'assignment_ip': host}})
+        delete_list.append({'record_type': u'ptr',
+                            'record_target': reverse_ip[:-len(zone_info[
+                                reverse_zone_name][options.view_name][
+                                    'zone_origin']) - 1:],
+                            'view_name': options.view_name,
+                            'record_zone_name': reverse_zone_name,
+                            'record_arguments': {'assignment_host':
+                                '%s.' % original_hosts_dict[host]['host']}})
+      else:
+        if( original_hosts_dict[host]['host'] is not None ):
+          print 'Host: %s with ip address %s will be REMOVED' % (
+              original_hosts_dict[host]['host'], host)
+          zone_origin = '%s.' % original_hosts_dict[host]['host'].split(
+              '%s.' % (original_hosts_dict[host]['alias']), 1)[1]
+          delete_list.append({'record_type': record_type,
+                              'record_target': original_hosts_dict[host][
+                                  'alias'],
+                              'view_name': options.view_name,
+                              'record_zone_name': zone_origin_dict[zone_origin],
+                              'record_arguments': {'assignment_ip': host}})
+          delete_list.append({'record_type': u'ptr',
+                              'record_target': reverse_ip[:-len(zone_info[
+                                  reverse_zone_name][options.view_name][
+                                      'zone_origin']) - 1:],
+                              'view_name': options.view_name,
+                              'record_zone_name': reverse_zone_name,
+                              'record_arguments': {'assignment_host':
+                                  '%s.' % original_hosts_dict[host]['host']}})
+        print 'Host: %s with ip address %s will be ADDED' % (
+            update_hosts_dict[host]['host'], host)
+        zone_origin = '%s.' % update_hosts_dict[host]['host'].split(
+            '%s.' % (update_hosts_dict[host]['alias']), 1)[1]
+        add_list.append({'record_type': record_type,
+                         'record_target': update_hosts_dict[host]['alias'],
+                         'view_name': options.view_name,
+                         'record_zone_name': zone_origin_dict[zone_origin],
+                         'record_arguments': {'assignment_ip': host}})
+        add_list.append({'record_type': u'ptr',
+                         'record_target': reverse_ip[:-len(zone_info[
+                             reverse_zone_name][options.view_name][
+                                 'zone_origin']) - 1:],
+                         'view_name': options.view_name,
+                         'record_zone_name': reverse_zone_name,
+                         'record_arguments': {'assignment_host':
+                             '%s.' % update_hosts_dict[host]['host']}})
+    while( not options.commit and not options.no_commit ):
+      yes_no = raw_input('Do you want to commit these changes? (y/N): ')
+      if( yes_no.lower() not in ['y', 'yes', 'n', 'no', ''] ):
+        continue
+      if( yes_no.lower() in ['n', 'no', ''] ):
+        options.no_commit = True
+      if( yes_no.lower() in ['y', 'yes'] ):
+        options.commit = True
+    if( options.no_commit ):
+      print 'No changes made.'
+      sys.exit(0)
+    rows = roster_client_lib.RunFunction(
+        'ProcessRecordsBatch', options.username, credfile=options.credfile,
+        server_name=options.server,
+        kwargs={'delete_records': delete_list,
+                'add_records': add_list})['core_return']
+    if( options.edit ):
+      os.remove(options.file)
+  if( not options.update and not options.range ):
+    cli_common_lib.DnsError('Range/update must be specified.', 1)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

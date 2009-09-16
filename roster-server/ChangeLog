@@ -1,0 +1,9 @@
+Current Release
+
+2009-09-14 release-0.3
+- Fixed allow_none problem on some python versions.
+
+2009-09-09 release-0.1b2
+
+2009-8-25 Release-0.1b1
+- First Release

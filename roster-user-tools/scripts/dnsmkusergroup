@@ -1,0 +1,235 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Make user tool for dnsmanagement"""
+
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+import os
+import sys
+import getpass
+
+from optparse import OptionParser
+
+from roster_user_tools import cli_common_lib
+from roster_user_tools import roster_client_lib
+
+
+def MakePermissions(options):
+  """Makes forward and reverse zone permissions
+
+  Inputs:
+    options: options object from optparse
+  """
+  zones = roster_client_lib.RunFunction(u'ListZones', options.username,
+                                        credfile=options.credfile,
+                                        credstring=options.credstring,
+                                        server_name=options.server)[
+                                            'core_return']
+  if( options.zone not in zones ):
+    cli_common_lib.DnsError('Zone does not exist.', 1)
+
+  if( options.forward_zone_permission ):
+    roster_client_lib.RunFunction(u'MakeForwardZonePermission',
+                                  options.username,
+                                  credfile=options.credfile,
+                                  credstring=options.credstring,
+                                  server_name=options.server,
+                                  args=[options.zone, options.group,
+                                        options.access_right])
+    if( not options.quiet ):
+      print ('ADDED FORWARD_ZONE_PERMISSION: zone_name: %s group: %s '
+             'access_right: %s' % (options.zone, options.group,
+                                   options.access_right))
+  if( options.reverse_range_permission ):
+    if( not options.cidr_block ):
+      cli_common_lib.DnsError('A Reverse range permission requires a '
+                              'cidr_block.', 1)
+    roster_client_lib.RunFunction(u'MakeReverseRangePermission',
+                                  options.username,
+                                  credfile=options.credfile,
+                                  credstring=options.credstring,
+                                  server_name=options.server,
+                                  args=[options.cidr_block, options.group,
+                                        options.access_right])
+    print ('ADDED REVERSE_RANGE_PERMISSION: cidr_block: %s group: %s '
+           'access_right: %s' % (options.cidr_block, options.group,
+                                 options.access_right))
+
+def MakeGroup(options):
+  """Makes a group
+
+  Inputs:
+    options: options object from optparse
+  """
+  groups = roster_client_lib.RunFunction(u'ListGroups', options.username,
+                                         credfile=options.credfile,
+                                         credstring=options.credstring,
+                                         server_name=options.server)[
+                                             'core_return']
+  if( options.group not in groups ):
+    if( options.make_all ):
+      roster_client_lib.RunFunction(u'MakeGroup', options.username,
+                                    credfile=options.credfile,
+                                    credstring=options.credstring,
+                                    server_name=options.server,
+                                    args=[options.group])
+      if( not options.quiet ):
+        print 'ADDED GROUP: group: %s' % options.group
+    else:
+      cli_common_lib.DnsError('Group does not exist, use the -m flag to make '
+                              'this group.', 1)
+
+def main(args):
+  """Collects command line arguments, adds users/groups/assignments
+
+  Inputs:
+    args: list of arguments from the command line
+  """
+  parser = OptionParser()
+
+  parser.add_option('-n', '--new-user', action='store', dest='new_user',
+                    help='String of the new user to create.',
+                    metavar='<new-user>', default=None)
+  parser.add_option('-a', '--access-level', action='store', dest='access_level',
+                    help='Access level of new user.', metavar='<access-level>',
+                    default=None)
+  parser.add_option('-g', '--group', action='store', dest='group',
+                    help='String of the group name to create or assign.',
+                    metavar='<group>', default=None)
+  parser.add_option('-f', '--forward-zone-permission', action='store_true',
+                    dest='forward_zone_permission', help='Make a forward zone '
+                                                         'permission.',
+                    default=False)
+  parser.add_option('-r', '--reverse-range-permission', action='store_true',
+                    dest='reverse_range_permission', help='Make a reverse range'
+                                                          'permission.',
+                    default=False)
+  parser.add_option('-z', '--zone', action='store', dest='zone',
+                    help='String of the zone name (optional)', metavar='<zone>',
+                    default=None)
+  parser.add_option('--access-right', action='store', dest='access_right',
+                    help='String of the access right (r/rw)', metavar='r|rw',
+                    default=None)
+  parser.add_option('-b', '--cidr-block', action='store', dest='cidr_block',
+                    help='String of CIDR block.', metavar='<cidr-block>',
+                    default=None)
+  parser.add_option('-m', '--make-all', action='store_true', dest='make_all',
+                    help='Make all required arguments.', default=False)
+  parser.add_option('-s', '--server', action='store', dest='server',
+                    help='XML RPC Server address.', metavar='<server>',
+                    default='https://localhost:8000')
+  parser.add_option('-u', '--username', action='store', dest='username',
+                    help='Run as a different username.', metavar='<username>',
+                    default=unicode(getpass.getuser()))
+  parser.add_option('-p', '--password', action='store', dest='password',
+                    help='Password string, NOTE: It is insecure to use this '
+                    'flag on the command line.', metavar='<password>',
+                    default=None)
+  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
+                    help='Location of credential file.', metavar='<cred-file>',
+                    default=os.path.join(os.path.expanduser('~'), '.dnscred'))
+  parser.add_option('--cred-string', action='store', dest='credstring',
+                    help='String of credential.', metavar='<cred-string>',
+                    default=None)
+  parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
+                    help='Suppress program output.', default=False)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  cli_common_lib.CheckCredentials(options)
+
+  if( options.new_user ):
+    access_rights = roster_client_lib.RunFunction(u'ListAccessRights',
+                                                  options.username,
+                                                  credfile=options.credfile,
+                                                  credstring=options.credstring,
+                                                  server_name=options.server)[
+                                                      'core_return']
+    access_rights_string = '|'.join(access_rights)
+    if( not options.group ):
+      cli_common_lib.DnsError('A username must be accompanied by a group name '
+                              'with the -g flag.', 1)
+    if( not options.access_level ):
+      cli_common_lib.DnsError('A username must be accompanied by an access '
+                              'level with the -a flag.', 1)
+    if( options.zone and not options.access_right and not options.cidr_block ):
+      cli_common_lib.DnsError('A zone must be accompanied with an access'
+                              ' right, CIDR block or both.', 1)
+    if( options.zone and (not options.access_right or options.access_right
+          not in access_rights) ):
+      cli_common_lib.DnsError('An access right of either %s is'
+                              ' required if specifying a zone.' % (
+                                  access_rights_string), 1)
+    users = roster_client_lib.RunFunction(
+        u'ListUsers', options.username, credfile=options.credfile,
+        credstring=options.credstring, server_name=options.server,
+        args=[options.new_user])['core_return']
+
+    if( options.new_user in users ):
+      cli_common_lib.DnsError('A username of that name already exists.', 1)
+    else:
+      MakeGroup(options)
+      roster_client_lib.RunFunction(u'MakeUser', options.username,
+                                    credfile=options.credfile,
+                                    credstring=options.credstring,
+                                    server_name=options.server,
+                                    args=[options.new_user,
+                                          int(options.access_level)])
+      if( not options.quiet ):
+        print 'ADDED USER: username: %s access_level: %s' % (
+            options.new_user, options.access_level)
+      roster_client_lib.RunFunction(u'MakeUserGroupAssignment',
+                                    options.username,
+                                    credfile=options.credfile,
+                                    credstring=options.credstring,
+                                    server_name=options.server,
+                                    args=[options.new_user, options.group])
+      if( not options.quiet ):
+        print 'ADDED USER_GROUP_ASSIGNMENT: username: %s group: %s' % (
+            options.new_user, options.group)
+    if( options.make_all ):
+      if( options.zone ):
+        MakePermissions(options)
+  elif( options.group ):
+    options.make_all = True
+    MakeGroup(options)
+    if( options.zone ):
+      MakePermissions(options)
+  else:
+    parser.print_help()
+    cli_common_lib.DnsError('Either a user name, group or both is required.', 1)
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

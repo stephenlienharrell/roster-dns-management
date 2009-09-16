@@ -1,0 +1,266 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Make record tool for dnsmanagement"""
+
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+
+import os
+import sys
+import getpass
+
+from optparse import OptionParser
+
+from roster_user_tools import cli_record_lib
+from roster_user_tools import cli_common_lib
+
+
+def main(args):
+  """Gathers command line arguments, constructs record_args_dict and
+     runs RemoveRecord.
+
+  Inputs:
+    args: list of command line args
+  """
+
+  parser = OptionParser()
+
+  parser.add_option('--a', action='store_true', dest='a', default=False,
+                    help='Set the record type to A record.')
+  parser.add_option('--a-assignment-ip', action='store',
+                    dest='a_assignment_ip', help='String of the IPv4 address',
+                    metavar='<assignment-ip>')
+
+  parser.add_option('--aaaa', action='store_true', dest='aaaa', default=False,
+                    help='Set the record type to AAAA record.')
+  parser.add_option('--aaaa-assignment-ip', action='store',
+                    dest='aaaa_assignment_ip',
+                    help='String of the IPv6 address.',
+                    metavar='<assignment-ip>')
+
+  parser.add_option('--hinfo', action='store_true', dest='hinfo', default=False,
+                    help='Set the record type to HINFO record.')
+  parser.add_option('--hinfo-hardware', action='store', dest='hinfo_hardware',
+                    help='String of the hardware type.', metavar='<hardware>')
+  parser.add_option('--hinfo-os', action='store', dest='hinfo_os',
+                    help='String of the OS type.', metavar='<os>')
+
+  parser.add_option('--txt', action='store_true', dest='txt', default=False,
+                    help='Set the record type to TXT record.')
+  parser.add_option('--txt-quoted-text', action='store', dest='txt_quoted_text',
+                    help='String of quoted text.', metavar='<quoted-text>')
+
+  parser.add_option('--cname', action='store_true', dest='cname', default=False,
+                    help='Set the record type to CNAME record.')
+  parser.add_option('--cname-assignment-host', action='store',
+                    dest='cname_assignment_host',
+                    help='String of the CNAME hostname.', metavar='<hostname>')
+
+  parser.add_option('--soa', action='store_true', dest='soa', default=False,
+                    help='Set the record type to SOA record.')
+  parser.add_option('--soa-name-server', action='store', dest='soa_name_server',
+                    help='String of the hostname of the SOA name server.',
+                    metavar='<name-server>')
+  parser.add_option('--soa-admin-email', action='store', dest='soa_admin_email',
+                    help='String of the admin email address.',
+                    metavar='<name-server>')
+  parser.add_option('--soa-serial-number', action='store', dest='soa_serial_number',
+                    help='String of the serial number.',
+                    metavar='<serial-number>')
+  parser.add_option('--soa-refresh-seconds', action='store',
+                    dest='soa_refresh_seconds',
+                    help='Number of seconds to refresh.',
+                    metavar='<refresh-seconds>')
+  parser.add_option('--soa-retry-seconds', action='store',
+                    dest='soa_retry_seconds',
+                    help='Number of seconds to retry.',
+                    metavar='<retry-seconds>')
+  parser.add_option('--soa-expiry-seconds', action='store',
+                    dest='soa_expiry_seconds',
+                    help='Number of seconds to expire.',
+                    metavar='<expiry-seconds>')
+  parser.add_option('--soa-minimum-seconds', action='store',
+                    dest='soa_minimum_seconds',
+                    help='Minium number of seconds to refresh.',
+                    metavar='<minumum-seconds>')
+
+  parser.add_option('--srv', action='store_true', dest='srv', default=False,
+                    help='Set the record type to SRV record.')
+  parser.add_option('--srv-priority', action='store', dest='srv_priority',
+                    help='Integerof priority between 0-65535.',
+                    metavar='<priority>')
+  parser.add_option('--srv-weight', action='store', dest='srv_weight',
+                    help='Integer of weight between 0-65535.',
+                    metavar='<weight>')
+  parser.add_option('--srv-port', action='store', dest='srv_port',
+                    help='Port number.', metavar='<port>')
+  parser.add_option('--srv-assignment-host', action='store',
+                    dest='srv_assignment_host',
+                    help='String of the SRV assignment hostname.',
+                    metavar='<hostname>')
+
+  parser.add_option('--ns', action='store_true', dest='ns', default=False,
+                    help='Set the record type to NS record.')
+  parser.add_option('--ns-name-server', action='store', dest='ns_name_server',
+                    help='String of the hostname of the NS name server.',
+                    metavar='<hostname>')
+
+  parser.add_option('--mx', action='store_true', dest='mx', default=False,
+                    help='Set the record type to MX record.')
+  parser.add_option('--mx-priority', action='store', dest='mx_priority',
+                    help='Integer of priority between 0-65535.',
+                    metavar='<priority>')
+  parser.add_option('--mx-mail-server', action='store', dest='mx_mail_server',
+                    help='String of mail server hostname.',
+                    metavar='<hostname>')
+
+  parser.add_option('--ptr', action='store_true', dest='ptr', default=False,
+                    help='Set the record type to PTR record.')
+  parser.add_option('--ptr-assignment-host', action='store',
+                    dest='ptr_assignment_host',
+                    help='String of PTR hostname.', metavar='<hostname>')
+
+  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
+                    help='Location of credential file.',
+                    default=os.path.join(os.path.expanduser('~'), '.dnscred'))
+  parser.add_option('-z', '--zone-name', action='store', dest='zone_name',
+                    help=('String of the <zone-name>. Example: '
+                          '"sub.university.edu"'), metavar='<zone-name>',
+                    default=None)
+  parser.add_option('-t', '--target', action='store', dest='target',
+                    help='String of the target. Example: "machine-01".',
+                    metavar='<target>', default=None)
+  parser.add_option('--ttl', action='store', dest='ttl',
+                    help='Integer of time to live <ttl> per record.',
+                    metavar='<ttl>')
+  parser.add_option('-v', '--view-name', action='store', dest='view_name',
+                    help=('String of the view name <view-name>. Example: '
+                          '"internal"'), metavar='<view-name>', default='any')
+  parser.add_option('-u', '--username', action='store', dest='username',
+                    help='Run as a different username.', metavar='<username>',
+                    default=unicode(getpass.getuser()))
+  parser.add_option('-p', '--password', action='store', dest='password',
+                    help='Password string, NOTE: It is insecure to use this '
+                         'flag on the command line.', metavar='<password>',
+                    default=None)
+  parser.add_option('-s', '--server', action='store', dest='server',
+                    help='XML RPC Server address.', metavar='<server>',
+                    default='https://localhost:8000')
+  parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
+                    help='Suppress program output.', default=False)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  cli_common_lib.CheckCredentials(options)
+
+  if( options.zone_name is None ):
+    cli_common_lib.DnsError('Must specify a zone-name with "-z".', 1)
+  if( options.target is None ):
+    cli_common_lib.DnsError('Must specify a target with "-t".', 1)
+
+  if( options.a ):
+    record_args_dict = {'assignment_ip': options.a_assignment_ip}
+    cli_record_lib.RemoveRecord('a', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.aaaa ):
+    record_args_dict = {'assignment_ip': options.aaaa_assignment_ip}
+    cli_record_lib.RemoveRecord('aaaa', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.hinfo ):
+    record_args_dict = {'hardware': options.hinfo_hardware,
+                        'os': options.hinfo_os}
+    cli_record_lib.RemoveRecord('hinfo', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.txt ):
+    record_args_dict = {'quoted_text': options.txt_quoted_text}
+    cli_record_lib.RemoveRecord('txt', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.cname ):
+    record_args_dict = {'assignment_host': options.cname_assignment_host}
+    cli_record_lib.RemoveRecord('cname', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.soa ):
+    integer_arguments = {'--soa-serial-number': options.soa_serial_number,
+                         '--soa-refresh-seconds': options.soa_refresh_seconds,
+                         '--soa-retry-seconds': options.soa_retry_seconds,
+                         '--soa-expiry-seconds': options.soa_expiry_seconds,
+                         '--soa-minimun-seconds': options.soa_minimum_seconds}
+    for argument in integer_arguments:
+      if( integer_arguments[argument] is None ):
+        cli_common_lib.DnsError('%s must be specified.' % argument, 1)
+      elif( not integer_arguments[argument].isdigit() ):
+        cli_common_lib.DnsError(
+            '%s must be an integer, %s is not an integer.' %
+            (argument, repr(integer_arguments[argument])), 1)
+    record_args_dict = {'name_server': options.soa_name_server,
+                        'admin_email': options.soa_admin_email,
+                        'serial_number': options.soa_serial_number,
+                        'refresh_seconds': options.soa_refresh_seconds,
+                        'retry_seconds': options.soa_retry_seconds,
+                        'expiry_seconds': options.soa_expiry_seconds,
+                        'minimum_seconds': options.soa_minimum_seconds}
+    cli_record_lib.RemoveRecord('soa', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.srv ):
+    record_args_dict = {'priority': options.srv_priority,
+                        'weight': options.srv_weight,
+                        'port': options.srv_port,
+                        'assignment_host': options.srv_assignment_host}
+    cli_record_lib.RemoveRecord('srv', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.ns ):
+    record_args_dict = {'name_server': options.ns_name_server}
+    cli_record_lib.RemoveRecord('ns', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.mx ):
+    if( options.mx_priority is None ):
+      cli_common_lib.DnsError('--mx-priority must be specified.', 1)
+    if( not options.mx_priority.isdigit() ):
+      cli_common_lib.DnsError('--mx-priority must be an integer. %s is not'
+                              ' an integer.' % repr(options.mx_priority), 1)
+
+    record_args_dict = {'priority': options.mx_priority,
+                        'mail_server': options.mx_mail_server}
+    cli_record_lib.RemoveRecord('mx', options, record_args_dict,
+                                quiet=options.quiet)
+  elif( options.ptr ):
+    record_args_dict = {'assignment_host': options.ptr_assignment_host}
+    cli_record_lib.RemoveRecord('ptr', options, record_args_dict,
+                                quiet=options.quiet)
+  else:
+    self.DnsError('Must specify a record type.', 1)
+
+if __name__ == "__main__":
+  main(sys.argv[1:])

@@ -1,0 +1,21 @@
+$ORIGIN		sub.university.edu.
+$TTL		3600
+@	in	soa	ns.university.edu. hostmaster.ns.university.edu. (
+				794	; serial
+				10800	; refresh 3 hours
+				3600	; retry   1 hour
+				3600000	; expire  1000 hours
+				86400 )	; minimum 24 hours
+	in	ns	ns.university.edu.
+	in	ns	ns2.university.edu.
+  in  mx  10 mail1.university.edu.
+  in  mx  20 mail2.university.edu.
+	in	txt	"Contact 1:  Stephen Harrell (sharrell@university.edu)"
+  in  a   192.168.0.1
+
+localhost	in	a		127.0.0.1
+
+
+www       in  cname sub.university.edu.
+desktop-1 in  a     192.168.1.100
+          in  hinfo PC NT

@@ -1,0 +1,128 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Make zone, view, dns server, dns server set tool for dnsmanagement"""
+
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+import os
+import sys
+import getpass
+
+from optparse import OptionParser
+
+from roster_user_tools import cli_common_lib
+from roster_user_tools import roster_client_lib
+
+
+def main(args):
+  """Collects command line arguments.
+
+  Inputs:
+    args: list of arguments from the command line
+  """
+  parser = OptionParser()
+
+  parser.add_option('-v', '--view', action='store', dest='view',
+                    help='Modify a view.', default=None)
+  parser.add_option('-z', '--zone', action='store', dest='zone',
+                    help='Modify a zone.', default=False)
+  parser.add_option('-o', '--options', action='store', dest='options',
+                    help='Extra zone/view options.',
+                    metavar='<view-options>', default=None)
+  parser.add_option('--dont-make-any', action='store_false',
+                    dest='dont_make_any',
+                    help='Make a zone in a view other than any, must specify'
+                         ' view name with --view-name', default=True)
+  parser.add_option('--origin', action='store', dest='origin',
+                    help='Zone origin.', metavar='<origin>', default=None)
+  parser.add_option('--type', action='store', dest='type',
+                    help='Zone type.', metavar='<type>', default=None)
+  parser.add_option('-m', '--make-all', action='store_true', dest='make_all',
+                    help='Make arguments automatically.', default=False)
+  parser.add_option('-s', '--server', action='store', dest='server',
+                    help='XML RPC Server URL.', metavar='<server>',
+                    default='https://localhost:8000')
+  parser.add_option('-u', '--username', action='store', dest='username',
+                    help='Run as a different username.', metavar='<username>',
+                    default=unicode(getpass.getuser()))
+  parser.add_option('-p', '--password', action='store', dest='password',
+                    help='Password string, NOTE: It is insecure to use this '
+                         'flag on the command line.', metavar='<password>',
+                    default=None)
+  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
+                    help='Location of credential file.', metavar='<cred-file>',
+                    default=os.path.join(os.path.expanduser('~'), '.dnscred'))
+  parser.add_option('--cred-string', action='store', dest='credstring',
+                    help='String of credential.', metavar='<cred-string>',
+                    default=None)
+  parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
+                    help='Suppress program output.', default=False)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  cli_common_lib.CheckCredentials(options)
+
+  dns_server_set_exists = False
+  view_exists = False
+  zone_exists = False
+
+  if( options.zone ):
+    if( not options.type ):
+      cli_common_lib.DnsError('A zone type must be specified with -t/--type', 1)
+    if( not options.origin ):
+      cli_common_lib.DnsError('An origin must be specified with --origin.', 1)
+    views = roster_client_lib.RunFunction(u'ListViews', options.username,
+                                          credfile=options.credfile,
+                                          credstring=options.credstring,
+                                          kwargs={u'view_name': options.view},
+                                          server_name=options.server)[
+                                              'core_return']
+    if( options.view not in views and options.view ):
+      cli_common_lib.DnsError('The view specified does not exist.', 1)
+    zones = roster_client_lib.RunFunction(
+        u'MakeZone', options.username, credfile=options.credfile,
+        credstring=options.credstring,
+        args=[options.zone, options.type, options.origin],
+        kwargs={u'view_name': options.view, u'zone_options': options.options,
+                u'make_any': not options.dont_make_any},
+        server_name=options.server)['core_return']
+    if( not options.quiet ):
+     print ('ADDED ZONE: zone_name: %s zone_type: %s zone_origin: %s '
+            'zone_options: %s view_name: %s' % (options.zone, options.type,
+                                                options.origin, options.options,
+                                                options.view))
+
+if __name__ == "__main__":
+  main(sys.argv[1:])

@@ -1,0 +1,107 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""This script is used for importing zone files into the database."""
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+import getopt
+import getpass
+import os
+import sys
+from optparse import OptionParser
+
+from roster_config_manager import zone_importer_lib
+
+
+def main(args):
+  user = unicode(getpass.getuser())
+  parser = OptionParser()
+
+  parser.add_option('-c', '--config-file', action='store', dest='config',
+                    help='Database config file.', metavar='<config-file>',
+                    default=None)
+  parser.add_option('-d', '--directory', action='store', dest='directory',
+                    help='Directory of zone files to load in. Mutually '
+                         'exclusive from -f/--file', metavar='<directory>',
+                    default=None)
+  parser.add_option('-f', '--file', action='store', dest='file',
+                    help='Zone file to load in. Mutually exclusive from '
+                         '-d/--directory.', metavar='<file>',
+                    default=None)
+  parser.add_option('-v', '--view', action='store', dest='view',
+                    help='View to put records in.', metavar='<view>',
+                    default=None)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  if( options.config is None ):
+    print "Must specify --config flag."
+    parser.print_help()
+    sys.exit(1)
+
+  if( options.file is None and options.directory is None):
+    print "Must specify --file or --directory flag."
+    parser.print_help()
+    sys.exit(1)
+
+  if( options.file is not None and options.directory is not None):
+    print "Must specify --file or --directory flag but not both."
+    parser.print_help()
+    sys.exit(1)
+
+  if( options.directory is not None ):
+    zone_list = os.listdir(options.directory)
+  else:
+    zone_list = [options.file]
+  total_record_count = 0
+  for options.file in zone_list:
+    if( options.directory is not None ):
+      options.file = '%s/%s' % (options.directory, options.file)
+    print 'Loading in %s' % options.file
+    importer = zone_importer_lib.ZoneImport(options.file, options.config,
+                                            user, view=options.view)
+
+    record_count = importer.MakeRecordsFromZone()
+    print '%s records loaded from zone %s' % (record_count, options.file)
+
+    total_record_count += record_count
+
+  print '%s total records added' % total_record_count
+
+
+if( __name__ == "__main__" ):
+  main(sys.argv[1:])
+
+
+# vi: set ai aw sw=2:
