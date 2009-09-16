@@ -40,8 +40,12 @@ try:
 except ImportError:
   from distutils.core import setup
 
+current_verion = __version__
+if( __version__.startswith('#') ):
+  current_version = '0.1'
+
 setup(name='RosterUserTools',
-      version='#TRUNK#',
+      version=current_version,
       description='CLI for Roster',
       url='http://code.google.com/p/roster-dns-management/',
       packages=['roster_user_tools'],
