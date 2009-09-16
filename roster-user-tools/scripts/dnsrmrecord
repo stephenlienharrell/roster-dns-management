@@ -226,17 +226,17 @@ def main(args):
             (argument, repr(integer_arguments[argument])), 1)
     record_args_dict = {'name_server': options.soa_name_server,
                         'admin_email': options.soa_admin_email,
-                        'serial_number': options.soa_serial_number,
-                        'refresh_seconds': options.soa_refresh_seconds,
-                        'retry_seconds': options.soa_retry_seconds,
-                        'expiry_seconds': options.soa_expiry_seconds,
-                        'minimum_seconds': options.soa_minimum_seconds}
+                        'serial_number': int(options.soa_serial_number),
+                        'refresh_seconds': int(options.soa_refresh_seconds),
+                        'retry_seconds': int(options.soa_retry_seconds),
+                        'expiry_seconds': int(options.soa_expiry_seconds),
+                        'minimum_seconds': int(options.soa_minimum_seconds)}
     cli_record_lib.RemoveRecord('soa', options, record_args_dict,
                                 quiet=options.quiet)
   elif( options.srv ):
-    record_args_dict = {'priority': options.srv_priority,
-                        'weight': options.srv_weight,
-                        'port': options.srv_port,
+    record_args_dict = {'priority': int(options.srv_priority),
+                        'weight': int(options.srv_weight),
+                        'port': int(options.srv_port),
                         'assignment_host': options.srv_assignment_host}
     cli_record_lib.RemoveRecord('srv', options, record_args_dict,
                                 quiet=options.quiet)
@@ -251,7 +251,7 @@ def main(args):
       cli_common_lib.DnsError('--mx-priority must be an integer. %s is not'
                               ' an integer.' % repr(options.mx_priority), 1)
 
-    record_args_dict = {'priority': options.mx_priority,
+    record_args_dict = {'priority': int(options.mx_priority),
                         'mail_server': options.mx_mail_server}
     cli_record_lib.RemoveRecord('mx', options, record_args_dict,
                                 quiet=options.quiet)
