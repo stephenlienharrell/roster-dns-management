@@ -125,14 +125,14 @@ class Testdnsrmrecord(unittest.TestCase):
                        '--a --a-assignment-ip="10.10.10.0" -t '
                        'machine1 -v test_view -z test_zone -u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
-    self.assertEqual(command.read(), 'ERROR: View does not exist!\n')
+    self.assertEqual(command.read(), 'CLIENT ERROR: View does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.core_instance.MakeView(u'test_view')
     command = os.popen('python %s '
                        '--a --a-assignment-ip="10.10.10.0" -t '
                        'machine1 -v test_view -z test_zone -u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
-    self.assertEqual(command.read(), 'ERROR: Zone does not exist!\n')
+    self.assertEqual(command.read(), 'CLIENT ERROR: Zone does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.assertFalse(self.core_instance.ListZones())
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
@@ -168,7 +168,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
-    self.assertEqual(command.read(), 'ERROR: View does not exist!\n')
+    self.assertEqual(command.read(), 'CLIENT ERROR: View does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.core_instance.MakeView(u'test_view')
     command = os.popen('python %s '
@@ -176,7 +176,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
-    self.assertEqual(command.read(), 'ERROR: Zone does not exist!\n')
+    self.assertEqual(command.read(), 'CLIENT ERROR: Zone does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.assertFalse(self.core_instance.ListZones())
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
@@ -402,13 +402,13 @@ class Testdnsrmrecord(unittest.TestCase):
     command = os.popen('python %s -u '
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
-    self.assertEqual(command.read(), 'ERROR: Must specify a zone-name '
+    self.assertEqual(command.read(), 'CLIENT ERROR: Must specify a zone-name '
                                      'with "-z".\n')
     command.close()
     command = os.popen('python %s -z test_zone -u '
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
-    self.assertEqual(command.read(), 'ERROR: Must specify a target '
+    self.assertEqual(command.read(), 'CLIENT ERROR: Must specify a target '
                                      'with "-t".\n')
     command.close()
     command = os.popen('python %s -z z -t t --soa --soa-serial-number number '
@@ -416,27 +416,27 @@ class Testdnsrmrecord(unittest.TestCase):
                        '--soa-expiry-seconds 3 --soa-minimum-seconds 3 '
                        '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                               self.server_name))
-    self.assertEqual(command.read(), 'ERROR: --soa-serial-number must be '
+    self.assertEqual(command.read(), 'CLIENT ERROR: --soa-serial-number must be '
                                      'an integer, \'number\' is '
                                      'not an integer.\n')
     command.close()
     command = os.popen('python %s -z z -t t --soa --soa-serial-number 3 '
                        '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                               self.server_name))
-    self.assertEqual(command.read(), 'ERROR: --soa-minimun-seconds must be '
+    self.assertEqual(command.read(), 'CLIENT ERROR: --soa-minimun-seconds must be '
                                      'specified.\n')
     command.close()
     command = os.popen('python %s -z z -t t --mx --mx-priority number '
                        '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                               self.server_name))
-    self.assertEqual(command.read(), 'ERROR: --mx-priority must be '
+    self.assertEqual(command.read(), 'CLIENT ERROR: --mx-priority must be '
                                      'an integer. \'number\' is '
                                      'not an integer.\n')
     command.close()
     command = os.popen('python %s -z z -t t --mx '
                        '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                               self.server_name))
-    self.assertEqual(command.read(), 'ERROR: --mx-priority must be '
+    self.assertEqual(command.read(), 'CLIENT ERROR: --mx-priority must be '
                                      'specified.\n')
     command.close()
 

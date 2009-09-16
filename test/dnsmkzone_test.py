@@ -170,19 +170,19 @@ class TestDnsMkZone(unittest.TestCase):
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: The view specified does not exist.\n')
+                     'CLIENT ERROR: The view specified does not exist.\n')
     output.close()
     output = os.popen('python %s -v test_view -z test_zone --type master '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: An origin must be specified with --origin.\n')
+                     'CLIENT ERROR: An origin must be specified with --origin.\n')
     output.close()
     output = os.popen('python %s -v test_view -z test_zone --origin '
                       'dept.univiersity.edu. -s %s -u %s -p %s' % (
                           EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: A zone type must be specified with -t/--type\n')
+                     'CLIENT ERROR: A zone type must be specified with -t/--type\n')
     output.close()
 
 if( __name__ == '__main__' ):

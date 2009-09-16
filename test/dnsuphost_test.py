@@ -311,7 +311,7 @@ class TestDnsMkHost(unittest.TestCase):
                       '%s --update -r 192.168.1.4/30' % (EXEC, INVALID_HOSTS,
                           self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: Line "192.168.1.5  host3.university.edu host3 3 '
+                     'CLIENT ERROR: Line "192.168.1.5  host3.university.edu host3 3 '
                      '# No reverse assignment" is incorrectly formatted in '
                      '"%s"\n' % INVALID_HOSTS)
     output.close()
@@ -335,7 +335,7 @@ class TestDnsMkHost(unittest.TestCase):
                       '%s --update -r 192.168.1.4/30 --commit' % (EXEC,
                           INVALID_HOSTS, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: Invalid ip address "5" in file '
+                     'CLIENT ERROR: Invalid ip address "5" in file '
                      '"test_data/invalid_hosts"\n')
     output.close()
 

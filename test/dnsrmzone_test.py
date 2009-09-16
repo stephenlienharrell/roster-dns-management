@@ -149,7 +149,7 @@ class Testdnsrmzone(unittest.TestCase):
     output = os.popen('python %s -z test_zone '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: Zone "test_zone" does not exist.\n')
+    self.assertEqual(output.read(), 'CLIENT ERROR: Zone "test_zone" does not exist.\n')
     output.close()
 
 if( __name__ == '__main__' ):

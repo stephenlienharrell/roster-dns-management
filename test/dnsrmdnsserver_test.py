@@ -166,19 +166,19 @@ class Testdnsrmdnsserver(unittest.TestCase):
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: DNS server "dns1" does not exist.\n')
+                     'CLIENT ERROR: DNS server "dns1" does not exist.\n')
     output.close()
     output = os.popen('python %s -e set1 '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: DNS server set "set1" does not exist.\n')
+                     'CLIENT ERROR: DNS server set "set1" does not exist.\n')
     output.close()
     output = os.popen('python %s -d dns1 -e set1 '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: DNS server set assignment "set1/dns1" '
+                     'CLIENT ERROR: DNS server set assignment "set1/dns1" '
                      'does not exist.\n')
     output.close()
 

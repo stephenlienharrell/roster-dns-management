@@ -157,13 +157,13 @@ class Testdnsmkdnsserver(unittest.TestCase):
     command = os.popen('python %s -e set1 -d dns1 -u %s -p %s -s %s' % (
         EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
-        'ERROR: DNS Server "dns1" does not exist.\n')
+        'CLIENT ERROR: DNS Server "dns1" does not exist.\n')
     command.close()
     self.core_instance.MakeDnsServer(u'dns1')
     command = os.popen('python %s -e set1 -d dns1 -u %s -p %s -s %s' % (
         EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
-        'ERROR: DNS Server Set "set1" does not exist.\n')
+        'CLIENT ERROR: DNS Server Set "set1" does not exist.\n')
     command.close()
 
 

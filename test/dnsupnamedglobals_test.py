@@ -278,75 +278,75 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options2')
     output = os.popen('python %s -t 299 -s %s -u %s -p %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: Timestamp incorrectly formatted.\n')
+    self.assertEqual(output.read(), 'CLIENT ERROR: Timestamp incorrectly formatted.\n')
     output.close()
     output = os.popen(
         'python %s -f test --update -l -i 1 -t "2009-02-02 01:10:10" -r '
         '1 -e -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        'ERROR: The -l/--list flag cannot be used.\n'
-        'ERROR: The -e/--edit flag cannot be used.\n'
-        'ERROR: The -i/--option-id flag cannot be used.\n'
-        'ERROR: The -r/--revert flag cannot be used.\n'
-        'ERROR: The -t/--timestamp flag cannot be used.\n')
+        'CLIENT ERROR: The -l/--list flag cannot be used.\n'
+        'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
+        'CLIENT ERROR: The -i/--option-id flag cannot be used.\n'
+        'CLIENT ERROR: The -r/--revert flag cannot be used.\n'
+        'CLIENT ERROR: The -t/--timestamp flag cannot be used.\n')
     output.close()
     output = os.popen(
         'python %s -l -i 1 -t "2009-02-02 01:10:10" -r set1 -f file -e '
         '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                PASSWORD))
     self.assertEqual(output.read(),
-        'ERROR: The -f/--file flag cannot be used.\n'
-        'ERROR: The -e/--edit flag cannot be used.\n'
-        'ERROR: The -r/--revert flag cannot be used.\n')
+        'CLIENT ERROR: The -f/--file flag cannot be used.\n'
+        'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
+        'CLIENT ERROR: The -r/--revert flag cannot be used.\n')
     output.close()
     output = os.popen('python %s -e -r 1 -s %s -u %s -p %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        'ERROR: The -r/--revert flag cannot be used.\n')
+        'CLIENT ERROR: The -r/--revert flag cannot be used.\n')
     output.close()
     output = os.popen('python %s -e -s %s -u %s -p %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        'ERROR: Either an option id or dns server set and '
+        'CLIENT ERROR: Either an option id or dns server set and '
         'timestamp are needed.\n')
     output.close()
     output = os.popen('python %s -e -d set1 -s %s -u %s -p %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        'ERROR: Multiple configurations found. This could '
+        'CLIENT ERROR: Multiple configurations found. This could '
         'be due to an internal error or arguments may be '
         'too general.\n')
     output.close()
     output = os.popen('python %s -e -d set2 -s %s -u %s -p %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: No configurations found.\n')
+    self.assertEqual(output.read(), 'CLIENT ERROR: No configurations found.\n')
     output.close()
     output = os.popen('python %s -r set1 -f file -s %s -u %s -p %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        'ERROR: The -f/--file flag cannot be used.\n')
+        'CLIENT ERROR: The -f/--file flag cannot be used.\n')
     output.close()
     output = os.popen('python %s -r set1 -s %s -u %s -p %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        'ERROR: To revert a configuration, the desired '
+        'CLIENT ERROR: To revert a configuration, the desired '
         'replacement must be specified with -i\n')
     output.close()
     output = os.popen(
         'python %s -f test -n --update -l -i 1 -t "2009-02-02 01:10:10" -r '
         '1 -e -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        'ERROR: The -l/--list flag cannot be used.\n'
-        'ERROR: The -e/--edit flag cannot be used.\n'
-        'ERROR: The -i/--option-id flag cannot be used.\n'
-        'ERROR: The -r/--revert flag cannot be used.\n'
-        'ERROR: The -t/--timestamp flag cannot be used.\n'
-        'ERROR: The --update flag cannot be used.\n')
+        'CLIENT ERROR: The -l/--list flag cannot be used.\n'
+        'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
+        'CLIENT ERROR: The -i/--option-id flag cannot be used.\n'
+        'CLIENT ERROR: The -r/--revert flag cannot be used.\n'
+        'CLIENT ERROR: The -t/--timestamp flag cannot be used.\n'
+        'CLIENT ERROR: The --update flag cannot be used.\n')
     output.close()
     output = os.popen(
         'python %s -n  '
         '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: Must specify a dns server '
+    self.assertEqual(output.read(), 'CLIENT ERROR: Must specify a dns server '
                                     'set with -d.\n')
     output.close()
 

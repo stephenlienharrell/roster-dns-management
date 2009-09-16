@@ -41,13 +41,24 @@ import roster_client_lib
 
 
 def DnsError(message, exit_status=0):
-  """Prints standardized error message to screen.
+  """Prints standardized client error message to screen.
 
   Inputs:
     message: string of message to be displayed on screen
     exit_status: integer of retrun code, assumed not exit if 0
   """
-  print "ERROR: %s" % message
+  print "CLIENT ERROR: %s" % message
+  if( exit_status ):
+    sys.exit(exit_status)
+
+def ServerError(message, exit_status=0):
+  """Prints standardized server error message to screen.
+
+  Inputs:
+    message: string of message to be displayed on screen
+    exit_status: integer of retrun code, assumed not exit if 0
+  """
+  print "SERVER ERROR: %s" % message
   if( exit_status ):
     sys.exit(exit_status)
 

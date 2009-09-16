@@ -266,24 +266,24 @@ class TestDnsMkHost(unittest.TestCase):
                       'forward_zone -v test_view -s %s -u %s -p %s' % (
                            EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: Incorrectly formatted IP address.\n')
+                     'CLIENT ERROR: Incorrectly formatted IP address.\n')
     output.close()
     output = os.popen('python %s -i 192.168.1.4 -t machine1.university.edu. -z'
                       'forward_zone -v test_view -s %s -u %s -p %s' % (
                            EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: Hostname cannot end with domain name.\n')
+                     'CLIENT ERROR: Hostname cannot end with domain name.\n')
     output.close()
     output = os.popen('python %s -i 192.168.1.6 -z forward_zone -t '
                       'machine1 -v test_view -s %s -u %s'
                       ' -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: No reverse zone found for "192.168.1.6"\n')
+                     'CLIENT ERROR: No reverse zone found for "192.168.1.6"\n')
     output.close()
     output = os.popen('python %s -s %s -u %s'
                       ' -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: An ip address or range must be specified.\n')
+                     'CLIENT ERROR: An ip address or range must be specified.\n')
     output.close()
 
 

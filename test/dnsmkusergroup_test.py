@@ -234,28 +234,28 @@ class Testdnsmkusergroup(unittest.TestCase):
     output = os.popen('python %s -n jcollins'
                       ' -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                               PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: A username must be accompanied by'
+    self.assertEqual(output.read(), 'CLIENT ERROR: A username must be accompanied by'
                                     ' a group name with the -g flag.\n')
     output.close()
     output = os.popen('python %s -n jcollins'
                       ' -g cs'
                       ' -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                               PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: A username must be accompanied by'
+    self.assertEqual(output.read(), 'CLIENT ERROR: A username must be accompanied by'
                                     ' an access level with the -a flag.\n')
     output.close()
     output = os.popen('python %s -n jcollins'
                       ' -a 128 -g cs'
                       ' -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                               PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: A username of that name already'
+    self.assertEqual(output.read(), 'CLIENT ERROR: A username of that name already'
                                     ' exists.\n')
     output.close()
     output = os.popen('python %s -n newuser'
                       ' -a 128 -g fakegroup'
                       ' -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                               PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: Group does not exist, use the -m'
+    self.assertEqual(output.read(), 'CLIENT ERROR: Group does not exist, use the -m'
                                     ' flag to make this group.\n')
     output.close()
     self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
@@ -263,14 +263,14 @@ class Testdnsmkusergroup(unittest.TestCase):
                       ' -a 128 -g testgroup -m -z test_zone'
                       ' -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                               PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: A zone must be accompanied with'
+    self.assertEqual(output.read(), 'CLIENT ERROR: A zone must be accompanied with'
                                     ' an access right, CIDR block or both.\n')
     output.close()
     output = os.popen('python %s -n testuser2'
                       ' -a 128 -g testgroup -m -z test_zone --access-right x'
                       ' -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                               PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: An access right of either rw|r '
+    self.assertEqual(output.read(), 'CLIENT ERROR: An access right of either rw|r '
                                     'is required if specifying a zone.\n')
     output.close()
 

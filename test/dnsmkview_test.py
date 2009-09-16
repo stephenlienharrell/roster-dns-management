@@ -141,7 +141,7 @@ class Testdnsmkview(unittest.TestCase):
                        '-u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
-                     'ERROR: View "test_view" does not exist.\n')
+                     'CLIENT ERROR: View "test_view" does not exist.\n')
     command.close()
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeView(u'test_view2')
@@ -160,14 +160,14 @@ class Testdnsmkview(unittest.TestCase):
                        '-u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
-                     'ERROR: View "test_view" does not exist.\n')
+                     'CLIENT ERROR: View "test_view" does not exist.\n')
     command.close()
     self.core_instance.MakeView(u'test_view')
     command = os.popen('python %s -v test_view -e set1 '
                        '-u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
-                     'ERROR: Dns Server Set "set1" does not exist.\n')
+                     'CLIENT ERROR: Dns Server Set "set1" does not exist.\n')
     command.close()
     self.core_instance.MakeDnsServerSet(u'set1')
     command = os.popen('python %s -v test_view -e set1 --acl outside --allow '
@@ -186,29 +186,29 @@ class Testdnsmkview(unittest.TestCase):
     command = os.popen('python %s -v test_view -e set1 -V test_view2 '
                        '-u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
-    self.assertEqual(command.read(), 'ERROR: Incorrect arguments.\n')
+    self.assertEqual(command.read(), 'CLIENT ERROR: Incorrect arguments.\n')
     command.close()
     command = os.popen('python %s -V test_view2 '
                        '-u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
-    self.assertEqual(command.read(), 'ERROR: Using -V/--view-dep requires the '
+    self.assertEqual(command.read(), 'CLIENT ERROR: Using -V/--view-dep requires the '
                                      'use of -v/--view.\n')
     command.close()
     command = os.popen('python %s -e set1 '
                        '-u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
-    self.assertEqual(command.read(), 'ERROR: Using -e/--dns-server-set '
+    self.assertEqual(command.read(), 'CLIENT ERROR: Using -e/--dns-server-set '
                                      'requires the use of -v/--view.\n')
     command.close()
     command = os.popen('python %s -v test_view '
                        '-u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
-    self.assertEqual(command.read(), 'ERROR: To make a view, an ACL '
+    self.assertEqual(command.read(), 'CLIENT ERROR: To make a view, an ACL '
                                      'must be specified with --acl.\n')
     command = os.popen('python %s -v test_view --acl test_acl '
                        '-u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
-    self.assertEqual(command.read(), 'ERROR: ACL "test_acl" does not '
+    self.assertEqual(command.read(), 'CLIENT ERROR: ACL "test_acl" does not '
                                      'exist.\n')
 
 

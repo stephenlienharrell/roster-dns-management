@@ -181,7 +181,7 @@ class Testdnsrmview(unittest.TestCase):
     output = os.popen('python %s -e test '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: To remove a dns server set view '
+    self.assertEqual(output.read(), 'CLIENT ERROR: To remove a dns server set view '
                                     'assignment a view must be '
                                     'specified with the -v flag.\n')
     output.close()
@@ -189,7 +189,7 @@ class Testdnsrmview(unittest.TestCase):
                       '--allow '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: To remove an ACL a CIDR block or '
+    self.assertEqual(output.read(), 'CLIENT ERROR: To remove an ACL a CIDR block or '
                                     'ip address must be specified with the '
                                     '--cidr-block flag.\n')
     output.close()
@@ -197,7 +197,7 @@ class Testdnsrmview(unittest.TestCase):
                       '--cidr-block 192.168.0.0/24 --allow --deny '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: --allow and --deny cannot be used '
+    self.assertEqual(output.read(), 'CLIENT ERROR: --allow and --deny cannot be used '
                                     'simultaneously.\n')
     output.close()
     output = os.popen('python %s -v test --acl '
@@ -205,8 +205,8 @@ class Testdnsrmview(unittest.TestCase):
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'ERROR: The --acl flag cannot be used.\n'
-                     'ERROR: The --cidr-block flag cannot be used.\n')
+                     'CLIENT ERROR: The --acl flag cannot be used.\n'
+                     'CLIENT ERROR: The --cidr-block flag cannot be used.\n')
     output.close()
 
 if( __name__ == '__main__' ):

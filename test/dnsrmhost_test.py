@@ -236,18 +236,18 @@ class Testdnsrmhost(unittest.TestCase):
     output = os.popen('python %s -i notipaddress -t '
                       'host3. -z forward_zone -v test_view -s %s -u %s '
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: Incorrectly formatted IP '
+    self.assertEqual(output.read(), 'CLIENT ERROR: Incorrectly formatted IP '
                                     'address.\n')
     output.close()
     output = os.popen('python %s -i 192.168.1.90 -t '
                       'host3. -z forward_zone -v test_view2 -s %s -u %s '
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: Could not find record.\n')
+    self.assertEqual(output.read(), 'CLIENT ERROR: Could not find record.\n')
     output.close()
     output = os.popen('python %s -t '
                       'host3 -z test_zone -v test_view -s %s -u %s '
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'ERROR: An ip address or range must be '
+    self.assertEqual(output.read(), 'CLIENT ERROR: An ip address or range must be '
                                     'specified.\n')
     output.close()
 
