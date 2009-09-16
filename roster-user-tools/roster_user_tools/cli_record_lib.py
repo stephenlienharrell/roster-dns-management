@@ -43,7 +43,7 @@ import roster_client_lib
 
 
 def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
-               quiet=False):
+               quiet=False, raise_errors=False):
   """Connects to server and makes a DNS record.
 
   Inputs:
@@ -52,6 +52,7 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
     record_args_dict: dictionary varying according to record record_type
     allow_duplicate: allow duplicate entries without causing error
     quiet: whether or not function should be quiet
+    raise_errors: raise errors rather than printing
   """
   for item in record_args_dict:
     if( record_args_dict[item] is None ):
@@ -62,23 +63,27 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
   cli_common_lib.CheckCredentials(options)
   views = roster_client_lib.RunFunction('ListViews', options.username,
                                         credfile=options.credfile,
-                                        server_name=options.server)['core_return']
+                                        server_name=options.server,
+                                        raise_errors=raise_errors)[
+                                            'core_return']
   zones = roster_client_lib.RunFunction('ListZones', options.username,
                                         credfile=options.credfile,
-                                        server_name=options.server)['core_return']
+                                        server_name=options.server,
+                                        raise_errors=raise_errors)[
+                                            'core_return']
   search_target = options.target
   if( record_type == u'ptr' ):
       search_target = roster_client_lib.RunFunction(
           'GetPTRTarget', options.username, credfile=options.credfile,
-          server_name=options.server, args=[options.target, options.view_name])[
-              'core_return'][0]
+          server_name=options.server, args=[options.target, options.view_name],
+          raise_errors=raise_errors)['core_return'][0]
   records = roster_client_lib.RunFunction(
       'ListRecords', options.username, credfile=options.credfile,
       server_name=options.server, kwargs={'record_type': record_type,
                                           'target': search_target,
                                           'zone_name': options.zone_name,
-                                          'view_name': options.view_name})[
-                                              'core_return']
+                                          'view_name': options.view_name},
+      raise_errors=raise_errors)['core_return']
 
   ## Check if view exists
   if( not views.has_key(options.view_name) and options.view_name != 'any' ):
@@ -99,7 +104,7 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
         u'MakeAAAARecord', options.username, credfile=options.credfile,
         args=[options.target, options.zone_name, record_args_dict],
         kwargs={'view_name': options.view_name, 'ttl': options.ttl},
-        server_name=options.server)
+        server_name=options.server, raise_errors=raise_errors)
     if( options.view_name is None ):
       options.view_name = u'any'
     if( options.ttl is None ):
@@ -121,7 +126,7 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
         u'MakePTRRecord', options.username, credfile=options.credfile,
         args=[options.target, record_args_dict],
         kwargs={'view_name': options.view_name, 'ttl': options.ttl},
-        server_name=options.server)
+        server_name=options.server, raise_errors=raise_errors)
     if( options.view_name is None ):
       options.view_name = u'any'
     if( options.ttl is None ):
@@ -144,7 +149,7 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
         args=[record_type, options.target, options.zone_name,
         record_args_dict],
         kwargs={'view_name': options.view_name, 'ttl': options.ttl},
-        server_name=options.server)['core_return']
+        server_name=options.server, raise_errors=raise_errors)['core_return']
     if( options.view_name is None ):
       options.view_name = u'any'
     if( options.ttl is None ):
@@ -162,7 +167,8 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
           options.view_name, options.ttl)
       print '    %s' % ' '.join(arg_list)
 
-def RemoveRecord(record_type, options, record_args_dict, quiet=False):
+def RemoveRecord(record_type, options, record_args_dict, quiet=False,
+                 raise_errors=False):
   """Connects to server and removes a DNS record.
 
   Inputs:
@@ -170,6 +176,7 @@ def RemoveRecord(record_type, options, record_args_dict, quiet=False):
     options: options object from optparse
     record_args_dict: dictionary varying according to record record_type
     quiet: whether or not function should be quiet
+    raise_errors: raise errors rather than printing
   """
   for item in record_args_dict:
     if( record_args_dict[item] is None ):
@@ -183,7 +190,7 @@ def RemoveRecord(record_type, options, record_args_dict, quiet=False):
       server_name=options.server)['core_return']
   zones = roster_client_lib.RunFunction(
       'ListZones', options.username, credfile=options.credfile,
-      server_name=options.server)['core_return']
+      server_name=options.server, raise_errors=raise_errors)['core_return']
   ## Check if view exists
   if( not views.has_key(options.view_name) ):
     cli_common_lib.DnsError('View does not exist!', 2)
@@ -194,7 +201,7 @@ def RemoveRecord(record_type, options, record_args_dict, quiet=False):
       u'RemoveRecord', options.username, credfile=options.credfile,
       args=[record_type, options.target, options.zone_name, record_args_dict,
             options.view_name], kwargs={'ttl': options.ttl},
-      server_name=options.server)
+      server_name=options.server, raise_errors=raise_errors)
   if( options.view_name is None ):
     options.view_name = u'any'
   if( options.ttl is None ):

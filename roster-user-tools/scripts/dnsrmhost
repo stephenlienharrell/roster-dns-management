@@ -116,7 +116,7 @@ def main(args):
       try:
         cli_record_lib.RemoveRecord(record_type, options,
                                     {u'assignment_ip': options.ip_address},
-                                    quiet=options.quiet)
+                                    quiet=options.quiet, raise_errors=True)
         removed_type = True
       except xmlrpclib.Fault, error:
         error_string = error.faultString.split(':')[1]
@@ -131,7 +131,7 @@ def main(args):
       try:
         cli_record_lib.RemoveRecord(u'ptr', options,
                                     {u'assignment_host': options.target},
-                                    quiet=options.quiet)
+                                    quiet=options.quiet, raise_errors=True)
         removed_ptr = True
       except xmlrpclib.Fault, error:
         error_string = error.faultString.split(':')[1]

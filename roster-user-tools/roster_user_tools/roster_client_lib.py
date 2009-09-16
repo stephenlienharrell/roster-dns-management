@@ -51,7 +51,8 @@ class InvalidCredentials(Exception):
 
 
 def RunFunction(function, user_name, credfile=None, credstring=None,
-                args=[], kwargs={}, server_name=SERVER_NAME):
+                args=[], kwargs={}, server_name=SERVER_NAME,
+                raise_errors=False):
   """Runs an arbitrary function for SERVER
 
   Inputs:
@@ -60,6 +61,7 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
     args: list of arguments to be passed to function
     kwargs: dictionary of keyword arguments to be passed to function
     server_name: a string of the server name to connect to
+    riase_errors: raise errors rather than printing
 
   Outputs:
     return from function in core
@@ -87,7 +89,10 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
     if( error_type == '_mysql_exceptions.IntegrityError' ):
       ## Can detect other certain cases of error_type later if needed
       error_string = eval(error_string)[1] # [0] is error code
-    cli_common_lib.ServerError(error_string, 1)
+    if( raise_errors ):
+      raise
+    else:
+      cli_common_lib.ServerError(error_string, 1)
 
   if( core_return == 'ERROR: Invalid Credentials' ):
     raise InvalidCredentials('Credential file is invalid.')
