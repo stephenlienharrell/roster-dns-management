@@ -61,7 +61,7 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
     args: list of arguments to be passed to function
     kwargs: dictionary of keyword arguments to be passed to function
     server_name: a string of the server name to connect to
-    riase_errors: raise errors rather than printing
+    raise_errors: raise errors rather than printing
 
   Outputs:
     return from function in core
