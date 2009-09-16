@@ -55,7 +55,7 @@ from roster_user_tools import roster_client_lib
 import roster_server
 from roster_server import credentials
 
-CONFIG_FILE = 'test_data/roster_server.conf'
+CONFIG_FILE = os.path.expanduser('~/.rosterrc') # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 HOST = u'localhost'

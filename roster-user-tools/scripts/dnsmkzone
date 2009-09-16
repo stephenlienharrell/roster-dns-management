@@ -116,7 +116,7 @@ def main(args):
         credstring=options.credstring,
         args=[options.zone, options.type, options.origin],
         kwargs={u'view_name': options.view, u'zone_options': options.options,
-                u'make_any': not options.dont_make_any},
+                u'make_any': options.dont_make_any},
         server_name=options.server)['core_return']
     if( not options.quiet ):
      print ('ADDED ZONE: zone_name: %s zone_type: %s zone_origin: %s '

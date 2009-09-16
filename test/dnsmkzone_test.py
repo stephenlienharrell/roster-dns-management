@@ -53,7 +53,7 @@ import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
 
-CONFIG_FILE = 'test_data/roster_server.conf'
+CONFIG_FILE = os.path.expanduser('~/.rosterrc') # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 HOST = u'localhost'
@@ -152,7 +152,7 @@ class TestDnsMkZone(unittest.TestCase):
     self.assertEqual(output.read(),
                      'ADDED ZONE: zone_name: test_zone2 zone_type: master '
                      'zone_origin: dept.univiersity.edu. zone_options: None '
-                     'view_name: None\n')
+                     'view_name: test_view\n')
     output.close()
     self.assertEqual(self.core_instance.ListZones(),
         {u'test_zone':

@@ -57,7 +57,7 @@ from roster_core import db_access
 
 ZONE_DIRECTORY = 'test_data/university.edu' # This directory will not be checked in
                                         # for security considerations.
-CONFIG_FILE = 'test_data/roster_server.conf'
+CONFIG_FILE = os.path.expanduser('~/.rosterrc') # Example in test_data
 SCHEMA_FILE = '../db/database_schema.sql'
 DATA_FILE = '../db/test_data.sql'
 TEMP_DIRECTORY = 'temp_data'

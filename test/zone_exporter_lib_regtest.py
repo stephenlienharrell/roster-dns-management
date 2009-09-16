@@ -47,7 +47,7 @@ from roster_config_manager import zone_exporter_lib
 from roster_config_manager import zone_importer_lib
 
 
-CONFIG_FILE = 'test_data/roster_server.conf'
+CONFIG_FILE = os.path.expanduser('~/.rosterrc') # Example in test_data
 ZONE_FILE = 'test_data/test_zone.db'
 REVERSE_ZONE_FILE = 'test_data/test_reverse_zone.db'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
