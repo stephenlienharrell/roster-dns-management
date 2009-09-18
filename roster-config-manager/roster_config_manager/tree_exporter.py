@@ -204,7 +204,7 @@ class BindTreeExport(object):
         acl_dict[acl['acl_name']][acl['acl_cidr_block']] = acl[
             'acl_range_allowed']
     for acl in acl_dict:
-      if( acl_dict[acl] is not None ):
+      if( acl_dict[acl] is not None and acl != 'any' ):
         named_conf_lines.append('acl %s {' % acl)
         for cidr in acl_dict[acl]:
           if( acl_dict[acl][cidr] ):
