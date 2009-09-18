@@ -197,7 +197,7 @@ class BindTreeExport(object):
       if( not acl['acl_name'] in acl_dict ):
         acl_dict[acl['acl_name']] = {}
       if( acl['acl_cidr_block'] is None ):
-        acl_dict[acl['acl_name']] = None
+        acl_dict[acl['acl_cidr_block']] = None
       else:
         if( not acl['acl_cidr_block'] in acl_dict[acl['acl_name']] ):
           acl_dict[acl['acl_name']][acl['acl_cidr_block']] = {}
