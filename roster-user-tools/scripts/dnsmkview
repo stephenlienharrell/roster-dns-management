@@ -178,7 +178,8 @@ def main(args):
       if( not options.quiet ):
         print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s' % (
             options.view, options.acl)
-  elif( options.view and not options.view_subset ):
+  elif( options.view and not options.view_subset
+        and not options.dns_server_set):
     cli_common_lib.DnsError('To make a view, an ACL must be specified with '
                             '--acl.', 1)
 
