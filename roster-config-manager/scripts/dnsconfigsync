@@ -97,5 +97,14 @@ def main(args):
       if( rsync_text != ''):
         print rsync_text
 
+      ssh_string = 'ssh %s \'/usr/sbin/rndc reload\'' % rsync_url_string
+
+      handle = os.popen(ssh_string)
+      ssh_text = handle.read()
+      handle.close()
+
+      if( ssh_text != ''):
+        print ssh_text
+
 if __name__ == "__main__":
     main(sys.argv[1:])
