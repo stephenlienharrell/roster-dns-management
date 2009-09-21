@@ -418,8 +418,12 @@ class BindTreeExport(object):
 
       for dns_server_set_assignment in data['dns_server_set_assignments']:
         if( dns_server_set_assignment[
-             'dns_server_set_assignments_dns_server_set_name'] ==
-                 dns_server_set['dns_server_set_name'] ):
+            'dns_server_set_assignments_dns_server_set_name'] ==
+            dns_server_set['dns_server_set_name'] and
+            dns_server_set_assignment[
+                'dns_server_set_assignments_dns_server_name']
+            not in cooked_data[dns_server_set_name]['dns_servers'] ):
+
           cooked_data[dns_server_set_name]['dns_servers'].append(
               dns_server_set_assignment[
                   'dns_server_set_assignments_dns_server_name'])
