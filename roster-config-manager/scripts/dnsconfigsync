@@ -88,6 +88,7 @@ def main(args):
       if( options.port ):
         rsync_url_parts.append(':%s' % options.port)
       rsync_url_string = ''.join(rsync_url_parts)
+      print 'Connecting to rsync on "%s"' % dns_server
       rsync_string = 'rsync %s %s:%s -r' % (rsync_dir, rsync_url_string,
                                             options.destination_directory)
       handle = os.popen(rsync_string)
@@ -97,6 +98,7 @@ def main(args):
       if( rsync_text != ''):
         print rsync_text
 
+      print 'Connecting to ssh on "%s"' % dns_server
       ssh_string = 'ssh %s \'/usr/sbin/rndc reload\'' % rsync_url_string
 
       handle = os.popen(ssh_string)
