@@ -51,6 +51,7 @@ setup(name='RosterServer',
       description='XMLRPC Server for Roster',
       url='http://code.google.com/p/roster-dns-management/',
       packages=['roster_server'],
+      license=__license__,
       install_requires = ['python-ldap>=2.3.1', 'pyOpenSSL>=0.9',
                           'RosterCore>=0.1'],
       scripts = ['scripts/rosterd']

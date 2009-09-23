@@ -48,5 +48,6 @@ setup(name='RosterCore',
       description='Core and DB libraries for Roster',
       url='http://code.google.com/p/roster-dns-management/',
       packages=['roster_core'],
+      license=__license__,
       install_requires = ['IPy>=0.62', 'MySQL-python>=1.2.2']
      )
