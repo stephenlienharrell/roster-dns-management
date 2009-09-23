@@ -5,7 +5,7 @@ Current Release
 - Made seperate "SERVER ERROR" and "CLIENT ERROR" messages
 - Fixed some inports in unittests and implemented a new function in roster client lib
 - Fixed dnsrmrecord integer problems
-- Fixed dnsrmhost and unittest
+- Fixed dnsrmhost and unittest printing errors and not catching raised errors used for comparison
 - Fixed spelling of raise in roster_client_lib
 - Fixed dnsmkview not allowing dns server set view assignments
 
