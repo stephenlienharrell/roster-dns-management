@@ -1,4 +1,6 @@
 Current Release
+- Made trunk install as version 0.1
+- Fixed current_version variable in setups
 
 2009-09-14 release-0.3
 - Fixed allow_none problem on some python versions.

@@ -1,4 +1,13 @@
 Current Release
+- Made trunk install as version 0.1
+- Fixed current_version variable in setups
+- Fixed dnsmkzone and made unittests use a configuration file in home directory
+- Made seperate "SERVER ERROR" and "CLIENT ERROR" messages
+- Fixed some inports in unittests and implemented a new function in roster client lib
+- Fixed dnsrmrecord integer problems
+- Fixed dnsrmhost and unittest
+- Fixed spelling of raise in roster_client_lib
+- Fixed dnsmkview not allowing dns server set view assignments
 
 2009-09-14 release-0.3
 - Added checking of ACLs in dnsmkview. Updated unittest.

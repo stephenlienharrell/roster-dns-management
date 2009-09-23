@@ -1,5 +1,14 @@
 Current Release
-added dnscheckconfig
+- Made trunk install as 0.1
+- Fixed current_version variable in setups
+- Fixed tree exporter
+- Fixed tree exporter redefining "any" acl
+- Fixed duplicate server names in tree exporter
+- Made dnsconfigsync restart bind after syncing
+- made dnsconfigsync tell what is going on
+- Added dnscheckconfig
+- Fixed dnscheckconfig
+- Added dnsexportconfig, updated setup
 
 2009-09-14 release-0.3
 
