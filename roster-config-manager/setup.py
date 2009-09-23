@@ -51,5 +51,6 @@ setup(name='RosterConfigManager',
       packages=['roster_config_manager'],
       install_requires = ['dnspython>=1.6.0', 'RosterCore>=0.1'],
       scripts = ['scripts/dnsconfigsync', 'scripts/dnszoneimporter',
-                 'scripts/dnstreeexport', 'scripts/dnscheckconfig']
+                 'scripts/dnstreeexport', 'scripts/dnscheckconfig',
+                 'scripts/dnsexportconfig']
      )

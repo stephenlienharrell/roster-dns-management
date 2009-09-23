@@ -1,0 +1,118 @@
+#!/usr/bin/python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Config export tool for Roster"""
+
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+import sys
+import os
+import shutil
+
+from optparse import OptionParser
+import ConfigParser
+
+def main(args):
+  """Collects command line arguments. Exports configs.
+
+  Inputs:
+    args: list of arguments from the command line
+  """
+  parser = OptionParser()
+
+  parser.add_option('-d', '--directory', action='store', dest='directory',
+                    help='Directory to scan.', metavar='<directory>',
+                    default='roster_tree')
+  parser.add_option('-t', '--tree-exporter', action='store', dest='tree_export',
+                    help='Location of "dnstreeexport" binary.',
+                    default='dnstreeexport')
+  parser.add_option('-c', '--check-config', action='store', dest='check_config',
+                    help='Location of "dnscheckconfig" binary.',
+                    default='dnscheckconfig')
+  parser.add_option('-s', '--config-sync', action='store', dest='config_sync',
+                    help='Location of "dnsconfigsync" binary.',
+                    default='dnsconfigsync')
+  parser.add_option('-f', '--force', action='store_true', dest='force',
+                    help='Force overwriting of files.', default=False)
+  parser.add_option('--named-checkzone', action='store',
+                    dest='named_checkzone',
+                    help='Location of named_checkzone binary.',
+                    default=None)
+  parser.add_option('--named-checkconf', action='store',
+                    dest='named_checkconf',
+                    help='Location of named_checkconf binary.',
+                    default=None)
+  parser.add_option('--destination-directory', action='store',
+                    dest='destination_directory',
+                    help='Destination directory for files.',
+                    default=None)
+  parser.add_option('--config-file', action='store', dest='config_file',
+                    help='Roster config file location.',
+                    default=None)
+
+  (globals()['options'], args) = parser.parse_args(args)
+
+  if( os.path.exists(options.directory) and not options.force ):
+    print 'ERROR: Directory "%s" exists, use -f flag to overwrite.' % (
+        options.directory)
+    sys.exit(1)
+  elif( os.path.exists(options.directory) and options.force ):
+    shutil.rmtree(options.directory)
+
+  dnstreeexport_array = [options.tree_export, '-d', options.directory]
+  if( options.config_file ):
+    dnstreeexport_array.extend(['-c', options.config_file])
+  tree_return = os.system(' '.join(dnstreeexport_array))
+
+  if( tree_return != 0 ):
+    sys.exit(tree_return)
+
+  dnscheckconfig_array = [options.check_config, '-d', options.directory]
+  if( options.named_checkzone ):
+    dnscheckconfig_array.extend(['-z', options.named_checkzone])
+  if( options.named_checkconf ):
+    dnscheckconfig_array.extend(['-c', options.named_checkconf])
+  config_return = os.system(' '.join(dnscheckconfig_array))
+
+  dnsconfigsync_array = [options.config_sync, '-r', options.directory]
+  if( options.destination_directory ):
+    dnsconfigsync_array.extend(['-d', options.destination_directory])
+  if( config_return != 0 ):
+    sys.exit(config_return)
+
+  sys.exit(os.system(' '.join(dnsconfigsync_array)))
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
