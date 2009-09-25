@@ -1,4 +1,9 @@
 Current Release
+- Made roster_client_lib have a fallback if errors cant be made nicer
+- Made nice error if zone does not exist in dnsmkhost
+- Made dnsmkzone actually have a -t option
+- Made dnsmkhost not include views in zone_info so the error message is more specific
+- Fixed dnsmkzone's handling of reverse zones, fixed unittest
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
