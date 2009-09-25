@@ -39,6 +39,7 @@ __version__ = '#TRUNK#'
 
 from optparse import OptionParser
 import sys
+import os
 
 import roster_core
 import roster_server
