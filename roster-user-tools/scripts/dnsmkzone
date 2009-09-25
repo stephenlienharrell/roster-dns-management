@@ -61,6 +61,9 @@ def main(args):
   parser.add_option('-o', '--options', action='store', dest='options',
                     help='Extra zone/view options.',
                     metavar='<view-options>', default=None)
+  parser.add_option('--cidr-block', action='store', dest='cidr_block',
+                    help='Cidr block for reverse zones.',
+                    metavar='<cidr-block>', default=None)
   parser.add_option('--dont-make-any', action='store_false',
                     dest='dont_make_any',
                     help='Make a zone in a view other than any, must specify'
@@ -111,18 +114,55 @@ def main(args):
                                               'core_return']
     if( options.view not in views and options.view ):
       cli_common_lib.DnsError('The view specified does not exist.', 1)
-    zones = roster_client_lib.RunFunction(
-        u'MakeZone', options.username, credfile=options.credfile,
-        credstring=options.credstring,
-        args=[options.zone, options.type, options.origin],
-        kwargs={u'view_name': options.view, u'zone_options': options.options,
-                u'make_any': options.dont_make_any},
-        server_name=options.server)['core_return']
-    if( not options.quiet ):
-     print ('ADDED ZONE: zone_name: %s zone_type: %s zone_origin: %s '
-            'zone_options: %s view_name: %s' % (options.zone, options.type,
-                                                options.origin, options.options,
-                                                options.view))
+    reverse_version = 0
+    if( options.origin.endswith('.in-addr.arpa.') ):
+      reverse_version = 4
+      ip_cidr_allowed = ['8', '16', '24']
+    elif( options.origin.endswith('.ip6.arpa.') ):
+      reverse_version = 6
+      ip_cidr_allowed = ['16', '32', '48', '64', '80', '96', '112']
+    if( reverse_version ):
+      if( not options.cidr_block ):
+        cli_common_lib.DnsError(
+            'Reverse zones require the --cidr-block argument', 1)
+      if( options.cidr_block.split('/')[-1] not in ip_cidr_allowed ):
+        cli_common_lib.DnsError(
+            'Cidr block must end with: "/%s"' % ', /'.join(ip_cidr_allowed), 1)
+      zones = roster_client_lib.RunFunction(
+          u'MakeZone', options.username, credfile=options.credfile,
+          credstring=options.credstring,
+          args=[options.zone, options.type, options.origin],
+          kwargs={u'view_name': options.view, u'zone_options': options.options,
+                  u'make_any': options.dont_make_any},
+          server_name=options.server)['core_return']
+      if( not options.quiet ):
+        print ('ADDED REVERSE ZONE: zone_name: %s zone_type: %s '
+               'zone_origin: %s zone_options: %s view_name: %s' % (
+                   options.zone, options.type, options.origin, options.options,
+                   options.view))
+      roster_client_lib.RunFunction(
+          u'MakeReverseRangeZoneAssignment', options.username,
+          credfile=options.credfile, credstring=options.credstring,
+          server_name=options.server,
+          args=[options.zone, options.cidr_block])
+      if( not options.quiet ):
+        print ('ADDED REVERSE RANGE ZONE ASSIGNMENT: zone_name: %s '
+               'cidr_block: %s ' % (
+                   options.zone, options.cidr_block))
+
+    else:
+      zones = roster_client_lib.RunFunction(
+          u'MakeZone', options.username, credfile=options.credfile,
+          credstring=options.credstring,
+          args=[options.zone, options.type, options.origin],
+          kwargs={u'view_name': options.view, u'zone_options': options.options,
+                  u'make_any': options.dont_make_any},
+          server_name=options.server)['core_return']
+      if( not options.quiet ):
+        print ('ADDED FORWARD ZONE: zone_name: %s zone_type: %s '
+               'zone_origin: %s zone_options: %s view_name: %s' % (
+                   options.zone, options.type, options.origin, options.options,
+                   options.view))
 
 if __name__ == "__main__":
   main(sys.argv[1:])
