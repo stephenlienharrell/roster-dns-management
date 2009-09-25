@@ -84,8 +84,13 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
   try:
     core_return = server.CoreRun(function, user_name, credstring, args, kwargs)
   except xmlrpclib.Fault, error:
-    error_type = eval(error.faultString.split('>:')[0].strip('<class '))
-    error_string = error.faultString.split('>:')[1]
+    if( len(error.faultString.split('>:')) >= 2 ):
+      # Try to make error nicer
+      error_type = eval(error.faultString.split('>:')[0].strip('<class '))
+      error_string = error.faultString.split('>:')[1]
+    else:
+      error_type = ''
+      error_string = error.faultString
     if( error_type == '_mysql_exceptions.IntegrityError' ):
       ## Can detect other certain cases of error_type later if needed
       error_string = eval(error_string)[1] # [0] is error code
