@@ -131,8 +131,7 @@ def main(args):
       zone_info = roster_client_lib.RunFunction(
           'ListZones', options.username, credfile=options.credfile,
           server_name=options.server,
-          kwargs={'zone_name': options.zone_name,
-                  'view_name': options.view_name})['core_return']
+          kwargs={'zone_name': options.zone_name})['core_return']
       if( options.zone_name not in zone_info ):
         cli_common_lib.DnsError(
             'Zone "%s" does not exist.' % options.zone_name, 1)
