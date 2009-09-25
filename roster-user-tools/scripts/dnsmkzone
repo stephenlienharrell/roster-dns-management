@@ -67,7 +67,7 @@ def main(args):
                          ' view name with --view-name', default=True)
   parser.add_option('--origin', action='store', dest='origin',
                     help='Zone origin.', metavar='<origin>', default=None)
-  parser.add_option('--type', action='store', dest='type',
+  parser.add_option('-t', '--type', action='store', dest='type',
                     help='Zone type.', metavar='<type>', default=None)
   parser.add_option('-m', '--make-all', action='store_true', dest='make_all',
                     help='Make arguments automatically.', default=False)
