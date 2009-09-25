@@ -63,7 +63,7 @@ def main(args):
                     default=0)
   parser.add_option('-f', '--file', dest='configfile', metavar='<file>',
                     help='Use <file> as a config file, rather than default',
-                    default='~/.rosterrc') 
+                    default=os.path.expanduser('~/.rosterrc'))
   parser.add_option('-H', '--host', dest='host', metavar='<host>',
                     help='Hostname of server to be created.',
                     default=u'localhost')
