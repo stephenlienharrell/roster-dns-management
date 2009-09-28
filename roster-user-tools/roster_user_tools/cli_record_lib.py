@@ -192,10 +192,10 @@ def RemoveRecord(record_type, options, record_args_dict, quiet=False,
       'ListZones', options.username, credfile=options.credfile,
       server_name=options.server, raise_errors=raise_errors)['core_return']
   ## Check if view exists
-  if( not views.has_key(options.view_name) ):
+  if( options.view_name not in views and options.view_name != 'any'  ):
     cli_common_lib.DnsError('View does not exist!', 2)
   ## Check if zone exists
-  if( not zones.has_key(options.zone_name) ):
+  if( options.zone_name not in zones ):
     cli_common_lib.DnsError('Zone does not exist!', 3)
   roster_client_lib.RunFunction(
       u'RemoveRecord', options.username, credfile=options.credfile,
