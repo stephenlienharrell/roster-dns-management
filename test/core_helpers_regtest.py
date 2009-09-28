@@ -93,8 +93,10 @@ class TestCoreHelpers(unittest.TestCase):
     self.core_instance.MakeZone(u'reverse_zone', u'master',
                                 u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view2')
+    self.core_instance.MakeZone(u'ipv6zone', u'master',
+                                u'ipv6.net.', view_name=u'test_view')
     self.core_instance.MakeRecord(
-        u'aaaa', u'host2', u'forward_zone', {u'assignment_ip':
+        u'aaaa', u'host2', u'ipv6zone', {u'assignment_ip':
             u'4321:0000:0001:0002:0003:0004:0567:89ab'}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'host1', u'forward_zone',
                                   {u'assignment_ip': u'192.168.0.1'},
@@ -158,8 +160,8 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
       u'4321:0000:0001:0002:0003:0004:0567:89ab', view_name=u'test_view'),
       {u'test_view': {u'4321:0000:0001:0002:0003:0004:0567:89ab':
-          [{u'forward': True, u'host': u'host2.university.edu',
-            u'zone': u'forward_zone'}]}})
+          [{u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone': u'ipv6zone'}]}})
 
   def testListRecordsByCIDRBlock(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
