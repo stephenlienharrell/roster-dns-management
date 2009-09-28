@@ -140,7 +140,7 @@ class TestDnsMkHost(unittest.TestCase):
                                 u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view2')
     self.core_instance.MakeZone(u'ipv6zone', u'master',
-                                u'8.0.e.f.f.3.ip6.arpa.',
+                                u'ipv6.net.',
                                 view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'aaaa', u'host2', u'forward_zone', {u'assignment_ip':
@@ -188,23 +188,6 @@ class TestDnsMkHost(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
-  def testListSingleIP(self):
-    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
-                                                      u'192.168.1.0/24')
-    output = os.popen('python %s -i 192.168.1.5 -l -t '
-                      'host3 -s %s -u %s -p %s' % (EXEC, self.server_name,
-                                                   USERNAME, PASSWORD))
-    self.assertEqual(output.read(),
-        '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
-        '192.168.1.5 Forward host3.university.edu forward_zone any\n\n')
-    output.close()
-    output = os.popen('python %s -i 192.168.1.4 -l -t '
-                      'host2. -s %s -u %s -p %s' % (EXEC, self.server_name,
-                                                    USERNAME, PASSWORD))
-    self.assertEqual(output.read(),
-        '192.168.1.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
-    output.close()
-
   def testMakeHost(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
@@ -212,13 +195,10 @@ class TestDnsMkHost(unittest.TestCase):
                       'machine1 -v test_view -s %s -u %s '
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     output.close()
-    output = os.popen('python %s -i 192.168.1.6 -l '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name,
-                                             USERNAME, PASSWORD))
-    self.assertEqual(output.read(),
-        '192.168.1.6 Reverse machine1.university.edu reverse_zone test_view\n'
-        '192.168.1.6 Forward machine1.university.edu forward_zone any\n\n')
-    output.close()
+    self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
+        [{'target': u'machine1', 'ttl': 5, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.6'}])
 
   def testMakeIPV6(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6zone',
@@ -234,32 +214,13 @@ class TestDnsMkHost(unittest.TestCase):
         '    assignment_ip: 3ffe:0800::0567\n'
         'ADDED PTR: 7.6.5.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.0.e.'
         'f.f.3.ip6.arpa. zone_name: ipv6zone view_name: test_view ttl: 5\n'
-        '    assignment_host: machine1.8.0.e.f.f.3.ip6.arpa.\n')
+        '    assignment_host: machine1.ipv6.net.\n')
     output.close()
-    output = os.popen('python %s -i 3ffe:0800::0567 -l '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name,
-                                                       USERNAME, PASSWORD))
-    self.assertEqual(output.read(),
-                     '3ffe:0800:0000:0000:0000:0000:0000:0567 Reverse '
-                     'machine1.8.0.e.f.f.3.ip6.arpa ipv6zone test_view\n'
-                     '3ffe:0800:0000:0000:0000:0000:0000:0567 Forward '
-                     'machine1.8.0.e.f.f.3.ip6.arpa ipv6zone any\n\n')
-    output.close()
-
-  def testListCIDR(self):
-    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
-                                                      u'192.168.1.4/30')
-    output = os.popen('python %s -r 192.168.1.4/30 -z'
-                      'forward_zone -v test_view -s %s -u %s -p %s' % (
-                           EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(
-        output.read(),
-        '192.168.1.4 --      --                   --           --\n'
-        '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
-        '192.168.1.5 Forward host3.university.edu forward_zone test_view\n'
-        '192.168.1.6 --      --                   --           --\n'
-        '192.168.1.7 --      --                   --           --\n\n')
-    output.close()
+    self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
+        [{'target': u'machine1', 'ttl': 5, 'record_type': u'aaaa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'ipv6zone',
+          u'assignment_ip': u'3ffe:0800:0000:0000:0000:0000:0000:0567'}])
 
   def testErrors(self):
     output = os.popen('python %s -i 192168414b -z'
@@ -275,15 +236,22 @@ class TestDnsMkHost(unittest.TestCase):
                      'CLIENT ERROR: Hostname cannot end with domain name.\n')
     output.close()
     output = os.popen('python %s -i 192.168.1.6 -z forward_zone -t '
-                      'machine1 -v test_view -s %s -u %s'
-                      ' -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      'machine1 -v test_view -s %s -u %s '
+                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: No reverse zone found for "192.168.1.6"\n')
     output.close()
-    output = os.popen('python %s -s %s -u %s'
-                      ' -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -s %s -u %s '
+                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: An ip address or range must be specified.\n')
+    output.close()
+    output = os.popen('python %s -s %s -u %s -i 192.168.0.1 -z reverse_zone '
+                      '-v test_view -t machine1 '
+                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+    self.assertEqual(output.read(),
+                     'CLIENT ERROR: This tool requres a forward zone as an '
+                     'argument. Reverse zones are handled automatically.\n')
     output.close()
 
 

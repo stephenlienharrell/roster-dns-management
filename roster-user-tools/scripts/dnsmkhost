@@ -104,63 +104,53 @@ def main(args):
     else:
       cli_common_lib.DnsError('Incorrectly formatted IP address.', 1)
 
-    if( options.list_data ):
-      records_dict = roster_client_lib.RunFunction('ListRecordsByCIDRBlock',
-                                                   options.username,
-                                                   credfile=options.credfile,
-                                                   server_name=options.server,
-                                                   args=[options.ip_address],
-                                                   kwargs={'view_name':
-                                                       options.view_name})[
-                                                           'core_return']
-      ip_address_list = roster_client_lib.RunFunction(
-          'CIDRExpand', options.username, credfile=options.credfile,
-          server_name=options.server, args=[options.ip_address])['core_return']
+    record_type = u'a'
+    if( version == 6 ):
+      record_type = u'aaaa'
+    reverse_ip = roster_client_lib.RunFunction('ReverseIP',
+                                               options.username,
+                                               credfile=options.credfile,
+                                               server_name=options.server,
+                                               args=[options.ip_address])[
+                                                   'core_return']
+    zone_info = roster_client_lib.RunFunction(
+        'ListZones', options.username, credfile=options.credfile,
+        server_name=options.server,
+        kwargs={'zone_name': options.zone_name})['core_return']
+    if( options.zone_name not in zone_info ):
+      cli_common_lib.DnsError(
+          'Zone "%s" does not exist.' % options.zone_name, 1)
+    if( options.view_name not in zone_info[options.zone_name] ):
+      cli_common_lib.DnsError('Zone "%s" not found in "%s" view.' % (
+          options.zone_name, options.view_name), 1)
+    zone_origin = zone_info[options.zone_name][options.view_name][
+        'zone_origin'].rstrip('.')
+    if( options.target.rstrip('.').endswith(zone_origin) ):
+      cli_common_lib.DnsError('Hostname cannot end with domain name.', 1)
+    if( zone_origin.endswith('.in-addr.arpa') or
+        zone_origin.endswith('.ip6.arpa') ):
+      cli_common_lib.DnsError(
+          'This tool requres a forward zone as an argument. '
+          'Reverse zones are handled automatically.', 1)
 
-      print cli_common_lib.PrintRecords(records_dict, ip_address_list)
-    else:
-      record_type = u'a'
-      if( version == 6 ):
-        record_type = u'aaaa'
-      reverse_ip = roster_client_lib.RunFunction('ReverseIP',
-                                                 options.username,
-                                                 credfile=options.credfile,
-                                                 server_name=options.server,
-                                                 args=[options.ip_address])[
-                                                     'core_return']
-      zone_info = roster_client_lib.RunFunction(
-          'ListZones', options.username, credfile=options.credfile,
-          server_name=options.server,
-          kwargs={'zone_name': options.zone_name})['core_return']
-      if( options.zone_name not in zone_info ):
-        cli_common_lib.DnsError(
-            'Zone "%s" does not exist.' % options.zone_name, 1)
-      if( options.view_name not in zone_info[options.zone_name] ):
-        cli_common_lib.DnsError('Zone "%s" not found in "%s" view.' % (
-            options.zone_name, options.view_name), 1)
-      zone_origin = zone_info[options.zone_name][options.view_name][
-          'zone_origin'].rstrip('.')
-      if( options.target.rstrip('.').endswith(zone_origin) ):
-        cli_common_lib.DnsError('Hostname cannot end with domain name.', 1)
+    reverse_zone_name = roster_client_lib.RunFunction(
+        'ListZoneByIPAddress', options.username, credfile=options.credfile,
+        server_name=options.server, args=[options.ip_address])['core_return']
 
-      reverse_zone_name = roster_client_lib.RunFunction(
-          'ListZoneByIPAddress', options.username, credfile=options.credfile,
-          server_name=options.server, args=[options.ip_address])['core_return']
+    if( not reverse_zone_name ):
+      cli_common_lib.DnsError('No reverse zone found for "%s"' % (
+          options.ip_address), 1)
 
-      if( not reverse_zone_name ):
-        cli_common_lib.DnsError('No reverse zone found for "%s"' % (
-            options.ip_address), 1)
-
-      cli_record_lib.MakeRecord(record_type, options,
-                                {u'assignment_ip': options.ip_address},
-                                quiet=options.quiet)
-      hostname = options.target
-      options.target = reverse_ip
-      options.zone_name = reverse_zone_name
-      cli_record_lib.MakeRecord(u'ptr', options,
-                                {u'assignment_host': '%s.%s.' % (
-                                    hostname, zone_origin)},
-                                quiet=options.quiet)
+    cli_record_lib.MakeRecord(record_type, options,
+                              {u'assignment_ip': options.ip_address},
+                              quiet=options.quiet)
+    hostname = options.target
+    options.target = reverse_ip
+    options.zone_name = reverse_zone_name
+    cli_record_lib.MakeRecord(u'ptr', options,
+                              {u'assignment_host': '%s.%s.' % (
+                                  hostname, zone_origin)},
+                              quiet=options.quiet)
 
   elif( options.range is not None ):
     records_dict = roster_client_lib.RunFunction('ListRecordsByCIDRBlock',
