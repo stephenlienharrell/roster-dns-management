@@ -5,6 +5,7 @@ Current Release
 - Made dnsmkhost not include views in zone_info so the error message is more specific
 - Fixed dnsmkzone's handling of reverse zones, fixed unittest
 - Fixed dnsmkview erroring out after already making view.
+- Fixed dnslsview KeyError with dns server sets.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1

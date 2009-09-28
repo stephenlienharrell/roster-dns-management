@@ -109,10 +109,13 @@ def main(args):
     print_list = [['view', 'view_dependencies', 'view_options',
                    'dns_server_sets']]
   for view in views:
+    dns_server_sets = ''
+    if( view in dns_set_view_assignments ):
+      dns_server_sets = ','.join(dns_set_view_assignments[view])
     if( view not in view_dependencies and view != 'any' ):
       continue
     print_list.append([view, ','.join(view_dependencies[view]), views[view],
-                       ','.join(dns_set_view_assignments[view])])
+                       dns_server_sets])
   print cli_common_lib.PrintColumns(print_list,
                                     first_line_header=(not options.no_header))
 
