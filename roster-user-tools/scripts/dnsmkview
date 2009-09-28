@@ -101,6 +101,10 @@ def main(args):
   elif( options.dns_server_set and not options.view ):
     cli_common_lib.DnsError('Using -e/--dns-server-set requires the use '
                             'of -v/--view.', 1)
+  elif( options.view and not options.view_subset
+        and not options.dns_server_set and not options.acl ):
+    cli_common_lib.DnsError('To make a view, an ACL must be specified with '
+                            '--acl.', 1)
   elif( options.view and options.view_subset and not options.dns_server_set ):
     pass
   elif( options.view and options.dns_server_set and not options.view_subset ):
@@ -178,10 +182,6 @@ def main(args):
       if( not options.quiet ):
         print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s' % (
             options.view, options.acl)
-  elif( options.view and not options.view_subset
-        and not options.dns_server_set):
-    cli_common_lib.DnsError('To make a view, an ACL must be specified with '
-                            '--acl.', 1)
 
   if( options.view_subset not in views and options.view_subset ):
     return_dict = roster_client_lib.RunFunction(
