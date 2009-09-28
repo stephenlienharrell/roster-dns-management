@@ -129,8 +129,10 @@ class Testdnsmkview(unittest.TestCase):
 
   def testMakeView(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
-    command = os.popen('python %s -v test_view -a acl1 -u %s -p %s -s %s' % (
-        EXEC, USERNAME, self.password, self.server_name))
+    command = os.popen('python %s -v test_view -a acl1 '
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(),
         'ADDED VIEW: view_name: test_view options None\n'
         'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl1\n')
@@ -146,8 +148,9 @@ class Testdnsmkview(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeView(u'test_view2')
     command = os.popen('python %s -v test_view -V test_view2 '
-                       '-u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(),
                      'ADDED VIEW ASSIGNMENT: view_name: test_view '
                      'view_subset: test_view2\n')
@@ -157,22 +160,25 @@ class Testdnsmkview(unittest.TestCase):
     self.core_instance.MakeACL(u'outside', u'192.168.1.0/24', 1)
     self.core_instance.MakeDnsServerSet(u'set2')
     command = os.popen('python %s -v test_view -e set2 '
-                       '-u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(),
                      'CLIENT ERROR: View "test_view" does not exist.\n')
     command.close()
     self.core_instance.MakeView(u'test_view')
     command = os.popen('python %s -v test_view -e set1 '
-                       '-u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(),
                      'CLIENT ERROR: Dns Server Set "set1" does not exist.\n')
     command.close()
     self.core_instance.MakeDnsServerSet(u'set1')
     command = os.popen('python %s -v test_view -e set1 --acl outside --allow '
-                       '--cidr-block 192.168.1/24 -u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '--cidr-block 192.168.1/24 -c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(),
                      'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: outside\n'
                      'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
@@ -184,30 +190,35 @@ class Testdnsmkview(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeView(u'test_view2')
     command = os.popen('python %s -v test_view -e set1 -V test_view2 '
-                       '-u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Incorrect arguments.\n')
     command.close()
     command = os.popen('python %s -V test_view2 '
-                       '-u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Using -V/--view-dep requires the '
                                      'use of -v/--view.\n')
     command.close()
     command = os.popen('python %s -e set1 '
-                       '-u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Using -e/--dns-server-set '
                                      'requires the use of -v/--view.\n')
     command.close()
     command = os.popen('python %s -v test_view '
-                       '-u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: To make a view, an ACL '
                                      'must be specified with --acl.\n')
     command = os.popen('python %s -v test_view --acl test_acl '
-                       '-u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       '-c %s -u %s -p %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: ACL "test_acl" does not '
                                      'exist.\n')
 
