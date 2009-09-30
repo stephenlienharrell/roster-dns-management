@@ -45,9 +45,24 @@ if( __version__.startswith('#') ):
 
 setup(name='RosterCore',
       version=current_version,
-      description='Core and DB libraries for Roster',
+      description='RosterCore contains the Core and  DB libraries for Roster',
+      long_description='Roster is DNS management software for use with Bind 9. '
+                       'Roster is written in Python and uses a MySQL database '
+                       'with an XML-RPC front-end. It contains a set of '
+                       'command line user tools that connect to the XML-RPC '
+                       'front-end. The config files for Bind are generated '
+                       'from the MySQL database so a live MySQL database is '
+                       'not needed.',
+      maintainer='Stephen Lien Harrell',
+      maintainer_email='stephen@teknikal.org',
       url='http://code.google.com/p/roster-dns-management/',
       packages=['roster_core'],
       license=__license__,
+      classifiers=['Development Status :: 4 - Beta',
+                   'Intended Audience :: System Administrators',
+                   'License :: OSI Approved :: BSD License',
+                   'Operating System :: Unix',
+                   'Programming Language :: Python :: 2.5',
+                   'Topic :: Internet :: Name Service (DNS)'],
       install_requires = ['IPy>=0.62', 'MySQL-python>=1.2.2']
      )

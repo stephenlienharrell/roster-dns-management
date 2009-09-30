@@ -46,11 +46,28 @@ if( __version__.startswith('#') ):
 
 setup(name='RosterConfigManager',
       version=current_version,
-      description='Bind9 config importer/exporter for Roster',
+      description='RosterConfigManager is a Bind9 config importer/exporter for '
+                  'Roster',
+      long_description='Roster is DNS management software for use with Bind 9. '
+                       'Roster is written in Python and uses a MySQL database '
+                       'with an XML-RPC front-end. It contains a set of '
+                       'command line user tools that connect to the XML-RPC '
+                       'front-end. The config files for Bind are generated '
+                       'from the MySQL database so a live MySQL database is '
+                       'not needed.',
+      maintainer='Stephen Lien Harrell',
+      maintainer_email='stephen@teknikal.org',
       url='http://code.google.com/p/roster-dns-management/',
       packages=['roster_config_manager'],
       license=__license__,
-      install_requires = ['dnspython>=1.6.0', 'RosterCore>=0.1'],
+      classifiers=['Development Status :: 4 - Beta',
+                   'Intended Audience :: System Administrators',
+                   'License :: OSI Approved :: BSD License',
+                   'Operating System :: Unix',
+                   'Programming Language :: Python :: 2.5',
+                   'Topic :: Internet :: Name Service (DNS)'],
+      install_requires = ['dnspython>=1.6.0',
+                          'RosterCore>=%s' % current_version],
       scripts = ['scripts/dnsconfigsync', 'scripts/dnszoneimporter',
                  'scripts/dnstreeexport', 'scripts/dnscheckconfig',
                  'scripts/dnsexportconfig']
