@@ -11,6 +11,7 @@ Current Release
 - Fixed dnsmkview unittest.
 - Removed -i flag in dnslshost as it is not used.
 - Fixed errors in remove record in cli_record_lib.
+- Changed default ttl from 5 to 3600 in dns*host.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
