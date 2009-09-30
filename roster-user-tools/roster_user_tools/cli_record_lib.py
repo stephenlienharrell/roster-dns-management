@@ -103,7 +103,7 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
     roster_client_lib.RunFunction(
         u'MakeAAAARecord', options.username, credfile=options.credfile,
         args=[options.target, options.zone_name, record_args_dict],
-        kwargs={'view_name': options.view_name, 'ttl': options.ttl},
+        kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
         server_name=options.server, raise_errors=raise_errors)
     if( options.view_name is None ):
       options.view_name = u'any'
@@ -125,7 +125,7 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
     roster_client_lib.RunFunction(
         u'MakePTRRecord', options.username, credfile=options.credfile,
         args=[options.target, record_args_dict],
-        kwargs={'view_name': options.view_name, 'ttl': options.ttl},
+        kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
         server_name=options.server, raise_errors=raise_errors)
     if( options.view_name is None ):
       options.view_name = u'any'
@@ -148,7 +148,7 @@ def MakeRecord(record_type, options, record_args_dict, allow_duplicate=False,
         u'MakeRecord', options.username, credfile=options.credfile,
         args=[record_type, options.target, options.zone_name,
         record_args_dict],
-        kwargs={'view_name': options.view_name, 'ttl': options.ttl},
+        kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
         server_name=options.server, raise_errors=raise_errors)['core_return']
     if( options.view_name is None ):
       options.view_name = u'any'
@@ -200,7 +200,7 @@ def RemoveRecord(record_type, options, record_args_dict, quiet=False,
   roster_client_lib.RunFunction(
       u'RemoveRecord', options.username, credfile=options.credfile,
       args=[record_type, options.target, options.zone_name, record_args_dict,
-            options.view_name], kwargs={'ttl': options.ttl},
+            options.view_name], kwargs={'ttl': int(options.ttl)},
       server_name=options.server, raise_errors=raise_errors)
   if( options.view_name is None ):
     options.view_name = u'any'
