@@ -110,6 +110,27 @@ def main(args):
           server_name=options.server, args=[options.ip_address])['core_return']
       print cli_common_lib.PrintRecords(records_dict, [options.ip_address])
     else:
+      records_dict = roster_client_lib.RunFunction(
+          'ListRecordsByCIDRBlock', options.username, credfile=options.credfile,
+          server_name=options.server, args=[options.ip_address])['core_return']
+      reverse_zone_name = roster_client_lib.RunFunction(
+          'ListZoneByIPAddress', options.username, credfile=options.credfile,
+          server_name=options.server, args=[options.ip_address])['core_return']
+      zone_info = roster_client_lib.RunFunction(
+          'ListZones', options.username, credfile=options.credfile,
+          server_name=options.server, kwargs={'zone_name': reverse_zone_name})[
+              'core_return']
+      reverse_zone_origin = zone_info[reverse_zone_name][options.view_name]['zone_origin']
+      try:
+        records_list = records_dict[options.view_name][options.ip_address]
+      except KeyError:
+        cli_common_lib.DnsError('Record not found.', 1)
+      if( len(records_list) == 1 ):
+        hostname = records_list[0]['host']
+        if( not hostname.endswith('.') ):
+          hostname = '%s.' % hostname
+      else:
+        cli_common_lib.DnsError('Multiple records found.')
       record_type = u'a'
       if( version == 6 ):
         record_type = u'aaaa'
@@ -127,10 +148,12 @@ def main(args):
       reverse_ip = roster_client_lib.RunFunction(
           'ReverseIP', options.username, credfile=options.credfile,
           server_name=options.server, args=[options.ip_address])['core_return']
-      options.target = reverse_ip
+      options.zone_name = reverse_zone_name
+      if( reverse_ip.endswith(reverse_zone_origin) ):
+        options.target = reverse_ip[:len(reverse_ip) - len(reverse_zone_origin) - 1]
       try:
         cli_record_lib.RemoveRecord(u'ptr', options,
-                                    {u'assignment_host': options.target},
+                                    {u'assignment_host': hostname},
                                     quiet=options.quiet, raise_errors=True)
         removed_ptr = True
       except xmlrpclib.Fault, error:
