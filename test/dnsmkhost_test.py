@@ -196,7 +196,7 @@ class TestDnsMkHost(unittest.TestCase):
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     output.close()
     self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
-        [{'target': u'machine1', 'ttl': 5, 'record_type': u'a',
+        [{'target': u'machine1', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.6'}])
 
@@ -210,14 +210,15 @@ class TestDnsMkHost(unittest.TestCase):
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(
         output.read(),
-        'ADDED AAAA: machine1 zone_name: ipv6zone view_name: test_view ttl: 5\n'
+        'ADDED AAAA: machine1 zone_name: ipv6zone view_name: '
+        'test_view ttl: 3600\n'
         '    assignment_ip: 3ffe:0800::0567\n'
         'ADDED PTR: 7.6.5.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.0.e.'
-        'f.f.3.ip6.arpa. zone_name: ipv6zone view_name: test_view ttl: 5\n'
+        'f.f.3.ip6.arpa. zone_name: ipv6zone view_name: test_view ttl: 3600\n'
         '    assignment_host: machine1.ipv6.net.\n')
     output.close()
     self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
-        [{'target': u'machine1', 'ttl': 5, 'record_type': u'aaaa',
+        [{'target': u'machine1', 'ttl': 3600, 'record_type': u'aaaa',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'ipv6zone',
           u'assignment_ip': u'3ffe:0800:0000:0000:0000:0000:0000:0567'}])
