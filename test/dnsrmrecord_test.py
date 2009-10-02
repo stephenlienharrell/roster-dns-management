@@ -157,7 +157,7 @@ class Testdnsrmrecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
         'REMOVED A: machine1 zone_name: test_zone view_name: test_view '
-        'ttl: DEFAULT\n'
+        'ttl: 3600\n'
         '    assignment_ip: 10.10.10.0\n')
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(), [])
@@ -224,7 +224,7 @@ class Testdnsrmrecord(unittest.TestCase):
     self.assertEqual(
         command.read(),
         'REMOVED HINFO: machine1 zone_name: test_zone view_name: test_view '
-        'ttl: DEFAULT\n'
+        'ttl: 3600\n'
         '    hardware: Pear os: ipear\n')
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(), [])

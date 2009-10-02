@@ -157,7 +157,7 @@ class TestDnsMkRecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
                      'ADDED A: machine zone_name: test_zone '
-                     'view_name: test_view ttl: DEFAULT\n'
+                     'view_name: test_view ttl: 3600\n'
                      '    assignment_ip: 10.10.10.0\n')
     #The command will succeed, return 0 (False)
     self.assertFalse(self.retCode(command.close()))
@@ -215,7 +215,7 @@ class TestDnsMkRecord(unittest.TestCase):
                        '%s' % (EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
                      'ADDED AAAA: machine zone_name: test_zone '
-                     'view_name: test_view ttl: DEFAULT\n'
+                     'view_name: test_view ttl: 3600\n'
                      '    assignment_ip: fe80::200:f8ff:fe21:67cf\n')
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
@@ -284,7 +284,7 @@ class TestDnsMkRecord(unittest.TestCase):
     self.assertEqual(
         command.read(),
         'ADDED TXT: machine zone_name: test_zone view_name: test_view '
-        'ttl: DEFAULT\n'
+        'ttl: 3600\n'
         '    quoted_text: et tu brute\n')
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
@@ -509,7 +509,7 @@ class TestDnsMkRecord(unittest.TestCase):
                                            self.server_name))
     self.assertEqual(command.read(),
                      'ADDED PTR: 192.168.1.5 zone_name: test_zone '
-                     'view_name: test_view ttl: DEFAULT\n'
+                     'view_name: test_view ttl: 3600\n'
                      '    assignment_host: university.edu.\n')
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
