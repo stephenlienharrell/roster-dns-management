@@ -14,6 +14,7 @@ Current Release
 - Changed default ttl from 5 to 3600 in dns*host.
 - Made ttl an int in cli_record_lib.
 - Fixed dnsrmhost not removing PTR records.
+- Standardized record not found error in dnsrmhost.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1

@@ -120,7 +120,11 @@ def main(args):
           'ListZones', options.username, credfile=options.credfile,
           server_name=options.server, kwargs={'zone_name': reverse_zone_name})[
               'core_return']
-      reverse_zone_origin = zone_info[reverse_zone_name][options.view_name]['zone_origin']
+      try:
+        reverse_zone_origin = zone_info[reverse_zone_name][
+            options.view_name]['zone_origin']
+      except KeyError:
+        cli_common_lib.DnsError('Reverse zone not found.', 1)
       try:
         records_list = records_dict[options.view_name][options.ip_address]
       except KeyError:
@@ -141,7 +145,7 @@ def main(args):
         removed_type = True
       except xmlrpclib.Fault, error:
         error_string = error.faultString.split(':')[1]
-        if(  error_string == 'No records found.' ):
+        if(  error_string == 'Record not found.' ):
           removed_type = False
         else:
           raise
@@ -163,7 +167,7 @@ def main(args):
         else:
           raise
       if( not removed_type and not removed_ptr ):
-        cli_common_lib.DnsError('Could not find record.')
+        cli_common_lib.DnsError('Record not found.')
 
 
   elif( options.range is not None ):

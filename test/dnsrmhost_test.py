@@ -118,6 +118,7 @@ class Testdnsrmhost(unittest.TestCase):
     self.daemon_thread = DaemonThread(self.config_instance, self.port)
     self.daemon_thread.start()
     self.core_instance = roster_core.Core(USERNAME, self.config_instance)
+    self.core_helper_instance = roster_core.CoreHelpers(self.core_instance)
     self.password = 'test'
     time.sleep(1)
     roster_client_lib.GetCredentials(USERNAME, u'test', credfile=CREDFILE,
@@ -127,7 +128,7 @@ class Testdnsrmhost(unittest.TestCase):
     self.core_instance.MakeView(u'test_view2')
     self.core_instance.MakeView(u'test_view3')
     self.core_instance.MakeZone(u'reverse_zone', u'master',
-                                u'1.168.192.in-addr.arpa.',
+                                u'0.168.192.in-addr.arpa.',
                                 view_name=u'test_view')
     self.core_instance.MakeZone(u'forward_zone', u'master',
                                 u'university.edu.',
@@ -136,11 +137,13 @@ class Testdnsrmhost(unittest.TestCase):
                                 u'university.edu.',
                                 view_name=u'test_view3')
     self.core_instance.MakeZone(u'reverse_zone', u'master',
-                                u'1.168.192.in-addr.arpa.',
+                                u'0.168.192.in-addr.arpa.',
                                 view_name=u'test_view2')
     self.core_instance.MakeZone(u'ipv6zone', u'master',
                                 u'8.0.e.f.f.3.ip6.arpa.',
                                 view_name=u'test_view')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
+                                                      u'192.168.0/24')
     self.core_instance.MakeRecord(
         u'aaaa', u'host2', u'forward_zone', {u'assignment_ip':
             u'4321:0000:0001:0002:0003:0004:0567:89ab'}, view_name=u'test_view')
@@ -148,19 +151,19 @@ class Testdnsrmhost(unittest.TestCase):
                                   {u'assignment_ip': u'192.168.0.1'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'host2', u'forward_zone',
-                                  {u'assignment_ip': u'192.168.1.11'},
+                                  {u'assignment_ip': u'192.168.0.11'},
                                   view_name=u'test_view3')
     self.core_instance.MakeRecord(u'a', u'host3', u'forward_zone',
-                                  {u'assignment_ip': u'192.168.1.5'},
+                                  {u'assignment_ip': u'192.168.0.5'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'host4', u'forward_zone',
-                                  {u'assignment_ip': u'192.168.1.10'},
+                                  {u'assignment_ip': u'192.168.0.10'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'host5', u'forward_zone',
-                                  {u'assignment_ip': u'192.168.1.17'},
+                                  {u'assignment_ip': u'192.168.0.17'},
                                   view_name=u'test_view3')
     self.core_instance.MakeRecord(u'a', u'host6', u'forward_zone',
-                                  {u'assignment_ip': u'192.168.1.8'},
+                                  {u'assignment_ip': u'192.168.0.8'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'8',
                                   u'reverse_zone',
@@ -188,48 +191,48 @@ class Testdnsrmhost(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testListSingleIP(self):
-    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
-                                                      u'192.168.1.4/30')
-    output = os.popen('python %s -i 192.168.1.5 -l '
+    output = os.popen('python %s -i 192.168.0.5 -l '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name,
                                              USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
-        '192.168.1.5 Forward host3.university.edu forward_zone any\n\n')
+        '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
+        '192.168.0.5 Forward host3.university.edu forward_zone any\n\n')
     output.close()
-    output = os.popen('python %s -i 192.168.1.4 -l '
+    output = os.popen('python %s -i 192.168.0.4 -l '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name,
                                              USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        '192.168.1.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
+        '192.168.0.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
     output.close()
 
   def testRemoveHost(self):
-    output = os.popen('python %s -i 192.168.1.5 -l '
+    output = os.popen('python %s -i 192.168.0.5 -l '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name,
                                              USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        '192.168.1.5 Forward host3.university.edu forward_zone any\n\n')
+        '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
+        '192.168.0.5 Forward host3.university.edu forward_zone any\n\n')
     output.close()
-    output = os.popen('python %s -q -i 192.168.1.5 '
+    output = os.popen('python %s -q -i 192.168.0.5 '
                       '-z forward_zone -v test_view -s %s -u %s '
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
     output.close()
-    output = os.popen('python %s -i 192.168.1.5 -l '
+    output = os.popen('python %s -i 192.168.0.5 -l '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name,
                                              USERNAME, PASSWORD))
     self.assertEqual(output.read(), '\n')
     output.close()
 
   def testListCIDR(self):
-    output = os.popen('python %s -r 192.168.1.4/30 -z '
+    output = os.popen('python %s -r 192.168.0.4/30 -z '
                       'forward_zone -v test_view -s %s -u %s -p %s' % (
                            EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-        '192.168.1.4 --      --                   --           --\n'
-        '192.168.1.5 Forward host3.university.edu forward_zone test_view\n'
-        '192.168.1.6 --      --                   --           --\n'
-        '192.168.1.7 --      --                   --           --\n\n')
+        '192.168.0.4 --      --                   --           --\n'
+        '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
+        '192.168.0.5 Forward host3.university.edu forward_zone test_view\n'
+        '192.168.0.6 --      --                   --           --\n'
+        '192.168.0.7 --      --                   --           --\n\n')
     output.close()
 
   def testErrors(self):
@@ -239,10 +242,10 @@ class Testdnsrmhost(unittest.TestCase):
     self.assertEqual(output.read(), 'CLIENT ERROR: Incorrectly formatted IP '
                                     'address.\n')
     output.close()
-    output = os.popen('python %s -i 192.168.1.90 -t '
+    output = os.popen('python %s -i 192.168.0.90 -t '
                       'host3. -z forward_zone -v test_view2 -s %s -u %s '
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: Could not find record.\n')
+    self.assertEqual(output.read(), 'CLIENT ERROR: Record not found.\n')
     output.close()
     output = os.popen('python %s -t '
                       'host3 -z test_zone -v test_view -s %s -u %s '
