@@ -92,12 +92,12 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  ccl_instance = cli_common_lib.CliCommonLib(options)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
 
   if( options.dns_server_set ):
-    ccl_instance.DisallowFlags([u'cidr_block', u'acl'], parser, options)
+    cli_common_lib_instance.DisallowFlags([u'cidr_block', u'acl'], parser, options)
     if( not options.view ):
-      ccl_instance.DnsError('To remove a dns server set view assignment a '
+      cli_common_lib_instance.DnsError('To remove a dns server set view assignment a '
                               'view must be specified with the -v flag.', 1)
     roster_client_lib.RunFunction(u'RemoveDnsServerSetViewAssignments',
                                   options.username,
@@ -109,7 +109,7 @@ def main(args):
       print ('REMOVED DNS SERVER SET VIEW ASSIGNMENT: view_name %s '
              'dns_server_set: %s' % (options.view, options.dns_server_set))
   elif( options.view ):
-    ccl_instance.DisallowFlags([u'cidr_block', u'acl'], parser, options)
+    cli_common_lib_instance.DisallowFlags([u'cidr_block', u'acl'], parser, options)
     roster_client_lib.RunFunction(u'RemoveView', options.username,
                                   credfile=options.credfile,
                                   credstring=options.credstring,
@@ -119,11 +119,11 @@ def main(args):
       print 'REMOVED VIEW: %s' % options.view
   elif( options.acl ):
     if( options.cidr_block is None ):
-      ccl_instance.DnsError('To remove an ACL a CIDR block or ip address '
+      cli_common_lib_instance.DnsError('To remove an ACL a CIDR block or ip address '
                               'must be specified with the --cidr-block flag.',
                               1)
     if( options.allow is not None and options.deny is not None ):
-      ccl_instance.DnsError('--allow and --deny cannot be used '
+      cli_common_lib_instance.DnsError('--allow and --deny cannot be used '
                               'simultaneously.', 1)
     allowed=0
     if( options.allow ):
@@ -140,7 +140,7 @@ def main(args):
           options.acl, options.cidr_block, options.allow)
   else:
     parser.print_help()
-    ccl_instance.DnsError('Must specify a flag.', 1)
+    cli_common_lib_instance.DnsError('Must specify a flag.', 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])

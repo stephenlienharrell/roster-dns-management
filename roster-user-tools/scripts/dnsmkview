@@ -94,16 +94,17 @@ def main(args):
                     help='Suppress program output.', default=False)
 
   (globals()["options"], args) = parser.parse_args(args)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
 
   if( options.view_subset and not options.view ):
-    ccl_instance.DnsError('Using -V/--view-dep requires the use of '
+    cli_common_lib_instance.DnsError('Using -V/--view-dep requires the use of '
                             '-v/--view.', 1)
   elif( options.dns_server_set and not options.view ):
-    ccl_instance.DnsError('Using -e/--dns-server-set requires the use '
+    cli_common_lib_instance.DnsError('Using -e/--dns-server-set requires the use '
                             'of -v/--view.', 1)
   elif( options.view and not options.view_subset
         and not options.dns_server_set and not options.acl ):
-    ccl_instance.DnsError('To make a view, an ACL must be specified with '
+    cli_common_lib_instance.DnsError('To make a view, an ACL must be specified with '
                             '--acl.', 1)
   elif( options.acl ):
     acls = roster_client_lib.RunFunction(u'ListACLs', options.username,
@@ -113,7 +114,7 @@ def main(args):
                                          kwargs={u'acl_name': options.acl})[
                                                          'core_return']
     if( acls == {} ):
-      ccl_instance.DnsError('ACL "%s" does not exist.' % options.acl, 1)
+      cli_common_lib_instance.DnsError('ACL "%s" does not exist.' % options.acl, 1)
   elif( options.view and options.view_subset and not options.dns_server_set ):
     pass
   elif( options.view and options.dns_server_set and not options.view_subset ):
@@ -122,9 +123,7 @@ def main(args):
           and not options.dns_server_set ):
     pass
   else:
-    ccl_instance.DnsError('Incorrect arguments.', 1)
-
-  ccl_instance = cli_common_lib.CliCommonLib(options)
+    cli_common_lib_instance.DnsError('Incorrect arguments.', 1)
 
   views = roster_client_lib.RunFunction(
       u'ListViews', options.username,
@@ -145,15 +144,15 @@ def main(args):
 
   if( options.view_subset and options.view and not options.dns_server_set ):
     if( options.view not in views ):
-      ccl_instance.DnsError('View "%s" does not exist.' % options.view, 1)
+      cli_common_lib_instance.DnsError('View "%s" does not exist.' % options.view, 1)
     if( options.view_subset not in views ):
-      ccl_instance.DnsError(
+      cli_common_lib_instance.DnsError(
           'View "%s" does not exist.' % options.view_subset, 1)
   elif( options.view and options.dns_server_set and not options.view_subset ):
     if( options.view not in views ):
-      ccl_instance.DnsError('View "%s" does not exist.' % options.view, 1)
+      cli_common_lib_instance.DnsError('View "%s" does not exist.' % options.view, 1)
     if( options.dns_server_set not in dns_server_sets ):
-      ccl_instance.DnsError(
+      cli_common_lib_instance.DnsError(
           'Dns Server Set "%s" does not exist.' % options.dns_server_set, 1)
 
   if( options.view not in views and options.view and not options.view_subset ):

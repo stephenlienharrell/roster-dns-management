@@ -48,7 +48,8 @@ from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
 
 
-def MakeHostsFile(options):
+
+def MakeHostsFile(options, cli_common_lib_instance):
   """Makes a hosts file string
 
   Inputs:
@@ -147,7 +148,7 @@ def CheckIPV6(ip_address):
   bigre = re.compile(bigre, re.I)
   return bigre.search(ip_address) and True
 
-def ReadHostsFile(options, hosts_file_contents):
+def ReadHostsFile(options, hosts_file_contents, cli_common_lib_instance):
   """Reads a hosts file
 
   Inputs:
@@ -271,7 +272,7 @@ def main(args):
       cli_common_lib_instance.DnsError('A range must be given if not updating.', 1)
     if( options.edit and 'EDITOR' not in os.environ ):
         cli_common.DnsError('EDITOR environment variable not set.')
-    file_contents = MakeHostsFile(options)
+    file_contents = MakeHostsFile(options, cli_common_lib_instance)
     handle = open(options.file, 'w')
     try:
       handle.writelines(file_contents)
@@ -296,13 +297,15 @@ def main(args):
       new_hosts_file_contents = new_hosts_file_handle.read()
     finally:
       new_hosts_file_handle.close()
-    new_hosts_dict = ReadHostsFile(options, new_hosts_file_contents)
+    new_hosts_dict = ReadHostsFile(options, new_hosts_file_contents,
+                                   cli_common_lib_instance)
     options.range = new_hosts_dict['range']
     new_hosts_dict = new_hosts_dict['hosts']
     original_hosts_dict = {}
-    original_hosts_file_contents = MakeHostsFile(options)
-    original_hosts_dict = ReadHostsFile(options, original_hosts_file_contents)[
-        'hosts']
+    original_hosts_file_contents = MakeHostsFile(options,
+                                                 cli_common_lib_instance)
+    original_hosts_dict = ReadHostsFile(options, original_hosts_file_contents,
+                                        cli_common_lib_instance)['hosts']
     zone_info = roster_client_lib.RunFunction(
         'ListZones', options.username, credfile=options.credfile,
         server_name=options.server,

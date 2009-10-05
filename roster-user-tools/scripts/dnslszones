@@ -75,7 +75,7 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  ccl_instance = cli_common_lib.CliCommonLib(options)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
 
   zones = roster_client_lib.RunFunction(
       u'ListZones', options.username,
@@ -92,7 +92,7 @@ def main(args):
                          zones[zone][view]['zone_origin'],
                          zones[zone][view]['zone_options']])
 
-  print ccl_instance.PrintColumns(print_list,
+  print cli_common_lib_instance.PrintColumns(print_list,
                                     first_line_header=(not options.no_header))
 
 

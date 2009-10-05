@@ -164,7 +164,7 @@ def main(args):
                     metavar='<target>', default=None)
   parser.add_option('--ttl', action='store', dest='ttl',
                     help='Integer of time to live <ttl> per record.',
-                    metavar='<ttl>')
+                    metavar='<ttl>', default=3600)
   parser.add_option('-v', '--view-name', action='store', dest='view_name',
                     help=('String of the view name <view-name>. Example: '
                           '"internal"'), metavar='<view-name>', default='any')

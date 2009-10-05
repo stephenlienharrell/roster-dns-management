@@ -101,7 +101,7 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  ccl_instance = cli_common_lib.CliCommonLib(options)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
 
   if( options.list ):
     users = roster_client_lib.RunFunction(
@@ -120,9 +120,9 @@ def main(args):
       if( user in groups ):
         group = groups[user]
       print_list.append([user, ','.join(group), users[user]])
-    print ccl_instance.PrintColumns(print_list)
+    print cli_common_lib_instance.PrintColumns(print_list)
   elif( options.user_name ):
-    ccl_instance.DisallowFlags([
+    cli_common_lib_instance.DisallowFlags([
         'group', 'forward_zone_permission', 'reverse_range_permission'],
         parser, options)
     roster_client_lib.RunFunction(u'RemoveUser', options.username,
@@ -133,12 +133,12 @@ def main(args):
     if( not options.quiet ):
       print 'REMOVED USER: %s' % options.user_name
   elif( options.forward_zone_permission ):
-    ccl_instance.DisallowFlags(['reverse_range_permission'], parser, options)
+    cli_common_lib_instance.DisallowFlags(['reverse_range_permission'], parser, options)
     if( not options.access_right ):
-      ccl_instance.DnsError('An access right must be specified with the'
+      cli_common_lib_instance.DnsError('An access right must be specified with the'
                           ' --access-right flag.', 1)
     if( not options.group ):
-      ccl_instance.DnsError('A group must be specified with the -g flag.', 1)
+      cli_common_lib_instance.DnsError('A group must be specified with the -g flag.', 1)
 
     access_rights = roster_client_lib.RunFunction(
         u'ListAccessRights', options.username, credfile=options.credfile,
@@ -146,10 +146,10 @@ def main(args):
             'core_return']
     access_rights_string = '|'.join(access_rights)
     if( not options.access_right or options.access_right not in access_rights ):
-      ccl_instance.DnsError('An access right of either %s is required.' % (
+      cli_common_lib_instance.DnsError('An access right of either %s is required.' % (
           access_rights_string), 1)
     if( not options.zone ):
-      ccl_instance.DnsError('A zone must be specified with the -z flag.', 1)
+      cli_common_lib_instance.DnsError('A zone must be specified with the -z flag.', 1)
     roster_client_lib.RunFunction(u'RemoveForwardZonePermission', options.username,
                                   credfile=options.credfile,
                                   credstring=options.credstring,
@@ -161,23 +161,23 @@ def main(args):
              'access_right: %s' % (options.zone, options.group,
                                    options.access_right))
   elif( options.reverse_range_permission ):
-    ccl_instance.DisallowFlags(['user_name'], parser,
+    cli_common_lib_instance.DisallowFlags(['user_name'], parser,
                                  options)
     if( not options.cidr_block ):
-      ccl_instance.DnsError('A CIDR block must be specified with the '
+      cli_common_lib_instance.DnsError('A CIDR block must be specified with the '
                               '--cidr-block flag.', 1)
     if( not options.group ):
-      ccl_instance.DnsError('A group must be specified with the -g flag.', 1)
+      cli_common_lib_instance.DnsError('A group must be specified with the -g flag.', 1)
     access_rights = roster_client_lib.RunFunction(
         u'ListAccessRights', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server)[
             'core_return']
     access_rights_string = '|'.join(access_rights)
     if( not options.access_right ):
-      ccl_instance.DnsError('An access right must be specified with the'
+      cli_common_lib_instance.DnsError('An access right must be specified with the'
                               ' --access-right flag.', 1)
     if( not options.access_right or options.access_right not in access_rights ):
-      ccl_instance.DnsError('An access right of either %s is required.' % (
+      cli_common_lib_instance.DnsError('An access right of either %s is required.' % (
                             access_rights_string), 1)
     roster_client_lib.RunFunction(u'RemoveReverseRangePermission', options.username,
                                   credfile=options.credfile,
@@ -199,7 +199,7 @@ def main(args):
       print 'REMOVED GROUP: %s' % options.group
   else:
     parser.print_help()
-    ccl_instance.DnsError('Need to specify an option.', 1)
+    cli_common_lib_instance.DnsError('Need to specify an option.', 1)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -80,7 +80,7 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  ccl_instance = cli_common_lib.CliCommonLib(options)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
 
   dns_servers = roster_client_lib.RunFunction(
       u'ListDnsServers', options.username,
@@ -104,10 +104,10 @@ def main(args):
       print 'ADDED DNS SERVER: %s' % options.dns_server
   elif( options.dns_server and options.dns_server_set ):
     if( options.dns_server not in dns_servers ):
-      ccl_instance.DnsError(
+      cli_common_lib_instance.DnsError(
           'DNS Server "%s" does not exist.' % options.dns_server, 1)
     if( options.dns_server_set not in dns_server_sets ):
-      ccl_instance.DnsError(
+      cli_common_lib_instance.DnsError(
           'DNS Server Set "%s" does not exist.' % options.dns_server_set, 1)
 
 
