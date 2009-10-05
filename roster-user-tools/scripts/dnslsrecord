@@ -184,27 +184,28 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib.CheckCredentials(options)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+  cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
 
   if( options.zone_name is None ):
-    cli_common_lib.DnsError('Must specify a zone-name with "-z".', 1)
+    cli_common_lib_instance.DnsError('Must specify a zone-name with "-z".', 1)
 
   if( options.a ):
     record_args_dict = {'assignment_ip': options.a_assignment_ip}
-    print cli_record_lib.ListRecords('a', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('a', options, record_args_dict)
   if( options.aaaa ):
     record_args_dict = {'assignment_ip': options.aaaa_assignment_ip}
-    print cli_record_lib.ListRecords('aaaa', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('aaaa', options, record_args_dict)
   if( options.hinfo ):
     record_args_dict = {'hardware': options.hinfo_hardware,
                         'os': options.hinfo_os}
-    print cli_record_lib.ListRecords('hinfo', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('hinfo', options, record_args_dict)
   if( options.txt ):
     record_args_dict = {'quoted_text': options.txt_quoted_text}
-    print cli_record_lib.ListRecords('txt', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('txt', options, record_args_dict)
   if( options.cname ):
     record_args_dict = {'assignment_host': options.cname_assignment_host}
-    print cli_record_lib.ListRecords('cname', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('cname', options, record_args_dict)
   if( options.soa ):
     integer_arguments = {'--soa-serial-number': options.soa_serial_number,
                          '--soa-refresh-seconds': options.soa_refresh_seconds,
@@ -213,7 +214,7 @@ def main(args):
                          '--soa-minimun-seconds': options.soa_minimum_seconds}
     for argument in integer_arguments:
       if( not integer_arguments[argument].isdigit() ):
-        cli_common_lib.DnsError(
+        cli_common_lib_instance.DnsError(
             '%s must be an integer, %s is not an integer. ' %
             (argument, repr(integer_arguments[argument])), 1)
     record_args_dict = {'name_server': options.soa_name_server,
@@ -223,39 +224,39 @@ def main(args):
                         'retry_seconds': int(options.soa_retry_seconds),
                         'expiry_seconds': int(options.soa_expiry_seconds),
                         'minimum_seconds': int(options.soa_minimum_seconds)}
-    print cli_record_lib.ListRecords('soa', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('soa', options, record_args_dict)
   if( options.srv ):
     integer_arguments = {'--srv-priority': options.srv_priority,
                          '--srv-weight': options.srv_weight,
                          '--srv-port': options.srv_port}
     for argument in integer_arguments:
       if( not integer_arguments[argument].isdigit() ):
-        cli_common_lib.DnsError(
+        cli_common_lib_instance.DnsError(
             '%s must be an integer, %s is not an integer. ' %
             (argument, repr(integer_arguments[argument])), 1)
     record_args_dict = {'priority': int(options.srv_priority),
                         'weight': int(options.srv_weight),
                         'port': int(options.srv_port),
                         'assignment_host': options.srv_assignment_host}
-    print cli_record_lib.ListRecords('srv', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('srv', options, record_args_dict)
   if( options.ns ):
     record_args_dict = {'name_server': options.ns_name_server}
-    print cli_record_lib.ListRecords('ns', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('ns', options, record_args_dict)
   if( options.mx ):
     if( not options.mx_priority.isdigit() ):
-      cli_common_lib.DnsError('--mx-priority must be an integer. %s is not'
+      cli_common_lib_instance.DnsError('--mx-priority must be an integer. %s is not'
                               ' an integer.' % repr(options.mx_priority), 1)
     record_args_dict = {'priority': int(options.mx_priority),
                         'mail_server': options.mx_mail_server}
-    print cli_record_lib.ListRecords('mx', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('mx', options, record_args_dict)
   if( options.ptr ):
     record_args_dict = {'assignment_host': options.ptr_assignment_host}
-    print cli_record_lib.ListRecords('ptr', options, record_args_dict)
+    print cli_record_lib_instance.ListRecords('ptr', options, record_args_dict)
   if( options.zone_name and not (options.a or options.aaaa or options.hinfo
                                  or options.txt or options.cname or
                                  options.soa or options.srv or options.ns
                                  or options.mx or options.ptr) ):
-    for line in cli_record_lib.ListRecords(None, options, None):
+    for line in cli_record_lib_instance.ListRecords(None, options, None):
       print line
 
 if __name__ == "__main__":

@@ -39,202 +39,207 @@ import sys
 import getpass
 import roster_client_lib
 
+class CliCommonLib:
+  
+  def __init__(self, options):
+    self.options = options
+    self.CheckCredentials(self.options)
 
-def DnsError(message, exit_status=0):
-  """Prints standardized client error message to screen.
+  def DnsError(self, message, exit_status=0):
+    """Prints standardized client error message to screen.
 
-  Inputs:
-    message: string of message to be displayed on screen
-    exit_status: integer of retrun code, assumed not exit if 0
-  """
-  print "CLIENT ERROR: %s" % message
-  if( exit_status ):
-    sys.exit(exit_status)
+    Inputs:
+      message: string of message to be displayed on screen
+      exit_status: integer of retrun code, assumed not exit if 0
+    """
+    print "CLIENT ERROR: %s" % message
+    if( exit_status ):
+      sys.exit(exit_status)
 
-def ServerError(message, exit_status=0):
-  """Prints standardized server error message to screen.
+  def ServerError(self, message, exit_status=0):
+    """Prints standardized server error message to screen.
 
-  Inputs:
-    message: string of message to be displayed on screen
-    exit_status: integer of retrun code, assumed not exit if 0
-  """
-  print "SERVER ERROR: %s" % message
-  if( exit_status ):
-    sys.exit(exit_status)
+    Inputs:
+      message: string of message to be displayed on screen
+      exit_status: integer of retrun code, assumed not exit if 0
+    """
+    print "SERVER ERROR: %s" % message
+    if( exit_status ):
+      sys.exit(exit_status)
 
-def DnsWarning(message):
-  """Prints standardized warning message to screen.
+  def DnsWarning(self, message):
+    """Prints standardized warning message to screen.
 
-  Inputs:
-    message: string of message to be displayed on screen
-  """
-  print "WARNING: %s" % message
+    Inputs:
+      message: string of message to be displayed on screen
+    """
+    print "WARNING: %s" % message
 
-def PrintColumns(print_list, first_line_header=False):
-  """Prints a table with aligned columns.
+  def PrintColumns(self, print_list, first_line_header=False):
+    """Prints a table with aligned columns.
 
-  Inputs:
-    print_list: list of lists of columns
-    file: string of filename
-  """
-  ## Construct zeros for lengths
-  lengths = []
-  if( print_list ):
-    for column in print_list[0]:
-      lengths.append(0)
-  ## Get sizes of strings
-  total_length = 0
-  for row in print_list:
-    for column_index, column in enumerate(row):
-      if( len(str(column)) > lengths[column_index] ):
-        lengths[column_index] = len(str(column))
-        total_length += len(str(column)) - 1
-  ## Construct string
-  print_string_list = []
-  for row in print_list:
-    string_list = []
-    string_args_list = []
-    for column_index, column in enumerate(print_list[0]):
-      string_list.append('%*s')
-      string_args_list.extend([lengths[column_index] * -1, row[column_index]])
-    print_line = ' '.join(string_list) % tuple(string_args_list)
-    print_string_list.append('%s\n' % print_line.strip())
-    if( first_line_header and (print_list.index(row) == 0) ):
-      hyphen_list = []
-      for character in range(len(print_line.strip())):
-        hyphen_list.append('-')
-      print_string_list.append('%s\n' % ''.join(hyphen_list))
-  return ''.join(print_string_list)
+    Inputs:
+      print_list: list of lists of columns
+      file: string of filename
+    """
+    ## Construct zeros for lengths
+    lengths = []
+    if( print_list ):
+      for column in print_list[0]:
+        lengths.append(0)
+    ## Get sizes of strings
+    total_length = 0
+    for row in print_list:
+      for column_index, column in enumerate(row):
+        if( len(str(column)) > lengths[column_index] ):
+          lengths[column_index] = len(str(column))
+          total_length += len(str(column)) - 1
+    ## Construct string
+    print_string_list = []
+    for row in print_list:
+      string_list = []
+      string_args_list = []
+      for column_index, column in enumerate(print_list[0]):
+        string_list.append('%*s')
+        string_args_list.extend([lengths[column_index] * -1, row[column_index]])
+      print_line = ' '.join(string_list) % tuple(string_args_list)
+      print_string_list.append('%s\n' % print_line.strip())
+      if( first_line_header and (print_list.index(row) == 0) ):
+        hyphen_list = []
+        for character in range(len(print_line.strip())):
+          hyphen_list.append('-')
+        print_string_list.append('%s\n' % ''.join(hyphen_list))
+    return ''.join(print_string_list)
 
-def PrintRecords(records_dictionary, ip_address_list=[]):
-  """Prints records dictionary in a nice usable format.
+  def PrintRecords(self, records_dictionary, ip_address_list=[]):
+    """Prints records dictionary in a nice usable format.
 
-  Inputs:
-    records_dictionary: dictionary of records
-    ip_address_list: list of ip_addresses to use
-  """
-  if( ip_address_list == [] ):
+    Inputs:
+      records_dictionary: dictionary of records
+      ip_address_list: list of ip_addresses to use
+    """
+    if( ip_address_list == [] ):
+      for view in records_dictionary:
+        ip_address_list.extend(records_dictionary[view].keys())
+      ip_address_list = list(set(ip_address_list))
+
+    print_list = []
     for view in records_dictionary:
-      ip_address_list.extend(records_dictionary[view].keys())
-    ip_address_list = list(set(ip_address_list))
+      for ip_address in ip_address_list:
+        if( ip_address in records_dictionary[view] ):
+          for record in records_dictionary[view][ip_address]:
+            direction = 'Reverse'
+            if( record['forward'] ):
+              direction = 'Forward'
+            print_list.append([ip_address, direction, record['host'],
+                                    record['zone'], view])
+        else:
+          print_list.append([ip_address, '--', '--', '--', '--'])
+    return self.PrintColumns(print_list)
 
-  print_list = []
-  for view in records_dictionary:
+  def PrintHosts(self, records_dictionary, ip_address_list, zones_info,
+                 view_name=None):
+    """Prints hosts in an /etc/hosts format
+
+    Inputs:
+      records_dictionary: dictionary of records
+      ip_address_list: list of ip_addresses
+      view_name: string of view_name
+      zones_info: zones info from list zones
+    """
+    print_dict = {}
+    print_list = []
+    for view in records_dictionary:
+      for ip_address in ip_address_list:
+        print_dict[ip_address] = {}
+        if( ip_address in records_dictionary[view] and view == view_name ):
+          print_dict[ip_address].update({'forward': False, 'reverse': False})
+          for record in records_dictionary[view][ip_address]:
+            if( record['forward'] ):
+              print_dict[ip_address].update({'host': record['host'],
+                'forward': True, 'zone_origin': zones_info[record['zone']][
+                    view]['zone_origin']})
+            else:
+              print_dict[ip_address].update({'host': record['host'],
+                'reverse': True, 'zone_origin': zones_info[record['zone']][
+                    view]['zone_origin']})
     for ip_address in ip_address_list:
-      if( ip_address in records_dictionary[view] ):
-        for record in records_dictionary[view][ip_address]:
-          direction = 'Reverse'
-          if( record['forward'] ):
-            direction = 'Forward'
-          print_list.append([ip_address, direction, record['host'],
-                                  record['zone'], view])
+      if( print_dict[ip_address] == {} ):
+        print_list.append(['#%s' % ip_address, '', '', ''])
       else:
-        print_list.append([ip_address, '--', '--', '--', '--'])
-  return PrintColumns(print_list)
+        forward_zone_origin = print_dict[ip_address]['zone_origin'].rstrip('.')
+        if( print_dict[ip_address]['forward'] and print_dict[ip_address][
+            'reverse'] ):
+          print_list.append([ip_address, print_dict[ip_address]['host'],
+                             print_dict[ip_address]['host'].rsplit(
+                                 '.%s' % forward_zone_origin, 1)[0], ''])
+        elif( print_dict[ip_address]['forward'] ):
+          print_list.append([ip_address, print_dict[ip_address]['host'],
+                             print_dict[ip_address]['host'].rsplit(
+                                 '.%s' % forward_zone_origin, 1)[0],
+                             '# No reverse assignment'])
+        else:
+          print_list.append(['#%s' % ip_address, print_dict[ip_address]['host'],
+                             '', '# No forward assignment'])
+    return self.PrintColumns(print_list)
 
-def PrintHosts(records_dictionary, ip_address_list, zones_info,
-               view_name=None):
-  """Prints hosts in an /etc/hosts format
+  def CheckCredentials(self, options):
+    """Checks if credential file is valid.
 
-  Inputs:
-    records_dictionary: dictionary of records
-    ip_address_list: list of ip_addresses
-    view_name: string of view_name
-    zones_info: zones info from list zones
-  """
-  print_dict = {}
-  print_list = []
-  for view in records_dictionary:
-    for ip_address in ip_address_list:
-      print_dict[ip_address] = {}
-      if( ip_address in records_dictionary[view] and view == view_name ):
-        print_dict[ip_address].update({'forward': False, 'reverse': False})
-        for record in records_dictionary[view][ip_address]:
-          if( record['forward'] ):
-            print_dict[ip_address].update({'host': record['host'],
-              'forward': True, 'zone_origin': zones_info[record['zone']][
-                  view]['zone_origin']})
-          else:
-            print_dict[ip_address].update({'host': record['host'],
-              'reverse': True, 'zone_origin': zones_info[record['zone']][
-                  view]['zone_origin']})
-  for ip_address in ip_address_list:
-    if( print_dict[ip_address] == {} ):
-      print_list.append(['#%s' % ip_address, '', '', ''])
-    else:
-      forward_zone_origin = print_dict[ip_address]['zone_origin'].rstrip('.')
-      if( print_dict[ip_address]['forward'] and print_dict[ip_address][
-          'reverse'] ):
-        print_list.append([ip_address, print_dict[ip_address]['host'],
-                           print_dict[ip_address]['host'].rsplit(
-                               '.%s' % forward_zone_origin, 1)[0], ''])
-      elif( print_dict[ip_address]['forward'] ):
-        print_list.append([ip_address, print_dict[ip_address]['host'],
-                           print_dict[ip_address]['host'].rsplit(
-                               '.%s' % forward_zone_origin, 1)[0],
-                           '# No reverse assignment'])
-      else:
-        print_list.append(['#%s' % ip_address, print_dict[ip_address]['host'],
-                           '', '# No forward assignment'])
-  return PrintColumns(print_list)
+    Inputs:
+      options: options object from optparse
 
-def CheckCredentials(options):
-  """Checks if credential file is valid.
-
-  Inputs:
-    options: options object from optparse
-
-  Outputs:
-    string: string of valid credential
-  """
-  password = None
-  got_credential = None
-  count = 0
-  while( count < 3 ):
-    valid = roster_client_lib.IsAuthenticated(options.username,
-                                              options.credfile,
-                                              server_name=options.server)
-    if( valid ):
-      break
-    password = options.password
-    if( options.password is None ):
-      try:
-        password = getpass.getpass('Password for %s: ' % options.username)
-      except KeyboardInterrupt:
-        sys.exit(0)
-    try:
-      got_credential = roster_client_lib.GetCredentials(options.username,
-                                                        password,
-                                                        options.credfile,
-                                                        options.server)
-    except roster_client_lib.InvalidCredentials:
+    Outputs:
+      string: string of valid credential
+    """
+    password = None
+    got_credential = None
+    count = 0
+    while( count < 3 ):
+      valid = roster_client_lib.IsAuthenticated(options.username,
+                                                options.credfile,
+                                                server_name=options.server)
+      if( valid ):
+        break
+      password = options.password
       if( options.password is None ):
-        count = count + 1
-      else:
-        DnsError('Incorrect username/password.', 1)
-  else:
-    DnsError('Incorrect username/password.', 1)
+        try:
+          password = getpass.getpass('Password for %s: ' % options.username)
+        except KeyboardInterrupt:
+          sys.exit(0)
+      try:
+        got_credential = roster_client_lib.GetCredentials(options.username,
+                                                          password,
+                                                          options.credfile,
+                                                          options.server)
+      except roster_client_lib.InvalidCredentials:
+        if( options.password is None ):
+          count = count + 1
+        else:
+          self.DnsError('Incorrect username/password.', 1)
+    else:
+      self.DnsError('Incorrect username/password.', 1)
 
-  return got_credential
+    return got_credential
 
-def DisallowFlags(disallow_list, parser, options):
-  """Dissallows certain command line flags.
+  def DisallowFlags(self, disallow_list, parser, options):
+    """Dissallows certain command line flags.
 
-  Inputs:
-    disallow_list: list of command line flags to block
-    parser: parser object from optparse
-    options: options object from optparse
-  """
-  defaults = parser.defaults
-  flags = {}
-  error = False
-  for flag in parser.option_list[1:]:
-    flags[flag.dest] = flag
-    combo = 'options.%s' % flag.dest
-    if( flag.dest in disallow_list ):
-      if( eval(combo) != defaults[flag.dest] ):
-        DnsError('The %s flag cannot be used.' % flag, 0)
-        error = True
-  if( error ):
-    sys.exit(1)
+    Inputs:
+      disallow_list: list of command line flags to block
+      parser: parser object from optparse
+      options: options object from optparse
+    """
+    defaults = parser.defaults
+    flags = {}
+    error = False
+    for flag in parser.option_list[1:]:
+      flags[flag.dest] = flag
+      combo = 'options.%s' % flag.dest
+      if( flag.dest in disallow_list ):
+        if( eval(combo) != defaults[flag.dest] ):
+          self.DnsError('The %s flag cannot be used.' % flag, 0)
+          error = True
+    if( error ):
+      sys.exit(1)
 

@@ -165,7 +165,7 @@ def main(args):
                     metavar='<target>', default=None)
   parser.add_option('--ttl', action='store', dest='ttl',
                     help='Integer of time to live <ttl> per record.',
-                    metavar='<ttl>')
+                    metavar='<ttl>', default=3600)
   parser.add_option('-v', '--view-name', action='store', dest='view_name',
                     help=('String of the view name <view-name>. Example: '
                           '"internal"'), metavar='<view-name>', default='any')
@@ -184,33 +184,35 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib.CheckCredentials(options)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+  cli_record_lib_instance = cli_record_lib.CliRecordLib(
+      cli_common_lib_instance)
 
   if( options.zone_name is None ):
-    cli_common_lib.DnsError('Must specify a zone-name with "-z".', 1)
+    cli_common_lib_instance.DnsError('Must specify a zone-name with "-z".', 1)
   if( options.target is None ):
-    cli_common_lib.DnsError('Must specify a target with "-t".', 1)
+    cli_common_lib_instance.DnsError('Must specify a target with "-t".', 1)
 
   if( options.a ):
     record_args_dict = {'assignment_ip': options.a_assignment_ip}
-    cli_record_lib.MakeRecord('a', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('a', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.aaaa ):
     record_args_dict = {'assignment_ip': options.aaaa_assignment_ip}
-    cli_record_lib.MakeRecord('aaaa', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('aaaa', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.hinfo ):
     record_args_dict = {'hardware': options.hinfo_hardware,
                         'os': options.hinfo_os}
-    cli_record_lib.MakeRecord('hinfo', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('hinfo', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.txt ):
     record_args_dict = {'quoted_text': options.txt_quoted_text}
-    cli_record_lib.MakeRecord('txt', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('txt', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.cname ):
     record_args_dict = {'assignment_host': options.cname_assignment_host}
-    cli_record_lib.MakeRecord('cname', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('cname', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.soa ):
     integer_arguments = {'--soa-serial-number': options.soa_serial_number,
@@ -220,9 +222,9 @@ def main(args):
                          '--soa-minimun-seconds': options.soa_minimum_seconds}
     for argument in integer_arguments:
       if( integer_arguments[argument] is None ):
-        cli_common_lib.DnsError('%s must be specified.' % argument, 1)
+        cli_common_lib_instance.DnsError('%s must be specified.' % argument, 1)
       elif( not integer_arguments[argument].isdigit() ):
-        cli_common_lib.DnsError(
+        cli_common_lib_instance.DnsError(
             '%s must be an integer, %s is not an integer.' %
             (argument, repr(integer_arguments[argument])), 1)
     record_args_dict = {'name_server': options.soa_name_server,
@@ -232,7 +234,7 @@ def main(args):
                         'retry_seconds': int(options.soa_retry_seconds),
                         'expiry_seconds': int(options.soa_expiry_seconds),
                         'minimum_seconds': int(options.soa_minimum_seconds)}
-    cli_record_lib.MakeRecord('soa', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('soa', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.srv ):
     integer_arguments = {'--srv-priority': options.srv_priority,
@@ -240,37 +242,38 @@ def main(args):
                          '--srv-port': options.srv_port}
     for argument in integer_arguments:
       if( integer_arguments[argument] is None ):
-        cli_common_lib.DnsError('%s must be specified.' % argument, 1)
+        cli_common_lib_instance.DnsError('%s must be specified.' % argument, 1)
       elif( not integer_arguments[argument].isdigit() ):
-        cli_common_lib.DnsError(
+        cli_common_lib_instance.DnsError(
             '%s must be an integer, %s is not an integer.' %
             (argument, repr(integer_arguments[argument])), 1)
     record_args_dict = {'priority': int(options.srv_priority),
                         'weight': int(options.srv_weight),
                         'port': int(options.srv_port),
                         'assignment_host': options.srv_assignment_host}
-    cli_record_lib.MakeRecord('srv', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('srv', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.ns ):
     record_args_dict = {'name_server': options.ns_name_server}
-    cli_record_lib.MakeRecord('ns', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('ns', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.mx ):
     if( options.mx_priority is None ):
-      cli_common_lib.DnsError('--mx-priority must be specified.', 1)
+      cli_common_lib_instance.DnsError('--mx-priority must be specified.', 1)
     if( not options.mx_priority.isdigit() ):
-      cli_common_lib.DnsError('--mx-priority must be an integer. %s is not'
-                              ' an integer.' % repr(options.mx_priority), 1)
+      cli_common_lib_instance.DnsError(
+          '--mx-priority must be an integer. %s is not'
+          ' an integer.' % repr(options.mx_priority), 1)
     record_args_dict = {'priority': int(options.mx_priority),
                         'mail_server': options.mx_mail_server}
-    cli_record_lib.MakeRecord('mx', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('mx', options, record_args_dict,
                               quiet=options.quiet)
   elif( options.ptr ):
     record_args_dict = {'assignment_host': options.ptr_assignment_host}
-    cli_record_lib.MakeRecord('ptr', options, record_args_dict,
+    cli_record_lib_instance.MakeRecord('ptr', options, record_args_dict,
                               quiet=options.quiet)
   else:
-    cli_common_lib.DnsError('Must specify a record type.', 1)
+    cli_common_lib_instance.DnsError('Must specify a record type.', 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])

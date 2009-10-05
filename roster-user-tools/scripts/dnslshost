@@ -82,7 +82,8 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib.CheckCredentials(options)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+  cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
   
   if( options.range is not None ):
     records_dict = roster_client_lib.RunFunction(
@@ -96,9 +97,9 @@ def main(args):
                                                     args=[options.range])[
                                                         'core_return']
 
-    print cli_common_lib.PrintRecords(records_dict, ip_address_list)
+    print cli_common_lib_instance.PrintRecords(records_dict, ip_address_list)
   else:
-    cli_common_lib.DnsError('An ip address or range must be specified.', 1)
+    cli_common_lib_instance.DnsError('An ip address or range must be specified.', 1)
 
 
 if __name__ == "__main__":

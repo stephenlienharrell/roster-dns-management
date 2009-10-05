@@ -96,14 +96,14 @@ def main(args):
   (globals()["options"], args) = parser.parse_args(args)
 
   if( options.view_subset and not options.view ):
-    cli_common_lib.DnsError('Using -V/--view-dep requires the use of '
+    ccl_instance.DnsError('Using -V/--view-dep requires the use of '
                             '-v/--view.', 1)
   elif( options.dns_server_set and not options.view ):
-    cli_common_lib.DnsError('Using -e/--dns-server-set requires the use '
+    ccl_instance.DnsError('Using -e/--dns-server-set requires the use '
                             'of -v/--view.', 1)
   elif( options.view and not options.view_subset
         and not options.dns_server_set and not options.acl ):
-    cli_common_lib.DnsError('To make a view, an ACL must be specified with '
+    ccl_instance.DnsError('To make a view, an ACL must be specified with '
                             '--acl.', 1)
   elif( options.acl ):
     acls = roster_client_lib.RunFunction(u'ListACLs', options.username,
@@ -113,7 +113,7 @@ def main(args):
                                          kwargs={u'acl_name': options.acl})[
                                                          'core_return']
     if( acls == {} ):
-      cli_common_lib.DnsError('ACL "%s" does not exist.' % options.acl, 1)
+      ccl_instance.DnsError('ACL "%s" does not exist.' % options.acl, 1)
   elif( options.view and options.view_subset and not options.dns_server_set ):
     pass
   elif( options.view and options.dns_server_set and not options.view_subset ):
@@ -122,9 +122,9 @@ def main(args):
           and not options.dns_server_set ):
     pass
   else:
-    cli_common_lib.DnsError('Incorrect arguments.', 1)
+    ccl_instance.DnsError('Incorrect arguments.', 1)
 
-  cli_common_lib.CheckCredentials(options)
+  ccl_instance = cli_common_lib.CliCommonLib(options)
 
   views = roster_client_lib.RunFunction(
       u'ListViews', options.username,
@@ -145,15 +145,15 @@ def main(args):
 
   if( options.view_subset and options.view and not options.dns_server_set ):
     if( options.view not in views ):
-      cli_common_lib.DnsError('View "%s" does not exist.' % options.view, 1)
+      ccl_instance.DnsError('View "%s" does not exist.' % options.view, 1)
     if( options.view_subset not in views ):
-      cli_common_lib.DnsError(
+      ccl_instance.DnsError(
           'View "%s" does not exist.' % options.view_subset, 1)
   elif( options.view and options.dns_server_set and not options.view_subset ):
     if( options.view not in views ):
-      cli_common_lib.DnsError('View "%s" does not exist.' % options.view, 1)
+      ccl_instance.DnsError('View "%s" does not exist.' % options.view, 1)
     if( options.dns_server_set not in dns_server_sets ):
-      cli_common_lib.DnsError(
+      ccl_instance.DnsError(
           'Dns Server Set "%s" does not exist.' % options.dns_server_set, 1)
 
   if( options.view not in views and options.view and not options.view_subset ):

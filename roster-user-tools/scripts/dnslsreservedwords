@@ -73,7 +73,7 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib.CheckCredentials(options)
+  ccl_instance = cli_common_lib.CliCommonLib(options)
 
   reserved_words = roster_client_lib.RunFunction(u'ListReservedWords',
                                                  options.username,

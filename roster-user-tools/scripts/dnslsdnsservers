@@ -80,7 +80,7 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib.CheckCredentials(options)
+  ccl_instance = cli_common_lib.CliCommonLib(options)
 
   dns_servers = roster_client_lib.RunFunction(
       u'ListDnsServerSetAssignments', options.username,
@@ -93,7 +93,7 @@ def main(args):
     print_list = [['set', 'dns_servers']]
   for dns_server_set in dns_servers:
     print_list.append([dns_server_set, ','.join(dns_servers[dns_server_set])])
-  print cli_common_lib.PrintColumns(print_list,
+  print ccl_instance.PrintColumns(print_list,
                                     first_line_header=(not options.no_header))
 
 

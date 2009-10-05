@@ -103,7 +103,8 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib.CheckCredentials(options)
+  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+  cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
 
   timestamp = options.timestamp
   if( options.option_id is not None ):
@@ -112,14 +113,14 @@ def main(args):
     try:
       timestamp = datetime.datetime.strptime(options.timestamp, '%Y-%m-%d %H:%M:%S')
     except ValueError:
-      cli_common_lib.DnsError('Timestamp incorrectly formatted.', 1)
+      cli_common_lib_instance.DnsError('Timestamp incorrectly formatted.', 1)
 
   if( options.newest ):
-    cli_common_lib.DisallowFlags(['list', 'edit', 'option_id',
+    cli_common_lib_instance.DisallowFlags(['list', 'edit', 'option_id',
                              'timestamp', 'revert', 'update'],
                              parser, options)
     if( options.dns_server_set is None ):
-      cli_common_lib.DnsError('Must specify a dns server set with -d.', 1)
+      cli_common_lib_instance.DnsError('Must specify a dns server set with -d.', 1)
     named_option = roster_client_lib.RunFunction(
         u'ListLatestNamedConfig', options.username,
         credfile=options.credfile, args=[options.dns_server_set],
@@ -131,7 +132,7 @@ def main(args):
       handle.close()
     print 'Wrote file: %s' % options.file
   elif( options.update ):
-    cli_common_lib.DisallowFlags(['list', 'edit', 'option_id',
+    cli_common_lib_instance.DisallowFlags(['list', 'edit', 'option_id',
                                   'timestamp', 'revert'],
                                  parser, options)
     handle = open(options.file, 'r')
@@ -149,7 +150,7 @@ def main(args):
       print 'ADDED NAMED_CONF_GLOBAL_OPTION: %s' % options.file
 
   elif( options.list ):
-    cli_common_lib.DisallowFlags(['revert', 'edit', 'file'],
+    cli_common_lib_instance.DisallowFlags(['revert', 'edit', 'file'],
                                  parser, options)
     named_options = roster_client_lib.RunFunction(
         u'ListNamedConfGlobalOptionsClient', options.username,
@@ -165,12 +166,12 @@ def main(args):
                                    "%Y%m%dT%H:%M:%S").strftime(
                                        '%Y-%m-%d %H:%M:%S'),
         option['dns_server_set_name']])
-    print cli_common_lib.PrintColumns(print_list)
+    print cli_common_lib_instance.PrintColumns(print_list)
   elif( options.edit ):
-    cli_common_lib.DisallowFlags(['revert'], parser, options)
+    cli_common_lib_instance.DisallowFlags(['revert'], parser, options)
     if( not options.option_id and not options.dns_server_set
         and not options.timestamp):
-      cli_common_lib.DnsError('Either an option id or dns server set and '
+      cli_common_lib_instance.DnsError('Either an option id or dns server set and '
                               'timestamp are needed.', 1)
     named_options = roster_client_lib.RunFunction(
         u'ListNamedConfGlobalOptionsClient', options.username,
@@ -180,7 +181,7 @@ def main(args):
                                            'timestamp': timestamp},
         server_name=options.server)['core_return']
     if( len(named_options) == 0 ):
-      cli_common_lib.DnsError('No configurations found.', 1)
+      cli_common_lib_instance.DnsError('No configurations found.', 1)
     elif( len(named_options) == 1 ):
       handle = open(options.file, 'w')
       try:
@@ -189,13 +190,13 @@ def main(args):
         handle.close()
       print 'Wrote file: %s' % options.file
     else:
-      cli_common_lib.DnsError('Multiple configurations found. This could be '
+      cli_common_lib_instance.DnsError('Multiple configurations found. This could be '
                               'due to an internal error or arguments may be '
                               'too general.', 1)
   elif( options.revert ):
-    cli_common_lib.DisallowFlags(['file'], parser, options)
+    cli_common_lib_instance.DisallowFlags(['file'], parser, options)
     if( not options.option_id ):
-      cli_common_lib.DnsError('To revert a configuration, the desired '
+      cli_common_lib_instance.DnsError('To revert a configuration, the desired '
                               'replacement must be specified with -i', 1)
     roster_client_lib.RunFunction(u'RevertNamedConfig', options.username,
         credfile=options.credfile, args=[options.revert,
@@ -206,7 +207,7 @@ def main(args):
           options.revert, options.option_id)
   else:
     parser.print_help()
-    cli_common_lib.DnsError('An ip address/range/file/update must be '
+    cli_common_lib_instance.DnsError('An ip address/range/file/update must be '
                             'specified.', 1)
 
 if __name__ == "__main__":

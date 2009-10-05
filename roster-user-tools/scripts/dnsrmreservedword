@@ -78,7 +78,7 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib.CheckCredentials(options)
+  ccl_instance = cli_common_lib.CliCommonLib(options)
 
   if( not options.word and len(parser.largs) == 1 ):
     options.word = parser.largs[0]

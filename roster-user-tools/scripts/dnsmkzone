@@ -95,7 +95,7 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib.CheckCredentials(options)
+  ccl_instance = cli_common_lib.CliCommonLib(options)
 
   dns_server_set_exists = False
   view_exists = False
@@ -103,9 +103,9 @@ def main(args):
 
   if( options.zone ):
     if( not options.type ):
-      cli_common_lib.DnsError('A zone type must be specified with -t/--type', 1)
+      ccl_instance.DnsError('A zone type must be specified with -t/--type', 1)
     if( not options.origin ):
-      cli_common_lib.DnsError('An origin must be specified with --origin.', 1)
+      ccl_instance.DnsError('An origin must be specified with --origin.', 1)
     views = roster_client_lib.RunFunction(u'ListViews', options.username,
                                           credfile=options.credfile,
                                           credstring=options.credstring,
@@ -113,7 +113,7 @@ def main(args):
                                           server_name=options.server)[
                                               'core_return']
     if( options.view not in views and options.view ):
-      cli_common_lib.DnsError('The view specified does not exist.', 1)
+      ccl_instance.DnsError('The view specified does not exist.', 1)
     reverse_version = 0
     if( options.origin.endswith('.in-addr.arpa.') ):
       reverse_version = 4
@@ -123,10 +123,10 @@ def main(args):
       ip_cidr_allowed = ['16', '32', '48', '64', '80', '96', '112']
     if( reverse_version ):
       if( not options.cidr_block ):
-        cli_common_lib.DnsError(
+        ccl_instance.DnsError(
             'Reverse zones require the --cidr-block argument', 1)
       if( options.cidr_block.split('/')[-1] not in ip_cidr_allowed ):
-        cli_common_lib.DnsError(
+        ccl_instance.DnsError(
             'Cidr block must end with: "/%s"' % ', /'.join(ip_cidr_allowed), 1)
       zones = roster_client_lib.RunFunction(
           u'MakeZone', options.username, credfile=options.credfile,
