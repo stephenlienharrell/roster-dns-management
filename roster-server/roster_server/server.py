@@ -84,6 +84,7 @@ class Server(object):
     self.keyfile = keyfile
     self.certfile = certfile
     self.inf_renew_time = inf_renew_time
+    self.core_store_cleanup_running = False
     if( inf_renew_time is None ):
       self.inf_renew_time = self.config_instance.config_file['server'][
           'inf_renew_time']
@@ -305,6 +306,9 @@ class Server(object):
     try:
       while 1:
         self.server.handle_request()
-        self.CleanupCoreStore()
+        if( not self.core_store_cleanup_running ):
+          self.core_store_cleanup_running = True
+          self.CleanupCoreStore()
+          self.core_store_cleanup_running = False
     except KeyboardInterrupt:
       print "Stopped by user."
