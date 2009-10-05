@@ -84,7 +84,7 @@ def main(args):
   cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
 
   if( options.zone ):
-    cli_common_lib_instance.DisallowFlags([u'view', u'cidr_block'], parser, options)
+    cli_common_lib_instance.DisallowFlags([u'view', u'cidr_block'], parser)
     core_return = roster_client_lib.RunFunction(
         u'RemoveZone', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,

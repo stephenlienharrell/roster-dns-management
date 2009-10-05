@@ -95,7 +95,7 @@ def main(args):
   cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
 
   if( options.dns_server_set ):
-    cli_common_lib_instance.DisallowFlags([u'cidr_block', u'acl'], parser, options)
+    cli_common_lib_instance.DisallowFlags([u'cidr_block', u'acl'], parser)
     if( not options.view ):
       cli_common_lib_instance.DnsError('To remove a dns server set view assignment a '
                               'view must be specified with the -v flag.', 1)
@@ -109,7 +109,7 @@ def main(args):
       print ('REMOVED DNS SERVER SET VIEW ASSIGNMENT: view_name %s '
              'dns_server_set: %s' % (options.view, options.dns_server_set))
   elif( options.view ):
-    cli_common_lib_instance.DisallowFlags([u'cidr_block', u'acl'], parser, options)
+    cli_common_lib_instance.DisallowFlags([u'cidr_block', u'acl'], parser)
     roster_client_lib.RunFunction(u'RemoveView', options.username,
                                   credfile=options.credfile,
                                   credstring=options.credstring,

@@ -118,7 +118,7 @@ def main(args):
   if( options.newest ):
     cli_common_lib_instance.DisallowFlags(['list', 'edit', 'option_id',
                              'timestamp', 'revert', 'update'],
-                             parser, options)
+                             parser)
     if( options.dns_server_set is None ):
       cli_common_lib_instance.DnsError('Must specify a dns server set with -d.', 1)
     named_option = roster_client_lib.RunFunction(
@@ -134,7 +134,7 @@ def main(args):
   elif( options.update ):
     cli_common_lib_instance.DisallowFlags(['list', 'edit', 'option_id',
                                   'timestamp', 'revert'],
-                                 parser, options)
+                                 parser)
     handle = open(options.file, 'r')
     try:
       named_file = handle.read()
@@ -151,7 +151,7 @@ def main(args):
 
   elif( options.list ):
     cli_common_lib_instance.DisallowFlags(['revert', 'edit', 'file'],
-                                 parser, options)
+                                 parser)
     named_options = roster_client_lib.RunFunction(
         u'ListNamedConfGlobalOptionsClient', options.username,
         credfile=options.credfile, kwargs={'option_id': options.option_id,
@@ -168,7 +168,7 @@ def main(args):
         option['dns_server_set_name']])
     print cli_common_lib_instance.PrintColumns(print_list)
   elif( options.edit ):
-    cli_common_lib_instance.DisallowFlags(['revert'], parser, options)
+    cli_common_lib_instance.DisallowFlags(['revert'], parser)
     if( not options.option_id and not options.dns_server_set
         and not options.timestamp):
       cli_common_lib_instance.DnsError('Either an option id or dns server set and '
@@ -194,7 +194,7 @@ def main(args):
                               'due to an internal error or arguments may be '
                               'too general.', 1)
   elif( options.revert ):
-    cli_common_lib_instance.DisallowFlags(['file'], parser, options)
+    cli_common_lib_instance.DisallowFlags(['file'], parser)
     if( not options.option_id ):
       cli_common_lib_instance.DnsError('To revert a configuration, the desired '
                               'replacement must be specified with -i', 1)

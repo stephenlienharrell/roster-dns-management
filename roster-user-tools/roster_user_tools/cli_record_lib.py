@@ -64,7 +64,6 @@ class CliRecordLib:
                                                       item.replace('_', '-')), 1)
     if( not options.credfile.startswith('/') ):
       options.credfile = '%s/%s' % (os.getcwd(), options.credfile)
-    self.ccl_instance.CheckCredentials(options)
     views = roster_client_lib.RunFunction('ListViews', options.username,
                                           credfile=options.credfile,
                                           server_name=options.server,
@@ -188,7 +187,6 @@ class CliRecordLib:
                                                       item.replace('_', '-')), 1)
     if( not options.credfile.startswith('/') ):
       options.credfile = '%s/%s' % (os.getcwd(), options.credfile)
-    self.ccl_instance.CheckCredentials(options)
     views = roster_client_lib.RunFunction(
         'ListViews', options.username, credfile=options.credfile,
         server_name=options.server)['core_return']

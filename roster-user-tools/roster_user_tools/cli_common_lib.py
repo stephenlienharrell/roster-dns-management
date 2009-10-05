@@ -43,7 +43,7 @@ class CliCommonLib:
   
   def __init__(self, options):
     self.options = options
-    self.CheckCredentials(self.options)
+    self.CheckCredentials()
 
   def DnsError(self, message, exit_status=0):
     """Prints standardized client error message to screen.
@@ -183,11 +183,8 @@ class CliCommonLib:
                              '', '# No forward assignment'])
     return self.PrintColumns(print_list)
 
-  def CheckCredentials(self, options):
+  def CheckCredentials(self):
     """Checks if credential file is valid.
-
-    Inputs:
-      options: options object from optparse
 
     Outputs:
       string: string of valid credential
@@ -196,24 +193,24 @@ class CliCommonLib:
     got_credential = None
     count = 0
     while( count < 3 ):
-      valid = roster_client_lib.IsAuthenticated(options.username,
-                                                options.credfile,
-                                                server_name=options.server)
+      valid = roster_client_lib.IsAuthenticated(self.options.username,
+                                                self.options.credfile,
+                                                server_name=self.options.server)
       if( valid ):
         break
-      password = options.password
-      if( options.password is None ):
+      password = self.options.password
+      if( self.options.password is None ):
         try:
-          password = getpass.getpass('Password for %s: ' % options.username)
+          password = getpass.getpass('Password for %s: ' % self.options.username)
         except KeyboardInterrupt:
           sys.exit(0)
       try:
-        got_credential = roster_client_lib.GetCredentials(options.username,
+        got_credential = roster_client_lib.GetCredentials(self.options.username,
                                                           password,
-                                                          options.credfile,
-                                                          options.server)
+                                                          self.options.credfile,
+                                                          self.options.server)
       except roster_client_lib.InvalidCredentials:
-        if( options.password is None ):
+        if( self.options.password is None ):
           count = count + 1
         else:
           self.DnsError('Incorrect username/password.', 1)
@@ -222,20 +219,19 @@ class CliCommonLib:
 
     return got_credential
 
-  def DisallowFlags(self, disallow_list, parser, options):
+  def DisallowFlags(self, disallow_list, parser):
     """Dissallows certain command line flags.
 
     Inputs:
       disallow_list: list of command line flags to block
       parser: parser object from optparse
-      options: options object from optparse
     """
     defaults = parser.defaults
     flags = {}
     error = False
     for flag in parser.option_list[1:]:
       flags[flag.dest] = flag
-      combo = 'options.%s' % flag.dest
+      combo = 'self.options.%s' % flag.dest
       if( flag.dest in disallow_list ):
         if( eval(combo) != defaults[flag.dest] ):
           self.DnsError('The %s flag cannot be used.' % flag, 0)

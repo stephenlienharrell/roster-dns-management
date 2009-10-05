@@ -124,7 +124,7 @@ def main(args):
   elif( options.user_name ):
     cli_common_lib_instance.DisallowFlags([
         'group', 'forward_zone_permission', 'reverse_range_permission'],
-        parser, options)
+        parser)
     roster_client_lib.RunFunction(u'RemoveUser', options.username,
                                   credfile=options.credfile,
                                   credstring=options.credstring,
@@ -133,7 +133,7 @@ def main(args):
     if( not options.quiet ):
       print 'REMOVED USER: %s' % options.user_name
   elif( options.forward_zone_permission ):
-    cli_common_lib_instance.DisallowFlags(['reverse_range_permission'], parser, options)
+    cli_common_lib_instance.DisallowFlags(['reverse_range_permission'], parser)
     if( not options.access_right ):
       cli_common_lib_instance.DnsError('An access right must be specified with the'
                           ' --access-right flag.', 1)
@@ -161,8 +161,7 @@ def main(args):
              'access_right: %s' % (options.zone, options.group,
                                    options.access_right))
   elif( options.reverse_range_permission ):
-    cli_common_lib_instance.DisallowFlags(['user_name'], parser,
-                                 options)
+    cli_common_lib_instance.DisallowFlags(['user_name'], parser)
     if( not options.cidr_block ):
       cli_common_lib_instance.DnsError('A CIDR block must be specified with the '
                               '--cidr-block flag.', 1)
