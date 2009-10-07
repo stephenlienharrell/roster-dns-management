@@ -48,7 +48,7 @@ import roster_core
 from roster_config_manager import tree_exporter
 
 
-CONFIG_FILE = os.path.expanduser('~/.rosterrc') # Example in test_data
+CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 BIND_CONFIG_DIR = './bind_configs'

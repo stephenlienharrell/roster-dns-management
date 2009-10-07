@@ -72,7 +72,7 @@ class Config(object):
                    'passwd': 'str', 'database': 'str'},
                    'server': {'inf_renew_time': 'int', 'core_die_time': 'int',
                    'get_credentials_wait_increment': 'int',
-                   'ldap_server': 'str', 'server_killswitch': 'boolean'},
+                   'server_killswitch': 'boolean'},
                    'credentials': {'authentication_method': 'str',
                                    'exp_time': 'int'}}
 

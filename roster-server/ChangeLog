@@ -1,5 +1,6 @@
 Current Release
 - Made it possible to use other authentication methods other than LDAP.
+- Removed the rest of LDAP traces.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1

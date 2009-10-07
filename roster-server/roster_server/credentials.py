@@ -39,7 +39,6 @@ __version__ = '#TRUNK#'
 
 import datetime
 import inspect
-import ldap
 import uuid
 
 class CredCache(object):
@@ -53,19 +52,16 @@ class CredCache(object):
   """
 
   # This will need a config option for the core objects, probably
-  def __init__(self, config_instance, inf_renew_time,
-               ldap_module=ldap):
+  def __init__(self, config_instance, inf_renew_time):
     """Constructs a new credential cache.
     Inputs:
       config_instance: instance of Config
       inf_renew_time: the that each credential is renewed (seconds)
-      ldap_module: module for ldap connection (used for unittest)
     """
     self.config_instance = config_instance
     self.exp_time = self.config_instance.config_file['credentials']['exp_time']
     self.authentication_method = self.config_instance.config_file[
         'credentials']['authentication_method']
-    self.ldap_module = ldap_module
     self.inf_renew_time = inf_renew_time
 
     # garbage_collector contains cred strings in insertion order, to be walked
@@ -73,7 +69,7 @@ class CredCache(object):
     self.garbage_collector = []
 
   def Authenticate(self, user_name, password):
-    """Authenticates user against LDAP database
+    """Authenticates user against authentication method
 
     Inputs:
       user_name: string of user name
@@ -159,7 +155,6 @@ class CredCache(object):
     Inputs:
       user_name: strin of login for a user
       password: string of user's password
-      server_name: string of ldap server name
       core_instance: instance of Core
 
     Outputs:

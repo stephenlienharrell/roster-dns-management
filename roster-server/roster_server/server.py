@@ -39,7 +39,6 @@ __version__ = '#TRUNK#'
 
 
 import datetime
-import ldap
 import os
 import inspect
 import SocketServer
@@ -68,7 +67,7 @@ class Server(object):
   """Daemon library used to serve commands to the client."""
   def __init__(self, config_instance, keyfile, certfile,
                inf_renew_time=None, core_die_time=None,
-               clean_time=None, ldap_module=ldap, unittest_timestamp=None):
+               clean_time=None, unittest_timestamp=None):
     """Sets up config instance. Stores core instances.
 
     Inputs:
@@ -78,7 +77,6 @@ class Server(object):
        inf_renew_time: time to refresh infinite credentials (seconds)
        core_die_time: time for each core instance to die (seconds)
        clean_time: time to wait between core instance cleanings (seconds)
-       ldap_module: module used for ldap authentication (for testing)
     """
     self.config_instance = config_instance
     self.keyfile = keyfile
@@ -94,14 +92,13 @@ class Server(object):
           'core_die_time']
     self.get_credentials_wait_increment = self.config_instance.config_file[
         'server']['get_credentials_wait_increment']
-    self.ldap_server = self.config_instance.config_file['server']['ldap_server']
     self.server_killswitch = self.config_instance.config_file['server'][
         'server_killswitch']
     self.clean_time = clean_time
     if( clean_time is None ):
       self.clean_time = self.core_die_time
     self.cred_cache_instance = credentials.CredCache(self.config_instance,
-                                   inf_renew_time, ldap_module=ldap_module)
+                                   inf_renew_time)
     self.unittest_timestamp = unittest_timestamp
     self.core_store = [] # {'user': user, 'last_used': last_used, 'instance': }
     self.get_credentials_wait = {} # {'user1': 3, 'user2': 4}
@@ -245,17 +242,14 @@ class Server(object):
     Inputs:
       user_name: string of user name
       password: string of password (plaintext)
-      server_name: ldap server url (string)
 
     Outputs:
       string: string of credential
               example: u'be4d4ecf-d670-44a0-b957-770e118e2755'
     """
-    server_name = self.ldap_server
     user_name = unicode(user_name)
     core_instance = self.GetCoreInstance(user_name)
     cred_string = self.cred_cache_instance.GetCredentials(user_name, password,
-                                                          server_name,
                                                           core_instance)
     if( cred_string == '' ):
       if( not self.get_credentials_wait.has_key(user_name) ):

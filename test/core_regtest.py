@@ -49,7 +49,7 @@ from roster_core import data_validation
 from roster_core import core
 
 
-CONFIG_FILE = os.path.expanduser('~/.rosterrc') # Example in test_data
+CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 
