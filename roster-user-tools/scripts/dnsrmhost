@@ -52,7 +52,7 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser()
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
 
   parser.add_option('-i', '--ip-address', action='store', dest='ip_address',
                     help='IP address of machine.', metavar='<ip-address>',

@@ -52,7 +52,7 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser()
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
 
   parser.add_option('-l', '--list', action='store_true', dest='list',
                     help='List users, apply -u flag to filter.',

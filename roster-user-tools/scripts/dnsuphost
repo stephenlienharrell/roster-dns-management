@@ -221,7 +221,7 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser()
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
 
   parser.add_option('--commit', action='store_true', dest='commit',
                     help='Commits changes of hosts file without confirmation.',

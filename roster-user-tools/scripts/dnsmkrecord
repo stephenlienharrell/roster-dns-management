@@ -55,7 +55,7 @@ def main(args):
     args: list of command line args
   """
 
-  parser = OptionParser()
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
 
   parser.add_option('--a', action='store_true', dest='a', default=False,
                     help='Set the record type to A record.')
