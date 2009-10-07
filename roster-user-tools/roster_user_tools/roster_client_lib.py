@@ -83,8 +83,16 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
       raise InvalidCredentials('Credential file not found.')
   core_return = server.CoreRun(function, user_name, credstring, args, kwargs)
 
+
   if( core_return == 'ERROR: Invalid Credentials' ):
     raise InvalidCredentials('Credential file is invalid.')
+  elif( core_return['new_credential'] is not None ):
+    if( os.path.exists(credfile) ):
+      try:
+        credfile_handle = open(credfile, 'w')
+        credfile_handle.writelines(core_return['new_credential'])
+      finally:
+        credfile_handle.close()
 
   return core_return
 

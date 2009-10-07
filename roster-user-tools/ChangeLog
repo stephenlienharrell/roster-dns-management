@@ -17,6 +17,7 @@ Current Release
 - Standardized record not found error in dnsrmhost.
 - Made cli record/common lib into classes.
 - All user tools use a config file.
+- Roster Client Lib replaces expired infinite credential strings.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
