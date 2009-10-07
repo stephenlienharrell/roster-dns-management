@@ -62,7 +62,6 @@ class CredCache(object):
       ldap_module: module for ldap connection (used for unittest)
     """
     self.config_instance = config_instance
-    #self.binddn = self.config_instance.config_file['credentials']['binddn']
     self.exp_time = self.config_instance.config_file['credentials']['exp_time']
     self.authentication_method = self.config_instance.config_file[
         'credentials']['authentication_method']

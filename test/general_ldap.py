@@ -1,5 +1,8 @@
 import ldap
 
+class GeneralLDAPConfigError(Exception):
+  pass
+
 class AuthenticationMethod:
   """General LDAP authentication method,
   should work for most LDAP applications.
@@ -20,24 +23,21 @@ class AuthenticationMethod:
     Outputs:
       boolean: authenticated or not
     """
-    print server
     binddn = binddn % user_name
-    print binddn
     if( tls == 'on' ):
-      tls = 'True'
-    elif( tls == 'off' ):
-      tls = 'False'
-    if( eval(tls) ):
-      print "TLS"
       ldap.set_option(ldap.OPT_X_TLS, 1)
       ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, cert_file)
+    elif( tls.lower() != 'off' ):
+      raise GeneralLDAPConfigError(
+          'Option "tls" must be set to "on" or "off", '
+          '"%s" is an invalid option.' % tls)
+                                 
     ldap_server = ldap.initialize(server)
-    ldap_server.protocol_version = eval('ldap.%s' % version)
+    ldap_server.protocol_version = get_attr(ldap, version)
     try:
       ldap_server.simple_bind_s(binddn, password)
       authenticated = True
     except ldap.LDAPError, e:
-      print e
       authenticated = False
     finally:
       ldap_server.unbind_s()
