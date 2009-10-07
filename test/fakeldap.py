@@ -47,25 +47,25 @@ def VERSION3(self):
 class LDAPError(roster_core.CoreError):
   pass
 
-class initialize(object):
+class AuthenticationMethod(object):
 
-  def __init__(self, server_address):
-    self.server_address = server_address
-
+  def __init__(self):
     self.protocol_version = 0
 
-  def simple_bind_s(self, binddn, password):
+  def Authenticate(self, user_name=None, binddn=None, password=None,
+                   server=None):
+    binddn = binddn % user_name
     if( binddn == 'uid=shuey,ou=People,dc=dc,dc=university,'
                   'dc=edu' and password == 'testpass' ):
-      pass
+      return True
     elif( binddn == 'uid=sharrell,ou=People,dc=dc,dc=university,'
                     'dc=edu' and password == 'test' ):
-      pass
+      return True
     elif( binddn == 'uid=jcollins,ou=People,dc=dc,dc=university,'
                     'dc=edu' and password == 'test' ):
-      pass
+      return True
     else:
-      raise LDAPError('Wrong username or password')
+      return False
 
   def unbind_s(self):
     pass

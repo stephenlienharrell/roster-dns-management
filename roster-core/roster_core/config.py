@@ -73,7 +73,8 @@ class Config(object):
                    'server': {'inf_renew_time': 'int', 'core_die_time': 'int',
                    'get_credentials_wait_increment': 'int',
                    'ldap_server': 'str', 'server_killswitch': 'boolean'},
-                   'credentials': {'binddn': 'str', 'exp_time': 'int'}}
+                   'credentials': {'authentication_method': 'str',
+                                   'exp_time': 'int'}}
 
     for section in file_schema:
       self.config_file[section] = {}
@@ -103,6 +104,14 @@ class Config(object):
           else:
             raise ConfigError('DataType "%s" is not supported' % (
                 varaibles[varaible]))
+
+    authentication_method =  self.config_file['credentials'][
+        'authentication_method']
+    self.config_file[authentication_method] = {}
+    authentication_values = cp.items(authentication_method)
+    for authentication_value in authentication_values:
+      self.config_file[authentication_method][authentication_value[0]] = (
+          authentication_value[1])
 
   def GetDb(self):
     """Creates a dbAccess instance.

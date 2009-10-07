@@ -109,10 +109,8 @@ class TestCredentialsLibrary(unittest.TestCase):
     return True
 
   def testCredentials(self):
-    self.assertTrue(self.cred_instance.Authenticate(u'sharrell', 'test',
-                                                    'ldaps://ldap:636'))
+    self.assertTrue(self.cred_instance.Authenticate(u'sharrell', 'test'))
     cred_string = self.cred_instance.GetCredentials(u'sharrell', 'test',
-                                                    'ldaps://ldap:636',
                                                     self.core_instance)
     self.assertEqual(self.cred_instance.CheckCredential(cred_string,
                                                        self.core_instance),

@@ -38,6 +38,7 @@ __version__ = '#TRUNK#'
 
 
 import datetime
+import inspect
 import ldap
 import uuid
 
@@ -61,8 +62,10 @@ class CredCache(object):
       ldap_module: module for ldap connection (used for unittest)
     """
     self.config_instance = config_instance
-    self.binddn = self.config_instance.config_file['credentials']['binddn']
+    #self.binddn = self.config_instance.config_file['credentials']['binddn']
     self.exp_time = self.config_instance.config_file['credentials']['exp_time']
+    self.authentication_method = self.config_instance.config_file[
+        'credentials']['authentication_method']
     self.ldap_module = ldap_module
     self.inf_renew_time = inf_renew_time
 
@@ -70,35 +73,44 @@ class CredCache(object):
     # when it's time to remove potentially expired Credentials.
     self.garbage_collector = []
 
-  def Authenticate(self, user_name, password, server_address,
-                   cert_file='/etc/certs/cacert.pem'):
+  def Authenticate(self, user_name, password):
     """Authenticates user against LDAP database
 
     Inputs:
       user_name: string of user name
       password: string of password
-      server_address: string of LDAP server,
-                      ex: ldaps://ldap.university.edu:636
-      cert_file: string of locateion of alternate LDAP cert file
 
     Outputs:
       boolean of whether or not user is authenticated
     """
-    authenticated = False
-    binddn = self.binddn % (user_name)
-    self.ldap_module.set_option(ldap.OPT_X_TLS, 1)
-    self.ldap_module.set_option(ldap.OPT_X_TLS_CACERTFILE, cert_file)
+    authenticate_module = __import__(self.authentication_method)
+    authentication_module_instance = authenticate_module.AuthenticationMethod()
+    authenticate_module_args = inspect.getargspec(
+        authentication_module_instance.Authenticate).args
+    if( authenticate_module_args[0] == 'self' ):
+      authenticate_module_args.pop(0)
+    for authenticate_module_arg in authenticate_module_args:
+       if( authenticate_module_arg == 'user_name' or
+           authenticate_module_arg == 'password' ):
+         continue
+       if( authenticate_module_arg not in self.config_instance.config_file[
+               self.authentication_method] ):
+         raise self.config_instance.ConfigError(
+             'Could not find "%s" value in "%s" in the "%s" section.' % (
+                 authenticate_module_arg, self.config_instance.config_file_path,
+                 self.authentication_method))
+    kwargs_dict = {}
+    for authenticate_module_arg in authenticate_module_args:
+      if( authenticate_module_arg == 'user_name' ):
+        kwargs_dict['user_name'] = user_name
+      elif( authenticate_module_arg == 'password' ):
+        kwargs_dict['password'] = password
+      else:
+        kwargs_dict[authenticate_module_arg] = (
+            self.config_instance.config_file[self.authentication_method][
+                authenticate_module_arg])
 
-    ldap_server = self.ldap_module.initialize(server_address)
-    ldap_server.protocol_version = self.ldap_module.VERSION3
-    try:
-      ldap_server.simple_bind_s(binddn, password)
-      authenticated = True
-    except self.ldap_module.LDAPError:
-      authenticated = False
-    ldap_server.unbind_s()
-
-    return authenticated
+    return authentication_module_instance.Authenticate(**kwargs_dict)
 
   def CheckCredential(self, credential, core_instance):
     """Checks users credential against database.
@@ -142,7 +154,7 @@ class CredCache(object):
 
     return None # Key is expired
 
-  def GetCredentials(self, user_name, password, server_name, core_instance):
+  def GetCredentials(self, user_name, password, core_instance):
     """Return a valid credential string given a username and password.
 
     Inputs:
@@ -160,7 +172,7 @@ class CredCache(object):
     """
     user_name = unicode(user_name)
     cred_string = ''
-    if( self.Authenticate(user_name, password, server_name) ):
+    if( self.Authenticate(user_name, password) ):
       current = core_instance._ListCredentials(user_name=user_name)
       if( current ):
         return current.keys()[0]
