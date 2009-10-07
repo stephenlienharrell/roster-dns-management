@@ -149,7 +149,7 @@ def main(args):
                     help='Make all required arguments.', default=False)
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server address.', metavar='<server>',
-                    default='https://localhost:8000')
+                    default=None)
   parser.add_option('-u', '--username', action='store', dest='username',
                     help='Run as a different username.', metavar='<username>',
                     default=unicode(getpass.getuser()))
@@ -159,7 +159,7 @@ def main(args):
                     default=None)
   parser.add_option('-c', '--cred-file', action='store', dest='credfile',
                     help='Location of credential file.', metavar='<cred-file>',
-                    default=os.path.join(os.path.expanduser('~'), '.dnscred'))
+                    default=None)
   parser.add_option('--cred-string', action='store', dest='credstring',
                     help='String of credential.', metavar='<cred-string>',
                     default=None)

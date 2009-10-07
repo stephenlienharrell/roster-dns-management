@@ -35,7 +35,9 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import ConfigParser
 import sys
+import os
 import getpass
 import roster_client_lib
 
@@ -43,6 +45,27 @@ class CliCommonLib:
   
   def __init__(self, options):
     self.options = options
+    self.config_file = ConfigParser.SafeConfigParser()
+    if( hasattr(options, 'config_file') ):
+      config_file = self.options.config_file
+      if( not os.path.expanduser(config_file) ):
+        self.DnsError('Config file "%s" could not be found.' % config_file, 1)
+    else:
+      config_file = ''
+      file_locations = [os.path.expanduser('~/.rosterrc'), '/etc/roster.conf']
+      for config_file in file_locations:
+        if( os.path.exists(config_file) ):
+          break
+      else:
+        self.DnsError('Config file "%s" could not be found.' % config_file, 1)
+    a = self.config_file.read(config_file)
+    if( hasattr(self.options, 'server') ):
+      if( not self.options.server ):
+        self.options.server = self.config_file.get('user_tools', 'server')
+    if( hasattr(self.options, 'credfile') ):
+      if( not options.credfile ):
+        self.options.credfile = self.config_file.get('user_tools', 'cred_file')
+    self.options.credfile = os.path.expanduser(self.options.credfile)
     self.CheckCredentials()
 
   def DnsError(self, message, exit_status=0):
@@ -189,13 +212,15 @@ class CliCommonLib:
     Outputs:
       string: string of valid credential
     """
+    if( not self.options.credfile ):
+      self.DnsError('No credential file specified.', 1)
     password = None
     got_credential = None
     count = 0
     while( count < 3 ):
-      valid = roster_client_lib.IsAuthenticated(self.options.username,
-                                                self.options.credfile,
-                                                server_name=self.options.server)
+      valid = roster_client_lib.IsAuthenticated(
+          self.options.username, self.options.credfile,
+          server_name=self.options.server)
       if( valid ):
         break
       password = self.options.password
@@ -205,10 +230,9 @@ class CliCommonLib:
         except KeyboardInterrupt:
           sys.exit(0)
       try:
-        got_credential = roster_client_lib.GetCredentials(self.options.username,
-                                                          password,
-                                                          self.options.credfile,
-                                                          self.options.server)
+        got_credential = roster_client_lib.GetCredentials(
+            self.options.username, password,
+            self.options.credfile, self.options.server)
       except roster_client_lib.InvalidCredentials:
         if( self.options.password is None ):
           count = count + 1

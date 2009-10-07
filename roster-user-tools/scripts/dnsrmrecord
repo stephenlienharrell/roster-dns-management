@@ -154,7 +154,7 @@ def main(args):
 
   parser.add_option('-c', '--cred-file', action='store', dest='credfile',
                     help='Location of credential file.',
-                    default=os.path.join(os.path.expanduser('~'), '.dnscred'))
+                    default=None)
   parser.add_option('-z', '--zone-name', action='store', dest='zone_name',
                     help=('String of the <zone-name>. Example: '
                           '"sub.university.edu"'), metavar='<zone-name>',
@@ -177,7 +177,7 @@ def main(args):
                     default=None)
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server address.', metavar='<server>',
-                    default='https://localhost:8000')
+                    default=None)
   parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
                     help='Suppress program output.', default=False)
 

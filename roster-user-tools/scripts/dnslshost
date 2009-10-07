@@ -60,7 +60,7 @@ def main(args):
                     metavar='<range>', default=None)
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server address.', metavar='<server>',
-                    default='https://localhost:8000')
+                    default=None)
   parser.add_option('-t', '--target', action='store', dest='target',
                     help='Target machine host name.', metavar='<target>',
                     default=None)
@@ -78,7 +78,7 @@ def main(args):
                     default=None)
   parser.add_option('-c', '--cred-file', action='store', dest='credfile',
                     help='Location of credential file.', metavar='<cred-file>',
-                    default=os.path.join(os.path.expanduser('~'), '.dnscred'))
+                    default=None)
 
   (globals()["options"], args) = parser.parse_args(args)
 
