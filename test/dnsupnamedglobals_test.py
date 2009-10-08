@@ -46,11 +46,9 @@ import socket
 import threading
 import time
 import getpass
-import fakeldap
 import datetime
 
 import unittest
-sys.path.append('../')
 
 import roster_core
 from roster_user_tools  import roster_client_lib
@@ -89,8 +87,7 @@ class DaemonThread(threading.Thread):
 
   def run(self):
     self.daemon_instance = roster_server.Server(self.config_instance, KEYFILE,
-                                                CERTFILE, ldap_module=fakeldap,
-                                                unittest_timestamp=(
+                                                CERTFILE, unittest_timestamp=(
                                                     self.unittest_timestamp))
     self.daemon_instance.Serve(port=self.port)
 

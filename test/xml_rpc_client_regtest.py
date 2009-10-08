@@ -45,10 +45,8 @@ import sys
 import threading
 import time
 import unittest
-sys.path.append('../')
 
 import fake_credentials
-import fakeldap
 
 import roster_core
 from roster_user_tools import roster_client_lib
@@ -86,8 +84,7 @@ class TestXMLServerClient(unittest.TestCase):
       return port
 
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
-    self.cred_instance = credentials.CredCache(self.config_instance, 5,
-                                               ldap_module=fakeldap)
+    self.cred_instance = credentials.CredCache(self.config_instance, 5)
 
     db_instance = self.config_instance.GetDb()
 
@@ -107,8 +104,7 @@ class TestXMLServerClient(unittest.TestCase):
     self.daemon_instance = roster_server.Server(self.config_instance, KEYFILE,
                                                 CERTFILE,
                                                 inf_renew_time=5,
-                                                core_die_time=5, clean_time=0,
-                                                ldap_module=fakeldap)
+                                                core_die_time=5, clean_time=0)
 
     self.daemon_thread = DaemonThread(self.config_instance, self.port,
                                       self.daemon_instance)

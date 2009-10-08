@@ -45,7 +45,6 @@ import os
 import roster_core
 import roster_server
 
-import fakeldap
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
@@ -76,8 +75,7 @@ class TestCredentialsLibrary(unittest.TestCase):
 
     self.server_instance = roster_server.Server(self.config_instance, KEYFILE,
                                                 CERTFILE, core_die_time=5,
-                                                inf_renew_time=5, clean_time=0,
-                                                ldap_module=fakeldap)
+                                                inf_renew_time=5, clean_time=0)
     self.credential = self.server_instance.GetCredentials(USERNAME, u'test')
     self.server_instance.core_store = [] # Clear out core instance from above
 
