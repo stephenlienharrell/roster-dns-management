@@ -67,14 +67,14 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
     return from function in core
   """
   if( credfile is None ):
-    credfile = os.path.join('.dnscred', os.path.expanduser('~'))
+    credfile = os.path.join(os.path.expanduser('~'), '.dnscred')
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
   ## Read credential File
   core_return = ''
   if( credstring is None ):
     if( os.path.exists(credfile) ):
+      credfile_handle = open(credfile, 'r')
       try:
-        credfile_handle = open(credfile, 'r')
         credstring = str(credfile_handle.read()).strip('\n')
         credfile_handle.close()
       except OSError:
@@ -88,8 +88,8 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
     raise InvalidCredentials('Credential file is invalid.')
   elif( core_return['new_credential'] is not None ):
     if( os.path.exists(credfile) ):
+      credfile_handle = open(credfile, 'w')
       try:
-        credfile_handle = open(credfile, 'w')
         credfile_handle.writelines(core_return['new_credential'])
       finally:
         credfile_handle.close()
