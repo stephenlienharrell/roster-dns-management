@@ -81,7 +81,7 @@ class CredCache(object):
     authenticate_module = __import__(self.authentication_method)
     authentication_module_instance = authenticate_module.AuthenticationMethod()
     authenticate_module_args = inspect.getargspec(
-        authentication_module_instance.Authenticate).args
+        authentication_module_instance.Authenticate)[0]
     if( authenticate_module_args[0] == 'self' ):
       authenticate_module_args.pop(0)
     for authenticate_module_arg in authenticate_module_args:
