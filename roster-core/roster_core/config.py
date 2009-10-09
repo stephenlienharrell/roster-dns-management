@@ -105,13 +105,14 @@ class Config(object):
             raise ConfigError('DataType "%s" is not supported' % (
                 varaibles[varaible]))
 
-    authentication_method =  self.config_file['credentials'][
-        'authentication_method']
-    self.config_file[authentication_method] = {}
-    authentication_values = cp.items(authentication_method)
-    for authentication_value in authentication_values:
-      self.config_file[authentication_method][authentication_value[0]] = (
-          authentication_value[1])
+    if( 'authentication_method' in self.config_file['credentials'] ):
+      authentication_method = self.config_file['credentials'][
+          'authentication_method']
+      self.config_file[authentication_method] = {}
+      authentication_values = cp.items(authentication_method)
+      for authentication_value in authentication_values:
+        self.config_file[authentication_method][authentication_value[0]] = (
+            authentication_value[1])
 
   def GetDb(self):
     """Creates a dbAccess instance.
