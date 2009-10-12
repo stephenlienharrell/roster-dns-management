@@ -320,14 +320,9 @@ class CoreHelpers(object):
           records_dict[view_name] = {}
         if( not ip_address in records_dict[view_name] ):
            records_dict[view_name][ip_address] = []
-
-        if( record['record_target'] == '@' ):
-          record_target = zone_origin.rstrip('.')
-        else:
-          record_target = '%s.%s' % (record['record_target'],
-              zone_origin.rstrip('.'))
         records_dict[view_name][ip_address].append({
-            u'forward': True, u'host': record_target,
+            u'forward': True, u'host': '%s.%s' % (
+                record['record_target'], zone_origin.rstrip('.')),
             u'zone': record['record_zone_name']})
     return records_dict
 
