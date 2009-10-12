@@ -307,7 +307,7 @@ class CoreHelpers(object):
           records_dict[db_view_name][ip_address] = []
         records_dict[db_view_name][ip_address].append({
             u'forward': False, u'host': record['argument_value'].rstrip('.'),
-            u'zone': record['record_zone_name']})
+            u'zone': record['record_zone_name'], 'zone_origin': zone_origin})
     for record in fwd_record_list:
       ip_address = record['argument_value']
       zone_name = record['record_zone_name']
