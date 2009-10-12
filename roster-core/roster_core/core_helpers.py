@@ -323,7 +323,8 @@ class CoreHelpers(object):
         records_dict[view_name][ip_address].append({
             u'forward': True, u'host': '%s.%s' % (
                 record['record_target'], zone_origin.rstrip('.')),
-            u'zone': record['record_zone_name']})
+            u'zone': record['record_zone_name'],
+            u'zone_origin': zone_origin})
     return records_dict
 
   def ListNamedConfGlobalOptionsClient(self, option_id=None,
