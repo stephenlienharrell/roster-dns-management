@@ -275,7 +275,8 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options2')
     output = os.popen('python %s -t 299 -s %s -u %s -p %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: Timestamp incorrectly formatted.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: Timestamp incorrectly formatted.\n')
     output.close()
     output = os.popen(
         'python %s -f test --update -l -i 1 -t "2009-02-02 01:10:10" -r '

@@ -164,23 +164,28 @@ class Testdnslshost(unittest.TestCase):
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'8',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host6.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host6.university.edu.'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'4',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host2.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host2.university.edu.'},
                                   view_name=u'test_view2')
     self.core_instance.MakeRecord(u'ptr', u'5',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host3.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host3.university.edu.'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'10',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host4.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host4.university.edu.'},
                                   view_name=u'test_view2')
     self.core_instance.MakeRecord(u'ptr', u'7',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host5.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host5.university.edu.'},
                                   view_name=u'test_view2')
 
   def tearDown(self):

@@ -300,9 +300,11 @@ class TestDnsMkHost(unittest.TestCase):
                      '# hostname. To change a hostname, edit the hostname\n'
                      '# next to the desired ip address.\n'
                      '#192.168.1.4\n'
-                     '192.168.1.5  host3.university.edu host3 3 # No reverse assignment\n'
+                     '192.168.1.5  host3.university.edu host3 3 # No reverse '
+                     'assignment\n'
                      '#192.168.1.6\n'
-                     '192.168.1.7  host5.university.edu host5 # No reverse assignment\n')
+                     '192.168.1.7  host5.university.edu host5 # No reverse '
+                     'assignment\n')
     handle = open(INVALID_HOSTS, 'w')
     handle.writelines(file_contents)
     handle.close()
@@ -310,7 +312,8 @@ class TestDnsMkHost(unittest.TestCase):
                       '%s --update -r 192.168.1.4/30' % (EXEC, INVALID_HOSTS,
                           self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: Line "192.168.1.5  host3.university.edu host3 3 '
+                     'CLIENT ERROR: Line "192.168.1.5  host3.university.edu '
+                     'host3 3 '
                      '# No reverse assignment" is incorrectly formatted in '
                      '"%s"\n' % INVALID_HOSTS)
     output.close()

@@ -381,27 +381,37 @@ class TestCore(unittest.TestCase):
   def testForwardZonePermissionMakeListRemove(self):
     self.assertEqual(self.core_instance.ListForwardZonePermissions(),
                      {u'bio': [
-                       {'zone_name': u'bio.university.edu', 'access_right': u'rw'}],
+                       {'zone_name': u'bio.university.edu',
+                        'access_right': u'rw'}],
                       u'cs': [
-                       {'zone_name': u'cs.university.edu', 'access_right': u'rw'},
-                       {'zone_name': u'eas.university.edu', 'access_right': u'r'}]})
+                       {'zone_name': u'cs.university.edu',
+                        'access_right': u'rw'},
+                       {'zone_name': u'eas.university.edu',
+                        'access_right': u'r'}]})
     self.core_instance.MakeForwardZonePermission(u'eas.university.edu', u'bio',
                                                  u'r')
     self.assertEqual(self.core_instance.ListForwardZonePermissions(),
                      {u'bio': [
-                       {'zone_name': u'bio.university.edu', 'access_right': u'rw'},
-                       {'zone_name': u'eas.university.edu', 'access_right': u'r'}],
+                       {'zone_name': u'bio.university.edu',
+                        'access_right': u'rw'},
+                       {'zone_name': u'eas.university.edu',
+                        'access_right': u'r'}],
                       u'cs': [
-                       {'zone_name': u'cs.university.edu', 'access_right': u'rw'},
-                       {'zone_name': u'eas.university.edu', 'access_right': u'r'}]})
+                       {'zone_name': u'cs.university.edu',
+                        'access_right': u'rw'},
+                       {'zone_name': u'eas.university.edu',
+                        'access_right': u'r'}]})
     self.assertTrue(self.core_instance.RemoveForwardZonePermission(
         u'eas.university.edu', u'bio', u'r'))
     self.assertEqual(self.core_instance.ListForwardZonePermissions(),
                      {u'bio': [
-                       {'zone_name': u'bio.university.edu', 'access_right': u'rw'}],
+                       {'zone_name': u'bio.university.edu',\
+                        'access_right': u'rw'}],
                       u'cs': [
-                       {'zone_name': u'cs.university.edu', 'access_right': u'rw'},
-                       {'zone_name': u'eas.university.edu', 'access_right': u'r'}]})
+                       {'zone_name': u'cs.university.edu',
+                        'access_right': u'rw'},
+                       {'zone_name': u'eas.university.edu',
+                        'access_right': u'r'}]})
 
   def testReverseRangePermissionsListMakeRemove(self):
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),

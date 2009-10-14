@@ -152,8 +152,9 @@ class Testdnsrmrecord(unittest.TestCase):
                        u'assignment_ip': u'10.10.10.0'}])
     command = os.popen('python %s '
                        '--a --a-assignment-ip="10.10.10.0" -t '
-                       'machine1 -v test_view -z test_zone -u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       'machine1 -v test_view -z test_zone -u %s -p %s '
+                       '-s %s' % (EXEC, USERNAME, self.password,
+                                  self.server_name))
     self.assertEqual(command.read(),
         'REMOVED A: machine1 zone_name: test_zone view_name: test_view '
         'ttl: 3600\n'
@@ -162,16 +163,16 @@ class Testdnsrmrecord(unittest.TestCase):
     self.assertEqual(self.core_instance.ListRecords(), [])
 
   def testAAAARemove(self):
-    command = os.popen('python %s '
-                       '--aaaa --aaaa-assignment-ip=" fe80::200:f8ff:fe21:67cf" '
+    command = os.popen('python %s --aaaa '
+                       '--aaaa-assignment-ip=" fe80::200:f8ff:fe21:67cf" '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: View does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.core_instance.MakeView(u'test_view')
-    command = os.popen('python %s '
-                       '--aaaa --aaaa-assignment-ip=" fe80::200:f8ff:fe21:67cf" '
+    command = os.popen('python %s --aaaa '
+                       '--aaaa-assignment-ip=" fe80::200:f8ff:fe21:67cf" '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
@@ -415,15 +416,15 @@ class Testdnsrmrecord(unittest.TestCase):
                        '--soa-expiry-seconds 3 --soa-minimum-seconds 3 '
                        '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                               self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: --soa-serial-number must be '
-                                     'an integer, \'number\' is '
-                                     'not an integer.\n')
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: --soa-serial-number must be '
+        'an integer, \'number\' is not an integer.\n')
     command.close()
     command = os.popen('python %s -z z -t t --soa --soa-serial-number 3 '
                        '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                               self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: --soa-minimun-seconds must be '
-                                     'specified.\n')
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: --soa-minimun-seconds must be specified.\n')
     command.close()
     command = os.popen('python %s -z z -t t --mx --mx-priority number '
                        '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,

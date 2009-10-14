@@ -141,8 +141,8 @@ class Testdnsmkacl(unittest.TestCase):
                            EXEC, USERNAME, self.password, self.server_name,
                            CREDFILE))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: To make an ACL a CIDR block or ip address must be specified '
-        'with the --cidr-block flag.\n')
+        'CLIENT ERROR: To make an ACL a CIDR block or ip address must be '
+        'specified with the --cidr-block flag.\n')
     self.core_instance.MakeACL(u'test_acl', u'192.168.1.0/24', 1)
     command = os.popen('python %s --acl test_acl '
                        '-u %s -p %s -s %s -c %s' % (

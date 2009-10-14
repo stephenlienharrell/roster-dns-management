@@ -211,21 +211,23 @@ class Testdnsrmusergroup(unittest.TestCase):
                       '-r test_reverse_error '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: The -r/--reverse-range-permission '
-                                    'flag cannot be used.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: The -r/--reverse-range-permission '
+        'flag cannot be used.\n')
     output.close()
     output = os.popen('python %s -f forward '
                       '-n test_user_name_error '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                               PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: The -f/--forward-zone-permission '
-                                    'flag cannot be used.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: The -f/--forward-zone-permission flag cannot be used.\n')
     output.close()
     output = os.popen('python %s -f forward '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: An access right must be specified '
-                                    'with the --access-right flag.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: An access right must be specified '
+        'with the --access-right flag.\n')
     output.close()
     output = os.popen('python %s -f forward '
                       '--access-right access_right '
@@ -238,28 +240,30 @@ class Testdnsrmusergroup(unittest.TestCase):
                       '--access-right access_right -g test_group '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: An access right of either rw|r '
-                                    'is required.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: An access right of either rw|r is required.\n')
     output.close()
     output = os.popen('python %s -f forward '
                       '--access-right rw -g test_group '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: A zone must be specified with the '
-                                    '-z flag.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: A zone must be specified with the -z flag.\n')
     output.close()
     output = os.popen('python %s -r reverse '
                       '-n test_user_name_error '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: The -r/--reverse-range-permission '
-                                    'flag cannot be used.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: The -r/--reverse-range-permission '
+        'flag cannot be used.\n')
     output.close()
     output = os.popen('python %s -r reverse '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: A CIDR block must be specified '
-                                    'with the --cidr-block flag.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: A CIDR block must be specified '
+        'with the --cidr-block flag.\n')
     output.close()
     output = os.popen('python %s -r reverse '
                       '--cidr-block 192.168.0.0/24 '
@@ -279,16 +283,17 @@ class Testdnsrmusergroup(unittest.TestCase):
                       '--cidr-block 192.168.0.0/24 -g test_group '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: An access right must be specified '
-                                    'with the --access-right flag.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: An access right must be specified '
+        'with the --access-right flag.\n')
     output.close()
     output = os.popen('python %s -r reverse '
                       '--cidr-block 192.168.0.0/24 -g test_group '
                       '--access-right fake_access_right '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: An access right of either rw|r '
-                                    'is required.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: An access right of either rw|r is required.\n')
     output.close()
     output = os.popen('python %s '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
@@ -296,7 +301,8 @@ class Testdnsrmusergroup(unittest.TestCase):
     self.assertEqual(output.read(),
                      'Usage: dnsrmusergroup [options]\n'
                      '\nOptions:\n'
-                     '  --version             show program\'s version number and exit\n'
+                     '  --version             show program\'s version number '
+                     'and exit\n'
                      '  -h, --help            show this help message and exit\n'
                      '  -l, --list            List users, apply -u flag to'
                      ' filter.\n'

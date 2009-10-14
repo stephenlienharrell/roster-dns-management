@@ -103,9 +103,11 @@ def main(args):
 
   if( options.zone ):
     if( not options.type ):
-      cli_common_lib_instance.DnsError('A zone type must be specified with -t/--type', 1)
+      cli_common_lib_instance.DnsError(
+          'A zone type must be specified with -t/--type', 1)
     if( not options.origin ):
-      cli_common_lib_instance.DnsError('An origin must be specified with --origin.', 1)
+      cli_common_lib_instance.DnsError(
+          'An origin must be specified with --origin.', 1)
     views = roster_client_lib.RunFunction(u'ListViews', options.username,
                                           credfile=options.credfile,
                                           credstring=options.credstring,

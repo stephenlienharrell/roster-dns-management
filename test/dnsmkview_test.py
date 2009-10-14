@@ -198,15 +198,16 @@ class Testdnsmkview(unittest.TestCase):
                        '-c %s -u %s -p %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password,
                            self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: Using -V/--view-dep requires the '
-                                     'use of -v/--view.\n')
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: Using -V/--view-dep requires the use of -v/--view.\n')
     command.close()
     command = os.popen('python %s -e set1 '
                        '-c %s -u %s -p %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password,
                            self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: Using -e/--dns-server-set '
-                                     'requires the use of -v/--view.\n')
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: Using -e/--dns-server-set '
+        'requires the use of -v/--view.\n')
     command.close()
     command = os.popen('python %s -v test_view '
                        '-c %s -u %s -p %s -s %s' % (

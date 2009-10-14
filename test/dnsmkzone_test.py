@@ -134,9 +134,9 @@ class TestDnsMkZone(unittest.TestCase):
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'ADDED FORWARD ZONE: zone_name: test_zone zone_type: master '
-                     'zone_origin: dept.univiersity.edu. zone_options: None '
-                     'view_name: test_view\n')
+                     'ADDED FORWARD ZONE: zone_name: test_zone zone_type: '
+                     'master zone_origin: dept.univiersity.edu. '
+                     'zone_options: None view_name: test_view\n')
     output.close()
 
     self.assertEqual(self.core_instance.ListZones(),
@@ -149,9 +149,9 @@ class TestDnsMkZone(unittest.TestCase):
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'ADDED FORWARD ZONE: zone_name: test_zone2 zone_type: master '
-                     'zone_origin: dept.univiersity.edu. zone_options: None '
-                     'view_name: test_view\n')
+                     'ADDED FORWARD ZONE: zone_name: test_zone2 zone_type: '
+                     'master zone_origin: dept.univiersity.edu. '
+                     'zone_options: None view_name: test_view\n')
     output.close()
     self.assertEqual(self.core_instance.ListZones(),
         {u'test_zone':
@@ -190,13 +190,15 @@ class TestDnsMkZone(unittest.TestCase):
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: An origin must be specified with --origin.\n')
+                     'CLIENT ERROR: An origin must be specified with '
+                     '--origin.\n')
     output.close()
     output = os.popen('python %s -v test_view -z test_zone --origin '
                       'dept.univiersity.edu. -s %s -u %s -p %s' % (
                           EXEC, self.server_name, USERNAME, PASSWORD))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: A zone type must be specified with -t/--type\n')
+                     'CLIENT ERROR: A zone type must be specified with '
+                     '-t/--type\n')
     output.close()
     self.core_instance.MakeView(u'test_view')
     output = os.popen('python %s -v test_view -z reverse_zone --origin '

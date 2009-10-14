@@ -166,23 +166,28 @@ class Testdnsrmhost(unittest.TestCase):
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'8',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host6.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host6.university.edu.'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'4',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host2.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host2.university.edu.'},
                                   view_name=u'test_view2')
     self.core_instance.MakeRecord(u'ptr', u'5',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host3.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host3.university.edu.'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'10',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host4.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host4.university.edu.'},
                                   view_name=u'test_view2')
     self.core_instance.MakeRecord(u'ptr', u'7',
                                   u'reverse_zone',
-                                  {u'assignment_host': u'host5.university.edu.'},
+                                  {u'assignment_host':
+                                      u'host5.university.edu.'},
                                   view_name=u'test_view2')
 
   def tearDown(self):
@@ -249,8 +254,8 @@ class Testdnsrmhost(unittest.TestCase):
     output = os.popen('python %s -t '
                       'host3 -z test_zone -v test_view -s %s -u %s '
                       '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: An ip address or range must be '
-                                    'specified.\n')
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: An ip address or range must be specified.\n')
     output.close()
 
 

@@ -191,7 +191,8 @@ class TestDnsMkHost(unittest.TestCase):
     zone_view_assignments_dict['zone_options'] = (
         u'#Allow update\nallow-update { none; };\n')
 
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = u'any'
+    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
+        u'any')
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
@@ -438,7 +439,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'soa'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'serial_number')
     record_arguments_record_assignments_dict['argument_value'] = u'20091223'
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
@@ -497,7 +499,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'a'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'assignment_ip')
     record_arguments_record_assignments_dict['argument_value'] = (
         u'192.168.1.1')
     db_instance.MakeRow('record_arguments_records_assignments',
@@ -517,7 +520,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'a'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'assignment_ip')
     record_arguments_record_assignments_dict['argument_value'] = (
         u'192.168.1.2')
     db_instance.MakeRow('record_arguments_records_assignments',
@@ -557,7 +561,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'soa'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'serial_number')
     record_arguments_record_assignments_dict['argument_value'] = u'20091224'
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
@@ -616,7 +621,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'a'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'assignment_ip')
     record_arguments_record_assignments_dict['argument_value'] = (
         u'1.2.3.5')
     db_instance.MakeRow('record_arguments_records_assignments',
@@ -636,7 +642,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'a'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'assignment_ip')
     record_arguments_record_assignments_dict['argument_value'] = (
         u'1.2.3.6')
     db_instance.MakeRow('record_arguments_records_assignments',
@@ -731,7 +738,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'a'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'assignment_ip')
     record_arguments_record_assignments_dict['argument_value'] = (
         u'192.168.1.4')
     db_instance.MakeRow('record_arguments_records_assignments',
@@ -771,7 +779,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'soa'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'serial_number')
     record_arguments_record_assignments_dict['argument_value'] = u'20091225'
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
@@ -850,7 +859,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'soa'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'serial_number')
     record_arguments_record_assignments_dict['argument_value'] = u'20091226'
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
@@ -929,7 +939,8 @@ class TestDnsMkHost(unittest.TestCase):
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'soa'
     record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
+        'record_arguments_records_assignments_argument_name'] = (
+            u'serial_number')
     record_arguments_record_assignments_dict['argument_value'] = u'20091227'
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
@@ -1210,7 +1221,8 @@ class TestDnsMkHost(unittest.TestCase):
         'computer1 3600 in a 1.2.3.5\n'
         'computer3 3600 in a 1.2.3.6\n')
     handle.close()
-    handle = open('./bind_configs/internal_dns_servers/internal_dns_config', 'r')
+    handle = open('./bind_configs/internal_dns_servers/internal_dns_config',
+                  'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                                     'dns_servers = ns1.int.university.edu,'
                                     'dns1.university.edu\n'

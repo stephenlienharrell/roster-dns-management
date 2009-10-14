@@ -181,15 +181,19 @@ class TestDnslsRecord(unittest.TestCase):
                        'machine1 -v test_view -z test_zone -u %s -p %s -s %s' % (
                            EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
-        'target   ttl  record_type view_name last_user zone_name assignment_ip\n'
-        '---------------------------------------------------------------------\n'
+        'target   ttl  record_type view_name last_user zone_name '
+        'assignment_ip\n'
+        '--------------------------------------------------------'
+        '-------------\n'
         'machine1 3600 a           test_view sharrell  test_zone 10.10.10.0\n\n')
     command.close()
     command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s -s '
                        '%s' % (EXEC, USERNAME, self.password, self.server_name))
     self.assertEqual(command.read(),
-        'target   ttl  record_type view_name last_user zone_name assignment_ip\n'
-        '---------------------------------------------------------------------\n'
+        'target   ttl  record_type view_name last_user zone_name '
+        'assignment_ip\n'
+        '--------------------------------------------------------'
+        '-------------\n'
         'machine1 3600 a           test_view sharrell  test_zone 10.10.10.0\n'
         'machine2 3600 a           test_view sharrell  test_zone 10.10.10.1\n\n')
     command.close()
@@ -232,8 +236,10 @@ class TestDnslsRecord(unittest.TestCase):
                        '%s --cname' % (EXEC, USERNAME, self.password,
                                            self.server_name))
     self.assertEqual(command.read(),
-        'target   ttl  record_type view_name last_user zone_name assignment_ip\n'
-        '---------------------------------------------------------------------\n'
+        'target   ttl  record_type view_name last_user zone_name '
+        'assignment_ip\n'
+        '--------------------------------------------------------'
+        '-------------\n'
         'machine1 3600 a           test_view sharrell  test_zone 10.10.10.0\n'
         'machine2 3600 a           test_view sharrell  test_zone 10.10.10.1\n\n'
         'target   ttl  record_type view_name last_user zone_name '
@@ -268,8 +274,10 @@ class TestDnslsRecord(unittest.TestCase):
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
     self.assertEqual(command.read(),
-        'target   ttl  record_type view_name last_user zone_name assignment_ip\n'
-        '---------------------------------------------------------------------\n'
+        'target   ttl  record_type view_name last_user zone_name '
+        'assignment_ip\n'
+        '--------------------------------------------------------'
+        '-------------\n'
         'machine1 3600 aaaa        test_view sharrell  test_zone '
         'fe80:0000:0000:0000:0200:f8ff:fe21:67cf\n\n')
     command.close()
@@ -310,7 +318,8 @@ class TestDnslsRecord(unittest.TestCase):
     self.assertEqual(command.read(),
         'target   ttl  record_type view_name last_user zone_name quoted_text\n'
         '-------------------------------------------------------------------\n'
-        'machine1 3600 txt         test_view sharrell  test_zone et tu brute\n\n')
+        'machine1 3600 txt         test_view sharrell  test_zone '
+        'et tu brute\n\n')
     command.close()
 
   def testCNAMEList(self):
@@ -327,8 +336,10 @@ class TestDnslsRecord(unittest.TestCase):
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
     self.assertEqual(command.read(),
-        'target   ttl  record_type view_name last_user zone_name assignment_host\n'
-        '-----------------------------------------------------------------------\n'
+        'target   ttl  record_type view_name last_user zone_name '
+        'assignment_host\n'
+        '--------------------------------------------------------'
+        '---------------\n'
         'machine1 3600 cname       test_view sharrell  test_zone '
         'university.edu.\n\n')
     command.close()
@@ -383,12 +394,12 @@ class TestDnslsRecord(unittest.TestCase):
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
     self.assertEqual(command.read(),
-        'target   weight last_user priority record_type view_name ttl  zone_name '
-        'assignment_host port\n'
-        '------------------------------------------------------------------------'
-        '--------------------\n'
-        'machine1 6      sharrell  5        srv         test_view 3600 test_zone '
-        'university.edu. 80\n\n')
+        'target   weight last_user priority record_type view_name ttl  '
+        'zone_name assignment_host port\n'
+        '--------------------------------------------------------------'
+        '------------------------------\n'
+        'machine1 6      sharrell  5        srv         test_view 3600 '
+        'test_zone university.edu. 80\n\n')
     command.close()
 
   def testNSList(self):
@@ -405,8 +416,10 @@ class TestDnslsRecord(unittest.TestCase):
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
     self.assertEqual(command.read(),
-        'target   name_server     ttl  record_type view_name last_user zone_name\n'
-        '-----------------------------------------------------------------------\n'
+        'target   name_server     ttl  record_type view_name last_user '
+        'zone_name\n'
+        '--------------------------------------------------------------'
+        '---------\n'
         'machine1 university.edu. 3600 ns          test_view sharrell  '
         'test_zone\n\n')
     command.close()
@@ -452,8 +465,10 @@ class TestDnslsRecord(unittest.TestCase):
                        '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
                                            self.server_name))
     self.assertEqual(command.read(),
-         'target ttl  record_type view_name last_user zone_name assignment_host\n'
-         '---------------------------------------------------------------------\n'
+         'target ttl  record_type view_name last_user zone_name '
+         'assignment_host\n'
+         '------------------------------------------------------'
+         '---------------\n'
          '4      3600 ptr         test_view sharrell  test_zone '
          'university.edu.\n\n')
     command.close()
