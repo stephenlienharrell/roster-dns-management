@@ -40,6 +40,7 @@ __version__ = '#TRUNK#'
 import datetime
 import inspect
 import uuid
+import os
 
 class CredCache(object):
   """Credentials cache for XMLRPC services.
@@ -78,8 +79,12 @@ class CredCache(object):
     Outputs:
       boolean of whether or not user is authenticated
     """
-    authenticate_module = __import__(self.authentication_method)
-    authentication_module_instance = authenticate_module.AuthenticationMethod()
+    try:
+      authenticate_module = __import__('roster_server.%s' % self.authentication_method)
+      authentication_module = getattr(authenticate_module, self.authentication_method)
+    except ImportError:
+      authentication_module = __import__(self.authentication_method)
+    authentication_module_instance = authentication_module.AuthenticationMethod()
     authenticate_module_args = inspect.getargspec(
         authentication_module_instance.Authenticate)[0]
     if( authenticate_module_args[0] == 'self' ):

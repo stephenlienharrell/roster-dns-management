@@ -46,7 +46,6 @@ import socket
 import threading
 import time
 import getpass
-import fakeldap
 
 import unittest
 sys.path.append('../')

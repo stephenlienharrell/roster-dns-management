@@ -37,7 +37,6 @@ __version__ = '#TRUNK#'
 
 
 import unittest
-import fakeldap
 import os
 
 import roster_core

@@ -48,7 +48,6 @@ import time
 import getpass
 import unittest
 
-import fakeldap
 import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
