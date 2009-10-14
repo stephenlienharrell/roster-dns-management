@@ -19,6 +19,7 @@ Current Release
 - All user tools use a config file.
 - Roster Client Lib replaces expired infinite credential strings.
 - Added a --version flag to all user tools.
+- Made a roster_user_tools.conf file, made it install with setup.py.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
