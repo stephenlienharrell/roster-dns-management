@@ -144,24 +144,26 @@ class TestCoreHelpers(unittest.TestCase):
       u'192.168.1.17', view_name=u'test_view3'),
       {u'test_view3': {u'192.168.1.17':
           [{u'forward': True, u'host': u'host5.university.edu',
-            u'zone': u'forward_zone'}]}})
+            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
     self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
         u'192.168.1.7', view_name=u'test_view2'),
         {u'test_view2': {u'192.168.1.7':
             [{u'forward': False, u'host': u'host5.university.edu',
+              u'zone_origin': u'1.168.192.in-addr.arpa.',
               u'zone': u'reverse_zone'}]}})
     self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
       u'192.168.1.8', view_name=u'test_view'),
       {u'test_view': {u'192.168.1.8':
           [{u'forward': False, u'host': u'host6.university.edu',
+            u'zone_origin': u'1.168.192.in-addr.arpa.',
             u'zone': u'reverse_zone'},
            {u'forward': True, u'host': u'host6.university.edu',
-            u'zone': u'forward_zone'}]}})
+            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
     self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
       u'4321:0000:0001:0002:0003:0004:0567:89ab', view_name=u'test_view'),
       {u'test_view': {u'4321:0000:0001:0002:0003:0004:0567:89ab':
           [{u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone': u'ipv6zone'}]}})
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'}]}})
 
   def testListRecordsByCIDRBlock(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
@@ -172,13 +174,16 @@ class TestCoreHelpers(unittest.TestCase):
         {u'test_view2':
             {u'192.168.1.7':
                  [{u'forward': False, u'host': u'host5.university.edu',
+                   u'zone_origin': u'1.168.192.in-addr.arpa.',
                    u'zone': u'reverse_zone'}],
              u'192.168.1.5':
                  [{u'forward': False, u'host': u'host3.university.edu',
+                   u'zone_origin': u'1.168.192.in-addr.arpa.',
                    u'zone': u'reverse_zone'}]},
          u'any':
             {u'192.168.1.5': [{u'forward': True,
-                u'host': u'host3.university.edu', u'zone': u'forward_zone'}]}})
+                u'host': u'host3.university.edu',
+                u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
 
   def testUnReverseIP(self):
     self.assertEqual(self.core_helper_instance.UnReverseIP(
