@@ -49,7 +49,7 @@ import os
 import roster_core
 
 
-CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
+CONFIG_FILE = '%s/.rosterrc' % os.path.expanduser('~') # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 

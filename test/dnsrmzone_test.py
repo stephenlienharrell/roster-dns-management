@@ -54,7 +54,7 @@ import roster_core
 from roster_user_tools import roster_client_lib
 import roster_server
 
-CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
+CONFIG_FILE = '%s/.rosterrc' % os.path.expanduser('~') # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 HOST = u'localhost'
