@@ -131,7 +131,7 @@ class Testdnsmkusergroup(unittest.TestCase):
 
   def testMakeUserGroupUserGroupAssignments(self):
     output = os.popen('python %s -n new_user '
-                      '-a 128 -g cs -m'
+                      '-a 128 -g cs -m '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                               PASSWORD))
     self.assertEqual(
@@ -250,7 +250,7 @@ class Testdnsmkusergroup(unittest.TestCase):
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: A username of that name already  exists.\n')
+        'CLIENT ERROR: A username of that name already exists.\n')
     output.close()
     output = os.popen('python %s -n newuser '
                       '-a 128 -g fakegroup '
@@ -270,7 +270,7 @@ class Testdnsmkusergroup(unittest.TestCase):
         'an access right, CIDR block or both.\n')
     output.close()
     output = os.popen('python %s -n testuser2 '
-                      '-a 128 -g testgroup -m -z test_zone --access-right x'
+                      '-a 128 -g testgroup -m -z test_zone --access-right x '
                       '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
                                              PASSWORD))
     self.assertEqual(output.read(),
