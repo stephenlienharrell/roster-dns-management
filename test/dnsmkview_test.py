@@ -84,7 +84,7 @@ class DaemonThread(threading.Thread):
 
   def run(self):
     self.daemon_instance = roster_server.Server(self.config_instance, KEYFILE,
-                                                CERTFILE, ldap_module=fakeldap)
+                                                CERTFILE)
     self.daemon_instance.Serve(port=self.port)
 
 class Testdnsmkview(unittest.TestCase):

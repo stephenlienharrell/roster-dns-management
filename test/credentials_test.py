@@ -54,8 +54,7 @@ class TestCredentialsLibrary(unittest.TestCase):
   def setUp(self):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
     self.cred_instance = credentials.CredCache(self.config_instance,
-                                               u'sharrell',
-                                               ldap_module=fakeldap)
+                                               u'sharrell')
     db_instance = self.config_instance.GetDb()
 
     schema = open(SCHEMA_FILE, 'r').read()

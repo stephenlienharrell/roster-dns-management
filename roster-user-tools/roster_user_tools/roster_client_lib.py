@@ -86,7 +86,8 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
 
   if( core_return == 'ERROR: Invalid Credentials' ):
     raise InvalidCredentials('Credential file is invalid.')
-  elif( core_return['new_credential'] is not None ):
+  elif( core_return['new_credential'] is not None and
+        core_return['new_credential'] != '' ):
     if( os.path.exists(credfile) ):
       credfile_handle = open(credfile, 'w')
       try:

@@ -152,22 +152,22 @@ class TestZoneImport(unittest.TestCase):
                         'zone_name': u'sub.university.edu',
                         u'quoted_text': u'"Contact 1:  Stephen Harrell '
                                         u'(sharrell@university.edu)"'}])
-    self.assertEquals(self.core_instance.ListRecords(record_type=u'a'),
-                      [{'target': u'localhost', 'ttl': 3600,
-                        'record_type': u'a', 'view_name': u'any',
-                        'last_user': u'sharrell',
-                        'zone_name': u'sub.university.edu',
-                        u'assignment_ip': u'127.0.0.1'},
-                       {'target': u'desktop-1', 'ttl': 3600,
-                        'record_type': u'a', 'view_name': u'any',
-                        'last_user': u'sharrell',
-                        'zone_name': u'sub.university.edu',
-                        u'assignment_ip': u'192.168.1.100'},
-                       {'target': u'@', 'ttl': 3600,
-                         'record_type': u'a', 'view_name': u'any',
-                         'last_user': u'sharrell',
-                         'zone_name': u'sub.university.edu',
-                         u'assignment_ip': u'192.168.0.1'}])
+    records_list = self.core_instance.ListRecords(record_type=u'a')
+    self.assertTrue({'target': u'localhost', 'ttl': 3600,
+                     'record_type': u'a', 'view_name': u'any',
+                     'last_user': u'sharrell',
+                     'zone_name': u'sub.university.edu',
+                     u'assignment_ip': u'127.0.0.1'} in records_list)
+    self.assertTrue({'target': u'desktop-1', 'ttl': 3600,
+                     'record_type': u'a', 'view_name': u'any',
+                     'last_user': u'sharrell',
+                     'zone_name': u'sub.university.edu',
+                     u'assignment_ip': u'192.168.1.100'} in records_list)
+    self.assertTrue({'target': u'@', 'ttl': 3600,
+                      'record_type': u'a', 'view_name': u'any',
+                      'last_user': u'sharrell',
+                      'zone_name': u'sub.university.edu',
+                      u'assignment_ip': u'192.168.0.1'} in records_list)
     self.assertEquals(self.core_instance.ListRecords(record_type=u'cname'),
                       [{'target': u'www', 'ttl': 3600,
                         'record_type': u'cname', 'view_name': u'any',
@@ -187,7 +187,7 @@ class TestZoneImport(unittest.TestCase):
     importer_instance.MakeRecordsFromZone()
     self.assertEquals(self.core_instance.ListReverseRangeZoneAssignments(),
                       {u'0.168.192.in-addr.arpa': u'192.168.0/24'})
-    self.assertEquals(self.core_instance.ListRecords(record_type=u'ptr'),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
                       [{'target': u'1', 'ttl': 86400,
                         'record_type': u'ptr', 'view_name': u'any',
                         'last_user': u'sharrell',

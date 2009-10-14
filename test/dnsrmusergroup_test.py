@@ -86,7 +86,7 @@ class DaemonThread(threading.Thread):
 
   def run(self):
     self.daemon_instance = roster_server.Server(self.config_instance, KEYFILE,
-                                                CERTFILE, ldap_module=fakeldap)
+                                                CERTFILE)
     self.daemon_instance.Serve(port=self.port)
 
 class Testdnsrmusergroup(unittest.TestCase):
@@ -297,6 +297,7 @@ class Testdnsrmusergroup(unittest.TestCase):
     self.assertEqual(output.read(),
                      'Usage: dnsrmusergroup [options]\n'
                      '\nOptions:\n'
+                     '  --version             show program\'s version number and exit\n'
                      '  -h, --help            show this help message and exit\n'
                      '  -l, --list            List users, apply -u flag to'
                      ' filter.\n'
