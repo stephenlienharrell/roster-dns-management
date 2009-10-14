@@ -7,8 +7,8 @@ class AuthenticationMethod:
   """General LDAP authentication method,
   should work for most LDAP applications.
   """
-  def Authenticate(self, user_name=None, password=None, binddn=None, cert_file=None,
-                   server=None, version=None, tls=None):
+  def Authenticate(self, user_name=None, password=None, binddn=None,
+                   cert_file=None, server=None, version=None, tls=None):
     """Authenticate method for LDAP
 
     Inputs:
@@ -31,7 +31,7 @@ class AuthenticationMethod:
       raise GeneralLDAPConfigError(
           'Option "tls" must be set to "on" or "off", '
           '"%s" is an invalid option.' % tls)
-                                 
+
     ldap_server = ldap.initialize(server)
     ldap_server.protocol_version = get_attr(ldap, version)
     try:
@@ -43,4 +43,3 @@ class AuthenticationMethod:
       ldap_server.unbind_s()
 
     return authenticated
-    
