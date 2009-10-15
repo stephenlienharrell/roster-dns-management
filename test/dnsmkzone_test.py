@@ -163,7 +163,7 @@ class TestDnsMkZone(unittest.TestCase):
                  {'zone_type': u'master', 'zone_options': u'',
                   'zone_origin': u'dept.univiersity.edu.'}}})
 
-  def testMakeReverseZone(self):
+  def testMakeReverseZoneOrigin(self):
     self.core_instance.MakeView(u'test_view')
     output = os.popen('python %s -v test_view -z reverse_zone '
                       '--origin 168.192.in-addr.arpa. --reverse '
@@ -177,6 +177,8 @@ class TestDnsMkZone(unittest.TestCase):
                      'ADDED REVERSE RANGE ZONE ASSIGNMENT: '
                      'zone_name: reverse_zone cidr_block: 192.168/16 \n')
     output.close()
+
+  def testMakeReverseZoneCidr(self):
     self.core_instance.MakeView(u'test_view')
     output = os.popen('python %s -v test_view -z reverse_zone '
                       '--cidr-block 192.168/16 --reverse '
@@ -189,6 +191,21 @@ class TestDnsMkZone(unittest.TestCase):
                      'zone_options: None view_name: test_view\n'
                      'ADDED REVERSE RANGE ZONE ASSIGNMENT: '
                      'zone_name: reverse_zone cidr_block: 192.168/16 \n')
+    output.close()
+
+  def testmakeReverseZoneWeird(self):
+    self.core_instance.MakeView(u'test_view')
+    output = os.popen('python %s -v test_view -z reverse_zone '
+                      '--cidr-block 192.168/27 --reverse '
+                      '--type master --dont-make-any '
+                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
+                                             PASSWORD))
+    self.assertEqual(output.read(),
+                     'ADDED REVERSE ZONE: zone_name: reverse_zone '
+                     'zone_type: master zone_origin: 0/27.168.192.in-addr.arpa. '
+                     'zone_options: None view_name: test_view\n'
+                     'ADDED REVERSE RANGE ZONE ASSIGNMENT: '
+                     'zone_name: reverse_zone cidr_block: 192.168/27 \n')
     output.close()
 
   def testErrors(self):
