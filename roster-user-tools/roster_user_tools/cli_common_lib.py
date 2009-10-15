@@ -52,7 +52,8 @@ class CliCommonLib:
         self.DnsError('Config file "%s" could not be found.' % config_file, 1)
     else:
       config_file = ''
-      file_locations = [os.path.expanduser('~/.rosterrc'), '/etc/roster.conf']
+      file_locations = [os.path.expanduser('~/.rosterrc'),
+                        '/etc/roster/roster_user_tools.conf']
       for config_file in file_locations:
         if( os.path.exists(config_file) ):
           break

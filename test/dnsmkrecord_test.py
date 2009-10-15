@@ -52,6 +52,7 @@ import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -120,16 +121,20 @@ class TestDnsMkRecord(unittest.TestCase):
   def testAZoneMakeRemoveListUpdate(self):
     command = os.popen('python %s '
                        '--a --a-assignment-ip="10.10.10.0" -q -t '
-                       'machine1 -v test_view -z test_zone -u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       'machine1 -v test_view -z test_zone -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password,
+                           USER_CONFIG, self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: View does not exist!\n')
     ##The command will fail, return 1 (True) 
     self.assertTrue(self.retCode(command.close()))
     self.core_instance.MakeView(u'test_view')
     command = os.popen('python %s '
                        '--a --a-assignment-ip="10.10.10.0" -q -t '
-                       'machine1 -v test_view -z test_zone -u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       'machine1 -v test_view -z test_zone -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password,
+                           USER_CONFIG, self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Zone does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.assertFalse(self.core_instance.ListZones())
@@ -146,14 +151,18 @@ class TestDnsMkRecord(unittest.TestCase):
                                   view_name=u'test_view')
     command = os.popen('python %s '
                        '--a --a-assignment-ip="10.10.10.0" -q -t '
-                       'machine1 -v test_view -z test_zone -u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       'machine1 -v test_view -z test_zone -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password,
+                           USER_CONFIG, self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
                        '--a --a-assignment-ip="10.10.10.0" -t '
-                       'machine -v test_view -z test_zone -u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       'machine -v test_view -z test_zone -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password,
+                           USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
                      'ADDED A: machine zone_name: test_zone '
                      'view_name: test_view ttl: 3600\n'
@@ -174,8 +183,9 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--aaaa --aaaa-assignment-ip="fe80::200:f8ff:fe21:67cf" '
                        '-q -t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: View does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.core_instance.MakeView(u'test_view')
@@ -183,8 +193,9 @@ class TestDnsMkRecord(unittest.TestCase):
                        '--aaaa --aaaa-assignment-ip=" '
                        'fe80::200:f8ff:fe21:67cf" -q -t '
                        'machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Zone does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.assertFalse(self.core_instance.ListZones())
@@ -204,14 +215,17 @@ class TestDnsMkRecord(unittest.TestCase):
                        '--aaaa --aaaa-assignment-ip='
                        '"fe80:0000:0000:0000:0200:f8ff:fe21:67cf" '
                        '-q -t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
                        '--aaaa --aaaa-assignment-ip="fe80::200:f8ff:fe21:67cf" '
-                       '-t machine -v test_view -z test_zone -u %s -p %s -s '
-                       '%s' % (EXEC, USERNAME, self.password, self.server_name))
+                       '-t machine -v test_view -z test_zone -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password,
+                           USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
                      'ADDED AAAA: machine zone_name: test_zone '
                      'view_name: test_view ttl: 3600\n'
@@ -240,15 +254,17 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--hinfo --hinfo-hardware Pear --hinfo-os ipear '
                        '-q -t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
                        '--hinfo --hinfo-hardware Pear --hinfo-os ipear '
                        '-q -t machine -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
                      [{'target': u'machine1', 'ttl': 3600, u'hardware': u'Pear',
@@ -271,15 +287,17 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--txt --txt-quoted-text "et tu brute" '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
                        '--txt --txt-quoted-text "et tu brute" '
                        '-t machine -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(
         command.read(),
         'ADDED TXT: machine zone_name: test_zone view_name: test_view '
@@ -307,15 +325,17 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--cname --cname-assignment-host="university.edu." '
                        '-q -t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
                        '--cname --cname-assignment-host="university.edu." '
                        '-q -t machine -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
                      [{'target': u'machine1', 'ttl': 3600,
@@ -347,8 +367,9 @@ class TestDnsMkRecord(unittest.TestCase):
                        '--soa-retry-seconds=30 --soa-minimum-seconds=30 '
                        '--soa-expiry-seconds=30 '
                        '-q -t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
@@ -358,8 +379,9 @@ class TestDnsMkRecord(unittest.TestCase):
                        '--soa-retry-seconds=30 --soa-minimum-seconds=30 '
                        '--soa-expiry-seconds=30 '
                        '-q -t machine -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
                      [{u'serial_number': 123456789,
@@ -394,16 +416,18 @@ class TestDnsMkRecord(unittest.TestCase):
                        '--srv-priority 5 --srv-weight 6 --srv-port 80 '
                        '--srv-assignment-host="university.edu." '
                        '-q -t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s --srv '
                        '--srv-priority 5 --srv-weight 6 --srv-port 80 '
                        '--srv-assignment-host="university.edu." '
                        '-q -t machine -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
                      [{'target': u'machine1', u'weight': 6,
@@ -429,15 +453,17 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--ns --ns-name-server="university.edu." '
                        '-q -t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
                        '--ns --ns-name-server="university.edu." '
                        '-q -t machine -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
                      [{'target': u'machine1',
@@ -462,15 +488,17 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s --mx '
                        '--mx-mail-server="university.edu." --mx-priority 5 '
                        '-q -t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s --mx '
                        '--mx-mail-server="university.edu." --mx-priority 5 '
                        '-q -t machine -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
                      [{'target': u'machine1', 'ttl': 3600, u'priority': 5,
@@ -497,15 +525,17 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--ptr --ptr-assignment-host="university.edu." '
                        '-q -t 192.168.1.4 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Duplicate record!\n')
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
                        '--ptr --ptr-assignment-host="university.edu." '
                        '-t 192.168.1.5 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
                      'ADDED PTR: 192.168.1.5 zone_name: test_zone '
                      'view_name: test_view ttl: 3600\n'
@@ -526,42 +556,48 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
     command = os.popen('python %s -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Must specify a zone-name '
                                      'with "-z".\n')
     command.close()
     command = os.popen('python %s -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: Must specify a target '
                                      'with "-t".\n')
     command.close()
     command = os.popen('python %s -z z -t t --soa --soa-serial-number number '
                        '--soa-refresh-seconds 3 --soa-retry-seconds 3 '
                        '--soa-expiry-seconds 3 --soa-minimum-seconds 3 '
-                       '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                              self.server_name))
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: --soa-serial-number must be '
                                      'an integer, \'number\' is '
                                      'not an integer.\n')
     command.close()
     command = os.popen('python %s -z z -t t --soa --soa-serial-number 3 '
-                       '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                              self.server_name))
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: --soa-minimun-seconds must be '
                                      'specified.\n')
     command.close()
     command = os.popen('python %s -z z -t t --mx --mx-priority number '
-                       '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                              self.server_name))
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: --mx-priority must be '
                                      'an integer. \'number\' is '
                                      'not an integer.\n')
     command.close()
     command = os.popen('python %s -z z -t t --mx '
-                       '-u %s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                              self.server_name))
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: --mx-priority must be '
                                      'specified.\n')
     command.close()

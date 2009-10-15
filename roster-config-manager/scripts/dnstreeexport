@@ -55,7 +55,7 @@ def main(args):
 
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
-                    default='~/.rosterrc')
+                    default=None)
   parser.add_option('-d', '--root-directory', action='store',
                     dest='root_directory',
                     help='Root directory to store configuration files.',

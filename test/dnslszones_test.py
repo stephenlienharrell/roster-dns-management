@@ -52,6 +52,7 @@ import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -133,8 +134,8 @@ class TestDnslszones(unittest.TestCase):
     self.core_instance.MakeZone(u'zone2', u'master', u'school.edu.',
                                 view_name=u'test_view', zone_options=u'stuff',
                                 make_any=False)
-    command = os.popen('python %s -u %s -p %s -s %s' % (
-        EXEC, USERNAME, self.password, self.server_name))
+    command = os.popen('python %s -u %s -p %s --config-file %s -s %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
         'zone_name view_name zone_type zone_origin     zone_options\n'
         '----------------------------------------------------------\n'

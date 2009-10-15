@@ -54,6 +54,7 @@ import roster_core
 from roster_user_tools  import roster_client_lib
 import roster_server
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -161,9 +162,9 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
     output = os.popen('python %s -r 192.168.1.4/30 -f %s '
-                      '-v test_view -s %s -u %s -p %s' % (
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
-                           PASSWORD))
+                           PASSWORD, USER_CONFIG))
     output.close()
     handle = open(TEST_FILE, 'r')
     self.assertEqual(
@@ -252,9 +253,9 @@ class TestDnsMkHost(unittest.TestCase):
                                                       u'192.168.1.0/24')
     # Run updater
     output = os.popen('python %s -f %s -z forward_zone -v test_view -s '
-                      '%s -u %s -p %s --update --commit' % (
+                      '%s -u %s -p %s --config-file %s --update --commit' % (
                           EXEC, TEST_FILE, self.server_name, USERNAME,
-                          PASSWORD))
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'Host: host5.university.edu with ip address '
                      '192.168.1.6 will be ADDED\n'
@@ -283,9 +284,9 @@ class TestDnsMkHost(unittest.TestCase):
                        'zone_name': u'reverse_zone',
                        u'assignment_host': u'host5.university.edu.'}])
     output = os.popen('python %s -r 192.168.1.4/30 -f %s '
-                      '-v test_view -s %s -u %s -p %s' % (
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
-                           PASSWORD))
+                           PASSWORD, USER_CONFIG))
     output.close()
 
     # Write another hosts file and check its contents
@@ -333,8 +334,9 @@ class TestDnsMkHost(unittest.TestCase):
     handle.writelines(file_contents)
     handle.close()
     output = os.popen('python %s -f %s -v test_view -s %s -u %s --commit -p '
-                      '%s --update -r 192.168.1.4/30' % (EXEC, INVALID_HOSTS,
-                          self.server_name, USERNAME, PASSWORD))
+                      '%s --config-file %s --update -r 192.168.1.4/30' % (
+                          EXEC, INVALID_HOSTS,
+                          self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: Line "192.168.1.5  host3.university.edu '
                      'host3 3 '
@@ -358,8 +360,10 @@ class TestDnsMkHost(unittest.TestCase):
     handle.writelines(file_contents)
     handle.close()
     output = os.popen('python %s -f %s -v test_view -s %s -u %s -p '
-                      '%s --update -r 192.168.1.4/30 --commit' % (EXEC,
-                          INVALID_HOSTS, self.server_name, USERNAME, PASSWORD))
+                      '%s --config-file %s --update -r 192.168.1.4/30 '
+                      '--commit' % (
+                          EXEC, INVALID_HOSTS, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: Invalid ip address "5" in file '
                      '"test_data/invalid_hosts"\n')

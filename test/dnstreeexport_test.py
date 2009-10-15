@@ -50,6 +50,7 @@ sys.path.append('../')
 
 import roster_core
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -1137,7 +1138,8 @@ class TestDnsMkHost(unittest.TestCase):
       shutil.rmtree(ROOT_DIR)
 
   def testMakeFilesFromDB(self):
-    output = os.popen('python %s -d %s -c %s' % (EXEC, ROOT_DIR, CONFIG_FILE))
+    output = os.popen('python %s -d %s -c %s' % (
+        EXEC, ROOT_DIR, CONFIG_FILE))
     output.close()
     ##Test Files
     handle = open(

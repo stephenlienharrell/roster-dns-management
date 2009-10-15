@@ -53,6 +53,7 @@ import roster_core
 from roster_user_tools import roster_client_lib
 import roster_server
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -137,8 +138,9 @@ class Testdnsrmzone(unittest.TestCase):
                          {'zone_type': u'master', 'zone_options': u'',
                           'zone_origin': u'origin.'}}})
     output = os.popen('python %s -z test_zone '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'REMOVED ZONE: zone_name: test_zone view_name: any\n')
     output.close()
@@ -146,8 +148,9 @@ class Testdnsrmzone(unittest.TestCase):
 
   def testErrors(self):
     output = os.popen('python %s -z test_zone '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: Zone "test_zone" does not exist.\n')
     output.close()

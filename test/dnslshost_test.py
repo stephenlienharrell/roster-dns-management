@@ -53,6 +53,7 @@ import roster_core
 import roster_server
 from roster_user_tools  import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -196,15 +197,17 @@ class Testdnslshost(unittest.TestCase):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
     output = os.popen('python %s -r 192.168.1.5 -t '
-                      'host3 -s %s -u %s -p %s' % (EXEC, self.server_name,
-                                                       USERNAME, PASSWORD))
+                      'host3 -s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
         '192.168.1.5 Forward host3.university.edu forward_zone any\n\n')
     output.close()
     output = os.popen('python %s -r 192.168.1.4 -t '
-                      'host2. -s %s -u %s -p %s' % (EXEC, self.server_name,
-                                                       USERNAME, PASSWORD))
+                      'host2. -s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         '192.168.1.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
     output.close()
@@ -213,8 +216,9 @@ class Testdnslshost(unittest.TestCase):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.4/30')
     output = os.popen('python %s -r 192.168.1.4/30 '
-                      '-v test_view -s %s -u %s -p %s' % (
-                           EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
+                           EXEC, self.server_name, USERNAME,
+                           PASSWORD, USER_CONFIG))
     self.assertEqual(
         output.read(),
         '192.168.1.4 --      --                   --           --\n'

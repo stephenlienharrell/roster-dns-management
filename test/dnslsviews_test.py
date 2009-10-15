@@ -52,6 +52,7 @@ import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -134,38 +135,42 @@ class TestDnslsviews(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set2')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set2')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view2', u'set2')
-    command = os.popen('python %s -u %s -p %s -s %s' % (
-        EXEC, USERNAME, self.password, self.server_name))
+    command = os.popen('python %s -u %s -p %s --config-file %s -s %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
         'view       view_dependencies view_options dns_server_sets\n'
         '---------------------------------------------------------\n'
         'test_view2 any,test_view2                 set2\n'
         'test_view  any,test_view                  set1,set2\n\n')
     command.close()
-    command = os.popen('python %s -u %s -p %s -s %s -v test_view' % (
-        EXEC, USERNAME, self.password, self.server_name))
+    command = os.popen(
+        'python %s -u %s -p %s --config-file %s -s %s -v test_view' % (
+            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
         'view      view_dependencies view_options dns_server_sets\n'
         '--------------------------------------------------------\n'
         'test_view any,test_view                  set1,set2\n\n')
     command.close()
-    command = os.popen('python %s -u %s -p %s -s %s -V test_view' % (
-        EXEC, USERNAME, self.password, self.server_name))
+    command = os.popen(
+        'python %s -u %s -p %s --config-file %s -s %s -V test_view' % (
+            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
         'view      view_dependencies view_options dns_server_sets\n'
         '--------------------------------------------------------\n'
         'test_view test_view                      set1,set2\n\n')
     command.close()
-    command = os.popen('python %s -u %s -p %s -s %s -e set2' % (
-        EXEC, USERNAME, self.password, self.server_name))
+    command = os.popen(
+        'python %s -u %s -p %s --config-file %s -s %s -e set2' % (
+            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
         'view       view_dependencies view_options dns_server_sets\n'
         '---------------------------------------------------------\n'
         'test_view2 any,test_view2                 set2\n'
         'test_view  any,test_view                  set2\n\n')
     command.close()
-    command = os.popen('python %s -u %s -p %s -s %s -e set2 -V any' % (
-        EXEC, USERNAME, self.password, self.server_name))
+    command = os.popen(
+        'python %s -u %s -p %s --config-file %s -s %s -e set2 -V any' % (
+            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
         'view       view_dependencies view_options dns_server_sets\n'
         '---------------------------------------------------------\n'

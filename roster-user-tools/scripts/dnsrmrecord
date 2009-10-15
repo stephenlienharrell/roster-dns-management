@@ -178,6 +178,9 @@ def main(args):
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server address.', metavar='<server>',
                     default=None)
+  parser.add_option('--config-file', action='store', dest='config_file',
+                    help='Config file location.', metavar='<file>',
+                    default=None)
   parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
                     help='Suppress program output.', default=False)
 

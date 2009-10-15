@@ -52,6 +52,7 @@ import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -135,23 +136,26 @@ class TestDnslsdnsservers(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(u'dns2', u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns2', u'set2')
     command = os.popen('python %s -u %s '
-                       '-p %s -s %s' % (EXEC, USERNAME, self.password,
-                                        self.server_name))
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'set  dns_servers\n'
                                      '----------------\n'
                                      'set1 dns1,dns2\n'
                                      'set2 dns2\n\n')
     command.close()
     command = os.popen('python %s -u %s -d dns1 '
-                       '-p %s -s %s' % (EXEC, USERNAME, self.password,
-                                        self.server_name))
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'set  dns_servers\n'
                                      '----------------\n'
                                      'set1 dns1\n\n')
     command.close()
     command = os.popen('python %s -u %s -e set2 '
-                       '-p %s -s %s' % (EXEC, USERNAME, self.password,
-                                        self.server_name))
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(), 'set  dns_servers\n'
                                      '----------------\n'
                                      'set2 dns2\n\n')

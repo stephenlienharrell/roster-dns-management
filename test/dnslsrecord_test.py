@@ -52,6 +52,7 @@ import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -135,8 +136,9 @@ class TestDnslsRecord(unittest.TestCase):
                                        u'machine1.university.edu.'},
                                   view_name=u'test_view')
     command = os.popen('python %s machine1 -v test_view -z test_zone -u %s '
-                       '-p %s -s %s' % (EXEC, USERNAME, self.password,
-                                        self.server_name))
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   ttl  record_type view_name last_user zone_name '
         'assignment_ip\n'
@@ -178,8 +180,10 @@ class TestDnslsRecord(unittest.TestCase):
                                   view_name=u'test_view')
     command = os.popen('python %s '
                        '--a --a-assignment-ip="10.10.10.0" -t '
-                       'machine1 -v test_view -z test_zone -u %s -p %s -s %s' % (
-                           EXEC, USERNAME, self.password, self.server_name))
+                       'machine1 -v test_view -z test_zone -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   ttl  record_type view_name last_user zone_name '
         'assignment_ip\n'
@@ -187,8 +191,10 @@ class TestDnslsRecord(unittest.TestCase):
         '-------------\n'
         'machine1 3600 a           test_view sharrell  test_zone 10.10.10.0\n\n')
     command.close()
-    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s -s '
-                       '%s' % (EXEC, USERNAME, self.password, self.server_name))
+    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   ttl  record_type view_name last_user zone_name '
         'assignment_ip\n'
@@ -209,9 +215,11 @@ class TestDnslsRecord(unittest.TestCase):
     self.core_instance.MakeRecord(u'a', u'machine2', u'test_zone',
                                   {u'assignment_ip': u'10.10.10.1'},
                                   view_name=u'test_view')
-    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s -s '
-                       '%s --no-header' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s '
+                       '--config-file %s -s '
+                       '%s --no-header' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'machine1 3600 a test_view sharrell test_zone 10.10.10.0\n'
         'machine2 3600 a test_view sharrell test_zone 10.10.10.1\n\n')
@@ -232,9 +240,10 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'assignment_host':
                                         u'machine1.university.edu.'},
                                   view_name=u'test_view')
-    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s -s '
-                       '%s --cname' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s '
+                       '--config-file %s -s %s --cname' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   ttl  record_type view_name last_user zone_name '
         'assignment_ip\n'
@@ -271,8 +280,9 @@ class TestDnslsRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--aaaa --aaaa-assignment-ip="fe80::200:f8ff:fe21:67cf" '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   ttl  record_type view_name last_user zone_name '
         'assignment_ip\n'
@@ -293,8 +303,9 @@ class TestDnslsRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--hinfo --hinfo-hardware Pear --hinfo-os ipear '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
          'target   ttl  hardware record_type view_name last_user zone_name os\n'
          '-------------------------------------------------------------------\n'
@@ -313,8 +324,9 @@ class TestDnslsRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--txt --txt-quoted-text "et to brute" '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   ttl  record_type view_name last_user zone_name quoted_text\n'
         '-------------------------------------------------------------------\n'
@@ -333,8 +345,9 @@ class TestDnslsRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--cname --cname-assignment-host="university.edu." '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   ttl  record_type view_name last_user zone_name '
         'assignment_host\n'
@@ -364,8 +377,9 @@ class TestDnslsRecord(unittest.TestCase):
                        '--soa-retry-seconds=30 --soa-minimum-seconds=30 '
                        '--soa-expiry-seconds=30 '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'zone_name refresh_seconds target   name_server        record_type '
         'last_user minimum_seconds retry_seconds view_name ttl  serial_number '
@@ -391,8 +405,9 @@ class TestDnslsRecord(unittest.TestCase):
                        '--srv-priority 5 --srv-weight 6 --srv-port 80 '
                        '--srv-assignment-host="university.edu." '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   weight last_user priority record_type view_name ttl  '
         'zone_name assignment_host port\n'
@@ -413,8 +428,9 @@ class TestDnslsRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--ns --ns-name-server="university.edu." '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   name_server     ttl  record_type view_name last_user '
         'zone_name\n'
@@ -436,8 +452,9 @@ class TestDnslsRecord(unittest.TestCase):
     command = os.popen('python %s --mx '
                        '--mx-mail-server="university.edu." --mx-priority 5 '
                        '-t machine1 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
         'target   ttl  priority record_type view_name last_user zone_name '
         'mail_server\n'
@@ -462,8 +479,9 @@ class TestDnslsRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--ptr --ptr-assignment-host="university.edu." '
                        '-t 192.168.1.4 -v test_view -z test_zone -u '
-                       '%s -p %s -s %s' % (EXEC, USERNAME, self.password,
-                                           self.server_name))
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
          'target ttl  record_type view_name last_user zone_name '
          'assignment_host\n'

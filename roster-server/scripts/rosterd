@@ -62,9 +62,9 @@ def main(args):
   parser.add_option('-d', '--debug', dest='debuglevel', metavar='<n>',
                     help='Print debug messages, with <n> indicating level.',
                     default=0)
-  parser.add_option('-f', '--file', dest='configfile', metavar='<file>',
+  parser.add_option('--config-file', dest='config_file', metavar='<file>',
                     help='Use <file> as a config file, rather than default',
-                    default=os.path.expanduser('~/.rosterrc'))
+                    default='/etc/roster/roster_server.conf')
   parser.add_option('-H', '--host', dest='host', metavar='<host>',
                     help='Hostname of server to be created.',
                     default=u'localhost')
@@ -74,7 +74,7 @@ def main(args):
   if( not options.foreground ):
     # daemonize here
     pass
-  config_instance = roster_core.Config(options.configfile)
+  config_instance = roster_core.Config(options.config_file)
   # Gotta work debuglevel into the config at some point.
   daemon = roster_server.Server(config_instance, options.key_file,
                                 options.cert_file)

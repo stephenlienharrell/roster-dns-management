@@ -53,6 +53,7 @@ import roster_server
 from roster_user_tools import roster_client_lib
 
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -132,8 +133,8 @@ class Testdnslsreservedword(unittest.TestCase):
   def testListReservedWords(self):
     self.core_instance.MakeReservedWord(u'reserved_word1')
     self.core_instance.MakeReservedWord(u'reserved_word2')
-    output = os.popen('python %s -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'damn\nreserved_word1\nreserved_word2\n')
     output.close()
 

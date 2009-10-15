@@ -179,6 +179,9 @@ def main(args):
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server address.', metavar='<server>',
                     default=None)
+  parser.add_option('--config-file', action='store', dest='config_file',
+                    help='Config file location.', metavar='<file>',
+                    default=None)
   parser.add_option('--no-header', action='store_true', dest='no_header',
                     help='Do not display a header.', default=False)
 

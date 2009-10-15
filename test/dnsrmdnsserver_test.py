@@ -53,6 +53,7 @@ import roster_core
 from roster_user_tools import roster_client_lib
 import roster_server
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -138,8 +139,9 @@ class Testdnsrmdnsserver(unittest.TestCase):
     self.assertEqual(self.core_instance.ListDnsServers(), [u'dns1'])
     output = os.popen('python %s -e set1 '
                       '-d dns1 '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'REMOVED DNS SERVER SET ASSIGNMENT: dns_server_set: set1 '
                      'dns_server: dns1\n')
@@ -147,35 +149,40 @@ class Testdnsrmdnsserver(unittest.TestCase):
     self.assertEqual(self.core_instance.ListDnsServerSetAssignments(), {})
     self.assertEqual(self.core_instance.ListDnsServerSets(), [u'set1'])
     output = os.popen('python %s -e set1 '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'REMOVED DNS SERVER SET: set1\n')
     output.close()
     self.assertEqual(self.core_instance.ListDnsServerSets(), [])
     self.assertEqual(self.core_instance.ListDnsServers(), [u'dns1'])
     output = os.popen('python %s -d dns1 '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'REMOVED DNS SERVER: dns1\n')
     output.close()
     self.assertEqual(self.core_instance.ListDnsServers(), [])
 
   def testErrors(self):
     output = os.popen('python %s -d dns1 '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: DNS server "dns1" does not exist.\n')
     output.close()
     output = os.popen('python %s -e set1 '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: DNS server set "set1" does not exist.\n')
     output.close()
     output = os.popen('python %s -d dns1 -e set1 '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: DNS server set assignment "set1/dns1" '
                      'does not exist.\n')

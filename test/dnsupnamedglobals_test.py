@@ -54,6 +54,7 @@ import roster_core
 from roster_user_tools  import roster_client_lib
 import roster_server
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -149,25 +150,25 @@ class TestDnsMkHost(unittest.TestCase):
     # Upload file to database
     self.core_instance.MakeDnsServerSet(u'set1')
     output = os.popen('python %s -f %s -d set1 --update '
-                      '-s %s -u %s -p %s' % (
+                      '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
-                           PASSWORD))
+                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'ADDED NAMED_CONF_GLOBAL_OPTION: test_data/test_named\n')
     output.close()
     timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%d %H:%M:%S')
     # Print the file list of set1 from the database
     output = os.popen('python %s -l -d set1 -t "%s" '
-                      '-s %s -u %s -p %s' % (
+                      '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, self.server_name,
-                           USERNAME, PASSWORD))
+                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), '1 %s set1\n\n' % timestamp_string)
     output.close()
     # Write uploaded file from the database by set name and timestamp
     output = os.popen('python %s -e -d set1 -t "%s" -f %s '
-                      '-s %s -u %s -p %s' % (
+                      '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, TEST_FILE, self.server_name,
-                           USERNAME, PASSWORD))
+                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Wrote file: %s\n' % TEST_FILE)
     output.close()
     # Verify file contents
@@ -182,9 +183,9 @@ class TestDnsMkHost(unittest.TestCase):
                                     '    allow-update { none; };\n};\n\n')
     # Write uploaded file from the database by id
     output = os.popen('python %s -e -i 1 -f %s '
-                      '-s %s -u %s -p %s' % (
+                      '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name,
-                           USERNAME, PASSWORD))
+                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Wrote file: %s\n' % TEST_FILE)
     output.close()
     # Verify file contents
@@ -201,17 +202,19 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options2')
     # Revert last version to original file
-    output = os.popen('python %s -r set1 -i 1 -s %s -u %s -p %s' % (
-                           EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -r set1 -i 1 -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                           EXEC, self.server_name,
+                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(
         output.read(),
         'REVERTED NAMED_CONF_GLOBAL_OPTION: dns_server_set: set1 rev: 1\n')
     output.close()
     # Download original file string and write to new file
     output = os.popen('python %s -e -i 4 -f %s '
-                      '-s %s -u %s -p %s' % (
+                      '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name,
-                           USERNAME, PASSWORD))
+                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Wrote file: %s\n' % TEST_FILE)
     output.close()
     # Verify file contents
@@ -226,9 +229,9 @@ class TestDnsMkHost(unittest.TestCase):
                                     '    allow-update { none; };\n};\n\n')
     # Print configuration revisions list
     output = os.popen('python %s -l -d set1 -t "%s" '
-                      '-s %s -u %s -p %s' % (
+                      '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, self.server_name,
-                           USERNAME, PASSWORD))
+                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), '1 %s set1\n2 %s set1\n3 %s set1\n'
                                     '4 %s set1\n\n' % (
         timestamp_string, timestamp_string, timestamp_string, timestamp_string))
@@ -250,9 +253,9 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.db_instance.CommitTransaction()
     time.sleep(2)
     output = os.popen('python %s -n -f %s -d set1 '
-                      '-s %s -u %s -p %s' % (
+                      '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name,
-                           USERNAME, PASSWORD))
+                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Wrote file: test_data/test_named\n')
     output.close()
     # Verify file contents
@@ -273,14 +276,15 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options2')
-    output = os.popen('python %s -t 299 -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -t 299 -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: Timestamp incorrectly formatted.\n')
     output.close()
     output = os.popen(
         'python %s -f test --update -l -i 1 -t "2009-02-02 01:10:10" -r '
-        '1 -e -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+        '1 -e -s %s -u %s -p %s --config-file %s' % (
+            EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: The -l/--list flag cannot be used.\n'
         'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
@@ -290,49 +294,53 @@ class TestDnsMkHost(unittest.TestCase):
     output.close()
     output = os.popen(
         'python %s -l -i 1 -t "2009-02-02 01:10:10" -r set1 -f file -e '
-        '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                               PASSWORD))
+        '-s %s -u %s -p %s --config-file %s' % (
+            EXEC, self.server_name, USERNAME,
+            PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: The -f/--file flag cannot be used.\n'
         'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
         'CLIENT ERROR: The -r/--revert flag cannot be used.\n')
     output.close()
-    output = os.popen('python %s -e -r 1 -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -e -r 1 -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: The -r/--revert flag cannot be used.\n')
     output.close()
-    output = os.popen('python %s -e -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -e -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: Either an option id or dns server set and '
         'timestamp are needed.\n')
     output.close()
-    output = os.popen('python %s -e -d set1 -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -e -d set1 -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: Multiple configurations found. This could '
         'be due to an internal error or arguments may be '
         'too general.\n')
     output.close()
-    output = os.popen('python %s -e -d set2 -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -e -d set2 -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'CLIENT ERROR: No configurations found.\n')
     output.close()
-    output = os.popen('python %s -r set1 -f file -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -r set1 -f file -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: The -f/--file flag cannot be used.\n')
     output.close()
-    output = os.popen('python %s -r set1 -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -r set1 -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: To revert a configuration, the desired '
         'replacement must be specified with -i\n')
     output.close()
     output = os.popen(
         'python %s -f test -n --update -l -i 1 -t "2009-02-02 01:10:10" -r '
-        '1 -e -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+        '1 -e -s %s -u %s -p %s --config-file %s' % (
+            EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: The -l/--list flag cannot be used.\n'
         'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
@@ -342,8 +350,9 @@ class TestDnsMkHost(unittest.TestCase):
         'CLIENT ERROR: The --update flag cannot be used.\n')
     output.close()
     output = os.popen(
-        'python %s -n  '
-        '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+        'python %s -n '
+        '-s %s -u %s -p %s --config-file %s' % (
+            EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'CLIENT ERROR: Must specify a dns server '
                                     'set with -d.\n')
     output.close()

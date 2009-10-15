@@ -53,6 +53,7 @@ import roster_core
 from roster_user_tools import roster_client_lib
 import roster_server
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -130,8 +131,9 @@ class Testdnsrmview(unittest.TestCase):
   def testRemoveZoneView(self):
     self.core_instance.MakeView(u'test_view')
     output = os.popen('python %s -v test_view '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'REMOVED VIEW: test_view\n')
     output.close()
     self.assertEqual(self.core_instance.ListViews(), {})
@@ -149,8 +151,9 @@ class Testdnsrmview(unittest.TestCase):
     self.assertEqual(self.core_instance.ListDnsServerSets(), [u'set1'])
     self.assertEqual(self.core_instance.ListDnsServers(), [u'dns1'])
     output = os.popen('python %s -v test_view -e set1 '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'REMOVED DNS SERVER SET VIEW ASSIGNMENT: '
                      'view_name test_view dns_server_set: set1\n')
@@ -167,8 +170,9 @@ class Testdnsrmview(unittest.TestCase):
                        'range_allowed': 1}]})
     output = os.popen('python %s --acl acl '
                       '--cidr-block 192.168.0.0/24 --allow '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'REMOVED ACL: acl_name: acl cidr_block: 192.168.0.0/24 '
                      'range_allowed: True\n')
@@ -178,31 +182,35 @@ class Testdnsrmview(unittest.TestCase):
 
   def testErrors(self):
     output = os.popen('python %s -e test '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: To remove a dns server set view '
-                                    'assignment a view must be '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(), 'CLIENT ERROR: To remove a dns server set '
+                                    'view assignment a view must be '
                                     'specified with the -v flag.\n')
     output.close()
     output = os.popen('python %s --acl acl '
                       '--allow '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: To remove an ACL a CIDR block or '
-                                    'ip address must be specified with the '
-                                    '--cidr-block flag.\n')
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(), 'CLIENT ERROR: To remove an ACL a CIDR '
+                                    'block or ip address must be specified '
+                                    'with the --cidr-block flag.\n')
     output.close()
     output = os.popen('python %s --acl acl '
                       '--cidr-block 192.168.0.0/24 --allow --deny '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
-    self.assertEqual(output.read(), 'CLIENT ERROR: --allow and --deny cannot be used '
-                                    'simultaneously.\n')
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(), 'CLIENT ERROR: --allow and --deny '
+                                    'cannot be used simultaneously.\n')
     output.close()
     output = os.popen('python %s -v test --acl '
                       'test --cidr-block test '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                             PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: The --acl flag cannot be used.\n'
                      'CLIENT ERROR: The --cidr-block flag cannot be used.\n')

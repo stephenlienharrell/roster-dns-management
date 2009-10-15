@@ -53,6 +53,7 @@ import roster_server
 from roster_user_tools import roster_client_lib
 
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -131,14 +132,16 @@ class Testdnsmkreservedword(unittest.TestCase):
 
   def testMakeUserGroupUserGroupAssignments(self):
     output = os.popen('python %s -q -w test_word'
-                      ' -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                              PASSWORD))
+                      ' -s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     output.close()
     self.assertEqual(self.core_instance.ListReservedWords(),
                      [u'damn', u'test_word'])
     output = os.popen('python %s test_word2'
-                      ' -s %s -u %s -p %s' % (EXEC, self.server_name, USERNAME,
-                                              PASSWORD))
+                      ' -s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'ADDED RESERVED_WORD: test_word2\n')
     output.close()
     self.assertEqual(self.core_instance.ListReservedWords(),

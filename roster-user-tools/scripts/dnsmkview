@@ -75,6 +75,9 @@ def main(args):
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server URL.', metavar='<server>',
                     default=None)
+  parser.add_option('--config-file', action='store', dest='config_file',
+                    help='Config file location.', metavar='<file>',
+                    default=None)
   parser.add_option('-u', '--username', action='store', dest='username',
                     help='Run as a different username.', metavar='<username>',
                     default=unicode(getpass.getuser()))

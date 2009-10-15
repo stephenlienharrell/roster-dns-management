@@ -53,6 +53,7 @@ import roster_server
 from roster_user_tools import roster_client_lib
 
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -130,35 +131,39 @@ class Testdnslsusergroup(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testListUserGroupUserGroupAssignments(self):
-    output = os.popen('python %s -s %s -u %s -p %s' % (EXEC, self.server_name,
-                                                       USERNAME, PASSWORD))
+    output = os.popen('python %s -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Username Groups Access Level\n'
                                     '----------------------------\n'
                                     'shuey    bio,cs 64\n'
                                     'jcollins        32\n'
                                     'sharrell cs     128\n\n')
     output.close()
-    output = os.popen('python %s -U sharrell -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -U sharrell -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Username Groups Access Level\n'
                                     '----------------------------\n'
                                     'sharrell cs     128\n\n')
     output.close()
-    output = os.popen('python %s -g cs -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -g cs -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Username Groups Access Level\n'
                                     '----------------------------\n'
                                     'shuey    cs     64\n'
                                     'sharrell cs     128\n\n')
     output.close()
-    output = os.popen('python %s -a 128 -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -a 128 -s %s -u %s -p %s --config-file %s' % (
+        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Username Groups Access Level\n'
                                     '----------------------------\n'
                                     'sharrell cs     128\n\n')
     output.close()
-    output = os.popen('python %s -g cs -a 128 -s %s -u %s -p %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD))
+    output = os.popen('python %s -g cs -a 128 -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'Username Groups Access Level\n'
                                     '----------------------------\n'
                                     'sharrell cs     128\n\n')

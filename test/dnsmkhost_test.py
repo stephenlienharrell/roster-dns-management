@@ -53,6 +53,7 @@ import roster_core
 import roster_server
 from roster_user_tools  import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -192,7 +193,9 @@ class TestDnsMkHost(unittest.TestCase):
                                                       u'192.168.1.0/24')
     output = os.popen('python %s -q -i 192.168.1.6 -z forward_zone -t '
                       'machine1 -v test_view -s %s -u %s '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     output.close()
     self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
         [{'target': u'machine1', 'ttl': 3600, 'record_type': u'a',
@@ -206,7 +209,9 @@ class TestDnsMkHost(unittest.TestCase):
     test_ipv6_addr = '3ffe:0800::0567'
     output = os.popen('python %s -i 3ffe:0800::0567 -t '
                       'machine1 -z ipv6zone -v test_view -s %s -u %s '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (EXEC, self.server_name,
+                                                  USERNAME, PASSWORD,
+                                                  USER_CONFIG))
     self.assertEqual(
         output.read(),
         'ADDED AAAA: machine1 zone_name: ipv6zone view_name: '
@@ -224,31 +229,41 @@ class TestDnsMkHost(unittest.TestCase):
 
   def testErrors(self):
     output = os.popen('python %s -i 192168414b -z'
-                      'forward_zone -v test_view -s %s -u %s -p %s' % (
-                           EXEC, self.server_name, USERNAME, PASSWORD))
+                      'forward_zone -v test_view -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                           EXEC, self.server_name, USERNAME, PASSWORD,
+                           USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: Incorrectly formatted IP address.\n')
     output.close()
     output = os.popen('python %s -i 192.168.1.4 -t machine1.university.edu. -z'
-                      'forward_zone -v test_view -s %s -u %s -p %s' % (
-                           EXEC, self.server_name, USERNAME, PASSWORD))
+                      'forward_zone -v test_view -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                           EXEC, self.server_name, USERNAME, PASSWORD,
+                           USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: Hostname cannot end with domain name.\n')
     output.close()
     output = os.popen('python %s -i 192.168.1.6 -z forward_zone -t '
                       'machine1 -v test_view -s %s -u %s '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: No reverse zone found for "192.168.1.6"\n')
     output.close()
     output = os.popen('python %s -s %s -u %s '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: An ip address or range must be specified.\n')
     output.close()
     output = os.popen('python %s -s %s -u %s -i 192.168.0.1 -z reverse_zone '
                       '-v test_view -t machine1 '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: This tool requres a forward zone as an '
                      'argument. Reverse zones are handled automatically.\n')

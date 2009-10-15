@@ -52,6 +52,7 @@ import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -196,41 +197,49 @@ class Testdnsrmhost(unittest.TestCase):
 
   def testListSingleIP(self):
     output = os.popen('python %s -i 192.168.0.5 -l '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name,
-                                             USERNAME, PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
         '192.168.0.5 Forward host3.university.edu forward_zone any\n\n')
     output.close()
     output = os.popen('python %s -i 192.168.0.4 -l '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name,
-                                             USERNAME, PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         '192.168.0.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
     output.close()
 
   def testRemoveHost(self):
     output = os.popen('python %s -i 192.168.0.5 -l '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name,
-                                             USERNAME, PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
         '192.168.0.5 Forward host3.university.edu forward_zone any\n\n')
     output.close()
     output = os.popen('python %s -q -i 192.168.0.5 '
                       '-z forward_zone -v test_view -s %s -u %s '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     output.close()
     output = os.popen('python %s -i 192.168.0.5 -l '
-                      '-s %s -u %s -p %s' % (EXEC, self.server_name,
-                                             USERNAME, PASSWORD))
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), '\n')
     output.close()
 
   def testListCIDR(self):
     output = os.popen('python %s -r 192.168.0.4/30 -z '
-                      'forward_zone -v test_view -s %s -u %s -p %s' % (
-                           EXEC, self.server_name, USERNAME, PASSWORD))
+                      'forward_zone -v test_view -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                           EXEC, self.server_name,
+                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         '192.168.0.4 --      --                   --           --\n'
         '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
@@ -242,18 +251,24 @@ class Testdnsrmhost(unittest.TestCase):
   def testErrors(self):
     output = os.popen('python %s -i notipaddress -t '
                       'host3. -z forward_zone -v test_view -s %s -u %s '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'CLIENT ERROR: Incorrectly formatted IP '
                                     'address.\n')
     output.close()
     output = os.popen('python %s -i 192.168.0.90 -t '
                       'host3. -z forward_zone -v test_view2 -s %s -u %s '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'CLIENT ERROR: Record not found.\n')
     output.close()
     output = os.popen('python %s -t '
                       'host3 -z test_zone -v test_view -s %s -u %s '
-                      '-p %s' % (EXEC, self.server_name, USERNAME, PASSWORD))
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: An ip address or range must be specified.\n')
     output.close()

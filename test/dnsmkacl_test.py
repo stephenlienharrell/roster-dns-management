@@ -52,6 +52,7 @@ import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
 
+USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -128,8 +129,8 @@ class Testdnsmkacl(unittest.TestCase):
 
   def testMakeAcl(self):
     command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
-                       '--allow -u %s -p %s -s %s -c %s' % (
-        EXEC, USERNAME, self.password, self.server_name, CREDFILE))
+                       '--allow -u %s -p %s --config-file %s -s %s -c %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
         'ADDED ACL: acl: acl1 cidr_block: 192.168.1.0/24 allowed: True\n')
     command.close()
@@ -137,17 +138,17 @@ class Testdnsmkacl(unittest.TestCase):
 
   def testErrors(self):
     command = os.popen('python %s --acl test_acl '
-                       '-u %s -p %s -s %s -c %s' % (
-                           EXEC, USERNAME, self.password, self.server_name,
-                           CREDFILE))
+                       '-u %s -p %s --config-file %s -s %s -c %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name, CREDFILE))
     self.assertEqual(command.read(),
         'CLIENT ERROR: To make an ACL a CIDR block or ip address must be '
         'specified with the --cidr-block flag.\n')
     self.core_instance.MakeACL(u'test_acl', u'192.168.1.0/24', 1)
     command = os.popen('python %s --acl test_acl '
-                       '-u %s -p %s -s %s -c %s' % (
-                           EXEC, USERNAME, self.password, self.server_name,
-                           CREDFILE))
+                       '-u %s -p %s --config-file %s -s %s -c %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name, CREDFILE))
     self.assertEqual(command.read(), 'WARNING: ACL already exists.\n')
 
 
