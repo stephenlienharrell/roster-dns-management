@@ -183,14 +183,4 @@ class CredCache(object):
           make_new_cred = False
 
     return cred_string
-
-  def ExpireCredentials(self):
-    """Expires all old credentials.  This changes internal state only, and
-    requires no inputs or outputs (and should raise no exceptions).
-    """
-
-    # Loop over garbage_collector array until a valid credential is found,
-    # deleting all expired credentials.
-    pass
-
 # vi: set ai aw sw=2:
