@@ -39,6 +39,7 @@ import datetime
 import IPy
 import constants
 import errors
+import math
 
 class CoreHelpers(object):
   """Library of helper functions that extend the core functions."""
@@ -71,7 +72,18 @@ class CoreHelpers(object):
       string: reverse ip address
     """
     ip_object = IPy.IP(ip_address)
-    return unicode(ip_object.reverseName())
+    reverse_ip_string = ip_object.reverseName()
+    if( ip_object.version() == 4 ):
+      ip_parts = reverse_ip_string.split('.')
+      if( '-' in ip_parts[0] ):
+        range = ip_parts.pop(0).split('-')
+        num_ips = int(range[1]) - int(range[0]) + 1
+        netmask = int(32 - (math.log(num_ips) / math.log(2)))
+        last_octet = ip_parts.pop(0)
+        reverse_ip_string = '.'.join(ip_parts)
+        reverse_ip_string = '%s/%s.%s' % (last_octet, netmask,
+                                          reverse_ip_string)
+    return unicode(reverse_ip_string)
 
   def UnReverseIP(self, ip_address):
     """Un-Reverses reversed IP addresses
