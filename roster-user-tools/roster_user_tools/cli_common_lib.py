@@ -46,7 +46,7 @@ class CliCommonLib:
   def __init__(self, options):
     self.options = options
     self.config_file = ConfigParser.SafeConfigParser()
-    if( hasattr(options, 'config_file') ):
+    if( hasattr(options, 'config_file') and options.config_file is not None ):
       config_file = self.options.config_file
       if( not os.path.expanduser(config_file) ):
         self.DnsError('Config file "%s" could not be found.' % config_file, 1)
