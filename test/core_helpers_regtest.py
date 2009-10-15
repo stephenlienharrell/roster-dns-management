@@ -199,6 +199,10 @@ class TestCoreHelpers(unittest.TestCase):
         '4.1.168.192.in-addr.arpa.'), '192.168.1.4')
     self.assertEqual(self.core_helper_instance.UnReverseIP(
         '64/27.23.168.192.in-addr.arpa.'), '192.168.23.64/27')
+    self.assertEqual(self.core_helper_instance.UnReverseIP(
+        '0.168.192.in-addr.arpa.'), '192.168.0/24')
+    self.assertEqual(self.core_helper_instance.UnReverseIP(
+        '168.192.in-addr.arpa.'), '192.168/16')
 
   def testListAccessRights(self):
     self.assertEqual(self.core_helper_instance.ListAccessRights(), ['rw', 'r'])
