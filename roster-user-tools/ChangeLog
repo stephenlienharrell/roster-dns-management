@@ -22,6 +22,7 @@ Current Release
 - Made a roster_user_tools.conf file, made it install with setup.py.
 - Added better documentation of dnsuphost output file.
 - Removed ListZones from MakeHostsFile.
+- Made dnsmkzone get cidr block from unreverse ip.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
