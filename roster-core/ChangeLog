@@ -1,6 +1,7 @@
 Current Release
 - Fixed ipv6 tests in core helpers regtest.
 - Made specific errors if functions in RemoveRecord fail.
+- Made UnReverseIP more robust.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1

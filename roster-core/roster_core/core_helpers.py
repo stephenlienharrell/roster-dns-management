@@ -82,10 +82,25 @@ class CoreHelpers(object):
     Outputs:
       string: forward ip address
     """
+    mask = 0
+    cidr_parts = ip_address.split('/')
+    if( len(cidr_parts) == 2 ):
+      mask = cidr_parts[1].split('.')[0]
+      ip_address = ip_address.replace('/%s' % mask, '')
     if( ip_address.endswith('in-addr.arpa.') ):
+      octets = 0
       ip_array = ip_address.split('.')
-      new_ip = '%s.%s.%s.%s' % (ip_array[3], ip_array[2], ip_array[1],
-                                ip_array[0])
+      ip_parts = []
+      while len(ip_array):
+        ip_part = ip_array.pop()
+        if( ip_part.isdigit() ):
+          ip_parts.append(ip_part)
+          octets += 1
+      new_ip = '.'.join(ip_parts)
+      if( mask ):
+        new_ip = '%s/%s' % (new_ip, mask)
+      elif( octets < 4 ):
+        new_ip = '%s/%s' % (new_ip, octets * 8)
     elif( ip_address.endswith('ip6.arpa.') ):
       ip_array = ip_address.split('.')[:-3]
       ip_parts = []
@@ -582,3 +597,7 @@ class CoreHelpers(object):
                                            record['record_arguments'],
                                            record['view_name']), success)
     return row_count
+
+  def CIDRtoOrigin(self, cidr_block):
+    ip = IPy.IP(cidr_block)
+
