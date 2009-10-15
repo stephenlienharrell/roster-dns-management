@@ -68,10 +68,6 @@ def MakeHostsFile(options, cli_common_lib_instance):
                                                      'core_return']
   if( records_dict == {} ):
     cli_common_lib_instance.DnsError('No records found.', 1)
-  zones_info = roster_client_lib.RunFunction(
-      'ListZones', options.username, credfile=options.credfile,
-      server_name=options.server,
-      kwargs={'view_name': options.view_name})['core_return']
   ip_address_list = roster_client_lib.RunFunction('CIDRExpand',
                                                   options.username,
                                                   credfile=options.credfile,
@@ -98,8 +94,7 @@ def MakeHostsFile(options, cli_common_lib_instance):
                    '# Ip_Address Fully_Qualified_Domain Hostname\n%s' % (
                        options.range, view_dependency,
                        cli_common_lib_instance.PrintHosts(
-                           records_dict, ip_address_list, zones_info,
-                           options.view_name)))
+                           records_dict, ip_address_list, options.view_name)))
   return file_contents
 
 def CheckIPV4(ip_address):

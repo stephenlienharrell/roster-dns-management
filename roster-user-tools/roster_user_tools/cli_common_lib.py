@@ -160,15 +160,13 @@ class CliCommonLib:
           print_list.append([ip_address, '--', '--', '--', '--'])
     return self.PrintColumns(print_list)
 
-  def PrintHosts(self, records_dictionary, ip_address_list, zones_info,
-                 view_name=None):
+  def PrintHosts(self, records_dictionary, ip_address_list, view_name=None):
     """Prints hosts in an /etc/hosts format
 
     Inputs:
       records_dictionary: dictionary of records
       ip_address_list: list of ip_addresses
       view_name: string of view_name
-      zones_info: zones info from list zones
     """
     print_dict = {}
     print_list = []
@@ -180,12 +178,10 @@ class CliCommonLib:
           for record in records_dictionary[view][ip_address]:
             if( record['forward'] ):
               print_dict[ip_address].update({'host': record['host'],
-                'forward': True, 'zone_origin': zones_info[record['zone']][
-                    view]['zone_origin']})
+                'forward': True, 'zone_origin': record['zone_origin']})
             else:
               print_dict[ip_address].update({'host': record['host'],
-                'reverse': True, 'zone_origin': zones_info[record['zone']][
-                    view]['zone_origin']})
+                'reverse': True, 'zone_origin': record['zone_origin']})
     for ip_address in ip_address_list:
       if( print_dict[ip_address] == {} ):
         print_list.append(['#%s' % ip_address, '', '', ''])
