@@ -58,8 +58,8 @@ from roster_core import db_access
 ZONE_DIRECTORY = 'test_data/university.edu' # This directory will not be checked in
                                         # for security considerations.
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
-SCHEMA_FILE = '../db/database_schema.sql'
-DATA_FILE = '../db/test_data.sql'
+SCHEMA_FILE = '../roster-core/data/database_schema.sql'
+DATA_FILE = 'test_data/test_data.sql'
 TEMP_DIRECTORY = 'temp_data'
 MAIN_USER = u'sharrell'
 
@@ -75,7 +75,7 @@ class ImportRecords(threading.Thread):
     importer_instance = zone_importer_lib.ZoneImport(self.zone_file,
                                                             CONFIG_FILE,
                                                             MAIN_USER,
-                                                            u'external')
+                                                            u'any')
 
     self.record_count += importer_instance.MakeRecordsFromZone()
     self.zone = importer_instance.zone
