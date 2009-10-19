@@ -38,7 +38,6 @@ __version__ = '#TRUNK#'
 import os
 import xmlrpclib
 
-import cli_common_lib
 import roster_client_lib
 
 
@@ -46,8 +45,8 @@ class CliRecordLib:
   def __init__(self, ccl_instance):
     self.ccl_instance = ccl_instance
 
-  def MakeRecord(self, record_type, options, record_args_dict, allow_duplicate=False,
-                 quiet=False, raise_errors=False):
+  def MakeRecord(self, record_type, options, record_args_dict,
+                 allow_duplicate=False, quiet=False, raise_errors=False):
     """Connects to server and makes a DNS record.
 
     Inputs:
@@ -60,8 +59,9 @@ class CliRecordLib:
     """
     for item in record_args_dict:
       if( record_args_dict[item] is None ):
-        self.ccl_instance.DnsError('Must specify --%s-%s' % (record_type,
-                                                      item.replace('_', '-')), 1)
+        self.ccl_instance.DnsError('Must specify --%s-%s' % (
+            record_type, item.replace('_', '-')), 1)
+
     if( not options.credfile.startswith('/') ):
       options.credfile = '%s/%s' % (os.getcwd(), options.credfile)
     views = roster_client_lib.RunFunction('ListViews', options.username,
@@ -78,8 +78,10 @@ class CliRecordLib:
     if( record_type == u'ptr' ):
         search_target = roster_client_lib.RunFunction(
             'GetPTRTarget', options.username, credfile=options.credfile,
-            server_name=options.server, args=[options.target, options.view_name],
+            server_name=options.server,
+            args=[options.target, options.view_name],
             raise_errors=raise_errors)['core_return'][0]
+
     records = roster_client_lib.RunFunction(
         'ListRecords', options.username, credfile=options.credfile,
         server_name=options.server, kwargs={'record_type': record_type,
@@ -152,7 +154,7 @@ class CliRecordLib:
           args=[record_type, options.target, options.zone_name,
           record_args_dict],
           kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
-          server_name=options.server, raise_errors=raise_errors)['core_return']
+          server_name=options.server, raise_errors=raise_errors)
       if( options.view_name is None ):
         options.view_name = u'any'
       if( options.ttl is None ):
@@ -183,8 +185,9 @@ class CliRecordLib:
     """
     for item in record_args_dict:
       if( record_args_dict[item] is None ):
-        self.ccl_instance.DnsError('Must specify --%s-%s' % (record_type,
-                                                      item.replace('_', '-')), 1)
+        self.ccl_instance.DnsError('Must specify --%s-%s' % (
+            record_type, item.replace('_', '-')), 1)
+
     if( not options.credfile.startswith('/') ):
       options.credfile = '%s/%s' % (os.getcwd(), options.credfile)
     views = roster_client_lib.RunFunction(
@@ -235,8 +238,9 @@ class CliRecordLib:
     if( record_type == u'ptr' ):
         search_target = roster_client_lib.RunFunction(
             'GetPTRTarget', options.username, credfile=options.credfile,
-            server_name=options.server, args=[options.target, options.view_name])[
-                'core_return'][0]
+            server_name=options.server,
+            args=[options.target, options.view_name])['core_return'][0]
+
     records = roster_client_lib.RunFunction(
         'ListRecords', options.username, credfile=options.credfile,
         server_name=options.server, kwargs={'record_type': record_type,
@@ -293,9 +297,9 @@ class CliRecordLib:
     """
     try:
       options.target = hostname.rplit('.%s' % zone_origin, 1)[0]
-      RemoveRecord(record_type, options, {u'assignment_ip': ip_address})
+      self.RemoveRecord(record_type, options, {u'assignment_ip': ip_address})
       options.target = reverse_ip_address
-      RemoveRecord(u'ptr', options, {u'assignment_host': options.target})
+      self.RemoveRecord(u'ptr', options, {u'assignment_host': options.target})
     except xmlrpclib.Fault, error:
       error_string = error.faultString.split(':')[1]
       if( error_string != 'No records found.' ):
@@ -314,7 +318,7 @@ class CliRecordLib:
       record_type: string of record type
     """
     options.target = hostname.rsplit('.%s' % zone_origin, 1)[0]
-    MakeRecord(record_type, options, {u'assignment_ip': ip_address})
+    self.MakeRecord(record_type, options, {u'assignment_ip': ip_address})
     options.hostname = options.target
     options.target = reverse_ip_address
     MakeRecord(u'ptr', options, {u'assignment_host': '%s.%s.' % (
