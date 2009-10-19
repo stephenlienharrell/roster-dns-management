@@ -50,7 +50,7 @@ LOCKFILE='/var/lock/roster'
 
 class ServerThread(Thread):
   """Thread for Roster server to run"""
-  def __init__(self, config_file, key_file, cert_file, host):
+  def __init__(self, config_instance, key_file, cert_file, host):
     """Initialize ServerThread
 
     Inputs:
@@ -59,7 +59,7 @@ class ServerThread(Thread):
       cert_file: string of ssl cert file location
       host: string of server url, if using ssl it must start with 'https://'
     """
-    self.config_file = config_file
+    self.config_instance = config_instance
     self.key_file = key_file
     self.cert_file = cert_file
     self.host = host
@@ -67,9 +67,8 @@ class ServerThread(Thread):
 
   def run(self):
     """Run Roster server"""
-    config_instance = roster_core.Config(self.config_file)
     # Gotta work debuglevel into the config at some point.
-    daemon = roster_server.Server(config_instance, self.key_file,
+    daemon = roster_server.Server(self.config_instance, self.key_file,
                                   self.cert_file)
     # This should probably be wrapped in a try/except, to catch signals
     daemon.Serve(self.host)
@@ -78,6 +77,8 @@ def main(args):
   """Make Roster server thread, watch lock file and stop if neccesarry."""
   # Collect command-line args
   parser = OptionParser()
+  parser.add_option('--lock-file', action='store', dest='lock_file',
+                    help='Lock file location.', default=None)
   parser.add_option('-c', '--cert-file', action='store', dest='cert_file',
                     help='SSL cert file path.', default=None)
   parser.add_option('-k', '--key-file', action='store', dest='key_file',
@@ -93,19 +94,22 @@ def main(args):
                     default=u'localhost')
   (globals()['options'], args) = parser.parse_args(args)
 
+  config_instance = roster_core.Config(options.config_file)
+  if( options.lock_file is None ):
+    options.lock_file = config_instance.config_file['server']['lock_file']
   
   if( os.access(LOCKFILE.replace('/roster', ''), os.W_OK) ):
     open(LOCKFILE, 'w').close()
-    ServerThread(options.config_file, options.key_file, options.cert_file,
+    ServerThread(config_instance, options.key_file, options.cert_file,
                  options.host).start()
   else:
     print 'ERROR: Could not access lock file "%s". Do you have permission?' % (
-        LOCKFILE)
+        options.lock_file)
     sys.exit(1)
 
   try:
     while( True ):
-      if( os.path.exists(LOCKFILE) ):
+      if( os.path.exists(options.lock_file) ):
         time.sleep(1)
       else:
         sys.exit(0)

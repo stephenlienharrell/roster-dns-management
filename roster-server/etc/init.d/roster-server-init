@@ -27,6 +27,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+lockfile=/var/lock/roster
+
 start_roster()
 {
   echo "Starting Roster Server..."
@@ -34,12 +36,12 @@ start_roster()
 }
 stop_roster()
 {
-  if [ -e /var/lock/roster ]
+  if [ -e $lockfile ]
   then
-    if [ -w /var/lock/roster ]
+    if [ -w $lockfile ]
     then
       echo "Stopping Roster Server..."
-      rm /var/lock/roster
+      rm $lockfile
     else
       echo "Could not stop Roster Server. Do you have correct permissions?"
       exit 1

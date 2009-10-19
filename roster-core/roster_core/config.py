@@ -72,7 +72,7 @@ class Config(object):
                    'passwd': 'str', 'database': 'str'},
                    'server': {'inf_renew_time': 'int', 'core_die_time': 'int',
                    'get_credentials_wait_increment': 'int',
-                   'server_killswitch': 'boolean',
+                   'server_killswitch': 'boolean', 'lock_file': 'str',
                    'ssl_key_file': 'str', 'ssl_cert_file': 'str'},
                    'credentials': {'authentication_method': 'str',
                                    'exp_time': 'int'}}
