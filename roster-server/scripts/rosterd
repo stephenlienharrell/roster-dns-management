@@ -42,6 +42,7 @@ from threading import Thread
 import sys
 import time
 import os
+import pwd
 
 import roster_core
 import roster_server
@@ -95,11 +96,15 @@ def main(args):
   (globals()['options'], args) = parser.parse_args(args)
 
   config_instance = roster_core.Config(options.config_file)
+
   if( options.lock_file is None ):
     options.lock_file = config_instance.config_file['server']['lock_file']
   
   if( os.access(LOCKFILE.replace('/roster', ''), os.W_OK) ):
     open(LOCKFILE, 'w').close()
+    username = config_instance.config_file['server']['run_as_username']
+    pw = pwd.getpwnam(username)
+    os.setuid(pw.pw_uid)
     ServerThread(config_instance, options.key_file, options.cert_file,
                  options.host).start()
   else:
