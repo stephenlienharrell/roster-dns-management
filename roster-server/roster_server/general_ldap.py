@@ -33,7 +33,7 @@ class AuthenticationMethod:
           '"%s" is an invalid option.' % tls)
 
     ldap_server = ldap.initialize(server)
-    ldap_server.protocol_version = get_attr(ldap, version)
+    ldap_server.protocol_version = getattr(ldap, version)
     try:
       ldap_server.simple_bind_s(binddn, password)
       authenticated = True

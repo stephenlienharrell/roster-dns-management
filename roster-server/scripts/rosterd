@@ -38,27 +38,50 @@ __version__ = '#TRUNK#'
 
 
 from optparse import OptionParser
+from threading import Thread
 import sys
+import time
 import os
 
 import roster_core
 import roster_server
 
-# This should go in a server config file
-CERTFILE=('/etc/ssl/certs/server.crt')
-KEYFILE=('/etc/ssl/certs/server.key')
+LOCKFILE='/var/lock/roster'
+
+class ServerThread(Thread):
+  """Thread for Roster server to run"""
+  def __init__(self, config_file, key_file, cert_file, host):
+    """Initialize ServerThread
+
+    Inputs:
+      config_file: string of config file location
+      key_file: string of ssl key file location
+      cert_file: string of ssl cert file location
+      host: string of server url, if using ssl it must start with 'https://'
+    """
+    self.config_file = config_file
+    self.key_file = key_file
+    self.cert_file = cert_file
+    self.host = host
+    Thread.__init__(self)
+
+  def run(self):
+    """Run Roster server"""
+    config_instance = roster_core.Config(self.config_file)
+    # Gotta work debuglevel into the config at some point.
+    daemon = roster_server.Server(config_instance, self.key_file,
+                                  self.cert_file)
+    # This should probably be wrapped in a try/except, to catch signals
+    daemon.Serve(self.host)
 
 def main(args):
+  """Make Roster server thread, watch lock file and stop if neccesarry."""
   # Collect command-line args
   parser = OptionParser()
-  parser.add_option('-F', '--foreground', action='store_true',
-                    dest='foreground', 
-                    help='Stay in foreground (don\'t daemonize)',
-                    default=False)
   parser.add_option('-c', '--cert-file', action='store', dest='cert_file',
-                    help='SSL cert file path.', default=CERTFILE)
+                    help='SSL cert file path.', default=None)
   parser.add_option('-k', '--key-file', action='store', dest='key_file',
-                    help='SSL key file path.', default=KEYFILE)
+                    help='SSL key file path.', default=None)
   parser.add_option('-d', '--debug', dest='debuglevel', metavar='<n>',
                     help='Print debug messages, with <n> indicating level.',
                     default=0)
@@ -69,17 +92,25 @@ def main(args):
                     help='Hostname of server to be created.',
                     default=u'localhost')
   (globals()['options'], args) = parser.parse_args(args)
-  if(options.debuglevel is not None):
-    foreground = True
-  if( not options.foreground ):
-    # daemonize here
-    pass
-  config_instance = roster_core.Config(options.config_file)
-  # Gotta work debuglevel into the config at some point.
-  daemon = roster_server.Server(config_instance, options.key_file,
-                                options.cert_file)
-  # This should probably be wrapped in a try/except, to catch signals
-  daemon.Serve(options.host)
+
+  
+  if( os.access(LOCKFILE.replace('/roster', ''), os.W_OK) ):
+    open(LOCKFILE, 'w').close()
+    ServerThread(options.config_file, options.key_file, options.cert_file,
+                 options.host).start()
+  else:
+    print 'ERROR: Could not access lock file "%s". Do you have permission?' % (
+        LOCKFILE)
+    sys.exit(1)
+
+  try:
+    while( True ):
+      if( os.path.exists(LOCKFILE) ):
+        time.sleep(1)
+      else:
+        sys.exit(0)
+  finally: # Make sure all threads are killed.
+    sys.exit(0)
 
 if __name__ == "__main__":
   main(sys.argv[1:])

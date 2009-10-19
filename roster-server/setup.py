@@ -71,5 +71,5 @@ setup(name='RosterServer',
       install_requires = ['python-ldap>=2.3.1', 'pyOpenSSL>=0.9',
                           'RosterCore>=%s' % current_version],
       scripts = ['scripts/rosterd'],
-      data_files = [('/etc', ['roster_server.conf'])]
+      data_files = [('/etc', ['roster_server.conf'], '/etc/init.d', ['roster-server-init'])]
      )

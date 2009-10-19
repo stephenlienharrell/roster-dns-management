@@ -65,7 +65,7 @@ class ThreadedXMLRPCServer(SocketServer.ThreadingMixIn,SecureXMLRPCServer):
 
 class Server(object):
   """Daemon library used to serve commands to the client."""
-  def __init__(self, config_instance, keyfile, certfile,
+  def __init__(self, config_instance, keyfile=None, certfile=None,
                inf_renew_time=None, core_die_time=None,
                clean_time=None, unittest_timestamp=None):
     """Sets up config instance. Stores core instances.
@@ -80,7 +80,13 @@ class Server(object):
     """
     self.config_instance = config_instance
     self.keyfile = keyfile
+    if( keyfile is None ):
+      self.keyfile = self.config_instance.config_file['server'][
+          'ssl_key_file']
     self.certfile = certfile
+    if( certfile is None ):
+      self.certfile = self.config_instance.config_file['server'][
+          'ssl_cert_file']
     self.inf_renew_time = inf_renew_time
     self.core_store_cleanup_running = False
     if( inf_renew_time is None ):

@@ -4,6 +4,9 @@ Current Release
 - Made ldap import from roster_server first, then current directory.
 - Made roster_server.conf and added it to setup.py to install in /etc.
 - Removed leftover unused function ExpireCredentials.
+- Made rosterd watch a lock file while starting server.
+- Added init script.
+- Fixed general_ldap module.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
