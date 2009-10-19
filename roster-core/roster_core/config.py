@@ -100,10 +100,10 @@ class Config(object):
             self.config_file[section][variable] = cp.getboolean(section,
                                                                 variable)
           elif( variables[variable] is 'float' ):
-            self.config_file[section][varaible] = cp.getfloat(section, varaible)
+            self.config_file[section][variable] = cp.getfloat(section, variable)
           else:
             raise ConfigError('DataType "%s" is not supported' % (
-                varaibles[varaible]))
+                variables[variable]))
 
     if( 'authentication_method' in self.config_file['credentials'] ):
       authentication_method = self.config_file['credentials'][
