@@ -97,9 +97,22 @@ def main(args):
 
   config_instance = roster_core.Config(options.config_file)
 
+  if( not os.access(options.config_file) ):
+    print 'ERROR: Could not access config file "%s", '
+          'Do you have permission?' % options.config_file
+    sys.exit(1)
+  file_stats = os.stat(options.config_file)
+  mode = file_stats[stat.ST_MODE]
+  perms = oct(mode & 0777)
+  if( len(perms) != 4 ):
+    print 'WARNING: Could not determine config file permissions.'
+  if( perms[3] != '0' ):
+    print 'ERROR: Config file cannot be world accessable.'
+    sys.exit(1)
+
   if( options.lock_file is None ):
     options.lock_file = config_instance.config_file['server']['lock_file']
-  
+
   if( os.access(LOCKFILE.replace('/roster', ''), os.W_OK) ):
     open(LOCKFILE, 'w').close()
     username = config_instance.config_file['server']['run_as_username']
