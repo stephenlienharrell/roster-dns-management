@@ -128,7 +128,7 @@ class dbAccess(object):
                         committed or rolled-back.
     """
     if( self.transaction_init ):
-      raise TransactionError('Cannot start new transaction last transaction'
+      raise TransactionError('Cannot start new transaction last transaction '
                              'not committed or rolled-back.')
 
     if( self.connection is not None ):
