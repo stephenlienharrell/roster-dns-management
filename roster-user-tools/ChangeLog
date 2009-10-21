@@ -24,6 +24,7 @@ Current Release
 - Removed ListZones from MakeHostsFile.
 - Made dnsmkzone get cidr block from unreverse ip.
 - Added --config-file to all user tools.
+- Improved error of config file not found.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1

@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -42,7 +42,7 @@ import getpass
 import roster_client_lib
 
 class CliCommonLib:
-  
+
   def __init__(self, options):
     self.options = options
     self.config_file = ConfigParser.SafeConfigParser()
@@ -56,18 +56,16 @@ class CliCommonLib:
                         '/etc/roster/roster_user_tools.conf']
       for config_file in file_locations:
         if( os.path.exists(config_file) ):
-          break
-      else:
-        self.DnsError('Config file "%s" could not be found.' % config_file, 1)
-    a = self.config_file.read(config_file)
-    if( hasattr(self.options, 'server') ):
-      if( not self.options.server ):
-        self.options.server = self.config_file.get('user_tools', 'server')
-    if( hasattr(self.options, 'credfile') ):
-      if( not options.credfile ):
-        self.options.credfile = self.config_file.get('user_tools', 'cred_file')
-    self.options.credfile = os.path.expanduser(self.options.credfile)
-    self.CheckCredentials()
+          a = self.config_file.read(config_file)
+          if( hasattr(self.options, 'server') ):
+            if( not self.options.server ):
+              self.options.server = self.config_file.get('user_tools', 'server')
+          if( hasattr(self.options, 'credfile') ):
+            if( not options.credfile ):
+              self.options.credfile = self.config_file.get('user_tools',
+                                                           'cred_file')
+          self.options.credfile = os.path.expanduser(self.options.credfile)
+          self.CheckCredentials()
 
   def DnsError(self, message, exit_status=0):
     """Prints standardized client error message to screen.
