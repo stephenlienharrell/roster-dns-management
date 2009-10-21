@@ -1684,7 +1684,7 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    self.user_instance.Authorize('MakeZone')
+    self.user_instance.Authorize('RemoveZone')
     zone_dict = {'zone_name': zone_name}
     zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
         'zone_view_assignments')
@@ -1720,7 +1720,7 @@ class Core(object):
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeZone', u'zone_name: %s '
+                                  u'RemoveZone', u'zone_name: %s '
                                   'view_name: %s' % (zone_name, view_name),
                                   success)
     return row_count
