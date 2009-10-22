@@ -77,7 +77,7 @@ class TestCredentialsLibrary(unittest.TestCase):
                                                 CERTFILE, core_die_time=5,
                                                 inf_renew_time=5, clean_time=0)
     self.credential = self.server_instance.GetCredentials(USERNAME, u'test')
-    self.server_instance.core_store = [] # Clear out core instance from above
+    self.server_instance.core_store = {} # Clear out core instance from above
 
   def testCoreRun(self):
     new_cred = self.server_instance.GetCredentials(u'shuey', 'testpass')
@@ -113,7 +113,7 @@ class TestCredentialsLibrary(unittest.TestCase):
     self.assertEqual(len(self.server_instance.core_store), 2)
 
   def testCoreStoreCleanup(self):
-    self.assertEqual(self.server_instance.core_store, [])
+    self.assertEqual(self.server_instance.core_store, {})
     self.assertEqual(self.server_instance.CoreRun(u'ListUsers', USERNAME,
                                         self.credential)['core_return'],
                      {'shuey': 64, 'jcollins': 32, 'sharrell': 128})
