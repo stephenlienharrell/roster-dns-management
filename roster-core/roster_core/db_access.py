@@ -213,7 +213,7 @@ class dbAccess(object):
     if( self.locked_db is True ):
       raise TransactionError('Must unlock tables before re-locking them')
     self.cursor.execute(
-        'LOCK TABLES %s READ' % ' READ, '.join(constants.TABLES.keys()))
+        'LOCK TABLES %s WRITE' % ' READ, '.join(constants.TABLES.keys()))
     self.locked_db = True
 
   def UnlockDb(self):
