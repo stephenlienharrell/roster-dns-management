@@ -76,6 +76,7 @@ class TestdbAccess(unittest.TestCase):
     self.db_instance.close()
 
   def testTransactions(self):
+    self.db_instance.thread_safe = False
     self.assertRaises(db_access.TransactionError,
                       self.db_instance.CommitTransaction)
     self.assertRaises(db_access.TransactionError,
