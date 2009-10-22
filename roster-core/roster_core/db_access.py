@@ -69,6 +69,10 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import Queue
+import threading
+import uuid
+
 import MySQLdb
 import MySQLdb.cursors
 
@@ -96,7 +100,7 @@ class MissingDataTypeError(data_validation.MissingDataTypeError):
 
 class dbAccess(object):
 
-  def __init__(self, db_host, db_user, db_passwd, db_name):
+  def __init__(self, db_host, db_user, db_passwd, db_name, thread_safe=True):
     # Do some better checking of these args
     self.db_host = db_host
     self.db_user = db_user
@@ -110,6 +114,10 @@ class dbAccess(object):
     self.foreign_keys = []
     self.data_validation_instance = None
     self.locked_db = False
+    self.thread_safe = thread_safe
+    self.queue = Queue.Queue()
+    self.now_serving = None
+    self.queue_update_lock = threading.Lock()
     
 
   def close(self): # Name this function better
@@ -127,9 +135,19 @@ class dbAccess(object):
       TransactionError: Cannot start new transaction last transaction not
                         committed or rolled-back.
     """
-    if( self.transaction_init ):
-      raise TransactionError('Cannot start new transaction last transaction '
-                             'not committed or rolled-back.')
+    if( self. thread_safe ):
+      unique_id = uuid.uuid4()
+      self.queue.put(unique_id)
+
+      while( unique_id != self.now_serving ):
+        self.queue_update_lock.acquire()
+        if( self.now_serving is None ):
+          self.now_serving = self.queue.get()
+        self.queue_update_lock.release()
+    else:
+      if( self.transaction_init ):
+        raise TransactionError('Cannot start new transaction last transaction '
+                               'not committed or rolled-back.')
 
     if( self.connection is not None ):
       try:
@@ -153,11 +171,17 @@ class dbAccess(object):
     Raises:
       TransactionError: Must run StartTansaction before roll-back.
     """
-    if( not self.transaction_init ):
-      raise TransactionError('Must run StartTansaction before commit.')
+    if( not self.thread_safe ):
+      if( not self.transaction_init ):
+        raise TransactionError('Must run StartTansaction before commit.')
     self.cursor.close()
     self.connection.commit()
     self.transaction_init = False
+    if( self.thread_safe ):
+      if( not self.queue.empty() ):
+        self.now_serving = self.queue.get()
+      else:
+        self.now_serving = None
 
   def RollbackTransaction(self):
     """Rollback a transaction.
@@ -167,11 +191,17 @@ class dbAccess(object):
     Raises:
       TransactionError: Must run StartTansaction before roll-back.
     """
-    if( not self.transaction_init ):
-      raise TransactionError('Must run StartTansaction before roll-back.')
+    if( not self.thread_safe ):
+      if( not self.transaction_init ):
+        raise TransactionError('Must run StartTansaction before roll-back.')
     self.cursor.close()
     self.connection.rollback()
     self.transaction_init = False
+    if( self.thread_safe ):
+      if( not self.queue.empty() ):
+        self.now_serving = self.queue.get()
+      else:
+        self.now_serving = None
 
   def LockDb(self):
     """This function is to lock the whole database for consistent data
