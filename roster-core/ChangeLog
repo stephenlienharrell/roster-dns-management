@@ -4,6 +4,7 @@ Current Release
 - Made UnReverseIP more robust.
 - Made ReverseIP more robust.
 - Made DbAccess thread safe.
+- Fixed deadlock condition with all table lock.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
