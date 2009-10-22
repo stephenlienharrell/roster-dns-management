@@ -246,6 +246,11 @@ class TestXMLServerClient(unittest.TestCase):
             'host%s-%s' % (user_number, record_number), self)
         new_client_thread.start()
         client_threads.append(new_client_thread)
+      self.core_instance.db_instance.StartTransaction()
+      self.core_instance.db_instance.LockDb()
+      time.sleep(1)
+      self.core_instance.db_instance.UnlockDb()
+      self.core_instance.db_instance.CommitTransaction()
 
     for old_thread in client_threads:
       old_thread.join()
