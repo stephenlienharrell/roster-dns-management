@@ -113,7 +113,7 @@ class TestXMLServerClient(unittest.TestCase):
     ## Will create a core_instance in core_store
     self.credential = roster_client_lib.GetCredentials(USERNAME, u'test',
                                             server_name=self.server_name)
-    self.daemon_instance.core_store = [] # Clear out core instance from above
+    self.daemon_instance.core_store = {} # Clear out core instance from above
 
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
@@ -205,71 +205,98 @@ class TestXMLServerClient(unittest.TestCase):
                                  'cs': ['sharrell', 'shuey']})
 
   def testMultipleThreadedConnections(self):
-    class ClientRecordModifyThread(threading.Thread):
-      def __init__(self, ip_address, host_name, test_instance):
-        threading.Thread.__init__(self)
-        self.ip_address = ip_address
-        self.host_name = host_name
-        self.test_instance = test_instance
-
-      def run(self):
-        self.test_instance.assertEqual(
-            roster_client_lib.RunFunction(
-                u'ListRecords', USERNAME,
-                credstring=self.test_instance.credential,
-                kwargs={'target': self.host_name},
-                server_name=self.test_instance.server_name)['core_return'], [])
-
-        roster_client_lib.RunFunction(u'MakeRecord', USERNAME,
-                                      credstring=self.test_instance.credential,
-                                      args=['a', self.host_name,
-                                            'new_zone',
-                                            {'assignment_ip': self.ip_address}],
-                                      server_name=self.test_instance.server_name)
-
-        self.test_instance.assertEqual(
-            roster_client_lib.RunFunction(
-                u'ListRecords', USERNAME,
-                credstring=self.test_instance.credential,
-                kwargs={'target': self.host_name},
-                server_name=self.test_instance.server_name)['core_return'],
-            [{'target': self.host_name, 'ttl': 3600, 'record_type': 'a',
-              'view_name': 'any', 'last_user': 'sharrell',
-              'zone_name': 'new_zone', 'assignment_ip': self.ip_address}])
-
-        roster_client_lib.RunFunction(u'RemoveRecord', USERNAME,
-                                      credstring=self.test_instance.credential,
-                                      args=['a', self.host_name,
-                                            'new_zone',
-                                            {'assignment_ip': self.ip_address},
-                                            'any'],
-                                      server_name=self.test_instance.server_name)
-
-
-        self.test_instance.assertEqual(
-            roster_client_lib.RunFunction(
-                u'ListRecords', USERNAME,
-                credstring=self.test_instance.credential,
-                kwargs={'target': self.host_name},
-                server_name=self.test_instance.server_name)['core_return'], [])
-
-
-
-      roster_client_lib.RunFunction(u'MakeZone', USERNAME,
-                                    credstring=self.credential,
-                                    args=['new_zone', 'forward',
-                                          'zone.com.'],
-                                    server_name=self.server_name)
+    self.daemon_instance.core_die_time = 7200
+    roster_client_lib.RunFunction(u'MakeZone', USERNAME,
+                                  credstring=self.credential,
+                                  args=['new_zone', 'forward',
+                                        'zone.com.'],
+                                  server_name=self.server_name)
     client_threads = []
-    for current_number in range(255):
+    for current_number in range(50):
       new_client_thread = ClientRecordModifyThread(
-          '192.168.0.%s' % current_number, 'host%s' % current_number, self)
+          USERNAME, '192.168.0.%s' % current_number,
+          'host%s' % current_number, self)
       new_client_thread.start()
       client_threads.append(new_client_thread)
 
     for old_thread in client_threads:
       old_thread.join()
 
+  def testMultipleThreadedConnectionsWithDifferentUsers(self):
+    self.daemon_instance.core_die_time = 7200
+    roster_client_lib.RunFunction(u'MakeZone', USERNAME,
+                                  credstring=self.credential,
+                                  args=['new_zone', 'forward',
+                                        'zone.com.'],
+                                  server_name=self.server_name)
+
+    for user_number in range(10):
+
+      roster_client_lib.RunFunction(u'MakeUser', USERNAME,
+                                    credstring=self.credential,
+                                    args=['user%s' % user_number, 128],
+                                    server_name=self.server_name)
+
+    client_threads = []
+    for record_number in range(20):
+      for user_number in range(10):
+        new_client_thread = ClientRecordModifyThread(
+            'user%s' % user_number, '192.168.%s.%s' % (
+                user_number, record_number),
+            'host%s-%s' % (user_number, record_number), self)
+        new_client_thread.start()
+        client_threads.append(new_client_thread)
+
+    for old_thread in client_threads:
+      old_thread.join()
+
+class ClientRecordModifyThread(threading.Thread):
+  def __init__(self, user_name, ip_address, host_name, test_instance):
+    threading.Thread.__init__(self)
+    self.ip_address = ip_address
+    self.host_name = host_name
+    self.test_instance = test_instance
+    self.user_name = user_name
+    self.thread_name = user_name + host_name + ip_address
+    self.setName(self.thread_name)
+
+  def run(self):
+    self.test_instance.assertEqual(
+        roster_client_lib.RunFunction(
+            u'ListRecords', self.user_name,
+            credstring=self.test_instance.credential,
+            kwargs={'target': self.host_name},
+            server_name=self.test_instance.server_name)['core_return'], [])
+
+    roster_client_lib.RunFunction(
+        u'MakeRecord', self.user_name, credstring=self.test_instance.credential,
+        args=['a', self.host_name, 'new_zone',
+              {'assignment_ip': self.ip_address}],
+        server_name=self.test_instance.server_name)
+
+    self.test_instance.assertEqual(
+        roster_client_lib.RunFunction(
+            u'ListRecords', self.user_name,
+            credstring=self.test_instance.credential,
+            kwargs={'target': self.host_name},
+            server_name=self.test_instance.server_name)['core_return'],
+        [{'target': self.host_name, 'ttl': 3600, 'record_type': 'a',
+          'view_name': 'any', 'last_user': self.user_name,
+          'zone_name': 'new_zone', 'assignment_ip': self.ip_address}])
+
+    roster_client_lib.RunFunction(
+        u'RemoveRecord', self.user_name,
+        credstring=self.test_instance.credential,
+        args=['a', self.host_name, 'new_zone',
+              {'assignment_ip': self.ip_address}, 'any'],
+        server_name=self.test_instance.server_name)
+
+    self.test_instance.assertEqual(
+        roster_client_lib.RunFunction(
+            u'ListRecords', self.user_name,
+            credstring=self.test_instance.credential,
+            kwargs={'target': self.host_name},
+            server_name=self.test_instance.server_name)['core_return'], [])
 
 if( __name__ == '__main__' ):
   unittest.main()
