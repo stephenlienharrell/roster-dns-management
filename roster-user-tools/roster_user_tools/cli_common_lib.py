@@ -42,31 +42,33 @@ import getpass
 import roster_client_lib
 
 class CliCommonLib:
- 
+
   def __init__(self, options):
     self.options = options
     self.config_file = ConfigParser.SafeConfigParser()
     if( hasattr(options, 'config_file') and options.config_file is not None ):
       config_file = self.options.config_file
-      if( not os.path.expanduser(config_file) ):
-        self.DnsError('Config file "%s" could not be found.' % config_file, 1)
+      a = self.config_file.read(config_file)
+      if( hasattr(self.options, 'server') ):
+        if( not self.options.server ):
+          self.options.server = self.config_file.get('user_tools', 'server')
+      if( hasattr(self.options, 'credfile') ):
+        if( not options.credfile ):
+          self.options.credfile = self.config_file.get('user_tools', 'cred_file')
     else:
       config_file = ''
       file_locations = [os.path.expanduser('~/.rosterrc'),
                         '/etc/roster/roster_user_tools.conf']
       for config_file in file_locations:
         if( os.path.exists(config_file) ):
-          break
-      else:
-        self.DnsError('Config file "%s" could not be found.' % config_file, 1)
-    a = self.config_file.read(config_file)
-    if( hasattr(self.options, 'server') ):
-      if( not self.options.server ):
-        self.options.server = self.config_file.get('user_tools', 'server')
-    if( hasattr(self.options, 'credfile') ):
-      if( not options.credfile ):
-        self.options.credfile = self.config_file.get('user_tools', 'cred_file')
-    self.options.credfile = os.path.expanduser(self.options.credfile)
+          a = self.config_file.read(config_file)
+          if( hasattr(self.options, 'server') ):
+            if( not self.options.server ):
+              self.options.server = self.config_file.get('user_tools', 'server')
+          if( hasattr(self.options, 'credfile') ):
+            if( not options.credfile ):
+              self.options.credfile = self.config_file.get('user_tools', 'cred_file')
+          break;
     self.CheckCredentials()
 
   def DnsError(self, message, exit_status=0):
