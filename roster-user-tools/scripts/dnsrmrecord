@@ -186,7 +186,11 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+  try:
+    cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+  except cli_common_lib.ArgumentError, e:
+    print 'ERROR: %s' % e
+    sys.exit(1)
   cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
 
   if( options.zone_name is None ):

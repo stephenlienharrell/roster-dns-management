@@ -41,6 +41,9 @@ import os
 import getpass
 import roster_client_lib
 
+class ArgumentError(Exception):
+  pass
+
 class CliCommonLib:
 
   def __init__(self, options):
@@ -69,6 +72,13 @@ class CliCommonLib:
             if( not options.credfile ):
               self.options.credfile = self.config_file.get('user_tools', 'cred_file')
           break;
+      else:
+        if( hasattr(self.options, 'server') ):
+          if( not self.options.server ):
+            raise ArgumentError('A server must be specified.')
+        if( hasattr(self.options, 'credfile') ):
+          if( not options.credfile ):
+            raise ArgumentError('A credential file must be specified.')
     self.CheckCredentials()
 
   def DnsError(self, message, exit_status=0):

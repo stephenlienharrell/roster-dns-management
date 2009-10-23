@@ -83,7 +83,11 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+  try:
+    cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+  except cli_common_lib.ArgumentError, e:
+    print 'ERROR: %s' % e
+    sys.exit(1)
 
   dns_servers = roster_client_lib.RunFunction(
       u'ListDnsServers', options.username,
