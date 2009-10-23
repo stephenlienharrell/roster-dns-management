@@ -77,8 +77,8 @@ class CliCommonLib:
           if( not self.options.server ):
             raise ArgumentError('A server must be specified.')
         if( hasattr(self.options, 'credfile') ):
-          if( not options.credfile ):
-            raise ArgumentError('A credential file must be specified.')
+          if( not self.options.credfile ):
+            self.options.credfile = os.path.expanduser('~/.dnscred')
     self.CheckCredentials()
 
   def DnsError(self, message, exit_status=0):
