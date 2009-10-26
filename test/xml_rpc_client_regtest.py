@@ -111,9 +111,9 @@ class TestXMLServerClient(unittest.TestCase):
     self.daemon_thread.start()
     time.sleep(1)
     ## Will create a core_instance in core_store
-    self.credential = roster_client_lib.GetCredentials(USERNAME, u'test',
-                                            server_name=self.server_name)
-    self.daemon_instance.core_store = {} # Clear out core instance from above
+    self.credential = roster_client_lib.GetCredentials(
+        USERNAME, u'test', server_name=self.server_name)
+    self.daemon_instance.core_store = [] # Clear out core instance from above
 
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
@@ -134,11 +134,10 @@ class TestXMLServerClient(unittest.TestCase):
                                      server_name=self.server_name,
                                      credfile=CREDFILE)
     # using file from function above
-    self.assertEqual(roster_client_lib.RunFunction(u'ListUsers', USERNAME,
-                                        credfile=CREDFILE,
-                                        server_name=self.server_name)[
-                                            'core_return'],
-                     {'shuey': 64, 'jcollins': 32, 'sharrell': 128})
+    self.assertEqual(roster_client_lib.RunFunction(
+                         u'ListUsers', u'shuey', credfile=CREDFILE,
+                         server_name=self.server_name)['core_return'],
+                    {'shuey': 64, 'jcollins': 32, 'sharrell': 128})
 
   def testCredsStrings(self):
     credstring = u'81ffc6ea-4b38-45e2-8fce-e24636672b27'
@@ -215,7 +214,7 @@ class TestXMLServerClient(unittest.TestCase):
     for current_number in range(50):
       new_client_thread = ClientRecordModifyThread(
           USERNAME, '192.168.0.%s' % current_number,
-          'host%s' % current_number, self)
+          'host%s' % current_number, self.credential, self)
       new_client_thread.start()
       client_threads.append(new_client_thread)
 
@@ -230,38 +229,46 @@ class TestXMLServerClient(unittest.TestCase):
                                         'zone.com.'],
                                   server_name=self.server_name)
 
-    for user_number in range(10):
+    cred_dict = {}
+    for user_number in range(40):
 
       roster_client_lib.RunFunction(u'MakeUser', USERNAME,
                                     credstring=self.credential,
                                     args=['user%s' % user_number, 128],
                                     server_name=self.server_name)
+      cred_dict['user%s' % user_number] = roster_client_lib.GetCredentials(
+          'user%s' % user_number, u'tost', server_name=self.server_name)
 
     client_threads = []
-    for record_number in range(20):
-      for user_number in range(10):
+    for record_number in range(5):
+      for user_number in range(40):
         new_client_thread = ClientRecordModifyThread(
             'user%s' % user_number, '192.168.%s.%s' % (
                 user_number, record_number),
-            'host%s-%s' % (user_number, record_number), self)
+            'host%s-%s' % (user_number, record_number),
+            cred_dict['user%s' % user_number], self)
         new_client_thread.start()
         client_threads.append(new_client_thread)
       self.core_instance.db_instance.StartTransaction()
-      self.core_instance.db_instance.LockDb()
-      time.sleep(1)
-      self.core_instance.db_instance.UnlockDb()
-      self.core_instance.db_instance.CommitTransaction()
+      try:
+        self.core_instance.db_instance.LockDb()
+        time.sleep(15)
+      finally:
+        self.core_instance.db_instance.UnlockDb()
+        self.core_instance.db_instance.CommitTransaction()
 
     for old_thread in client_threads:
       old_thread.join()
 
 class ClientRecordModifyThread(threading.Thread):
-  def __init__(self, user_name, ip_address, host_name, test_instance):
+  def __init__(self, user_name, ip_address, host_name, credential,
+               test_instance):
     threading.Thread.__init__(self)
     self.ip_address = ip_address
     self.host_name = host_name
     self.test_instance = test_instance
     self.user_name = user_name
+    self.credential = credential
     self.thread_name = user_name + host_name + ip_address
     self.setName(self.thread_name)
 
@@ -269,12 +276,12 @@ class ClientRecordModifyThread(threading.Thread):
     self.test_instance.assertEqual(
         roster_client_lib.RunFunction(
             u'ListRecords', self.user_name,
-            credstring=self.test_instance.credential,
+            credstring=self.credential,
             kwargs={'target': self.host_name},
             server_name=self.test_instance.server_name)['core_return'], [])
 
     roster_client_lib.RunFunction(
-        u'MakeRecord', self.user_name, credstring=self.test_instance.credential,
+        u'MakeRecord', self.user_name, credstring=self.credential,
         args=['a', self.host_name, 'new_zone',
               {'assignment_ip': self.ip_address}],
         server_name=self.test_instance.server_name)
@@ -282,7 +289,7 @@ class ClientRecordModifyThread(threading.Thread):
     self.test_instance.assertEqual(
         roster_client_lib.RunFunction(
             u'ListRecords', self.user_name,
-            credstring=self.test_instance.credential,
+            credstring=self.credential,
             kwargs={'target': self.host_name},
             server_name=self.test_instance.server_name)['core_return'],
         [{'target': self.host_name, 'ttl': 3600, 'record_type': 'a',
@@ -291,7 +298,7 @@ class ClientRecordModifyThread(threading.Thread):
 
     roster_client_lib.RunFunction(
         u'RemoveRecord', self.user_name,
-        credstring=self.test_instance.credential,
+        credstring=self.credential,
         args=['a', self.host_name, 'new_zone',
               {'assignment_ip': self.ip_address}, 'any'],
         server_name=self.test_instance.server_name)
@@ -299,7 +306,7 @@ class ClientRecordModifyThread(threading.Thread):
     self.test_instance.assertEqual(
         roster_client_lib.RunFunction(
             u'ListRecords', self.user_name,
-            credstring=self.test_instance.credential,
+            credstring=self.credential,
             kwargs={'target': self.host_name},
             server_name=self.test_instance.server_name)['core_return'], [])
 

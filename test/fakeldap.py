@@ -64,6 +64,8 @@ class AuthenticationMethod(object):
     elif( binddn == 'uid=jcollins,ou=People,dc=dc,dc=university,'
                     'dc=edu' and password == 'test' ):
       return True
+    elif( binddn.startswith('uid=user') and password == 'tost' ):
+      return True
     else:
       return False
 
