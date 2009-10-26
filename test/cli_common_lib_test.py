@@ -128,9 +128,13 @@ class Testdnslshost(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
+  def NewDnsError(self, message, exit_status=0):
+    return 'ERROR: %s\n' % message
+
   def testPrintColumns(self):
     options.server = self.server_name
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+    cli_common_lib_instance.DnsError = self.NewDnsError
     self.assertEqual(cli_common_lib_instance.PrintColumns(
         [['1', '2', '3'], ['long line', 'b', 'c']]),
         '1         2 3\nlong line b c\n')
@@ -149,6 +153,7 @@ class Testdnslshost(unittest.TestCase):
              'zone_origin': 'university.edu.', 'zone': 'forward_zone'}]}}
     options.server = self.server_name
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+    cli_common_lib_instance.DnsError = self.NewDnsError
     self.assertEqual(cli_common_lib_instance.PrintRecords(records_dictionary),
                      '192.168.1.5 Reverse host3.university.edu reverse_zone '
                      'test_view\n192.168.1.5 Forward host3.university.edu '
@@ -169,11 +174,16 @@ class Testdnslshost(unittest.TestCase):
              'zone_origin': 'university.edu.', 'zone': 'forward_zone'}]}}
     options.server = self.server_name
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+    cli_common_lib_instance.DnsError = self.NewDnsError
     self.assertEqual(cli_common_lib_instance.PrintHosts(
         records_dictionary, [u'192.168.1.5'], view_name='any'),
         u'192.168.1.5 host3.university.edu host3 # No reverse assignment\n')
 
-  # Check credentials is tested when cli_common_lib is instantiated
+  def testCheckCredentials(self):
+    options.server = self.server_name
+    cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
+    cli_common_lib_instance.DnsError = self.NewDnsError
+    self.assertEqual(cli_common_lib_instance.CheckCredentials(), None)
 
 if( __name__ == '__main__' ):
       unittest.main()
