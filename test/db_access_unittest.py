@@ -295,7 +295,8 @@ class TestdbAccess(unittest.TestCase):
               'database']])
 
     for db_table in db_tables:
-      self.assertTrue(db_table in tables)
+      if( not db_table == 'locks' ):
+        self.assertTrue(db_table in tables)
 
     self.db_instance.CommitTransaction()
 
