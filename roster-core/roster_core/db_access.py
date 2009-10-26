@@ -69,8 +69,10 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import datetime
 import Queue
 import threading
+import time
 import uuid
 
 import MySQLdb
@@ -100,12 +102,15 @@ class MissingDataTypeError(data_validation.MissingDataTypeError):
 
 class dbAccess(object):
 
-  def __init__(self, db_host, db_user, db_passwd, db_name, thread_safe=True):
+  def __init__(self, db_host, db_user, db_passwd, db_name, big_lock_timeout,
+               big_lock_wait, thread_safe=True):
     # Do some better checking of these args
     self.db_host = db_host
     self.db_user = db_user
     self.db_passwd = db_passwd
     self.db_name = db_name
+    self.big_lock_timeout = big_lock_timeout
+    self.big_lock_wait = big_lock_wait
     self.transaction_init = False
     self.connection = None
     self.cursor = None
@@ -139,11 +144,15 @@ class dbAccess(object):
       unique_id = uuid.uuid4()
       self.queue.put(unique_id)
 
+      while_sleep = 0
       while( unique_id != self.now_serving ):
+        time.sleep(while_sleep)
         self.queue_update_lock.acquire()
         if( self.now_serving is None ):
           self.now_serving = self.queue.get()
         self.queue_update_lock.release()
+        while_sleep = 0.005
+
     else:
       if( self.transaction_init ):
         raise TransactionError('Cannot start new transaction last transaction '
@@ -161,6 +170,26 @@ class dbAccess(object):
                                         use_unicode=True)
       self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
 
+    while_sleep = 0
+    db_lock_locked = 1
+    while( db_lock_locked ):
+      time.sleep(while_sleep)
+      try:
+        self.cursor.execute('SELECT `locked`, `lock_last_updated`, '
+                            'NOW() as `now` from `locks` WHERE '
+                            '`lock_name`="db_lock_lock"')
+        rows = self.cursor.fetchall()
+      except MySQLdb.ProgrammingError:
+        break
+      if( not rows ):
+        break
+      lock_last_updated = rows[0]['lock_last_updated']
+      db_lock_locked = rows[0]['locked']
+      now = rows[0]['now']
+      if( (now - lock_last_updated).seconds > self.big_lock_timeout ):
+        break
+      while_sleep = 1
+
     self.transaction_init = True
 
   def CommitTransaction(self):
@@ -174,9 +203,12 @@ class dbAccess(object):
     if( not self.thread_safe ):
       if( not self.transaction_init ):
         raise TransactionError('Must run StartTansaction before commit.')
+
+
     self.cursor.close()
     self.connection.commit()
     self.transaction_init = False
+
     if( self.thread_safe ):
       if( not self.queue.empty() ):
         self.now_serving = self.queue.get()
@@ -194,6 +226,7 @@ class dbAccess(object):
     if( not self.thread_safe ):
       if( not self.transaction_init ):
         raise TransactionError('Must run StartTansaction before roll-back.')
+
     self.cursor.close()
     self.connection.rollback()
     self.transaction_init = False
@@ -212,6 +245,9 @@ class dbAccess(object):
     """
     if( self.locked_db is True ):
       raise TransactionError('Must unlock tables before re-locking them')
+    self.cursor.execute('UPDATE `locks` SET `locked`=1 WHERE '
+                        '`lock_name`="db_lock_lock"')
+    time.sleep(self.big_lock_wait)
     self.cursor.execute(
         'LOCK TABLES %s READ' % ' READ, '.join(constants.TABLES.keys()))
     self.locked_db = True
@@ -225,6 +261,8 @@ class dbAccess(object):
     if( self.locked_db is False ):
       raise TransactionError('Must lock tables before unlocking them')
     self.cursor.execute('UNLOCK TABLES')
+    self.cursor.execute('UPDATE `locks` SET `locked`=0 WHERE '
+                        '`lock_name`="db_lock_lock"')
     self.locked_db = False
 
   def InitDataValidation(self):

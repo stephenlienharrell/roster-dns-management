@@ -69,12 +69,15 @@ class Config(object):
 
     # Supported data types: str, int, boolean, float
     file_schema = {'database': {'server': 'str', 'login': 'str',
-                   'passwd': 'str', 'database': 'str'},
+                                'passwd': 'str', 'database': 'str',
+                                'big_lock_timeout': 'int',
+                                'big_lock_wait': 'int'},
                    'server': {'inf_renew_time': 'int', 'core_die_time': 'int',
-                   'get_credentials_wait_increment': 'int',
-                   'run_as_username': 'str',
-                   'server_killswitch': 'boolean', 'lock_file': 'str',
-                   'ssl_key_file': 'str', 'ssl_cert_file': 'str'},
+                              'get_credentials_wait_increment': 'int',
+                              'run_as_username': 'str',
+                              'server_killswitch': 'boolean',
+                              'lock_file': 'str', 'ssl_key_file': 'str',
+                              'ssl_cert_file': 'str'},
                    'credentials': {'authentication_method': 'str',
                                    'exp_time': 'int'}}
 
@@ -125,7 +128,9 @@ class Config(object):
     return db_access.dbAccess(self.config_file['database']['server'],
                               self.config_file['database']['login'],
                               self.config_file['database']['passwd'],
-                              self.config_file['database']['database'])
+                              self.config_file['database']['database'],
+                              self.config_file['database']['big_lock_timeout'],
+                              self.config_file['database']['big_lock_wait'])
 
 
 # vi: set ai aw sw=2:

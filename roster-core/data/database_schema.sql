@@ -60,8 +60,21 @@ DROP TABLE IF EXISTS `users`;
 DROP TABLE IF EXISTS `record_arguments`;
 DROP TABLE IF EXISTS `data_types`;
 DROP TABLE IF EXISTS `record_types`;
+DROP TABLE IF EXISTS `locks`;
 
 ########## Below is the database schema ##########
+
+CREATE TABLE `locks` (
+
+  `lock_id` smallint unsigned NOT NULL auto_increment,
+  `lock_name` varchar(31) UNIQUE NOT NULL,
+  `locked` tinyint(1) default '0',
+  `lock_last_updated` timestamp default CURRENT_TIMESTAMP
+      on update CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (`lock_id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `record_types` (
 
@@ -162,7 +175,7 @@ CREATE TABLE `view_dependencies` (
 CREATE TABLE `zone_types` (
 
   `zone_type_id` tinyint unsigned NOT NULL auto_increment,
-  `zone_type` varchar(32) UNIQUE NOT NULL,
+  `zone_type` varchar(31) UNIQUE NOT NULL,
 
   PRIMARY KEY (`zone_type_id`)
 
@@ -174,7 +187,7 @@ CREATE TABLE `zone_view_assignments` (
   `zone_view_assignments_id` mediumint unsigned NOT NULL auto_increment,
   `zone_view_assignments_zone_name` varchar(255) NOT NULL,
   `zone_view_assignments_view_dependency` varchar(255) NOT NULL,
-  `zone_view_assignments_zone_type` varchar(32) NOT NULL,
+  `zone_view_assignments_zone_type` varchar(31) NOT NULL,
   `zone_origin` varchar(255) NOT NULL,
   `zone_options` longtext,
 
@@ -529,6 +542,8 @@ CREATE TABLE `audit_log` (
 ##########
 # Things that are expected in the db that are not schema.
 ##########
+
+INSERT INTO locks (lock_name) VALUES ('db_lock_lock');
 
 INSERT INTO view_dependencies (view_dependency) VALUES ('any');
 INSERT INTO zone_types (zone_type) VALUES ('master'),('slave'),('forward');
