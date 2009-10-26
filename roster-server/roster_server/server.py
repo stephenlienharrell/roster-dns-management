@@ -106,7 +106,7 @@ class Server(object):
     self.cred_cache_instance = credentials.CredCache(self.config_instance,
                                    inf_renew_time)
     self.unittest_timestamp = unittest_timestamp
-    self.core_store = {} # {'user': ['last_used', core_instance }
+    self.core_store = [] # {'user': user, 'last_used': last_used, 'instance': }
     self.get_credentials_wait = {} # {'user1': 3, 'user2': 4}
     self.last_cleaned = datetime.datetime.now()
 
@@ -116,12 +116,12 @@ class Server(object):
     if( self.last_cleaned + datetime.timedelta(seconds=self.clean_time) < (
           datetime.datetime.now()) ):
       self.last_cleaned = datetime.datetime.now()
-      for user_name, core_instance in self.core_store.iteritems():
+      for core_instance in self.core_store:
         if( core_instance['last_used'] + datetime.timedelta(
                 seconds=self.core_die_time) < datetime.datetime.now() ):
-          delete_list.append(user_name)
-      for user_name in delete_list:
-        del self.core_store[user_name]
+          delete_list.append(core_instance)
+      for instance in delete_list:
+        self.core_store.remove(instance)
 
   def StringToUnicode(self, string):
     """Returns a unicode string if string is not numeric
@@ -162,15 +162,17 @@ class Server(object):
     Outputs:
       instance: instance of dnsmgmtcore
     """
-    if( user_name in self.core_store ):
-      core_instance_dict = self.core_store[user_name]
+    for core_instance_dict in self.core_store:
+      if( core_instance_dict['user_name'] == user_name ):
+        break
     else:
       new_core_instance = roster_core.Core(user_name, self.config_instance,
                                            unittest_timestamp=(
                                                self.unittest_timestamp))
-      core_instance_dict = {'last_used': datetime.datetime.now(),
+      core_instance_dict = {'user_name': user_name,
+                            'last_used': datetime.datetime.now(),
                             'core_instance': new_core_instance}
-      self.core_store[user_name] = core_instance_dict
+      self.core_store.append(core_instance_dict)
 
     return core_instance_dict['core_instance']
 
