@@ -196,7 +196,7 @@ class Server(object):
     ## Instantiate the core instance
     core_instance = self.GetCoreInstance(user_name)
     core_helper_instance = roster_core.CoreHelpers(core_instance)
-    cred_status = self.cred_cache_instance.CheckCredential(credfile,
+    cred_status = self.cred_cache_instance.CheckCredential(credfile, user_name,
                                                            core_instance)
     if( cred_status is not None ):
       ## Fix non unicode strings containing no unicode characters
@@ -281,7 +281,7 @@ class Server(object):
     credstring = unicode(credstring)
     core_instance = self.GetCoreInstance(user_name)
     valid = self.cred_cache_instance.CheckCredential(
-        credstring, core_instance)
+        credstring, user_name, core_instance)
     if( valid == '' ):
       return True
     return False
