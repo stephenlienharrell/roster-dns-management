@@ -112,7 +112,7 @@ class CredCache(object):
 
     return authentication_module_instance.Authenticate(**kwargs_dict)
 
-  def CheckCredential(self, credential, core_instance):
+  def CheckCredential(self, credential, user_name, core_instance):
     """Checks users credential against database.
 
     Inputs:
@@ -147,6 +147,8 @@ class CredCache(object):
             return new_cred # Infinite key re issued
       return u'' # Infinite key is valid
     elif( db_timestamp > current_timestamp ):
+      if( credential_dict['user'] != user_name ):
+        return None
       core_instance._UpdateCredential(search_credential=credential,
                                       update_credential=credential)
       return u'' # Key is valid
