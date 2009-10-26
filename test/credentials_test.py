@@ -111,9 +111,10 @@ class TestCredentialsLibrary(unittest.TestCase):
     cred_string = self.cred_instance.GetCredentials(u'sharrell', 'test',
                                                     self.core_instance)
     self.assertEqual(self.cred_instance.CheckCredential(cred_string,
+                                                        u'sharrell',
                                                        self.core_instance),
                      u'')
-    self.assertEqual(self.cred_instance.CheckCredential(u'test',
+    self.assertEqual(self.cred_instance.CheckCredential(u'test', u'sharrell',
                                                         self.core_instance),
                      None)
 
