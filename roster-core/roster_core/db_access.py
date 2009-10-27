@@ -101,9 +101,24 @@ class MissingDataTypeError(data_validation.MissingDataTypeError):
 
 
 class dbAccess(object):
+  """This class provides the primary interface for connecting and interacting
+   with the roster database.
+   """
 
   def __init__(self, db_host, db_user, db_passwd, db_name, big_lock_timeout,
                big_lock_wait, thread_safe=True):
+    """Instantiates the db_access class.
+
+    Inputs:
+      db_host: string of the database host name
+      db_user: string of the user name used to connect to mysql
+      db_passwd: string of password used to connect to mysql
+      db_name: string of name of database in mysql server to use
+      big_lock_timeout: integer of how long the big lock should be valid for
+      big_lock_wait: integer of how long to wait for proccesses to finish
+                     before locking the database
+      thread_safe: boolean of if db_acceess should be thread safe
+    """
     # Do some better checking of these args
     self.db_host = db_host
     self.db_user = db_user
@@ -124,17 +139,14 @@ class dbAccess(object):
     self.now_serving = None
     self.queue_update_lock = threading.Lock()
     
-
-  def close(self): # Name this function better
-    if( self.connection is not None ):
-      self.connection.close()
-      self.connection = None
-
   def StartTransaction(self):
     """Starts a transaction.
 
     Also it starts a db connection if none exists or it times out.
     Always creates a new cursor.
+    
+    This function also serializes all requests on this object and if the 
+    big lock has been activated will wait for it to be released.
 
     Raises:
       TransactionError: Cannot start new transaction last transaction not
@@ -195,7 +207,8 @@ class dbAccess(object):
   def CommitTransaction(self):
     """Commits a transaction.
 
-    Also does some simple checking to make sure a connection was open first.
+    Also does some simple checking to make sure a connection was open first
+    and releases itself from the current queue.
 
     Raises:
       TransactionError: Must run StartTansaction before roll-back.
@@ -203,7 +216,6 @@ class dbAccess(object):
     if( not self.thread_safe ):
       if( not self.transaction_init ):
         raise TransactionError('Must run StartTansaction before commit.')
-
 
     self.cursor.close()
     self.connection.commit()
@@ -218,7 +230,8 @@ class dbAccess(object):
   def RollbackTransaction(self):
     """Rollback a transaction.
 
-    Also does some simple checking to make sure a connection was open first.
+    Also does some simple checking to make sure a connection was open first
+    and releases itself from the current queue.
 
     Raises:
       TransactionError: Must run StartTansaction before roll-back.
@@ -230,6 +243,7 @@ class dbAccess(object):
     self.cursor.close()
     self.connection.rollback()
     self.transaction_init = False
+
     if( self.thread_safe ):
       if( not self.queue.empty() ):
         self.now_serving = self.queue.get()
