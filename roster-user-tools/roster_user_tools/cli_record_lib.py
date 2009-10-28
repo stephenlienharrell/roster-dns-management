@@ -81,6 +81,12 @@ class CliRecordLib:
             server_name=options.server,
             args=[options.target, options.view_name],
             raise_errors=raise_errors)['core_return'][0]
+    ## Check if view exists
+    if( not views.has_key(options.view_name) and options.view_name != 'any' ):
+      self.ccl_instance.DnsError('View does not exist!', 2)
+    ## Check if zone exists
+    if( not zones.has_key(options.zone_name) ):
+      self.ccl_instance.DnsError('Zone does not exist!', 3)
 
     records = roster_client_lib.RunFunction(
         'ListRecords', options.username, credfile=options.credfile,
@@ -89,13 +95,6 @@ class CliRecordLib:
                                             'zone_name': options.zone_name,
                                             'view_name': options.view_name},
         raise_errors=raise_errors)['core_return']
-
-    ## Check if view exists
-    if( not views.has_key(options.view_name) and options.view_name != 'any' ):
-      self.ccl_instance.DnsError('View does not exist!', 2)
-    ## Check if zone exists
-    if( not zones.has_key(options.zone_name) ):
-      self.ccl_instance.DnsError('Zone does not exist!', 3)
     ## Check for duplicate record
     if( records != [] and not allow_duplicate ):
       for record in records:
