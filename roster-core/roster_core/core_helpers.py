@@ -36,14 +36,10 @@ __version__ = '#TRUNK#'
 
 
 import datetime
-import math
-
 import IPy
-
 import constants
-import core
 import errors
-
+import math
 
 class CoreHelpers(object):
   """Library of helper functions that extend the core functions."""
@@ -80,8 +76,8 @@ class CoreHelpers(object):
     if( ip_object.version() == 4 ):
       ip_parts = reverse_ip_string.split('.')
       if( '-' in ip_parts[0] ):
-        ip_range = ip_parts.pop(0).split('-')
-        num_ips = int(ip_range[1]) - int(ip_range[0]) + 1
+        range = ip_parts.pop(0).split('-')
+        num_ips = int(range[1]) - int(range[0]) + 1
         netmask = int(32 - (math.log(num_ips) / math.log(2)))
         last_octet = ip_parts.pop(0)
         reverse_ip_string = '.'.join(ip_parts)
@@ -219,9 +215,13 @@ class CoreHelpers(object):
         self.core_instance.ListReverseRangeZoneAssignments())
     ip_address = IPy.IP(self.UnReverseIP(target))
     for zone_assignment in reverse_range_zone_assignments:
-      if( ip_address in IPy.IP(
-          reverse_range_zone_assignments[zone_assignment]) ):
-        break
+      if( zone_assignment in reverse_range_zone_assignments ):
+        if( ip_address in IPy.IP(
+            reverse_range_zone_assignments[zone_assignment]) ):
+          break
+    else:
+      raise errors.CoreError(
+          'No suitable reverse range zone assignments found.')
     zone_detail = self.core_instance.ListZones(view_name=view_name)
     zone_origin = zone_detail[zone_assignment][view_name]['zone_origin']
     # Count number of characters in zone origin, add one to count the extra
@@ -566,13 +566,12 @@ class CoreHelpers(object):
                           'record_zone_name': record['record_zone_name'],
                           'record_view_dependency': view_name,
                           'record_last_user': self.user_instance.GetUserName()}
-          if( record['record_type'] == 'a' or
-              record['record_type'] == 'cname' ):
+          if( record['record_type'] == 'a' or record['record_type'] == 'cname' ):
             current_records = self.db_instance.ListRow('records', records_dict)
             for record in current_records:
               if( record['record_type'] == 'a' or
                   record['record_type'] == 'cname' ):
-                raise core.RecordError('Record already exists with that target '
+                raise RecordError('Record already exists with that target '
                                   'target: %s type: %s' %
                                   (record['record_type'],
                                    record['record_target']))
@@ -614,3 +613,7 @@ class CoreHelpers(object):
                                            record['record_arguments'],
                                            record['view_name']), success)
     return row_count
+
+  def CIDRtoOrigin(self, cidr_block):
+    ip = IPy.IP(cidr_block)
+
