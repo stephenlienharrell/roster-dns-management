@@ -42,8 +42,10 @@ import roster_client_lib
 
 
 class CliRecordLib:
-  def __init__(self, ccl_instance):
-    self.ccl_instance = ccl_instance
+  """Command line record library class"""
+  def __init__(self, cli_common_lib_instance):
+    """Creates cli common instance"""
+    self.cli_common_lib_instance = cli_common_lib_instance
 
   def MakeRecord(self, record_type, options, record_args_dict,
                  allow_duplicate=False, quiet=False, raise_errors=False):
@@ -59,7 +61,7 @@ class CliRecordLib:
     """
     for item in record_args_dict:
       if( record_args_dict[item] is None ):
-        self.ccl_instance.DnsError('Must specify --%s-%s' % (
+        self.cli_common_lib_instance.DnsError('Must specify --%s-%s' % (
             record_type, item.replace('_', '-')), 1)
 
     if( not options.credfile.startswith('/') ):
@@ -83,10 +85,10 @@ class CliRecordLib:
             raise_errors=raise_errors)['core_return'][0]
     ## Check if view exists
     if( not views.has_key(options.view_name) and options.view_name != 'any' ):
-      self.ccl_instance.DnsError('View does not exist!', 2)
+      self.cli_common_lib_instance.DnsError('View does not exist!', 2)
     ## Check if zone exists
     if( not zones.has_key(options.zone_name) ):
-      self.ccl_instance.DnsError('Zone does not exist!', 3)
+      self.cli_common_lib_instance.DnsError('Zone does not exist!', 3)
 
     records = roster_client_lib.RunFunction(
         'ListRecords', options.username, credfile=options.credfile,
@@ -102,7 +104,7 @@ class CliRecordLib:
           if( record[record_arg] != record_args_dict[record_arg] ):
             break
         else:
-          self.ccl_instance.DnsError('Duplicate record!', 4)
+          self.cli_common_lib_instance.DnsError('Duplicate record!', 4)
     if( record_type == u'aaaa' ):
       roster_client_lib.RunFunction(
           u'MakeAAAARecord', options.username, credfile=options.credfile,
@@ -184,7 +186,7 @@ class CliRecordLib:
     """
     for item in record_args_dict:
       if( record_args_dict[item] is None ):
-        self.ccl_instance.DnsError('Must specify --%s-%s' % (
+        self.cli_common_lib_instance.DnsError('Must specify --%s-%s' % (
             record_type, item.replace('_', '-')), 1)
 
     if( not options.credfile.startswith('/') ):
@@ -197,10 +199,10 @@ class CliRecordLib:
         server_name=options.server, raise_errors=raise_errors)['core_return']
     ## Check if view exists
     if( options.view_name not in views and options.view_name != 'any'  ):
-      self.ccl_instance.DnsError('View does not exist!', 2)
+      self.cli_common_lib_instance.DnsError('View does not exist!', 2)
     ## Check if zone exists
     if( options.zone_name not in zones ):
-      self.ccl_instance.DnsError('Zone does not exist!', 3)
+      self.cli_common_lib_instance.DnsError('Zone does not exist!', 3)
     roster_client_lib.RunFunction(
         u'RemoveRecord', options.username, credfile=options.credfile,
         args=[record_type, options.target, options.zone_name, record_args_dict,
@@ -265,7 +267,7 @@ class CliRecordLib:
             print_list = [key_list]
             have_keys = True
           print_list.append(record.values())
-        return_list.append(self.ccl_instance.PrintColumns(
+        return_list.append(self.cli_common_lib_instance.PrintColumns(
             print_list, first_line_header=(not options.no_header)))
       return return_list
     else:
@@ -279,5 +281,5 @@ class CliRecordLib:
           print_list = [key_list]
           have_keys = True
         print_list.append(record.values())
-      return self.ccl_instance.PrintColumns(
+      return self.cli_common_lib_instance.PrintColumns(
           print_list, first_line_header=(not options.no_header))

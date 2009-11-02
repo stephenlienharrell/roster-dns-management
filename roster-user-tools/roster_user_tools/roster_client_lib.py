@@ -44,6 +44,7 @@ import cli_common_lib
 
 
 class InvalidCredentials(Exception):
+  """Invalid Credentials Exception"""
   pass
 
 

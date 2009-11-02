@@ -78,13 +78,29 @@ class options(object):
   ttl = 3600
 
 class StdOutStream():
+  """Std out redefined"""
   def __init__(self):
+    """Appends stdout to stdout array
+    
+       Inputs:
+         text: String of stdout
+    """
     self.stdout = []
 
   def write(self, text):
+    """Appends stdout to stdout array
+    
+    Inputs:
+      text: String of stdout
+    """
     self.stdout.append(text)
 
   def flush(self):
+    """Flushes stdout array and outputs string of contents
+
+    Outputs:
+      String: String of stdout
+    """
     std_array = self.stdout
     self.stdout = []
     return ''.join(std_array)

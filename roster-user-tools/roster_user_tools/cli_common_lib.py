@@ -42,11 +42,17 @@ import getpass
 import roster_client_lib
 
 class ArgumentError(Exception):
+  """Arguemnt Error Exception"""
   pass
 
 class CliCommonLib:
-
+  """Command line common library"""
   def __init__(self, options):
+    """Retrieves configuration
+
+    Inputs:
+      options: Options object from optparse
+    """
     self.options = options
     self.config_file = ConfigParser.SafeConfigParser()
     if( hasattr(options, 'config_file') and options.config_file is not None ):
