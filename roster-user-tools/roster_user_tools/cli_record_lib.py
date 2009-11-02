@@ -44,7 +44,11 @@ import roster_client_lib
 class CliRecordLib:
   """Command line record library class"""
   def __init__(self, cli_common_lib_instance):
-    """Creates cli common instance"""
+    """Gets cli common lib instance
+    
+    Inputs:
+      cli_common_lib_instance: instance of cli common lib
+    """
     self.cli_common_lib_instance = cli_common_lib_instance
 
   def MakeRecord(self, record_type, options, record_args_dict,

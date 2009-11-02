@@ -42,7 +42,6 @@ import getpass
 import roster_client_lib
 
 class ArgumentError(Exception):
-  """Arguemnt Error Exception"""
   pass
 
 class CliCommonLib:

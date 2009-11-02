@@ -44,7 +44,6 @@ import cli_common_lib
 
 
 class InvalidCredentials(Exception):
-  """Invalid Credentials Exception"""
   pass
 
 
@@ -97,7 +96,7 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
 
 
 def GetCredentials(user_name, password, credfile=None,
-                   server_name=SERVER_NAME):
+                   server_name=None):
   """Gets credential string from CredCache.
 
   Inputs:
@@ -129,7 +128,7 @@ def GetCredentials(user_name, password, credfile=None,
 
 
 def IsAuthenticated(user_name, credfile,
-                    server_name=SERVER_NAME):
+                    server_name=None):
   """Checks credential file if it is valid.
 
   Inputs:
