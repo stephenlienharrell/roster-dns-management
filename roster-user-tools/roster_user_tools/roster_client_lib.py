@@ -43,15 +43,12 @@ import xmlrpclib
 import cli_common_lib
 
 
-SERVER_NAME = u'https://localhost:8000'
-
-
 class InvalidCredentials(Exception):
   pass
 
 
 def RunFunction(function, user_name, credfile=None, credstring=None,
-                args=[], kwargs={}, server_name=SERVER_NAME,
+                args=[], kwargs={}, server_name=None,
                 raise_errors=False):
   """Runs an arbitrary function for SERVER
 

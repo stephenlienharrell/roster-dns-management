@@ -26,6 +26,7 @@ Current Release
 - Added --config-file to all user tools.
 - Improved error of config file not found.
 - Fixed config file missing error.
+- Removed server name constant from roster client lib.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
