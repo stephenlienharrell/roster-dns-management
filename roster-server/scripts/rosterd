@@ -40,6 +40,7 @@ __version__ = '#TRUNK#'
 from optparse import OptionParser
 from threading import Thread
 import sys
+import stat
 import time
 import os
 import pwd
@@ -51,7 +52,7 @@ LOCKFILE='/var/lock/roster'
 
 class ServerThread(Thread):
   """Thread for Roster server to run"""
-  def __init__(self, config_instance, key_file, cert_file, host):
+  def __init__(self, config_instance, key_file, cert_file, host, port):
     """Initialize ServerThread
 
     Inputs:
@@ -64,6 +65,7 @@ class ServerThread(Thread):
     self.key_file = key_file
     self.cert_file = cert_file
     self.host = host
+    self.port = port
     Thread.__init__(self)
 
   def run(self):
@@ -72,14 +74,14 @@ class ServerThread(Thread):
     daemon = roster_server.Server(self.config_instance, self.key_file,
                                   self.cert_file)
     # This should probably be wrapped in a try/except, to catch signals
-    daemon.Serve(self.host)
+    daemon.Serve(server_name=self.host, port=int(self.port))
 
 def main(args):
   """Make Roster server thread, watch lock file and stop if neccesarry."""
   # Collect command-line args
   parser = OptionParser()
   parser.add_option('--lock-file', action='store', dest='lock_file',
-                    help='Lock file location.', default=None)
+                    help='Lock file location.', default=LOCKFILE)
   parser.add_option('-c', '--cert-file', action='store', dest='cert_file',
                     help='SSL cert file path.', default=None)
   parser.add_option('-k', '--key-file', action='store', dest='key_file',
@@ -93,13 +95,14 @@ def main(args):
   parser.add_option('-H', '--host', dest='host', metavar='<host>',
                     help='Hostname of server to be created.',
                     default=u'localhost')
+  parser.add_option('-p', '--port', dest='port', metavar='<port>',
+                    help='Port of server to be created.',
+                    default=u'8000')
   (globals()['options'], args) = parser.parse_args(args)
-
   config_instance = roster_core.Config(options.config_file)
-
-  if( not os.access(options.config_file) ):
-    print 'ERROR: Could not access config file "%s", '
-          'Do you have permission?' % options.config_file
+  if( not os.access(options.config_file, os.R_OK) ):
+    print ('ERROR: Could not access config file "%s", '
+           'Do you have permission?' % options.config_file)
     sys.exit(1)
   file_stats = os.stat(options.config_file)
   mode = file_stats[stat.ST_MODE]
@@ -108,19 +111,20 @@ def main(args):
     print 'WARNING: Could not determine config file permissions.'
   if( perms[3] != '0' ):
     print ('ERROR: Roster will not start with a world writable config file. '
-           'Please change the permissions of "%s"' % options.config_file
+           'Please change the permissions of "%s"' % options.config_file)
     sys.exit(1)
 
   if( options.lock_file is None ):
     options.lock_file = config_instance.config_file['server']['lock_file']
 
-  if( os.access(LOCKFILE.replace('/roster', ''), os.W_OK) ):
-    open(LOCKFILE, 'w').close()
+  if( os.access(options.lock_file.replace('/roster', ''), os.W_OK) ):
+    open(options.lock_file, 'w').close()
     username = config_instance.config_file['server']['run_as_username']
-    pw = pwd.getpwnam(username)
-    os.setuid(pw.pw_uid)
+    if( os.getuid() == 0 ):
+      pw = pwd.getpwnam(username)
+      os.setuid(pw.pw_uid)
     ServerThread(config_instance, options.key_file, options.cert_file,
-                 options.host).start()
+                 options.host, options.port).start()
   else:
     print 'ERROR: Could not access lock file "%s". Do you have permission?' % (
         options.lock_file)
