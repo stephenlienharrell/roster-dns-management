@@ -248,11 +248,10 @@ class CliRecordLib:
 
     records = roster_client_lib.RunFunction(
         'ListRecords', options.username, credfile=options.credfile,
-        server_name=options.server, kwargs={'record_type': record_type,
-                                            'target': search_target,
-                                            'zone_name': options.zone_name,
-                                            'view_name': options.view_name})[
-                                                'core_return']
+        server_name=options.server,
+        kwargs={'record_type': record_type, 'target': search_target,
+                'zone_name': options.zone_name, 'view_name': options.view_name,
+                'record_args_dict': record_args_dict})['core_return']
     if( record_type is None ):
       records_type_dict = {}
       return_list = []

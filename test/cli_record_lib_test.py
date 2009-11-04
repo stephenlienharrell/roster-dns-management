@@ -215,22 +215,23 @@ class TestCliRecordLib(unittest.TestCase):
                                 view_name=options.view_name)
     self.core_instance.MakeReverseRangeZoneAssignment(
         options.zone_name, u'192.168.1/24')
-    options.target = '6'
+    options.target = '192.168.1.6'
     cli_record_lib_instance.MakeRecord(
         u'ptr', options, {u'assignment_host': u'server.university.edu.'})
     self.assertEqual(sys.stdout.flush(),
-                     u'ADDED PTR: 6 zone_name: reverse_zone view_name: '
-                      'test_view ttl: 3600\n    assignment_host: '
+                     u'ADDED PTR: 192.168.1.6 zone_name: reverse_zone '
+                      'view_name: test_view ttl: 3600\n    assignment_host: '
                       'server.university.edu.\n')
 
     options.zone_name = u'ipv6_zone'
     self.core_instance.MakeZone(options.zone_name, u'master',
                                 u'university.edu.',
                                 view_name=options.view_name)
+    options.target = u'ipv6host'
     cli_record_lib_instance.MakeRecord(
         u'aaaa', options, {u'assignment_ip': u'2001:db8::1428:57ab'})
     self.assertEqual(sys.stdout.flush(),
-                     u'ADDED AAAA: 6 zone_name: ipv6_zone view_name: '
+                     u'ADDED AAAA: ipv6host zone_name: ipv6_zone view_name: '
                       'test_view ttl: 3600\n    assignment_ip: '
                       '2001:db8::1428:57ab\n')
 
