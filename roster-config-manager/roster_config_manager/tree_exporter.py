@@ -101,12 +101,14 @@ class BindTreeExport(object):
   def ExportAllBindTrees(self):
     """Exports bind trees to files"""
     self.db_instance.StartTransaction()
-    self.db_instance.LockDb()
     try:
-      data = self.GetRawData()
+      self.db_instance.LockDb()
+      try:
+        data = self.GetRawData()
+      finally:
+        self.db_instance.UnlockDb()
     finally:
-      self.db_instance.UnlockDb()
-      self.db_instance.CommitTransaction()
+        self.db_instance.EndTransaction()
     cooked_data = self.CookData(data)
 
     record_arguments = data['record_arguments']
