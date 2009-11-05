@@ -65,12 +65,12 @@ class TestdbAccess(unittest.TestCase):
     schema = open(SCHEMA_FILE, 'r').read()
     self.db_instance.StartTransaction()
     self.db_instance.cursor.execute(schema)
-    self.db_instance.CommitTransaction()
+    self.db_instance.EndTransaction()
 
     data = open(DATA_FILE, 'r').read()
     self.db_instance.StartTransaction()
     self.db_instance.cursor.execute(data)
-    self.db_instance.CommitTransaction()
+    self.db_instance.EndTransaction()
 
   def tearDown(self):
     self.db_instance.close()
@@ -78,15 +78,11 @@ class TestdbAccess(unittest.TestCase):
   def testTransactions(self):
     self.db_instance.thread_safe = False
     self.assertRaises(db_access.TransactionError,
-                      self.db_instance.CommitTransaction)
-    self.assertRaises(db_access.TransactionError,
-                      self.db_instance.RollbackTransaction)
+                      self.db_instance.EndTransaction)
     self.db_instance.StartTransaction()
     self.assertRaises(db_access.TransactionError,
                       self.db_instance.StartTransaction)
-    self.db_instance.CommitTransaction()
-    self.db_instance.StartTransaction()
-    self.db_instance.RollbackTransaction()
+    self.db_instance.EndTransaction()
 
   def testDbLocking(self):
     self.db_instance.StartTransaction()
@@ -100,6 +96,7 @@ class TestdbAccess(unittest.TestCase):
     self.assertRaises(db_access.TransactionError, self.db_instance.LockDb)
     self.db_instance.UnlockDb()
     self.db_instance.MakeRow('users', users_dict)
+    self.db_instance.EndTransaction()
 
   def testInitDataValidation(self):
     self.db_instance.InitDataValidation()
@@ -244,7 +241,7 @@ class TestdbAccess(unittest.TestCase):
             u'shuey', 'user_group_assignments_group_name': u'bio',
             'forward_zone_permissions_zone_name': u'bio.university.edu'}))
                                               
-    self.db_instance.CommitTransaction()
+    self.db_instance.EndTransaction()
 
   def testGetRecordArgsDict(self):
     self.assertEquals(self.db_instance.GetRecordArgsDict(u'mx'),
@@ -298,7 +295,7 @@ class TestdbAccess(unittest.TestCase):
       if( not db_table == 'locks' ):
         self.assertTrue(db_table in tables)
 
-    self.db_instance.CommitTransaction()
+    self.db_instance.EndTransaction()
 
   def testDataTypeValidation(self):
     self.db_instance.StartTransaction()

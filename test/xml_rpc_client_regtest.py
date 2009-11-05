@@ -91,12 +91,12 @@ class TestXMLServerClient(unittest.TestCase):
     schema = open(SCHEMA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(data)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
     db_instance.close()
 
     self.port = PickUnusedPort()
@@ -255,7 +255,7 @@ class TestXMLServerClient(unittest.TestCase):
         time.sleep(15)
       finally:
         self.core_instance.db_instance.UnlockDb()
-        self.core_instance.db_instance.CommitTransaction()
+        self.core_instance.db_instance.EndTransaction()
 
     for old_thread in client_threads:
       old_thread.join()

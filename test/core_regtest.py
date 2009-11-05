@@ -64,12 +64,12 @@ class TestCore(unittest.TestCase):
     schema = open(SCHEMA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(data)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
     db_instance.close()
 
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
@@ -590,7 +590,7 @@ class TestCore(unittest.TestCase):
                        u'admin_email': u'test.', u'expiry_seconds': 4}])
     self.core_instance.db_instance.StartTransaction()
     self.core_instance._IncrementSoa(u'test_view', u'university.edu')
-    self.core_instance.db_instance.CommitTransaction()
+    self.core_instance.db_instance.EndTransaction()
     self.assertEqual(self.core_instance.ListRecords(),
                      [{u'serial_number': 1, u'refresh_seconds': 4,
                        'target': u'newtarget.', u'name_server': u'test.',

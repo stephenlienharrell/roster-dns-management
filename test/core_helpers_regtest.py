@@ -64,12 +64,12 @@ class TestCoreHelpers(unittest.TestCase):
     schema = open(SCHEMA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(data)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
     db_instance.close()
 
     self.unittest_timestamp = datetime.datetime.now().replace(microsecond=0)
@@ -247,9 +247,9 @@ class TestCoreHelpers(unittest.TestCase):
       self.core_instance.db_instance.UpdateRow('named_conf_global_options',
                                                config_dict, update_config_dict)
     except:
-      self.core_instance.db_instance.RollbackTransaction()
+      self.core_instance.db_instance.EndTransaction(rollback=True)
       raise
-    self.core_instance.db_instance.CommitTransaction()
+    self.core_instance.db_instance.EndTransaction()
     time.sleep(2)
     self.assertEqual(self.core_helper_instance.ListLatestNamedConfig(u'set1'),
                      {'timestamp': time_difference, 'options': u'test_options',

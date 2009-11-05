@@ -137,12 +137,12 @@ class TestCliRecordLib(unittest.TestCase):
     schema = open(SCHEMA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(data)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
     db_instance.close()
 
     self.port = PickUnusedPort()

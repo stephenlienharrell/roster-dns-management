@@ -67,12 +67,12 @@ class TestTreeExporter(unittest.TestCase):
     schema = open(SCHEMA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(data)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
     db_instance.close()
     self.db_instance = db_instance
 
@@ -1117,12 +1117,12 @@ class TestTreeExporter(unittest.TestCase):
                         named_conf_global_options_dict)
 
     # COMMIT
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     # get data
     self.tree_exporter_instance.db_instance.StartTransaction()
     self.data = self.tree_exporter_instance.GetRawData()
-    self.tree_exporter_instance.db_instance.CommitTransaction()
+    self.tree_exporter_instance.db_instance.EndTransaction()
     self.cooked_data = self.tree_exporter_instance.CookData(self.data)
 
   #def tearDown(self):
@@ -1138,7 +1138,7 @@ class TestTreeExporter(unittest.TestCase):
       record_arguments = self.db_instance.ListRow('record_arguments',
                                                   search_record_arguments_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     self.assertEqual(self.tree_exporter_instance.ListRecordArgumentDefinitions(
         record_arguments),
@@ -1176,7 +1176,7 @@ class TestTreeExporter(unittest.TestCase):
           'records', records_dict, 'record_arguments_records_assignments',
           record_args_assignment_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     self.assertEqual(self.tree_exporter_instance.SortRecords(records),
                      {(u'university.edu', u'internal_dep'):

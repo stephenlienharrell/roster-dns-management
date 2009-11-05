@@ -110,12 +110,12 @@ class TestDnsMkHost(unittest.TestCase):
     schema = open(SCHEMA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(data)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
     db_instance.close()
 
     self.port = PickUnusedPort()
@@ -250,7 +250,7 @@ class TestDnsMkHost(unittest.TestCase):
     except:
       self.core_instance.db_instance.RollbackTransaction()
       raise
-    self.core_instance.db_instance.CommitTransaction()
+    self.core_instance.db_instance.EndTransaction()
     time.sleep(2)
     output = os.popen('python %s -n -f %s -d set1 '
                       '-s %s -u %s -p %s --config-file %s' % (
