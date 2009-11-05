@@ -126,10 +126,10 @@ class AuditLog(object):
     try:
       self.db_instance.MakeRow('audit_log', log_dict)
     except:
-      self.db_instance.RollbackTransaction()
+      self.db_instance.EndTransaction(rollback=True)
       raise
 
-    self.db_instance.CommitTransaction()
+    self.db_instance.EndTransaction()
 
 
   def _LogToFile(self, log_string):

@@ -89,9 +89,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('users', user_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, u'MakeUser',
@@ -120,7 +120,7 @@ class Core(object):
     try:
       users = self.db_instance.ListRow('users', user_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     user_access_level_dict = {}
     for user in users:
@@ -154,9 +154,9 @@ class Core(object):
           # user_name in users is a unique field so we know there is only one.
           row_count += self.db_instance.RemoveRow('users', found_user[0])
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, u'RemoveUser',
@@ -192,10 +192,10 @@ class Core(object):
         row_count = self.db_instance.UpdateRow('users', search_user_dict,
                                                update_user_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
 
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, u'UpdateUser',
@@ -222,7 +222,7 @@ class Core(object):
     try:
       groups = self.db_instance.ListRow('groups', group_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     group_list = []
     for group in groups:
@@ -249,9 +249,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('groups', group_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, u'MakeGroup',
@@ -279,9 +279,9 @@ class Core(object):
       try:
         row_count = self.db_instance.RemoveRow('groups', group_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, u'RemoveGroup',
@@ -315,9 +315,9 @@ class Core(object):
         row_count = self.db_instance.UpdateRow('groups', search_group_dict,
                                                update_group_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, u'UpdateGroup',
@@ -355,7 +355,7 @@ class Core(object):
       assignments = self.db_instance.ListRow('user_group_assignments',
                                              assignment_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     assignments_dict = {}
     for assignment in assignments:
@@ -401,9 +401,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('user_group_assignments', assignment_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -436,9 +436,9 @@ class Core(object):
         row_count = self.db_instance.RemoveRow('user_group_assignments',
                                                assignment_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       return row_count
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -480,7 +480,7 @@ class Core(object):
     try:
       acls = self.db_instance.ListRow('acls', acl_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     acl_cidr_range_dict = {}
     for acl in acls:
@@ -514,9 +514,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('acls', acls_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success  = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, u'MakeACL',
@@ -554,9 +554,9 @@ class Core(object):
           for found_acl in found_acls:
             row_count += self.db_instance.RemoveRow('acls', found_acl)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -607,9 +607,9 @@ class Core(object):
       try:
         row_count = self.db_instance.UpdateRow('acls', search_dict, update_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -638,7 +638,7 @@ class Core(object):
     try:
       dns_servers = self.db_instance.ListRow('dns_servers', dns_server_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     dns_server_list = []
     for dns_server in dns_servers:
@@ -664,9 +664,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('dns_servers', dns_server_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -692,9 +692,9 @@ class Core(object):
       try:
         row_count = self.db_instance.RemoveRow('dns_servers', dns_server_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -730,9 +730,9 @@ class Core(object):
                                                search_dns_server_dict,
                                                update_dns_server_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -761,7 +761,7 @@ class Core(object):
       dns_server_sets = self.db_instance.ListRow('dns_server_sets',
                                                  dns_server_set_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     dns_server_set_list = []
     for dns_server_set in dns_server_sets:
@@ -788,9 +788,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('dns_server_sets', dns_server_set_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -821,9 +821,9 @@ class Core(object):
         row_count = self.db_instance.RemoveRow('dns_server_sets',
                                                dns_server_set_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -865,9 +865,9 @@ class Core(object):
                                                search_dns_server_set_dict,
                                                update_dns_server_set_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -905,7 +905,7 @@ class Core(object):
       assignments = self.db_instance.ListRow('dns_server_set_assignments',
                                              assignment_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     assignments_dict = {}
     for assignment in assignments:
@@ -943,9 +943,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('dns_server_set_assignments', assignment_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -980,9 +980,9 @@ class Core(object):
         row_count = self.db_instance.RemoveRow('dns_server_set_assignments',
                                                assignment_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       return row_count
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1024,7 +1024,7 @@ class Core(object):
       assignments = self.db_instance.ListRow('dns_server_set_view_assignments',
                                              assignment_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     assignments_dict = {}
     for assignment in assignments:
@@ -1076,9 +1076,9 @@ class Core(object):
         self.db_instance.MakeRow('dns_server_set_view_assignments',
                                  assignment_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1114,9 +1114,9 @@ class Core(object):
             'dns_server_set_view_assignments', assignment_dict)
 
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       return row_count
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1143,7 +1143,7 @@ class Core(object):
     try:
       views = self.db_instance.ListRow('views', view_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     view_options_dict = {}
     for view in views:
@@ -1191,9 +1191,9 @@ class Core(object):
         self.db_instance.MakeRow('view_dependency_assignments',
                                  view_dependency_assignments_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1238,9 +1238,9 @@ class Core(object):
           row_count += self.db_instance.RemoveRow('view_dependencies',
                                                   view_dep_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1284,9 +1284,9 @@ class Core(object):
                                                 search_view_dep_dict,
                                                 update_view_dep_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1330,7 +1330,7 @@ class Core(object):
       view_assignments = self.db_instance.ListRow(
           'view_dependency_assignments', view_dependency_assignments_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     view_assignments_dict = {}
     for view_assignment in view_assignments:
@@ -1388,9 +1388,9 @@ class Core(object):
         self.db_instance.MakeRow('view_dependency_assignments',
                                  view_dependency_assignments_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1422,9 +1422,9 @@ class Core(object):
         row_count = self.db_instance.RemoveRow('view_dependency_assignments',
                                                view_dependency_assignments_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1458,7 +1458,7 @@ class Core(object):
       view_acl_assignments = self.db_instance.ListRow('view_acl_assignments',
                                                       view_acl_assign_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     assignments_dicts = []
     for view_acl_assignment in view_acl_assignments:
@@ -1491,9 +1491,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('view_acl_assignments', view_acl_assign_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1525,9 +1525,9 @@ class Core(object):
         row_count = self.db_instance.RemoveRow('view_acl_assignments',
                                                view_acl_assign_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1584,7 +1584,7 @@ class Core(object):
       zone_view_assignment_rows = self.db_instance.ListRow(
           'zone_view_assignments', zone_view_assignments_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     zone_view_assignments = {}
     for row in zone_view_assignment_rows:
@@ -1658,9 +1658,9 @@ class Core(object):
             self.db_instance.MakeRow('zone_view_assignments',
                                      zone_view_assignments_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1714,9 +1714,9 @@ class Core(object):
             row_count += self.db_instance.RemoveRow('zone_view_assignments',
                                                     found_zone_assignment[0])
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1779,9 +1779,9 @@ class Core(object):
             'zone_view_assignments',search_zone_view_assignments_dict,
             update_zone_view_assignments_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1819,7 +1819,7 @@ class Core(object):
       assignment_rows = self.db_instance.ListRow(
           'reverse_range_zone_assignments', assignment_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     reverse_range_dict = {}
     for row in assignment_rows:
@@ -1847,10 +1847,10 @@ class Core(object):
       self.db_instance.MakeRow('reverse_range_zone_assignments',
                                assignment_dict)
     except:
-      self.db_instance.RollbackTransaction()
+      self.db_instance.EndTransaction(rollback=True)
       raise
 
-    self.db_instance.CommitTransaction()
+    self.db_instance.EndTransaction()
 
   def RemoveReverseRangeZoneAssignment(self, zone_name, cidr_block):
     """Remove reverse range to zone assignment.
@@ -1875,9 +1875,9 @@ class Core(object):
         row_count = self.db_instance.RemoveRow('reverse_range_zone_assignments',
                                                assignment_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1919,7 +1919,7 @@ class Core(object):
       permission_rows = self.db_instance.ListRow('forward_zone_permissions',
                                                  permissions_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     forward_zone_perms_dict = {}
     for row in permission_rows:
@@ -1957,9 +1957,9 @@ class Core(object):
         self.db_instance.MakeRow('forward_zone_permissions',
                                  permissions_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -1993,9 +1993,9 @@ class Core(object):
         row_count = self.db_instance.RemoveRow('forward_zone_permissions',
                                                permissions_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2038,7 +2038,7 @@ class Core(object):
       permission_rows = self.db_instance.ListRow('reverse_range_permissions',
                                                  permissions_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     reverse_range_perms_dict = {}
     for row in permission_rows:
@@ -2076,9 +2076,9 @@ class Core(object):
         self.db_instance.MakeRow('reverse_range_permissions',
                                  permissions_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2112,9 +2112,9 @@ class Core(object):
         row_count = self.db_instance.RemoveRow('reverse_range_permissions',
                                                permissions_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2198,7 +2198,7 @@ class Core(object):
                                          'record_arguments_records_assignments',
                                          record_args_assignment_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     full_record_dicts = {}
     del_id_list = []
@@ -2320,9 +2320,9 @@ class Core(object):
         if( record_type != u'soa' ):
           self._IncrementSoa(view_name, zone_name)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2468,9 +2468,9 @@ class Core(object):
           update_zone_name = search_zone_name
         self._IncrementSoa(update_view_name, update_zone_name)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(
@@ -2571,9 +2571,9 @@ class Core(object):
           raise errors.CoreError('Duplicate records found.')
         self._IncrementSoa(view_name, zone_name)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2619,7 +2619,7 @@ class Core(object):
       record_arguments = self.db_instance.ListRow('record_arguments',
                                                   search_record_arguments_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     sorted_record_arguments = {}
     for record_argument in record_arguments:
@@ -2649,7 +2649,7 @@ class Core(object):
     try:
       zone_types = self.db_instance.ListRow('zone_types', zone_types_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       type_list = []
     for zone_type in zone_types:
       type_list.append(zone_type['zone_type'])
@@ -2672,9 +2672,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('zone_types', zone_types_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2708,9 +2708,9 @@ class Core(object):
           row_count += self.db_instance.RemoveRow('zone_types',
                                                   found_zone_type[0])
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2742,7 +2742,7 @@ class Core(object):
       named_conf_options = self.db_instance.ListRow(
           'named_conf_global_options', named_conf_global_options_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     named_conf_list = []
     for named_conf_option in named_conf_options:
@@ -2783,9 +2783,9 @@ class Core(object):
         self.db_instance.MakeRow('named_conf_global_options',
                                  named_conf_global_options_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2811,9 +2811,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('reserved_words', reserved_word_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2838,7 +2838,7 @@ class Core(object):
       reserved_words = self.db_instance.ListRow('reserved_words',
           reserved_word_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     reserved_word_list = []
     for reserved_word in reserved_words:
@@ -2873,9 +2873,9 @@ class Core(object):
           row_count += self.db_instance.RemoveRow('reserved_words',
               found_reserved_word[0])
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -2969,9 +2969,9 @@ class Core(object):
       try:
         self.db_instance.MakeRow('credentials', credential_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -3016,7 +3016,7 @@ class Core(object):
     try:
       credentials = self.db_instance.ListRow('credentials', credential_dict)
     finally:
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
 
     credentials_dict = {}
     if( key_by_user ):
@@ -3065,9 +3065,9 @@ class Core(object):
           row_count += self.db_instance.RemoveRow('credentials',
                                                   found_credential[0])
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
@@ -3108,10 +3108,10 @@ class Core(object):
                                                search_credential_dict,
                                                update_credential_dict)
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
 
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,

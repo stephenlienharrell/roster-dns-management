@@ -56,9 +56,9 @@ The two primary uses of this class are:
     for row in matching_rows:
       db_instance.RemoveRow('acls', row)
   except Exception:
-    db_instance.RollbackTransaction()
+    db_instance.EndTransaction(rollback=True)
   else:
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
 Note: MySQLdb.Error can be raised in almost any function in this module. Please
       keep that in mind when using this module.
@@ -213,51 +213,37 @@ class dbAccess(object):
 
     self.transaction_init = True
 
-  def CommitTransaction(self):
-    """Commits a transaction.
+  def EndTransaction(self, rollback=False):
+    """Ends a transaction.
 
     Also does some simple checking to make sure a connection was open first
     and releases itself from the current queue.
+
+    Inputs:
+      rollback: boolean of if the transaction should be rolled back
 
     Raises:
       TransactionError: Must run StartTansaction before roll-back.
     """
     if( not self.thread_safe ):
       if( not self.transaction_init ):
-        raise TransactionError('Must run StartTansaction before commit.')
+        raise TransactionError('Must run StartTansaction before '
+                               'EndTransaction.')
 
-    self.cursor.close()
-    self.connection.commit()
-    self.transaction_init = False
-
-    if( self.thread_safe ):
-      if( not self.queue.empty() ):
-        self.now_serving = self.queue.get()
+    try:
+      self.cursor.close()
+      if( rollback ):
+        self.connection.rollback()
       else:
-        self.now_serving = None
+        self.connection.commit()
+      self.transaction_init = False
 
-  def RollbackTransaction(self):
-    """Rollback a transaction.
-
-    Also does some simple checking to make sure a connection was open first
-    and releases itself from the current queue.
-
-    Raises:
-      TransactionError: Must run StartTansaction before roll-back.
-    """
-    if( not self.thread_safe ):
-      if( not self.transaction_init ):
-        raise TransactionError('Must run StartTansaction before roll-back.')
-
-    self.cursor.close()
-    self.connection.rollback()
-    self.transaction_init = False
-
-    if( self.thread_safe ):
-      if( not self.queue.empty() ):
-        self.now_serving = self.queue.get()
-      else:
-        self.now_serving = None
+    finally:
+      if( self.thread_safe ):
+        if( not self.queue.empty() ):
+          self.now_serving = self.queue.get()
+        else:
+          self.now_serving = None
 
   def LockDb(self):
     """This function is to lock the whole database for consistent data
@@ -376,7 +362,7 @@ class dbAccess(object):
         else:
           return {}
     finally:
-      self.CommitTransaction()
+      self.EndTransaction()
 
     auth_info_dict['user_access_level'] = db_data[0]['access_level']
     for row in db_data:
@@ -703,7 +689,7 @@ class dbAccess(object):
       record_arguments = self.ListRow('record_arguments',
                                       search_record_arguments_dict)
     finally:
-      self.CommitTransaction()
+      self.EndTransaction()
 
     record_arguments_dict = {}
     if( not record_arguments ):

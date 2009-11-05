@@ -271,24 +271,24 @@ class CoreHelpers(object):
     fwd_record_list = []
     zone_list = []
 
-    ptr_dict = self.core_instance.db_instance.GetEmptyRowDict('records')
+    ptr_dict = self.db_instance.GetEmptyRowDict('records')
     ptr_dict['record_type'] = u'ptr'
-    ptr_args_dict = self.core_instance.db_instance.GetEmptyRowDict(
+    ptr_args_dict = self.db_instance.GetEmptyRowDict(
         'record_arguments_records_assignments')
 
-    zone_dict = self.core_instance.db_instance.GetEmptyRowDict(
+    zone_dict = self.db_instance.GetEmptyRowDict(
         'reverse_range_zone_assignments')
 
-    fwd_dict = self.core_instance.db_instance.GetEmptyRowDict('records')
+    fwd_dict = self.db_instance.GetEmptyRowDict('records')
     fwd_dict['record_type'] = record_type
-    fwd_args_dict = self.core_instance.db_instance.GetEmptyRowDict(
+    fwd_args_dict = self.db_instance.GetEmptyRowDict(
         'record_arguments_records_assignments')
     fwd_args_dict['record_arguments_records_assignments_argument_name'] = (
         u'assignment_ip')
-    self.core_instance.db_instance.StartTransaction()
+    self.db_instance.StartTransaction()
     try:
       reverse_range_zone_assignments_db = (
-          self.core_instance.db_instance.ListRow(
+          self.db_instance.ListRow(
               'reverse_range_zone_assignments', zone_dict))
       for reverse_range_zone_assignment in reverse_range_zone_assignments_db:
         db_zone = reverse_range_zone_assignment[
@@ -302,22 +302,22 @@ class CoreHelpers(object):
           zone_list.append(db_zone)
       for zone in zone_list:
         ptr_dict['record_zone_name'] = zone
-        ptr_record_list.extend(self.core_instance.db_instance.ListRow(
+        ptr_record_list.extend(self.db_instance.ListRow(
             'records', ptr_dict, 'record_arguments_records_assignments',
             ptr_args_dict))
-      num_records = self.core_instance.db_instance.TableRowCount('records')
+      num_records = self.db_instance.TableRowCount('records')
       ratio = num_records / float(user_cidr.len())
       if( ratio > constants.RECORD_RATIO ):
         for ip_address in user_cidr:
           fwd_args_dict['argument_value'] = unicode(ip_address.strFullsize())
-          fwd_record_list.extend(self.core_instance.db_instance.ListRow(
+          fwd_record_list.extend(self.db_instance.ListRow(
               'records', fwd_dict, 'record_arguments_records_assignments',
               fwd_args_dict))
       else:
-        fwd_record_list = self.core_instance.db_instance.ListRow('records',
+        fwd_record_list = self.db_instance.ListRow('records',
             fwd_dict, 'record_arguments_records_assignments', fwd_args_dict)
     finally:
-      self.core_instance.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
     records_dict = {}
     for record in ptr_record_list:
       zone_name = record['record_zone_name']
@@ -409,22 +409,22 @@ class CoreHelpers(object):
       int: number of rows modified
     """
     record_arguments_record_assignments_dict = (
-        self.core_instance.db_instance.GetEmptyRowDict(
+        self.db_instance.GetEmptyRowDict(
             'record_arguments_records_assignments'))
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'cname'
     record_arguments_record_assignments_dict[
         'argument_value'] = hostname
-    records_dict = self.core_instance.db_instance.GetEmptyRowDict(
+    records_dict = self.db_instance.GetEmptyRowDict(
         'records')
     records_dict['record_type'] = u'cname'
     records_dict['record_view_dependency'] = '%s_dep' % view_name
     records_dict['record_zone_name'] = zone_name
     success = False
     try:
-      self.core_instance.db_instance.StartTransaction()
+      self.db_instance.StartTransaction()
       try:
-        found_record_arguments = self.core_instance.db_instance.ListRow(
+        found_record_arguments = self.db_instance.ListRow(
             'record_arguments_records_assignments',
             record_arguments_record_assignments_dict)
         remove_record_dict = {}
@@ -435,7 +435,7 @@ class CoreHelpers(object):
         row_count = 0
         for record_id in remove_record_dict:
           records_dict['records_id'] = record_id
-          found_records_dict = self.core_instance.db_instance.ListRow(
+          found_records_dict = self.db_instance.ListRow(
               'records', records_dict)
           if( len(found_records_dict) != 1 ):
             raise errors.CoreError('Incorrect number of records found!')
@@ -444,14 +444,14 @@ class CoreHelpers(object):
                 'RemoveRecord', target=found_records_dict[0]['record_target'])
           except self.core_instance.user_instance.AuthError:
             continue
-          row_count += self.core_instance.db_instance.RemoveRow(
+          row_count += self.db_instance.RemoveRow(
               'records', found_records_dict[0])
           remove_record_dict[record_id].update({
               'cname_host': found_records_dict[0]['record_target']})
       except:
-        self.core_instance.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.core_instance.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
       remove_record_string = ''
       log_list = []
@@ -595,9 +595,9 @@ class CoreHelpers(object):
                                              record['record_zone_name'])
 
       except:
-        self.db_instance.RollbackTransaction()
+        self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.CommitTransaction()
+      self.db_instance.EndTransaction()
       success = True
     finally:
       for operation in log_dict:
