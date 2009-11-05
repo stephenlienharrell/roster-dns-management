@@ -223,7 +223,7 @@ class dbAccess(object):
       rollback: boolean of if the transaction should be rolled back
 
     Raises:
-      TransactionError: Must run StartTansaction before roll-back.
+      TransactionError: Must run StartTansaction before EndTransaction.
     """
     if( not self.thread_safe ):
       if( not self.transaction_init ):
@@ -236,9 +236,9 @@ class dbAccess(object):
         self.connection.rollback()
       else:
         self.connection.commit()
-      self.transaction_init = False
 
     finally:
+      self.transaction_init = False
       if( self.thread_safe ):
         if( not self.queue.empty() ):
           self.now_serving = self.queue.get()
