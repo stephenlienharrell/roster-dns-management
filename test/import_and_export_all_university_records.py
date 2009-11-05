@@ -73,9 +73,9 @@ class ImportRecords(threading.Thread):
 
   def run(self):
     importer_instance = zone_importer_lib.ZoneImport(self.zone_file,
-                                                            CONFIG_FILE,
-                                                            MAIN_USER,
-                                                            u'any')
+                                                     CONFIG_FILE,
+                                                     MAIN_USER,
+                                                     u'any')
 
     self.record_count += importer_instance.MakeRecordsFromZone()
     self.zone = importer_instance.zone
@@ -91,12 +91,12 @@ class TestZoneExport(unittest.TestCase):
     schema = open(SCHEMA_FILE, 'r').read()
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     db_instance.StartTransaction()
     db_instance.cursor.execute("INSERT INTO users (user_name, access_level) "
                                "VALUES ('%s', 128)" % MAIN_USER)
-    db_instance.CommitTransaction()
+    db_instance.EndTransaction()
 
     self.core_instance = roster_core.Core(MAIN_USER, config_instance)
     os.mkdir(TEMP_DIRECTORY)
