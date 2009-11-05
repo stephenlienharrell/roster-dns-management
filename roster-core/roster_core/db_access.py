@@ -138,6 +138,15 @@ class dbAccess(object):
     self.queue = Queue.Queue()
     self.now_serving = None
     self.queue_update_lock = threading.Lock()
+
+  def close(self):
+    """Closes a connection that has been opened. 
+
+    A new connection will be created on StartTransaction.
+    """
+    if( self.connection is not None ):
+      self.connection.close()
+    self.connection = None
     
   def StartTransaction(self):
     """Starts a transaction.
