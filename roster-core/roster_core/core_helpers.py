@@ -200,20 +200,23 @@ class CoreHelpers(object):
     self.core_instance.MakeRecord(u'aaaa', target, zone_name, record_args_dict,
                                   view_name, ttl)
 
-  def GetPTRTarget(self, target, view_name=u'any'):
+  def GetPTRTarget(self, long_target, view_name=u'any'):
     """Gets the actual PTR target given view_name.
 
     Inputs:
-      target: string of ip address
+      long_target: string of ip address
       view_name: string of view name
+
+    Ouptuts:
+      string: String of short ip address
     """
-    if( not target.endswith('in-addr.arpa.') and not
-        target.endswith('ip6.arpa.') ):
-      target = self.ReverseIP(target)
+    if( not long_target.endswith('in-addr.arpa.') and not
+        long_target.endswith('ip6.arpa.') ):
+      long_target = self.ReverseIP(long_target)
     zone_assignment = None
     reverse_range_zone_assignments = (
         self.core_instance.ListReverseRangeZoneAssignments())
-    ip_address = IPy.IP(self.UnReverseIP(target))
+    ip_address = IPy.IP(self.UnReverseIP(long_target))
     for zone_assignment in reverse_range_zone_assignments:
       if( zone_assignment in reverse_range_zone_assignments ):
         if( ip_address in IPy.IP(
@@ -227,9 +230,9 @@ class CoreHelpers(object):
     # Count number of characters in zone origin, add one to count the extra
     # period and remove that number of characters from the target.
     zone_origin_length = len(zone_origin) + 1
-    target = target[:-zone_origin_length:]
+    short_target = long_target[:-zone_origin_length:]
 
-    return (target, zone_assignment)
+    return (short_target, zone_assignment)
 
   def MakePTRRecord(self, target, record_args_dict,
                     view_name=u'any', ttl=None):

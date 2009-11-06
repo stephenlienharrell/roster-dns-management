@@ -123,34 +123,27 @@ class Server(object):
       for instance in delete_list:
         self.core_store.remove(instance)
 
-  def StringToUnicode(self, string):
-    """Returns a unicode string if string is not numeric
+  def StringToUnicode(self, object_to_convert):
+    """Converts objects recursively into strings.
 
     Inputs:
-      string: string to be used
-
+      object_to_convert: the object that needs to be converted to unicode
     Outputs:
-      string: either the same or unicode of above string
+      converted_object: object can vary type, but all strings will be unicode
     """
-    if( isinstance(string, str) ):
-      string = unicode(string)
-    elif( isinstance(string, list) ):
-      new_list = []
-      for item in string:
-        if( isinstance(item, dict) ):
-          new_dict = {}
-          for dict_item in item:
-            if( isinstance(item[dict_item], dict) ):
-              embedded_dict = {}
-              for dict_dict_item in item[dict_item]:
-                embedded_dict[unicode(dict_dict_item)] = unicode(item[
-                    dict_item][dict_dict_item])
-              new_dict[unicode(dict_item)] = embedded_dict
-            else:
-              new_dict[unicode(dict_item)] = unicode(item[dict_item])
-          new_list.append(new_dict)
-      string = new_list
-    return string
+    converted_object = object_to_convert
+    if( isinstance(object_to_convert, str) ):
+      converted_object = unicode(object_to_convert)
+    elif( isinstance(object_to_convert, dict) ):
+      new_dict = {}
+      for key, value in object_to_convert.iteritems():
+        new_dict[unicode(key)] = self.StringToUnicode(value)
+      converted_object = new_dict
+    elif( isinstance(object_to_convert, list) ):
+      for index, item in enumerate(object_to_convert):
+        object_to_convert[index] = self.StringToUnicode(item)
+      converted_object = object_to_convert
+    return converted_object
 
   def GetCoreInstance(self, user_name):
     """Finds core instance in core store, if one cannot be found
@@ -200,17 +193,14 @@ class Server(object):
                                                            core_instance)
     if( cred_status is not None ):
       ## Fix non unicode strings containing no unicode characters
-      for arg in args:
-        args[args.index(arg)] = self.StringToUnicode(arg)
-        if( isinstance(arg, dict) ):
-          new_arg = {}
-          for i in arg:
-            new_arg.update(
-                {self.StringToUnicode(i): self.StringToUnicode(arg[i])})
-          args[args.index(arg)] = new_arg
+      args = self.StringToUnicode(args)
+      kwargs = self.StringToUnicode(kwargs)
 
-      for k in kwargs:
-        kwargs[k] = self.StringToUnicode(kwargs[k])
+      ## Fix unicoded kwargs keys
+      new_kwargs = {}
+      for key in kwargs:
+        new_kwargs[str(key)] = kwargs[key]
+      kwargs = new_kwargs
 
       if( function.startswith('_') ):
         raise FunctionError('Function does not exist.')

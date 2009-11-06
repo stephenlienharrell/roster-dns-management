@@ -161,7 +161,8 @@ def main(args):
                           '"sub.university.edu"'), metavar='<zone-name>',
                     default=None)
   parser.add_option('-t', '--target', action='store', dest='target',
-                    help='String of the target. Example: "machine-01".',
+                    help='String of the target. Example: "machine-01", '
+                         'for PTR, "192.168.1.2".',
                     metavar='<target>', default=None)
   parser.add_option('--ttl', action='store', dest='ttl',
                     help='Integer of time to live <ttl> per record.',
