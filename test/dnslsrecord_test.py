@@ -162,6 +162,29 @@ class TestDnslsRecord(unittest.TestCase):
         'test_zone machine1.university.edu.\n\n')
     command.close()
 
+  def testListSameRecord(self):
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.',
+                                view_name=u'test_view')
+    self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
+                                  {u'assignment_ip': u'10.10.10.0'},
+                                  view_name=u'test_view')
+    self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
+                                  {u'assignment_ip': u'10.10.10.1'},
+                                  view_name=u'test_view')
+    command = os.popen('python %s machine1 -v test_view -z test_zone -u %s '
+                       '--a --a-assignment-ip 10.10.10.0 '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'target   ttl  record_type view_name last_user zone_name '
+        'assignment_ip\n'
+        '--------------------------------------------------------'
+        '-------------\n'
+        'machine1 3600 a           test_view sharrell  test_zone 10.10.10.0\n\n')
+    command.close()
+
   def testAList(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
@@ -264,19 +287,19 @@ class TestDnslsRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
-    self.core_instance.MakeRecord(u'aaaa', u'machine1', u'test_zone',
-                                  {u'assignment_ip':
-                                      u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
-                                  view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'machine1', u'test_zone',
+        {u'assignment_ip': u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
+        view_name=u'test_view')
   def testAAAAList(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
-    self.core_instance.MakeRecord(u'aaaa', u'machine1', u'test_zone',
-                                  {u'assignment_ip':
-                                      u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
-                                  view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'machine1', u'test_zone',
+        {u'assignment_ip': u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
+        view_name=u'test_view')
     command = os.popen('python %s '
                        '--aaaa --aaaa-assignment-ip="fe80::200:f8ff:fe21:67cf" '
                        '-t machine1 -v test_view -z test_zone -u '
