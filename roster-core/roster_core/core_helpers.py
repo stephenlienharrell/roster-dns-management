@@ -201,14 +201,14 @@ class CoreHelpers(object):
                                   view_name, ttl)
 
   def GetPTRTarget(self, long_target, view_name=u'any'):
-    """Gets the actual PTR target given view_name.
+    """Gets the short PTR target given the long PTR target
 
     Inputs:
-      long_target: string of ip address
-      view_name: string of view name
+      long_target: String of long PTR target
+      view_name: String of view name
 
     Ouptuts:
-      string: String of short ip address
+      string: String of short PTR target
     """
     if( not long_target.endswith('in-addr.arpa.') and not
         long_target.endswith('ip6.arpa.') ):
