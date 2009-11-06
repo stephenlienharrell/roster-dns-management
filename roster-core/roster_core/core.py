@@ -2171,7 +2171,6 @@ class Core(object):
                    'last_user': 'sharrell}]
     """
     self.user_instance.Authorize('ListRecords', target=target)
-    
     if( view_name is not None and view_name != u'any' and not
           view_name.endswith('_dep') ):
       view_name = '%s_dep' % view_name
@@ -2189,6 +2188,8 @@ class Core(object):
         raise RecordError('Must specify record_type with record_args_dict')
       self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict,
                                               none_ok=True)
+    else:
+      record_args_dict = {}
 
 
 

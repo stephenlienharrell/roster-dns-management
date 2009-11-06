@@ -200,6 +200,20 @@ class CoreHelpers(object):
     self.core_instance.MakeRecord(u'aaaa', target, zone_name, record_args_dict,
                                   view_name, ttl)
 
+  def ExpandIPV6(self, ip_address):
+    """Expands a shorthand ipv6 address to a full ipv6 address
+
+    Inputs:
+      ip_address: string of ipv6 address
+
+    Outputs:
+      string: string of long ipv6 address
+    """
+    ipv6_address = IPy.IP(ip_address)
+    if( ipv6_address.version() != 6 ):
+      raise errors.CoreError('"%s" is not a valid IPV6 address.' % ipv6_address)
+    return ipv6_address
+
   def GetPTRTarget(self, long_target, view_name=u'any'):
     """Gets the short PTR target given the long PTR target
 
