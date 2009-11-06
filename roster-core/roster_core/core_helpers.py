@@ -212,7 +212,7 @@ class CoreHelpers(object):
     ipv6_address = IPy.IP(ip_address)
     if( ipv6_address.version() != 6 ):
       raise errors.CoreError('"%s" is not a valid IPV6 address.' % ipv6_address)
-    return ipv6_address
+    return ipv6_address.strFullsize()
 
   def GetPTRTarget(self, long_target, view_name=u'any'):
     """Gets the short PTR target given the long PTR target
