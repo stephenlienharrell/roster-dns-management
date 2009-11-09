@@ -229,7 +229,8 @@ class TestDnsMkRecord(unittest.TestCase):
     self.assertEqual(command.read(),
                      'ADDED AAAA: machine zone_name: test_zone '
                      'view_name: test_view ttl: 3600\n'
-                     '    assignment_ip: fe80::200:f8ff:fe21:67cf\n')
+                     '    assignment_ip: '
+                     'fe80:0000:0000:0000:0200:f8ff:fe21:67cf\n')
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(),
                      [{'target': u'machine1', 'ttl': 3600,

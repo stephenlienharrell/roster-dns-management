@@ -216,7 +216,7 @@ class TestDnsMkHost(unittest.TestCase):
         output.read(),
         'ADDED AAAA: machine1 zone_name: ipv6zone view_name: '
         'test_view ttl: 3600\n'
-        '    assignment_ip: 3ffe:0800::0567\n'
+        '    assignment_ip: 3ffe:0800:0000:0000:0000:0000:0000:0567\n'
         'ADDED PTR: 7.6.5.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.0.e.'
         'f.f.3.ip6.arpa. zone_name: ipv6zone view_name: test_view ttl: 3600\n'
         '    assignment_host: machine1.ipv6.net.\n')

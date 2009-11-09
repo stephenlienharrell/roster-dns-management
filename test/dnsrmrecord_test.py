@@ -195,14 +195,16 @@ class Testdnsrmrecord(unittest.TestCase):
                   'zone_origin': u'test_zone.'},
          u'test_view': {'zone_type': u'master', 'zone_options': u'',
                         'zone_origin': u'test_zone.'}}})
-    self.core_instance.MakeRecord(u'aaaa', u'machine1', u'test_zone',
-                                  {u'assignment_ip': u'fe80::200:f8ff:fe21:67cf'},
-                                  view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'machine1', u'test_zone',
+        {u'assignment_ip': u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
+        view_name=u'test_view')
     self.assertEqual(self.core_instance.ListRecords(),
                      [{'target': u'machine1', 'ttl': 3600,
                        'record_type': u'aaaa', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
-                       u'assignment_ip': u'fe80::200:f8ff:fe21:67cf'}])
+                       u'assignment_ip':
+                           u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'}])
     command = os.popen('python %s '
                        '--aaaa --aaaa-assignment-ip="fe80::200:f8ff:fe21:67cf" '
                        '-q -t machine1 -v test_view -z test_zone -u '
@@ -392,20 +394,21 @@ class Testdnsrmrecord(unittest.TestCase):
 
   def testPTRRemove(self):
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
+    self.core_instance.MakeZone(u'test_zone', u'master', u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view')
-    self.core_instance.MakeRecord(u'ptr', u'machine1', u'test_zone',
-                                  {u'assignment_host': u'university.edu.'},
+    self.core_instance.MakeReverseRangeZoneAssignment(u'test_zone',
+                                                      u'192.168.1/24')
+    self.core_instance.MakeRecord(u'ptr', u'1', u'test_zone',
+                                  {u'assignment_host': u'm.university.edu.'},
                                   view_name=u'test_view')
     self.assertEqual(self.core_instance.ListRecords(),
-                     [{'target': u'machine1', 'ttl': 3600,
+                     [{'target': u'1', 'ttl': 3600,
                        'record_type': u'ptr', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
-                       u'assignment_host': u'university.edu.'}])
+                       u'assignment_host': u'm.university.edu.'}])
     command = os.popen('python %s '
-                       '--ptr --ptr-assignment-host="university.edu." '
-                       '-q -t machine1 -v test_view -z test_zone -u '
+                       '--ptr --ptr-assignment-host="m.university.edu." '
+                       '-q -t 192.168.1.1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))

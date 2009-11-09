@@ -345,7 +345,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'quoted_text': u'et tu brute'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
-                       '--txt --txt-quoted-text "et to brute" '
+                       '--txt --txt-quoted-text "et tu brute" '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,

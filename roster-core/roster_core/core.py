@@ -2252,7 +2252,6 @@ class Core(object):
           record['record_arguments_records_assignments_record_id']][record[
               'record_arguments_records_assignments_argument_name']] = record[
               'argument_value']
-
     for record_id in set(del_id_list):
       del full_record_dicts[record_id]
 

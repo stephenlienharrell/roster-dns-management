@@ -82,11 +82,17 @@ class CliRecordLib:
                                               'core_return']
     search_target = options.target
     if( record_type == u'ptr' ):
-        search_target = roster_client_lib.RunFunction(
-            'GetPTRTarget', options.username, credfile=options.credfile,
-            server_name=options.server,
-            args=[options.target, options.view_name],
-            raise_errors=raise_errors)['core_return'][0]
+      search_target = roster_client_lib.RunFunction(
+          'GetPTRTarget', options.username, credfile=options.credfile,
+          server_name=options.server,
+          args=[options.target, options.view_name],
+          raise_errors=raise_errors)['core_return'][0]
+    elif( record_type == u'aaaa' ):
+      expanded_ip = roster_client_lib.RunFunction(
+          u'ExpandIPV6', options.username, credfile=options.credfile,
+          args=[record_args_dict['assignment_ip']], server_name=options.server,
+          raise_errors=raise_errors)['core_return']
+      record_args_dict['assignment_ip'] = expanded_ip
     ## Check if view exists
     if( not views.has_key(options.view_name) and options.view_name != 'any' ):
       self.cli_common_lib_instance.DnsError('View does not exist!', 2)
@@ -109,10 +115,9 @@ class CliRecordLib:
             break
         else:
           self.cli_common_lib_instance.DnsError('Duplicate record!', 4)
-    if( record_type == u'aaaa' ):
       roster_client_lib.RunFunction(
-          u'MakeAAAARecord', options.username, credfile=options.credfile,
-          args=[options.target, options.zone_name, record_args_dict],
+          u'MakeRecord', options.username, credfile=options.credfile,
+          args=[u'aaaa', options.target, options.zone_name, record_args_dict],
           kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
           server_name=options.server, raise_errors=raise_errors)
       if( options.view_name is None ):
@@ -192,6 +197,18 @@ class CliRecordLib:
       if( record_args_dict[item] is None ):
         self.cli_common_lib_instance.DnsError('Must specify --%s-%s' % (
             record_type, item.replace('_', '-')), 1)
+    if( record_type == u'ptr' ):
+      options.target = roster_client_lib.RunFunction(
+          'GetPTRTarget', options.username, credfile=options.credfile,
+          server_name=options.server,
+          args=[options.target, options.view_name],
+          raise_errors=raise_errors)['core_return'][0]
+    elif( record_type == u'aaaa' ):
+      expanded_ip = roster_client_lib.RunFunction(
+          u'ExpandIPV6', options.username, credfile=options.credfile,
+          args=[record_args_dict['assignment_ip']], server_name=options.server,
+          raise_errors=raise_errors)['core_return']
+      record_args_dict['assignment_ip'] = expanded_ip
 
     if( not options.credfile.startswith('/') ):
       options.credfile = '%s/%s' % (os.getcwd(), options.credfile)
@@ -245,6 +262,12 @@ class CliRecordLib:
             'GetPTRTarget', options.username, credfile=options.credfile,
             server_name=options.server,
             args=[options.target, options.view_name])['core_return'][0]
+    elif( record_type == u'aaaa' ):
+      expanded_ip = roster_client_lib.RunFunction(
+          u'ExpandIPV6', options.username, credfile=options.credfile,
+          args=[record_args_dict['assignment_ip']],
+          server_name=options.server)['core_return']
+      record_args_dict['assignment_ip'] = expanded_ip
     records = roster_client_lib.RunFunction(
         'ListRecords', options.username, credfile=options.credfile,
         server_name=options.server,

@@ -233,7 +233,7 @@ class TestCliRecordLib(unittest.TestCase):
     self.assertEqual(sys.stdout.flush(),
                      u'ADDED AAAA: ipv6host zone_name: ipv6_zone view_name: '
                       'test_view ttl: 3600\n    assignment_ip: '
-                      '2001:db8::1428:57ab\n')
+                      '2001:0db8:0000:0000:0000:0000:1428:57ab\n')
 
     sys.stdout = old_stdout
 

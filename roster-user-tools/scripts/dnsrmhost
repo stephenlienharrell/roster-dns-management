@@ -161,8 +161,7 @@ def main(args):
           'ReverseIP', options.username, credfile=options.credfile,
           server_name=options.server, args=[options.ip_address])['core_return']
       options.zone_name = reverse_zone_name
-      if( reverse_ip.endswith(reverse_zone_origin) ):
-        options.target = reverse_ip[:len(reverse_ip) - len(reverse_zone_origin) - 1]
+      options.target = reverse_ip
       try:
         cli_record_lib_instance.RemoveRecord(u'ptr', options,
                                     {u'assignment_host': hostname},
