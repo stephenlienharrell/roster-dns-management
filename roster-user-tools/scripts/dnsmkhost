@@ -56,7 +56,7 @@ def main(args):
   parser = OptionParser(version='%%prog (Roster %s)' % __version__)
 
   parser.add_option('-i', '--ip-address', action='store', dest='ip_address',
-                    help='IP address of machine.', metavar='<ip-address>',
+                    help='Full IP address of machine.', metavar='<ip-address>',
                     default=None)
   parser.add_option('-r', '--range', action='store', dest='range',
                     help='CIDR block range of IP addresses. Assumes -l, will'
