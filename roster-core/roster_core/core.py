@@ -2417,11 +2417,12 @@ class Core(object):
           current_records = self.db_instance.ListRow('records',
                                                      update_records_dict)      
           for record in current_records:
-            if( (record['record_type'] == 'a' and search_record_type == 'cname')                or record['record_type'] == 'cname' ):
-               raise RecordError('Record already exists with that '
-                                 'target type: %s target: %s' %
-                                 (record['record_type'],
-                                  record['record_target']))
+            if( (record['record_type'] == 'a' and search_record_type == 'cname')
+                or record['record_type'] == 'cname' ):
+              raise RecordError('Record already exists with that '
+                                'target type: %s target: %s' %
+                                (record['record_type'],
+                                 record['record_target']))
         args_search_list = []
         record_ids = []
         final_id = []
