@@ -36,7 +36,7 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
-
+import os
 try:
   from setuptools import setup
 except ImportError:
@@ -45,7 +45,7 @@ except ImportError:
 current_version = __version__
 if( __version__.startswith('#') ):
   current_version = '0.1'
-
+os.system('pwd')
 setup(name='RosterServer',
       version=current_version,
       description='RosterServer is a XML/RPC Server for Roster.',
@@ -71,5 +71,6 @@ setup(name='RosterServer',
       install_requires = ['python-ldap>=2.3.1', 'pyOpenSSL>=0.9',
                           'RosterCore>=%s' % current_version],
       scripts = ['scripts/rosterd'],
-      data_files = [('/etc', ['roster_server.conf'], '/etc/init.d', ['roster-server-init'])]
+      data_files = [('/etc', ['etc/roster_server.conf'],
+                     '/etc/init.d', ['etc/init.d/roster-server-init'])]
      )

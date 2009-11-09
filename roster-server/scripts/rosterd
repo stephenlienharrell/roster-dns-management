@@ -99,15 +99,18 @@ def main(args):
                     help='Port of server to be created.',
                     default=u'8000')
   (globals()['options'], args) = parser.parse_args(args)
-  if( not os.path.exists(options.config_file) ):
-    print 'ERROR: Config file "%s" does not exist.' % options.config_file
-    sys.exit(1)
-  if( not os.path.exists(options.cert_file) ):
-    print 'ERROR: Cert file "%s" does not exist.' % options.cert_file
-    sys.exit(1)
-  if( not os.path.exists(options.key_file) ):
-    print 'ERROR: Key file "%s" does not exist.' % options.key_file
-    sys.exit(1)
+  if( options.config_file is not None ):
+    if( not os.path.exists(options.config_file) ):
+      print 'ERROR: Config file "%s" does not exist.' % options.config_file
+      sys.exit(1)
+  if( options.cert_file is not None ):
+    if( not os.path.exists(options.cert_file) ):
+      print 'ERROR: Cert file "%s" does not exist.' % options.cert_file
+      sys.exit(1)
+  if( options.key_file is not None ):
+    if( not os.path.exists(options.key_file) ):
+      print 'ERROR: Key file "%s" does not exist.' % options.key_file
+      sys.exit(1)
   config_instance = roster_core.Config(options.config_file)
   if( not os.access(options.config_file, os.R_OK) ):
     print ('ERROR: Could not access config file "%s", '
