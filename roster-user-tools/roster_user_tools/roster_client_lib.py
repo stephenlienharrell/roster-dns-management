@@ -82,6 +82,8 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
   try:
     core_return = server.CoreRun(function, user_name, credstring, args, kwargs)
   except xmlrpclib.Fault, e:
+    if( raise_errors ):
+      raise
     print "SERVER ERROR: %s" % e.faultString
     sys.exit(1)
 

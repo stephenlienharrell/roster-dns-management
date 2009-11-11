@@ -30,6 +30,7 @@ Current Release
 - Made ListRecords in cli_record_lib use record_args_dict. Updated unittest.
 - cli_record_lib checks core return on RemoveRecord.
 - Caught xml Exceptions in roster_client_lib to make errors nicer.
+- Allowed xml Exceptions to be raised rather than printed.
 
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
