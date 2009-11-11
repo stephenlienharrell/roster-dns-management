@@ -39,6 +39,7 @@ __version__ = '#TRUNK#'
 
 
 import os
+import sys
 import xmlrpclib
 import cli_common_lib
 
@@ -78,7 +79,11 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
         pass
     else:
       raise InvalidCredentials('Credential file not found.')
-  core_return = server.CoreRun(function, user_name, credstring, args, kwargs)
+  try:
+    core_return = server.CoreRun(function, user_name, credstring, args, kwargs)
+  except xmlrpclib.Fault, e:
+    print "SERVER ERROR: %s" % e.faultString
+    sys.exit(1)
 
 
   if( core_return == 'ERROR: Invalid Credentials' ):
