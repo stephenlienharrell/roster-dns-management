@@ -1,6 +1,5 @@
 Current Release
 - Made it possible to use other authentication methods other than LDAP.
-- Removed the rest of LDAP traces.
 - Made ldap import from roster_server first, then current directory.
 - Made roster_server.conf and added it to setup.py to install in /etc.
 - Removed leftover unused function ExpireCredentials.
@@ -14,11 +13,3 @@ Current Release
 2009-09-23 release-0.5
 - Made trunk install as version 0.1
 - Fixed current_version variable in setups
-
-2009-09-14 release-0.3
-- Fixed allow_none problem on some python versions.
-
-2009-09-09 release-0.1b2
-
-2009-8-25 Release-0.1b1
-- First Release
