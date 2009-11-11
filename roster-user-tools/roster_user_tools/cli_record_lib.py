@@ -41,6 +41,9 @@ import xmlrpclib
 import roster_client_lib
 
 
+class RecordNotFoundException(Exception):
+  pass
+
 class CliRecordLib:
   """Command line record library class"""
   def __init__(self, cli_common_lib_instance):
@@ -224,11 +227,15 @@ class CliRecordLib:
     ## Check if zone exists
     if( options.zone_name not in zones ):
       self.cli_common_lib_instance.DnsError('Zone does not exist!', 3)
-    roster_client_lib.RunFunction(
+    removed_records = roster_client_lib.RunFunction(
         u'RemoveRecord', options.username, credfile=options.credfile,
         args=[record_type, options.target, options.zone_name, record_args_dict,
               options.view_name], kwargs={'ttl': int(options.ttl)},
-        server_name=options.server, raise_errors=raise_errors)
+        server_name=options.server, raise_errors=raise_errors)['core_return']
+    if( removed_records == 0 ):
+      self.cli_common_lib_instance.DnsError(
+          '"%s" record with target "%s" in "%s" zone and "%s" view not found.',
+          1)
     if( options.view_name is None ):
       options.view_name = u'any'
     if( options.ttl is None ):
