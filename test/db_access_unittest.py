@@ -41,8 +41,10 @@ __version__ = '#TRUNK#'
 
 
 import unittest
+import time
 import MySQLdb
 import os
+import threading
 
 import roster_core
 from roster_core import data_validation
@@ -53,6 +55,39 @@ from roster_core import table_enumeration
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
+
+
+class DbAccessThread(threading.Thread):
+  def __init__(self, db_instance, test_instance, num1, num2):
+    self.db_instance = db_instance
+    self.test_instance = test_instance
+    self.view_name = u'test_view%s-%s' % (num1, num2)
+    threading.Thread.__init__(self)
+  def run(self):
+    self.db_instance.StartTransaction()
+    self.test_instance.assertEqual(self.db_instance.ListRow(
+        'views',self.db_instance.GetEmptyRowDict('views')), ())
+    self.test_instance.assertTrue(self.db_instance.MakeRow(
+        'views', {'view_options': u'', 'view_name': self.view_name}))
+    self.test_instance.assertEqual(self.db_instance.ListRow(
+        'views',self.db_instance.GetEmptyRowDict('views')),
+        ({'view_options': u'', 'view_name': self.view_name},))
+    self.test_instance.assertTrue(self.db_instance.RemoveRow(
+        'views', {'view_options': u'', 'view_name': self.view_name}))
+    self.test_instance.assertEqual(self.db_instance.ListRow(
+        'views',self.db_instance.GetEmptyRowDict('views')), ())
+    self.db_instance.EndTransaction()
+
+class DbLockThread(threading.Thread):
+  def __init__(self, db_instance):
+    self.db_instance = db_instance
+    threading.Thread.__init__(self)
+  def run(self):
+    self.db_instance.StartTransaction()
+    self.db_instance.LockDb()
+    time.sleep(1)
+    self.db_instance.UnlockDb()
+    self.db_instance.EndTransaction()
 
 
 class TestdbAccess(unittest.TestCase):
@@ -74,6 +109,18 @@ class TestdbAccess(unittest.TestCase):
 
   def tearDown(self):
     self.db_instance.close()
+
+  def testThread(self):
+    for i in range(10):
+      new_db_instance = self.config_instance.GetDb()
+      lock_thread = DbLockThread(new_db_instance)
+      lock_thread.start()
+      lock_thread.join()
+      new_db_instance = self.config_instance.GetDb()
+      for j in range(20):
+        thread = DbAccessThread(new_db_instance, self, i, j)
+        thread.start()
+        thread.join()
 
   def testTransactions(self):
     self.db_instance.thread_safe = False
