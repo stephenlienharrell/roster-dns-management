@@ -52,6 +52,7 @@ import roster_core
 from roster_user_tools import roster_client_lib
 import roster_server
 from roster_server import credentials
+from roster_config_manager import tree_exporter
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
@@ -222,6 +223,7 @@ class TestXMLServerClient(unittest.TestCase):
       old_thread.join()
 
   def testMultipleThreadedConnectionsWithDifferentUsers(self):
+    data_exporter = tree_exporter.BindTreeExport(CONFIG_FILE, '')
     self.daemon_instance.core_die_time = 7200
     roster_client_lib.RunFunction(u'MakeZone', USERNAME,
                                   credstring=self.credential,
@@ -249,13 +251,15 @@ class TestXMLServerClient(unittest.TestCase):
             cred_dict['user%s' % user_number], self)
         new_client_thread.start()
         client_threads.append(new_client_thread)
-      self.core_instance.db_instance.StartTransaction()
+      data_exporter.db_instance.StartTransaction()
       try:
-        self.core_instance.db_instance.LockDb()
-        time.sleep(15)
+        data_exporter.db_instance.LockDb()
+        try:
+          data_exporter.GetRawData()
+        finally:
+          data_exporter.db_instance.UnlockDb()
       finally:
-        self.core_instance.db_instance.UnlockDb()
-        self.core_instance.db_instance.EndTransaction()
+        data_exporter.db_instance.EndTransaction()
 
     for old_thread in client_threads:
       old_thread.join()
