@@ -96,6 +96,12 @@ def main(args):
   parser.add_option('-n', '--hostname', action='store', dest='hostname',
                     help='MySQL database hostname.', metavar='<hostname>',
                     default='localhost')
+  parser.add_option('--big-lock-timeout', action='store',
+                    dest='big_lock_timeout', metavar='<seconds>',
+                    help='Timeout for big database lock.', default='90')
+  parser.add_option('--big-lock-wait', action='store',
+                    dest='big_lock_wait', metavar='<seconds>',
+                    help='Wait for big database lock.', default='5')
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -124,6 +130,8 @@ def main(args):
   config_parser.set('database', 'login', options.user_name)
   config_parser.set('database', 'database', options.database)
   config_parser.set('database', 'passwd', password)
+  config_parser.set('database', 'big_lock_timeout', options.big_lock_timeout)
+  config_parser.set('database', 'big_lock_wait', options.big_lock_wait)
 
   config_parser.add_section('server')
   config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
