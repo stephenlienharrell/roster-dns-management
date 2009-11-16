@@ -1,4 +1,6 @@
 Current Release
+
+2009-11-16 release-0.6
 - Made it possible to use other authentication methods other than LDAP.
 - Made ldap import from roster_server first, then current directory.
 - Made roster_server.conf and added it to setup.py to install in /etc.

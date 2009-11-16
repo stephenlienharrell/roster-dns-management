@@ -1,4 +1,6 @@
 Current Release
+
+2009-11-16 release-0.6
 - Made roster_client_lib have a fallback if errors cant be made nicer
 - Made nice error if zone does not exist in dnsmkhost
 - Made dnsmkzone actually have a -t option
