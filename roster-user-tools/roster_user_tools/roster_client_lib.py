@@ -35,7 +35,7 @@ Connects to XML RPC server and runs arbitrary functions.
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.6'
 
 
 import os

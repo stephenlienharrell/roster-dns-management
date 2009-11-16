@@ -1,5 +1,3 @@
-Current Release
-
 2009-11-16 release-0.6
 - Fixed ipv6 tests in core helpers regtest.
 - Made specific errors if functions in RemoveRecord fail.
