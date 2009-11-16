@@ -1,0 +1,17 @@
+Authors
+ChangeLog
+License
+setup.py
+roster_core/__init__.py
+roster_core/audit_log.py
+roster_core/config.py
+roster_core/constants.py
+roster_core/core.py
+roster_core/core_helpers.py
+roster_core/data_validation.py
+roster_core/db_access.py
+roster_core/errors.py
+roster_core/table_enumeration.py
+roster_core/user.py
+scripts/roster_database_bootstrap
+data/database_schema.sql

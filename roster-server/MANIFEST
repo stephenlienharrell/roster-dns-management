@@ -1,0 +1,12 @@
+Authors
+ChangeLog
+License
+setup.py
+roster_server/__init__.py
+roster_server/credentials.py
+roster_server/general_ldap.py
+roster_server/server.py
+roster_server/ssl_xml_rpc_lib.py
+scripts/rosterd
+etc/roster_server.conf
+etc/init.d/roster-server-init
