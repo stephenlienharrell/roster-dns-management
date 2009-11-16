@@ -75,7 +75,8 @@ class CliCommonLib:
               self.options.server = self.config_file.get('user_tools', 'server')
           if( hasattr(self.options, 'credfile') ):
             if( not options.credfile ):
-              self.options.credfile = self.config_file.get('user_tools', 'cred_file')
+              self.options.credfile = self.config_file.get('user_tools',
+                                                           'cred_file')
           break;
       else:
         if( hasattr(self.options, 'server') ):
@@ -238,6 +239,8 @@ class CliCommonLib:
           server_name=self.options.server)
       if( valid ):
         break
+      else:
+        count += 1
       password = self.options.password
       if( self.options.password is None ):
         try:

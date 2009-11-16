@@ -65,7 +65,9 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
     return from function in core
   """
   if( credfile is None ):
-    credfile = os.path.join(os.path.expanduser('~'), '.dnscred')
+    credfile = os.path.expanduser('~/.dnscred')
+  else:
+    credfile = os.path.expanduser(credfile)
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
   ## Read credential File
   core_return = ''
@@ -119,6 +121,7 @@ def GetCredentials(user_name, password, credfile=None,
   """
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
   credential = server.GetCredentials(user_name, password)
+  credfile = os.path.expanduser(credfile)
   if( credfile is not None ):
     try:
       credfile_handle = open(credfile, 'w')
@@ -146,6 +149,7 @@ def IsAuthenticated(user_name, credfile,
   Outputs:
     bool: whether or not credential file is valid
   """
+  credfile = os.path.expanduser(credfile)
   if( os.path.exists(credfile) ):
     try:
       credfile_handle = open(credfile, 'r')
