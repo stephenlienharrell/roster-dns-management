@@ -32,9 +32,10 @@
 
 
 from server import Server
+import general_ldap
 
 
-__all__ = ['Server']
+__all__ = ['Server', 'general_ldap']
 
 
 # vi: set ai aw sw=2:

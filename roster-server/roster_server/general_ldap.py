@@ -7,6 +7,13 @@ class AuthenticationMethod:
   """General LDAP authentication method,
   should work for most LDAP applications.
   """
+  def __init__(self):
+    self.requires = {'binddn': {'type': 'str', 'default': None},
+                     'server': {'type': 'str', 'default': None},
+                     'tls': {'type': 'str', 'default': 'on'},
+                     'cert_file': {'type': 'str', 'default': None},
+                     'version': {'type': 'str', 'default': None}}
+
   def Authenticate(self, user_name=None, password=None, binddn=None,
                    cert_file=None, server=None, version=None, tls=None):
     """Authenticate method for LDAP

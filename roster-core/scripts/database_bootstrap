@@ -43,6 +43,7 @@ import MySQLdb.cursors
 from optparse import OptionParser
 import ConfigParser
 import getpass
+import roster_server
 
 
 def main(args):
@@ -51,13 +52,12 @@ def main(args):
   Inputs:
     args: arguments from the command line
   """
-  linux_home_dir = os.path.expanduser('~')
   parser = OptionParser()
 
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Location of the new config file.',
                     metavar='<config-file>',
-                    default=os.path.join(linux_home_dir, '.rosterrc'))
+                    default='/etc/roster/roster_server.conf')
   parser.add_option('-s', '--schema-file', action='store', dest='schema_file',
                     help='Location of the database schema file.',
                     metavar='<schema-file>',
@@ -123,6 +123,23 @@ def main(args):
     parser.print_help()
     sys.exit(1)
 
+  module_list = []
+  for module in dir(roster_server):
+    if( module.startswith('_') ):
+      continue
+    module_object = getattr(roster_server, module)
+    if( 'AuthenticationMethod' in dir(module_object) ):
+      module_list.append(module)
+
+  for module in module_list:
+    print "%s. %s" % (module_list.index(module) + 1, module)
+  module = raw_input('Please select an authentication module (1 - %s) '
+                     'above: ' % len(module_list))
+  module = int(module) - 1
+
+  authentication_module = getattr(roster_server, module_list[module])
+  authentication_module_instance = authentication_module.AuthenticationMethod()
+
   password = getpass.getpass('Enter password for %s: ' % options.user_name)
   config_parser = ConfigParser.SafeConfigParser()
   config_parser.add_section('database')
@@ -142,9 +159,19 @@ def main(args):
   config_parser.set('server', 'server_killswitch', 'on')
 
   config_parser.add_section('credentials')
-  config_parser.set('credentials', 'binddn', options.binddn)
+  config_parser.set('credentials', 'authentication_method', module_list[module])
   config_parser.set('credentials', 'exp_time', options.credential_expiry_time)
   config_parser_file = open(options.config_file, 'wb')
+
+  config_parser.add_section(module_list[module])
+  for variable in authentication_module_instance.requires:
+    if( authentication_module_instance.requires[variable]['default'] is None ):
+      value = raw_input('Please enter \'%s\' for \'%s\': ' % (
+          variable, module_list[module]))
+    else:
+      value = authentication_module_instance.requires[variable]['default']
+    config_parser.set(module_list[module], variable, value)
+
   config_parser.write(config_parser_file)
 
   new_user_mysql = (
