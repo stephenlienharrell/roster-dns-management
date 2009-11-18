@@ -46,6 +46,96 @@ import getpass
 import roster_server
 
 
+INIT_LOCATION = '/etc/init.d/rosterd'
+INIT_FILE = (
+    '#!/bin/sh\n'
+    '# Copyright (c) 2009, Purdue University\n'
+    '# All rights reserved.\n'
+    '# \n'
+    '# Redistribution and use in source and binary forms, with or without\n'
+    '# modification, are permitted provided that the following conditions are '
+    'met:\n'
+    '# \n'
+    '# Redistributions of source code must retain the above copyright notice, '
+    'this\n'
+    '# list of conditions and the following disclaimer.\n'
+    '#\n'
+    '# Redistributions in binary form must reproduce the above copyright '
+    'notice, this\n'
+    '# list of conditions and the following disclaimer in the documentation '
+    'and/or\n'
+    '# other materials provided with the distribution.\n'
+    '# \n'
+    '# Neither the name of the Purdue University nor the names of its '
+    'contributors\n'
+    '# may be used to endorse or promote products derived from this software '
+    'without\n'
+    '# specific prior written permission.\n'
+    '# \n'
+    '# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS '
+    '"AS IS"\n'
+    '# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, '
+    'THE\n'
+    '# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR '
+    'PURPOSE ARE\n'
+    '# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE '
+    'LIABLE\n'
+    '# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR '
+    'CONSEQUENTIAL\n'
+    '# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE '
+    'GOODS OR\n'
+    '# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) '
+    'HOWEVER\n'
+    '# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT '
+    'LIABILITY,\n'
+    '# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF '
+    'THE USE\n'
+    '# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n'
+    '\n'
+    'lockfile=/var/lock/roster\n'
+    '\n'
+    'start_roster()\n'
+    '{\n'
+    '  echo "Starting Roster Server..."\n'
+    '  rosterd &\n'
+    '}\n'
+    'stop_roster()\n'
+    '{\n'
+    '  if [ -e $lockfile ]\n'
+    '  then\n'
+    '    if [ -w $lockfile ]\n'
+    '    then\n'
+    '      echo "Stopping Roster Server..."\n'
+    '      rm $lockfile\n'
+    '    else\n'
+    '      echo "Could not stop Roster Server. Do you have correct '
+    'permissions?"\n'
+    '      exit 1\n'
+    '    fi\n'
+    '  else\n'
+    '    echo "Could not find lock file. Is Roster Server running?"\n'
+    '    exit 1\n'
+    '  fi\n'
+    '}\n'
+    '\n'
+    'case "$1" in\n'
+    '  start)\n'
+    '    start_roster\n'
+    '    ;;\n'
+    '  stop)\n'
+    '    stop_roster\n'
+    '    ;;\n'
+    '  restart)\n'
+    '    stop_roster\n'
+    '    sleep 2\n'
+    '    start_roster\n'
+    '    ;;\n'
+    '  *)\n'
+    '   echo "Usage $1 {start|stop|restart}"\n'
+    '   exit 1\n'
+    '   ;;\n'
+    'esac\n')
+
 def main(args):
   """Collects command line arguments. Sets up initial parameters.
 
@@ -104,6 +194,10 @@ def main(args):
                     help='Wait for big database lock.', default='5')
 
   (globals()["options"], args) = parser.parse_args(args)
+
+  if( os.getuid() != 0 ):
+    print '%s: Need to be root.' % sys.argv[0]
+    sys.exit(1)
 
   args_dict = {'-c/--config-file': options.config_file,
                '-s/--schema-file': options.schema_file,
@@ -195,6 +289,12 @@ def main(args):
   finally:
     cursor.close()
     connection.commit()
+
+  try:
+    init_file = open(INIT_LOCATION, 'w')
+    init_file.writelines(INIT_FILE)
+  finally:
+    init_file.close()
 
 if __name__ == '__main__':
   main(sys.argv[1:])
