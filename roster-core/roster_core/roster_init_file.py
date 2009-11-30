@@ -1,5 +1,4 @@
-#!/usr/bin/python
-
+INIT_FILE = """#!/bin/sh
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
 # 
@@ -28,17 +27,46 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Toplevel RosterCore API.  This presents entities to external consumers."""
+lockfile=/var/lock/roster
 
-__copyright__ = 'Copyright (C) 2009, Purdue University'
-__license__ = 'BSD'
-__version__ = '#TRUNK#'
+start_roster()
+{
+  echo "Starting Roster Server..."
+  rosterd &
+}
+stop_roster()
+{
+  if [ -e $lockfile ]
+  then
+    if [ -w $lockfile ]
+    then
+      echo "Stopping Roster Server..."
+      rm $lockfile
+    else
+      echo "Could not stop Roster Server. Do you have correct permissions?"
+      exit 1
+    fi
+  else
+    echo "Could not find lock file. Is Roster Server running?"
+    exit 1
+  fi
+}
 
-
-import roster_user_tools_config
-
-
-__all__ = ['roster_user_tools_config']
-
-
-# vi: set ai aw sw=2:
+case "$1" in
+  start)
+    start_roster
+    ;;
+  stop)
+    stop_roster
+    ;;
+  restart)
+    stop_roster
+    sleep 2
+    start_roster
+    ;;
+  *)
+   echo "Usage $1 {start|stop|restart}"
+   exit 1
+   ;;
+esac
+"""

@@ -43,6 +43,7 @@ import os
 import inspect
 import SocketServer
 import time
+import sys #FIXME
 
 import roster_core
 
@@ -283,6 +284,15 @@ class Server(object):
       server_name: name of server you wish to create
       port: listening port number of server
     """
+    for path in sys.path:
+      print path
+      if( 'RosterServer' in path ):
+        new_path = '%s/data/roster_server.conf' % path
+        new_path = path
+        file = open(new_path, 'r')
+        print file.read()
+        file.close()
+        break
     if( self.server_killswitch ):
       raise ServerError('"server_killswitch" must be set to "off" in "%s" '
                         'to allow the XML-RPC server to run.' % (
