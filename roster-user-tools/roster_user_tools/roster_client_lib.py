@@ -121,8 +121,8 @@ def GetCredentials(user_name, password, credfile=None,
   """
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
   credential = server.GetCredentials(user_name, password)
-  credfile = os.path.expanduser(credfile)
   if( credfile is not None ):
+    credfile = os.path.expanduser(credfile)
     try:
       credfile_handle = open(credfile, 'w')
       try:
