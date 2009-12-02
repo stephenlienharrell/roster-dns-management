@@ -108,6 +108,7 @@ class TestDnsMkHost(unittest.TestCase):
     db_instance.EndTransaction()
 
     data = open(DATA_FILE, 'r').read()
+    print type(data)
     db_instance.StartTransaction()
     db_instance.cursor.execute(data)
     db_instance.EndTransaction()
