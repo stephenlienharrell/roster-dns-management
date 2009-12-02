@@ -150,6 +150,10 @@ def main(args):
   authentication_module = getattr(roster_server, module_list[module])
   authentication_module_instance = authentication_module.AuthenticationMethod()
 
+  directory = '/'.join(config_file.split('/')[:-1])
+  if( !os.path.exists(directory) ):
+    os.path.makedirs(directory)
+
   password = getpass.getpass('Enter password for %s: ' % options.user_name)
   config_parser = ConfigParser.SafeConfigParser()
   config_parser.add_section('database')
@@ -206,7 +210,6 @@ def main(args):
     cursor.close()
     connection.commit()
 
-  os.mkdir('/usr/share/roster')
   init_file = open(options.init_file, 'w')
   try:
     init_file.writelines(roster_core.embedded_files.INIT_FILE)
