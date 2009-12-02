@@ -55,7 +55,6 @@ from roster_user_tools  import roster_client_lib
 
 USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
-SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 HOST = u'localhost'
 USERNAME = u'sharrell'
@@ -103,7 +102,7 @@ class TestDnsMkHost(unittest.TestCase):
 
     db_instance = self.config_instance.GetDb()
 
-    schema = open(SCHEMA_FILE, 'r').read()
+    schema = roster_core.embedded_files.SCHEMA_FILE
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
     db_instance.EndTransaction()
