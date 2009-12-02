@@ -47,8 +47,6 @@ import roster_core
 import roster_server
 
 
-SCHEMA_LOCATION = '/usr/share/roster/database_schema.sql'
-INIT_LOCATION = '/etc/init.d/rosterd'
 
 
 def main(args):
@@ -66,7 +64,10 @@ def main(args):
   parser.add_option('-s', '--schema-file', action='store', dest='schema_file',
                     help='Location of the database schema file.',
                     metavar='<schema-file>',
-                    default=None)
+                    default='/usr/share/roster/database_schema.sql')
+  parser.add_option('-i', '--init-file', action='store', dest='init_file',
+                    help='Location of the init file, default is reccommended.',
+                    metavar='<init-file>', default='/etc/init.d/rosterd')
   parser.add_option('-u', '--user-name', action='store', dest='user_name',
                     help='MySQL username.', metavar='<user-name>',
                     default=None)
@@ -206,15 +207,15 @@ def main(args):
     connection.commit()
 
   os.mkdir('/usr/share/roster')
-  init_file = open(INIT_LOCATION, 'w')
+  init_file = open(options.init_file, 'w')
   try:
-    init_file.writelines(roster_core.roster_init_file.INIT_FILE)
+    init_file.writelines(roster_core.embedded_files.INIT_FILE)
   finally:
     init_file.close()
 
-  schema_file = open(SCHEMA_LOCATION, 'w')
+  schema_file = open(options.schema_file, 'w')
   try:
-    schema_file.writelines(roster_core.roster_schema_file.SCHEMA_FILE)
+    schema_file.writelines(roster_core.embedded_files.SCHEMA_FILE)
   finally:
     schema_file.close()
 

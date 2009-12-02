@@ -77,6 +77,6 @@ setup(name='RosterUserTools',
                  'scripts/dnsrmhost', 'scripts/dnsrmrecord',
                  'scripts/dnsrmreservedword', 'scripts/dnsrmusergroup',
                  'scripts/dnsrmview', 'scripts/dnsrmzone',
-                 'scripts/dnsuphost', 'scripts/dnsupnamedglobals'],
-     data_files = [('share/roster', ['etc/roster_user_tools.conf'])]
+                 'scripts/dnsuphost', 'scripts/dnsupnamedglobals',
+                 'scripts/dnsuphost', 'scripts/roster-user-tools-bootstrap']
      )

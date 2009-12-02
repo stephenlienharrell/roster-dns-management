@@ -39,12 +39,10 @@ from config import Config
 from core import Core
 from core_helpers import CoreHelpers
 from errors import CoreError
-import roster_init_file
-import roster_schema_file
+import embedded_files
 
 
-__all__ = ['CoreError', 'Core', 'CoreHelpers', 'Config', 'roster_init_file',
-           'roster_schema_file']
+__all__ = ['CoreError', 'Core', 'CoreHelpers', 'Config', 'embedded_files']
 
 
 # vi: set ai aw sw=2:
