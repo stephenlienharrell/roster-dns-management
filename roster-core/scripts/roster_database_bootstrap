@@ -45,8 +45,7 @@ import ConfigParser
 import getpass
 import roster_core
 import roster_server
-
-
+import roster_user_tools
 
 
 def main(args):
@@ -61,10 +60,6 @@ def main(args):
                     help='Location of the new config file.',
                     metavar='<config-file>',
                     default='/etc/roster/roster_server.conf')
-  parser.add_option('-s', '--schema-file', action='store', dest='schema_file',
-                    help='Location of the database schema file.',
-                    metavar='<schema-file>',
-                    default='/usr/share/roster/database_schema.sql')
   parser.add_option('-i', '--init-file', action='store', dest='init_file',
                     help='Location of the init file, default is reccommended.',
                     metavar='<init-file>', default='/etc/init.d/rosterd')
@@ -196,7 +191,7 @@ def main(args):
                                passwd=password, db=options.database,
                                use_unicode=True)
   cursor = connection.cursor(MySQLdb.cursors.DictCursor)
-  schema = open(options.schema_file, 'r').read()
+  schema = roster_user_tools.embedded_files.SCHEMA_FILE
   try:
     cursor.execute(schema)
   finally:
@@ -215,12 +210,6 @@ def main(args):
     init_file.writelines(roster_core.embedded_files.INIT_FILE)
   finally:
     init_file.close()
-
-  schema_file = open(options.schema_file, 'w')
-  try:
-    schema_file.writelines(roster_core.embedded_files.SCHEMA_FILE)
-  finally:
-    schema_file.close()
 
 if __name__ == '__main__':
   main(sys.argv[1:])
