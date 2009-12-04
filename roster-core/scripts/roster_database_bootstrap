@@ -45,8 +45,22 @@ import ConfigParser
 import getpass
 import roster_core
 import roster_server
-import roster_user_tools
 
+
+def isDbEmpty(hostname, user_name, password, database):
+  mysql = 'SHOW TABLES'
+  connection = MySQLdb.connect(host=hostname, user=user_name,
+                               passwd=password, db=database,
+                               use_unicode=True)
+  cursor = connection.cursor(MySQLdb.cursors.DictCursor)
+  schema = roster_core.embedded_files.SCHEMA_FILE
+  try:
+    cursor.execute(mysql)
+    tables = cursor.fetchall()
+  finally:
+    cursor.close()
+    connection.commit()
+  return (len(tables) == 0)
 
 def main(args):
   """Collects command line arguments. Sets up initial parameters.
@@ -103,19 +117,26 @@ def main(args):
   parser.add_option('--big-lock-wait', action='store',
                     dest='big_lock_wait', metavar='<seconds>',
                     help='Wait for big database lock.', default='5')
+  parser.add_option('--force', action='store_true', dest='force',
+                    help='Force overwriting a database.', default=False)
 
   (globals()["options"], args) = parser.parse_args(args)
 
   if( os.getuid() != 0 ):
     print '%s: Need to be root.' % sys.argv[0]
     sys.exit(1)
+  password = getpass.getpass(
+      'Enter database password for %s: ' % options.user_name)
+  empty = isDbEmpty(options.hostname, options.user_name, password,
+                    options.database)
+  if( not empty and not options.force ):
+    print ('Database is not empty, specify a different database or use '
+           '--force.')
+    sys.exit(1)
 
   args_dict = {'-c/--config-file': options.config_file,
-               '-s/--schema-file': options.schema_file,
                '-u/--user-name': options.user_name,
                '-U/--roster-user-name': options.roster_user_name,
-               '-l/--ldap-server': options.ldap_server,
-               '-b/--binddn': options.binddn,
                '-d/--database': options.database,
                '-n/--hostname': options.hostname}
 
@@ -145,11 +166,10 @@ def main(args):
   authentication_module = getattr(roster_server, module_list[module])
   authentication_module_instance = authentication_module.AuthenticationMethod()
 
-  directory = '/'.join(config_file.split('/')[:-1])
-  if( !os.path.exists(directory) ):
+  directory = '/'.join(options.config_file.split('/')[:-1])
+  if( not os.path.exists(directory) ):
     os.path.makedirs(directory)
 
-  password = getpass.getpass('Enter password for %s: ' % options.user_name)
   config_parser = ConfigParser.SafeConfigParser()
   config_parser.add_section('database')
   config_parser.set('database', 'server', options.hostname)
@@ -164,7 +184,7 @@ def main(args):
   config_parser.set('server', 'core_die_time', options.core_die_time)
   config_parser.set('server', 'get_credentials_wait_increment',
                     options.get_credentials_wait_increment)
-  config_parser.set('server', 'ldap_server', options.ldap_server)
+  #config_parser.set('server', 'ldap_server', options.ldap_server)
   config_parser.set('server', 'server_killswitch', 'on')
 
   config_parser.add_section('credentials')
@@ -191,7 +211,7 @@ def main(args):
                                passwd=password, db=options.database,
                                use_unicode=True)
   cursor = connection.cursor(MySQLdb.cursors.DictCursor)
-  schema = roster_user_tools.embedded_files.SCHEMA_FILE
+  schema = roster_core.embedded_files.SCHEMA_FILE
   try:
     cursor.execute(schema)
   finally:
