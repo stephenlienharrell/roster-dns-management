@@ -38,6 +38,7 @@ __version__ = '#TRUNK#'
 import datetime
 import IPy
 import constants
+import core
 import errors
 import math
 
@@ -558,7 +559,10 @@ class CoreHelpers(object):
           if( len(final_id) == 1 ):
             records_dict['records_id'] = final_id[0]
             new_records = self.db_instance.ListRow('records', records_dict)
-            self.db_instance.RemoveRow('records', new_records[0])
+            rows_deleted = self.db_instance.RemoveRow('records', new_records[0])
+            if( not rows_deleted ):
+              raise core.RecordError('Record with record_id %s not found' %
+                                     final_id)
             log_dict['delete'].append(record)
             row_count += 1
 
