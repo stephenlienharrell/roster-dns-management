@@ -1,7 +1,15 @@
 Current Release
+- Embeded database schema and init script and changed roster_database_bootstrap
+  to write them out.
+- Add extra checking to make sure that if a delete happens in batch processing
+  that it actually happened.
+- Create new function to list tables in a database in db_access module.
+- Removed SQL code from database_bootstrap and instead use the db_access module.
+- Added chkconfig runlevels to init script.
+- Made adding a cert for TLS an option in roster_database_bootstrap
 
 2009-11-16 release-0.7
--Added MANIFEST to fix install problems.
+- Added MANIFEST to fix install problems.
 
 2009-11-16 release-0.6
 - Fixed ipv6 tests in core helpers regtest.

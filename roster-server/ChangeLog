@@ -1,7 +1,9 @@
 Current Release
+- Changed python-ldap version need on install to work with centos.
+- Made using certificates with TLS and option.
 
 2009-11-16 release-0.7
--Added MANIFEST to fix install problems.
+- Added MANIFEST to fix install problems.
 
 2009-11-16 release-0.6
 - Made it possible to use other authentication methods other than LDAP.

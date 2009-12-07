@@ -1,7 +1,10 @@
 Current Release
+- Fixed error in roster_client_lib that would prevent tools from working if no
+  credfile was present.
+- Created user-tools bootstrap to write out roster_user.conf.
 
 2009-11-16 release-0.7
--Added MANIFEST to fix install problems.
+- Added MANIFEST to fix install problems.
 
 2009-11-16 release-0.6
 - Made roster_client_lib have a fallback if errors cant be made nicer
