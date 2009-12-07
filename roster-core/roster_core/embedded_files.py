@@ -1,4 +1,22 @@
 INIT_FILE = """#!/bin/sh
+#
+# /etc/rc.d/init.d/roster
+#
+# Starts Roster server
+#
+# chkconfig: 345 99 1
+#
+# description: Starts Roster Server
+#
+### BEGIN INIT INFO
+# Provides:     rosterd
+# Required-Start:   $local_fs $network $syslog
+# Required-Stop:   $local_fs $network $syslog
+# Default-Start:    3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start/stop rosterd server
+### END INIT INFO
+#
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
 # 
