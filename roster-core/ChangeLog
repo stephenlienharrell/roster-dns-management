@@ -1,4 +1,6 @@
 Current Release
+
+2009-12-07 release-0.8
 - Embeded database schema and init script and changed roster_database_bootstrap
   to write them out.
 - Add extra checking to make sure that if a delete happens in batch processing

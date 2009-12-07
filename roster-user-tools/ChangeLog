@@ -1,4 +1,6 @@
 Current Release
+
+2009-12-07 release-0.8
 - Fixed error in roster_client_lib that would prevent tools from working if no
   credfile was present.
 - Created user-tools bootstrap to write out roster_user.conf.
