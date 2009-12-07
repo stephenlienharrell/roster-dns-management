@@ -31,4 +31,3 @@ scripts/dnsrmzone
 scripts/dnsuphost
 scripts/dnsupnamedglobals
 scripts/roster-user-tools-bootstrap
-etc/roster_user_tools.conf
