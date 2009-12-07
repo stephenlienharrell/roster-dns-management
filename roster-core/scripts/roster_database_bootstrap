@@ -196,8 +196,12 @@ def main(args):
   config_parser.add_section(module_list[module])
   for variable in authentication_module_instance.requires:
     if( authentication_module_instance.requires[variable]['default'] is None ):
-      value = raw_input('Enter \'%s\' for \'%s\': ' % (
-          variable, module_list[module]))
+      if( authentication_module_instance.requires[variable]['optional'] ):
+        value = raw_input('Enter \'%s\' for \'%s\' (Enter for None): ' % (
+            variable, module_list[module]))
+      else:
+        value = raw_input('Enter \'%s\' for \'%s\': ' % (
+            variable, module_list[module]))
     else:
       value = authentication_module_instance.requires[variable]['default']
     config_parser.set(module_list[module], variable, value)

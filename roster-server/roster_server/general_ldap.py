@@ -8,11 +8,16 @@ class AuthenticationMethod:
   should work for most LDAP applications.
   """
   def __init__(self):
-    self.requires = {'binddn': {'type': 'str', 'default': None},
-                     'server': {'type': 'str', 'default': None},
-                     'tls': {'type': 'str', 'default': 'on'},
-                     'cert_file': {'type': 'str', 'default': None},
-                     'version': {'type': 'str', 'default': None}}
+    self.requires = {'binddn': {'type': 'str', 'default': None,
+                                'optional': False},
+                     'server': {'type': 'str', 'default': None,
+                                'optional': False},
+                     'tls': {'type': 'str', 'default': 'on',
+                             'optional': False},
+                     'cert_file': {'type': 'str', 'default': None,
+                                   'optional': True},
+                     'version': {'type': 'str', 'default': None,
+                                'optional': False}}
 
   def Authenticate(self, user_name=None, password=None, binddn=None,
                    cert_file=None, server=None, version=None, tls=None):
@@ -31,9 +36,10 @@ class AuthenticationMethod:
       boolean: authenticated or not
     """
     binddn = binddn % user_name
-    if( tls == 'on' ):
+    if( tls.lower() == 'on' ):
       ldap.set_option(ldap.OPT_X_TLS, 1)
-      ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, cert_file)
+      if( cert_file ):
+        ldap.set_option(ldap.OPT_X_TLS_CACERTFILE, cert_file)
     elif( tls.lower() != 'off' ):
       raise GeneralLDAPConfigError(
           'Option "tls" must be set to "on" or "off", '
