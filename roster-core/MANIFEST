@@ -10,6 +10,7 @@ roster_core/core.py
 roster_core/core_helpers.py
 roster_core/data_validation.py
 roster_core/db_access.py
+roster_core/embedded_files.py
 roster_core/errors.py
 roster_core/table_enumeration.py
 roster_core/user.py
