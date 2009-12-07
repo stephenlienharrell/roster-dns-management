@@ -754,6 +754,19 @@ class dbAccess(object):
         raise UnexpectedDataError('Invalid data type %s: %s' %
                                   (record_type_dict[record_arg_name],
                                    record_args_dict[record_arg_name]))
+  def ListTableNames(self):
+    """Lists all tables in the database.
 
+    Outputs:
+      List: List of tables
+    """
+    query = 'SHOW TABLES'
+    self.cursor.execute(query)
+    tables = self.cursor.fetchall()
+    table_list = []
+    for table_dict in tables:
+      for table in table_dict:
+        table_list.append(table_dict[table])
+    return table_list
 
 # vi: set ai aw sw=2:

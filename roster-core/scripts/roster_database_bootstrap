@@ -47,21 +47,6 @@ import roster_core
 import roster_server
 
 
-def isDbEmpty(hostname, user_name, password, database):
-  mysql = 'SHOW TABLES'
-  connection = MySQLdb.connect(host=hostname, user=user_name,
-                               passwd=password, db=database,
-                               use_unicode=True)
-  cursor = connection.cursor(MySQLdb.cursors.DictCursor)
-  schema = roster_core.embedded_files.SCHEMA_FILE
-  try:
-    cursor.execute(mysql)
-    tables = cursor.fetchall()
-  finally:
-    cursor.close()
-    connection.commit()
-  return (len(tables) == 0)
-
 def main(args):
   """Collects command line arguments. Sets up initial parameters.
 
@@ -84,6 +69,12 @@ def main(args):
                     dest='roster_user_name',
                     help='Initial admin username for roster.',
                     default=None)
+  parser.add_option('--run-as-username', action='store', dest='run_as_username',
+                    help='Username roster server should run as.',
+                    default='nobody')
+  parser.add_option('--lock-file', action='store', dest='lock_file',
+                    help='Location of roster server lock file.',
+                    default='/var/lock/rosterd')
   parser.add_option('-l', '--ldap-server', action='store', dest='ldap_server',
                     help='URL of ldap server to authenticate with.',
                     metavar='<ldap-server>', default=None)
@@ -119,6 +110,12 @@ def main(args):
                     help='Wait for big database lock.', default='5')
   parser.add_option('--force', action='store_true', dest='force',
                     help='Force overwriting a database.', default=False)
+  parser.add_option('--ssl-cert', action='store', dest='ssl_cert',
+                    help='SSL Cert file for XML-RPC.',
+                    default=None)
+  parser.add_option('--ssl-key', action='store', dest='ssl_key',
+                    help='SSL Key file for XML-RPC.',
+                    default=None)
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -127,12 +124,6 @@ def main(args):
     sys.exit(1)
   password = getpass.getpass(
       'Enter database password for %s: ' % options.user_name)
-  empty = isDbEmpty(options.hostname, options.user_name, password,
-                    options.database)
-  if( not empty and not options.force ):
-    print ('Database is not empty, specify a different database or use '
-           '--force.')
-    sys.exit(1)
 
   args_dict = {'-c/--config-file': options.config_file,
                '-u/--user-name': options.user_name,
@@ -159,12 +150,19 @@ def main(args):
 
   for module in module_list:
     print "%s. %s" % (module_list.index(module) + 1, module)
-  module = raw_input('Please select an authentication module (1 - %s) '
+  module = raw_input('Select an authentication module (1 - %s) '
                      'above: ' % len(module_list))
   module = int(module) - 1
 
   authentication_module = getattr(roster_server, module_list[module])
   authentication_module_instance = authentication_module.AuthenticationMethod()
+
+  if( not options.ssl_cert ):
+    print 'ERROR: An ssl cert file MUST be specified with --ssl-cert.'
+    sys.exit(1)
+  if( not options.ssl_key ):
+    print 'ERROR: An ssl key file MUST be specified with --ssl-key.'
+    sys.exit(1)
 
   directory = '/'.join(options.config_file.split('/')[:-1])
   if( not os.path.exists(directory) ):
@@ -182,9 +180,12 @@ def main(args):
   config_parser.add_section('server')
   config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
   config_parser.set('server', 'core_die_time', options.core_die_time)
+  config_parser.set('server', 'run_as_username', options.run_as_username)
+  config_parser.set('server', 'lock_file', options.lock_file)
+  config_parser.set('server', 'ssl_cert_file', options.ssl_cert_file)
+  config_parser.set('server', 'ssl_key_file', options.ssl_key_file)
   config_parser.set('server', 'get_credentials_wait_increment',
                     options.get_credentials_wait_increment)
-  #config_parser.set('server', 'ldap_server', options.ldap_server)
   config_parser.set('server', 'server_killswitch', 'on')
 
   config_parser.add_section('credentials')
@@ -195,35 +196,42 @@ def main(args):
   config_parser.add_section(module_list[module])
   for variable in authentication_module_instance.requires:
     if( authentication_module_instance.requires[variable]['default'] is None ):
-      value = raw_input('Please enter \'%s\' for \'%s\': ' % (
+      value = raw_input('Enter \'%s\' for \'%s\': ' % (
           variable, module_list[module]))
     else:
       value = authentication_module_instance.requires[variable]['default']
     config_parser.set(module_list[module], variable, value)
 
-  config_parser.write(config_parser_file)
+  try:
+    config_parser.write(config_parser_file)
+  finally:
+    config_parser_file.close()
 
-  new_user_mysql = (
-      'INSERT INTO users (user_name, access_level) VALUES ("%s", 128)' % (
-          options.roster_user_name))
+  config_instance = roster_core.Config(options.config_file)
+  db_instance = config_instance.GetDb()
+  db_instance.StartTransaction()
+  try:
+    tables = len(db_instance.ListTableNames())
+  finally:
+    db_instance.EndTransaction()
+  if( tables > 0 and not options.force ):
+    print ('ERROR: Database is not empty, specify a different database or use '
+           '--force.')
+    sys.exit(1)
 
-  connection = MySQLdb.connect(host=options.hostname, user=options.user_name,
-                               passwd=password, db=options.database,
-                               use_unicode=True)
-  cursor = connection.cursor(MySQLdb.cursors.DictCursor)
   schema = roster_core.embedded_files.SCHEMA_FILE
+  db_instance.StartTransaction()
   try:
-    cursor.execute(schema)
+    db_instance.cursor.execute(schema)
   finally:
-    cursor.close()
-    connection.commit()
-
-  cursor = connection.cursor()
+    db_instance.EndTransaction()
+  db_instance.StartTransaction()
   try:
-    cursor.execute(new_user_mysql)
+    db_instance.MakeRow(u'users',
+                        {u'user_name': unicode(options.roster_user_name),
+                         u'access_level': 128})
   finally:
-    cursor.close()
-    connection.commit()
+    db_instance.EndTransaction()
 
   init_file = open(options.init_file, 'w')
   try:

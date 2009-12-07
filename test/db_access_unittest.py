@@ -330,14 +330,7 @@ class TestdbAccess(unittest.TestCase):
          # print 'testing %s in %s\n' % (column, fields)
          self.assertTrue(column in fields)
 
-    self.db_instance.cursor.execute('show tables')
-    table_dicts = self.db_instance.cursor.fetchall()
-    db_tables = []
-    for table_dict in table_dicts:
-      db_tables.append(table_dict[
-          'Tables_in_%s' % self.config_instance.config_file['database'][
-              'database']])
-
+    db_tables = self.db_instance.ListTableNames()
     for db_table in db_tables:
       if( not db_table == 'locks' ):
         self.assertTrue(db_table in tables)
@@ -359,6 +352,22 @@ class TestdbAccess(unittest.TestCase):
   def testTableRowCount(self):
     self.db_instance.StartTransaction()
     self.assertEqual(self.db_instance.TableRowCount('users'), 3)
+
+  def testListTables(self):
+    self.db_instance.StartTransaction()
+    self.assertEqual(
+      self.db_instance.ListTableNames(),
+      [u'acls', u'audit_log', u'credentials', u'data_types',
+       u'dns_server_set_assignments', u'dns_server_set_view_assignments',
+       u'dns_server_sets', u'dns_servers', u'forward_zone_permissions',
+       u'groups', u'locks', u'named_conf_global_options', u'record_arguments',
+       u'record_arguments_records_assignments', u'record_types', u'records',
+       u'reserved_words', u'reverse_range_permissions',
+       u'reverse_range_zone_assignments', u'user_group_assignments', u'users',
+       u'view_acl_assignments', u'view_dependencies',
+       u'view_dependency_assignments', u'views', u'zone_types',
+       u'zone_view_assignments', u'zones'])
+    self.db_instance.EndTransaction()
 
 
 if( __name__ == '__main__' ):
