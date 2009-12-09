@@ -15,4 +15,3 @@ roster_core/errors.py
 roster_core/table_enumeration.py
 roster_core/user.py
 scripts/roster_database_bootstrap
-data/database_schema.sql

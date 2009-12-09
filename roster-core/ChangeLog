@@ -1,4 +1,6 @@
 Current Release
+- Updated MANIFEST
+- Removed data/database_schema.sql
 
 2009-12-07 release-0.8
 - Embeded database schema and init script and changed roster_database_bootstrap
