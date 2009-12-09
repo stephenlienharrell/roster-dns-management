@@ -97,7 +97,7 @@ class TestdbAccess(unittest.TestCase):
 
     self.db_instance = self.config_instance.GetDb()
 
-    schema = open(SCHEMA_FILE, 'r').read()
+    schema = roster_core.embedded_files.SCHEMA_FILE
     self.db_instance.StartTransaction()
     self.db_instance.cursor.execute(schema)
     self.db_instance.EndTransaction()

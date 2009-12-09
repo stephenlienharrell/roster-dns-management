@@ -62,7 +62,7 @@ class TestCredentialsLibrary(unittest.TestCase):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
     db_instance = self.config_instance.GetDb()
 
-    schema = open(SCHEMA_FILE, 'r').read()
+    schema = roster_core.embedded_files.SCHEMA_FILE
     db_instance.StartTransaction()
     db_instance.cursor.execute(schema)
     db_instance.EndTransaction()
