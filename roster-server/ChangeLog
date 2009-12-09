@@ -1,4 +1,4 @@
-Current Release
+2009-12-09 release-0.9
 
 2009-12-07 release-0.8
 - Changed python-ldap version need on install to work with centos.
