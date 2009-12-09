@@ -166,7 +166,7 @@ def main(args):
 
   directory = '/'.join(options.config_file.split('/')[:-1])
   if( not os.path.exists(directory) ):
-    os.path.makedirs(directory)
+    os.makedirs(directory)
 
   config_parser = ConfigParser.SafeConfigParser()
   config_parser.add_section('database')
@@ -182,8 +182,8 @@ def main(args):
   config_parser.set('server', 'core_die_time', options.core_die_time)
   config_parser.set('server', 'run_as_username', options.run_as_username)
   config_parser.set('server', 'lock_file', options.lock_file)
-  config_parser.set('server', 'ssl_cert_file', options.ssl_cert_file)
-  config_parser.set('server', 'ssl_key_file', options.ssl_key_file)
+  config_parser.set('server', 'ssl_cert_file', options.ssl_cert)
+  config_parser.set('server', 'ssl_key_file', options.ssl_key)
   config_parser.set('server', 'get_credentials_wait_increment',
                     options.get_credentials_wait_increment)
   config_parser.set('server', 'server_killswitch', 'on')
