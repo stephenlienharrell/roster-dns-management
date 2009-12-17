@@ -38,7 +38,6 @@ __version__ = '#TRUNK#'
 import ConfigParser
 import sys
 import os
-import getpass
 import roster_client_lib
 
 class ArgumentError(Exception):
@@ -85,7 +84,9 @@ class CliCommonLib:
         if( hasattr(self.options, 'credfile') ):
           if( not self.options.credfile ):
             self.options.credfile = os.path.expanduser('~/.dnscred')
-    self.CheckCredentials()
+    roster_client_lib.CheckCredentials(
+        self.options.username, self.options.credfile, self.options.server,
+        password=self.options.password)
 
   def DnsError(self, message, exit_status=0):
     """Prints standardized client error message to screen.
@@ -220,46 +221,6 @@ class CliCommonLib:
           print_list.append(['#%s' % ip_address, print_dict[ip_address]['host'],
                              '', '# No forward assignment'])
     return self.PrintColumns(print_list)
-
-
-  def CheckCredentials(self):
-    """Checks if credential file is valid.
-
-    Outputs:
-      string: string of valid credential
-    """
-    if( not self.options.credfile ):
-      self.DnsError('No credential file specified.', 1)
-    password = None
-    got_credential = None
-    count = 0
-    while( count < 3 ):
-      valid = roster_client_lib.IsAuthenticated(
-          self.options.username, self.options.credfile,
-          server_name=self.options.server)
-      if( valid ):
-        break
-      else:
-        count += 1
-      password = self.options.password
-      if( self.options.password is None ):
-        try:
-          password = getpass.getpass('Password for %s: ' % self.options.username)
-        except KeyboardInterrupt:
-          sys.exit(0)
-      try:
-        got_credential = roster_client_lib.GetCredentials(
-            self.options.username, password,
-            self.options.credfile, self.options.server)
-      except roster_client_lib.InvalidCredentials:
-        if( self.options.password is None ):
-          count = count + 1
-        else:
-          self.DnsError('Incorrect username/password.', 1)
-    else:
-      self.DnsError('Incorrect username/password.', 1)
-
-    return got_credential
 
   def DisallowFlags(self, disallow_list, parser):
     """Dissallows certain command line flags.

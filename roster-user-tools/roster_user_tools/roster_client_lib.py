@@ -42,6 +42,7 @@ import os
 import sys
 import xmlrpclib
 import cli_common_lib
+import getpass
 
 
 class InvalidCredentials(Exception):
@@ -80,7 +81,9 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
       except OSError:
         pass
     else:
-      raise InvalidCredentials('Credential file not found.')
+      if( not CheckCredentials(user_name, credfile, server_name) ):
+        print "ERROR: Credential file not found, invalid credentials."
+        sys.exit(1)
   try:
     core_return = server.CoreRun(function, user_name, credstring, args, kwargs)
   except xmlrpclib.Fault, e:
@@ -91,7 +94,9 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
 
 
   if( core_return == 'ERROR: Invalid Credentials' ):
-    raise InvalidCredentials('Credential file is invalid.')
+      if( not CheckCredentials(user_name, credfile, server_name) ):
+        print "ERROR: Credential file not found, invalid credentials."
+        sys.exit(1)
   elif( core_return['new_credential'] is not None and
         core_return['new_credential'] != '' ):
     if( os.path.exists(credfile) ):
@@ -161,3 +166,45 @@ def IsAuthenticated(user_name, credfile,
     return False
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
   return server.IsAuthenticated(user_name, credstring)
+
+def CheckCredentials(username, credfile, server, password=None):
+  """Checks if credential file is valid.
+
+  Inputs:
+    username: string of username
+    credfile: string of credential file location
+    server: string of server URL
+    password: string of password
+
+  Outputs:
+    string: string of valid credential
+  """
+  if( not credfile ):
+    self.DnsError('No credential file specified.', 1)
+  got_credential = None
+  count = 0 
+  while( count < 3 ):
+    valid = IsAuthenticated(username, credfile, server_name=server)
+    if( valid ):
+      break
+    else:
+      count += 1
+    password = password
+    if( password is None ):
+      try:
+        password = getpass.getpass('Password for %s: ' %  username)
+      except KeyboardInterrupt:
+        sys.exit(0)
+    try:
+      got_credential = GetCredentials(username, password, credfile, server)
+    except InvalidCredentials:
+      if( password is None ):
+        count = count + 1 
+      else:
+        print 'ERROR: Incorrect username/password.'
+        sys.exit(1)
+  else:
+    print 'ERROR: Incorrect username/password.'
+    sys.exit(1)
+
+  return got_credential
