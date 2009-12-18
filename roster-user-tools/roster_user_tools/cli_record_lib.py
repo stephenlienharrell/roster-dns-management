@@ -71,8 +71,7 @@ class CliRecordLib:
         self.cli_common_lib_instance.DnsError('Must specify --%s-%s' % (
             record_type, item.replace('_', '-')), 1)
 
-    if( not options.credfile.startswith('/') ):
-      options.credfile = '%s/%s' % (os.getcwd(), options.credfile)
+    options.credfile = os.path.expanduser(options.credfile)
     views = roster_client_lib.RunFunction('ListViews', options.username,
                                           credfile=options.credfile,
                                           server_name=options.server,
@@ -213,8 +212,7 @@ class CliRecordLib:
           raise_errors=raise_errors)['core_return']
       record_args_dict['assignment_ip'] = expanded_ip
 
-    if( not options.credfile.startswith('/') ):
-      options.credfile = '%s/%s' % (os.getcwd(), options.credfile)
+    options.credfile = os.path.expanduser(options.credfile)
     views = roster_client_lib.RunFunction(
         'ListViews', options.username, credfile=options.credfile,
         server_name=options.server)['core_return']
