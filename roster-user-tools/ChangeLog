@@ -1,5 +1,3 @@
-Current Release
-
 2009-12-18 release-0.10
 - Moved CheckCredentials function to roster_client_lib from cli_common_lib
 - Made CheckCredentials run when credential file is invalid.
