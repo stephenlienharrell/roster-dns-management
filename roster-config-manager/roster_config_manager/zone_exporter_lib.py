@@ -87,13 +87,16 @@ def FormatRecordsForZone(unsorted_records=None, origin=None):
     sorted_records['bulk'] = sorted(sorted_records['bulk'],
                                     key=lambda k: k['target'])
 
-  if( len(sorted_records['soa']) == 1 ):
-    soa_origin = sorted_records['soa'][0]['target']
-    if( soa_origin != origin and soa_origin != u'@' ):
-      raise Error('SOA origin "%s" and zone origin "%s" do not match.' % (
-          soa_origin, origin))
+  if( 'soa' in sorted_records ):
+    if( len(sorted_records['soa']) == 1 ):
+      soa_origin = sorted_records['soa'][0]['target']
+      if( soa_origin != origin and soa_origin != u'@' ):
+        raise Error('SOA origin "%s" and zone origin "%s" do not match.' % (
+            soa_origin, origin))
+    else:
+      raise Error('Multiple SOA records found.')
   else:
-    raise Error('Multiple SOA records found.')
+    raise Error('No SOA records found for zone with origin "%s"' % origin)
 
   return sorted_records
 
