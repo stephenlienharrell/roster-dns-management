@@ -94,6 +94,9 @@ def main(args):
   except cli_common_lib.ArgumentError, e:
     print 'ERROR: %s' % e
     sys.exit(1)
+  if( not options.acl and not options.cidr_block ):
+    cli_common_lib_instance.DnsError('ERROR: An acl name and cidr block '
+        'must be specified with --acl and --cidr-block.', 1)
 
   acls = roster_client_lib.RunFunction(
       u'ListACLs', options.username, credfile=options.credfile,
