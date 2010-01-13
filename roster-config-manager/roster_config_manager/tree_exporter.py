@@ -451,7 +451,7 @@ class BindTreeExport(object):
                 zone_name = zone['zone_view_assignments_zone_name']
                 if( view_dependency_name == zone[
                       'zone_view_assignments_view_dependency'] and
-                         (zone_name, view_dependency_name) in sorted_records ):
+                      (zone_name, view_dependency_name) in sorted_records ):
                   if( not view_name in cooked_data[
                         dns_server_set_name]['views'] ):
                     cooked_data[dns_server_set_name]['views'][view_name] = {}
@@ -464,14 +464,17 @@ class BindTreeExport(object):
                     cooked_data[dns_server_set_name]['views'][view_name][
                         'zones'] = {}
                   if( not zone_name in cooked_data[
-                        dns_server_set_name]['views'][view_name] ):
+                        dns_server_set_name]['views'][view_name]['zones'] ):
                     cooked_data[dns_server_set_name]['views'][view_name][
                         'zones'][zone_name]= {}
+                  if( 'records' not in cooked_data[dns_server_set_name][
+                          'views'][view_name]['zones'][zone_name] ):
+                      cooked_data[dns_server_set_name]['views'][view_name][
+                          'zones'][zone_name]['records'] = []
 
                   cooked_data[dns_server_set_name]['views'][view_name][
-                      'zones'][zone_name]['records'] = sorted_records[(
-                          zone_name, view_dependency_name)].values()
-
+                      'zones'][zone_name]['records'].extend(sorted_records[(
+                          zone_name, view_dependency_name)].values())
                   cooked_data[dns_server_set_name]['views'][view_name][
                       'zones'][zone_name]['zone_origin'] = zone['zone_origin']
 
