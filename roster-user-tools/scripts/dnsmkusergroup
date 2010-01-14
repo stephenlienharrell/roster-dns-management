@@ -146,7 +146,8 @@ def main(args):
                     help='String of CIDR block.', metavar='<cidr-block>',
                     default=None)
   parser.add_option('-m', '--make-all', action='store_true', dest='make_all',
-                    help='Make all required arguments.', default=False)
+                    help='Make user, group and access level for bootstrapping.',
+                    default=False)
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server address.', metavar='<server>',
                     default=None)

@@ -72,8 +72,6 @@ def main(args):
                     help='Zone origin.', metavar='<origin>', default=None)
   parser.add_option('-t', '--type', action='store', dest='type',
                     help='Zone type.', metavar='<type>', default=None)
-  parser.add_option('-m', '--make-all', action='store_true', dest='make_all',
-                    help='Make arguments automatically.', default=False)
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server URL.', metavar='<server>',
                     default=None)
