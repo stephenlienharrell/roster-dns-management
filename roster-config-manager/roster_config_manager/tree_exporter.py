@@ -110,6 +110,18 @@ class BindTreeExport(object):
     finally:
         self.db_instance.EndTransaction()
     cooked_data = self.CookData(data)
+    zone_view_assignments = {}
+    for zone_view_assignment in data['zone_view_assignments']:
+      if( not zone_view_assignment['zone_view_assignments_zone_name']
+              in zone_view_assignments):
+        zone_view_assignments[zone_view_assignment[
+            'zone_view_assignments_zone_name']] = []
+      zone_view_assignments[zone_view_assignment[
+          'zone_view_assignments_zone_name']].append(zone_view_assignment[
+          'zone_view_assignments_view_dependency'].rstrip('_dep'))
+    for zone_view_assignment in zone_view_assignments:
+      if( zone_view_assignments[zone_view_assignment] == [u'any'] ):
+        raise Error('Zone "%s" has no view assignments.' % zone_view_assignment)
 
     record_arguments = data['record_arguments']
     record_argument_definitions = self.ListRecordArgumentDefinitions(
@@ -134,13 +146,15 @@ class BindTreeExport(object):
         if( not os.path.exists(view_directory) ):
           os.makedirs(view_directory)
         for zone in cooked_data[dns_server_set]['views'][view]['zones']:
+          if( view not in zone_view_assignments[zone] ):
+            continue
           zone_file = '%s/%s/%s.db' % (dns_server_set_directory, view, zone)
           zone_file_string = zone_exporter_lib.MakeZoneString(
               cooked_data[dns_server_set]['views'][view]['zones'][zone][
                   'records'],
               cooked_data[dns_server_set]['views'][view]['zones'][zone][
                   'zone_origin'],
-              record_argument_definitions)
+              record_argument_definitions, zone, view)
           zone_file_handle = open(zone_file, 'w')
           try:
             zone_file_handle.writelines(zone_file_string)
