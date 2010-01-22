@@ -2317,8 +2317,8 @@ class Core(object):
              'argument_value': unicode(record_args_dict[k])}
           self.db_instance.MakeRow('record_arguments_records_assignments',
                                    record_argument_assignments_dict)
-        if( record_type != u'soa' ):
-          self._IncrementSoa(view_name, zone_name)
+          if( record_type != u'soa' ):
+            self._IncrementSoa(view_name, zone_name)
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -2903,45 +2903,72 @@ class Core(object):
     soa_dict = self.db_instance.GetEmptyRowDict('records')
     soa_arguments_dict = self.db_instance.GetEmptyRowDict(
         'record_arguments_records_assignments')
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_view_assignments_dict['zone_view_assignments_zone_name'] = zone_name
+
 
     soa_dict['record_type'] = u'soa'
     if( view_name is None ):
       view_name = u'any'
+
+    zone_view_assignment_rows = self.db_instance.ListRow(
+        'zone_view_assignments', zone_view_assignments_dict)
+
+    zone_view_assignments = {}
+    for zone_view_assignment in zone_view_assignment_rows:
+      zv_zone_name = zone_view_assignment['zone_view_assignments_zone_name']
+      zv_view_name = zone_view_assignment[
+          'zone_view_assignments_view_dependency']
+      if( zv_zone_name not in zone_view_assignments ):
+        zone_view_assignments[zv_zone_name] = []
+      zone_view_assignments[zv_zone_name].append(zv_view_name)
+
     if( view_name != u'any' and not view_name.endswith('_dep') ):
-      view_name = '%s_dep' % view_name
-    soa_dict['record_view_dependency'] = view_name
-    soa_dict['record_zone_name'] = zone_name
-    soa_records_list = self.db_instance.ListRow('records', soa_dict)
-    row_count = 0
+      views = [u'%s_dep' % view_name]
+    elif( view_name == u'any' ):
+      view_deps = zone_view_assignments[zone_name]
 
-    if( len(soa_records_list) > 1 ):
-      raise errors.CoreError('Multiple SOA records found.')
+    for view_name in view_deps:
+      if( view_name == u'any' ):
+        continue
+      soa_dict['record_view_dependency'] = view_name
+      soa_dict['record_zone_name'] = zone_name
 
-    if( len(soa_records_list) == 0 ):
-      if( not missing_ok ):
-        raise errors.CoreError('No SOA record found.')
-    else:
-      soa_records_list = soa_records_list[0]
-      soa_arguments_dict[
-          'record_arguments_records_assignments_record_id'] = (
-              soa_records_list['records_id'])
-      soa_record_arguments = self.db_instance.ListRow(
-          'record_arguments_records_assignments', soa_arguments_dict)
-      for argument in soa_record_arguments:
-        if( argument[
-            'record_arguments_records_assignments_argument_name'] == (
-                u'serial_number') ):
-          serial_number = int(argument['argument_value'])
-          search_soa_dict = argument
+      soa_records_list = self.db_instance.ListRow('records', soa_dict)
 
-      if( serial_number >= constants.MAX_SOA_SERIAL ):
-        soa_arguments_dict[u'argument_value'] = u'1'
+      row_count = 0
+
+      if( len(soa_records_list) > 1 ):
+        raise errors.CoreError('Multiple SOA records found.')
+
+      if( len(soa_records_list) == 0 ):
+        missing_ok = False
+        if( not missing_ok ):
+          raise errors.CoreError('No SOA record found for zone "%s" view "%s".' % (
+              zone_name, view_name))
       else:
-        soa_arguments_dict[u'argument_value'] = unicode(serial_number + 1)
+        soa_records_list = soa_records_list[0]
+        soa_arguments_dict[
+            'record_arguments_records_assignments_record_id'] = (
+                soa_records_list['records_id'])
+        soa_record_arguments = self.db_instance.ListRow(
+            'record_arguments_records_assignments', soa_arguments_dict)
+        for argument in soa_record_arguments:
+          if( argument[
+              'record_arguments_records_assignments_argument_name'] == (
+                  u'serial_number') ):
+            serial_number = int(argument['argument_value'])
+            search_soa_dict = argument
 
-      row_count += self.db_instance.UpdateRow(
-          'record_arguments_records_assignments', search_soa_dict,
-          soa_arguments_dict)
+        if( serial_number >= constants.MAX_SOA_SERIAL ):
+          soa_arguments_dict[u'argument_value'] = u'1'
+        else:
+          soa_arguments_dict[u'argument_value'] = unicode(serial_number + 1)
+
+        row_count += self.db_instance.UpdateRow(
+            'record_arguments_records_assignments', search_soa_dict,
+            soa_arguments_dict)
     return row_count
 
   def _MakeCredential(self, credential, user_name, last_used=None,
