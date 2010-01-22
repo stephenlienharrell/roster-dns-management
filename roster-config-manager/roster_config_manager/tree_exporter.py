@@ -129,7 +129,11 @@ class BindTreeExport(object):
     for dns_server_set in cooked_data:
       config_parser = ConfigParser.SafeConfigParser()
       ## Make Files
-      dns_server_set_directory = '%s/%s_servers' % (self.root_config_dir,
+      named_directory = '%s/%s_servers' % (self.root_config_dir,
+          dns_server_set)
+      if( not os.path.exists(named_directory) ):
+        os.makedirs(named_directory)
+      dns_server_set_directory = '%s/%s_servers/named' % (self.root_config_dir,
           dns_server_set)
       if( not os.path.exists(dns_server_set_directory) ):
         os.makedirs(dns_server_set_directory)
@@ -160,7 +164,7 @@ class BindTreeExport(object):
             zone_file_handle.writelines(zone_file_string)
           finally:
             zone_file_handle.close()
-      named_conf_file = '%s/named.conf' % dns_server_set_directory
+      named_conf_file = '%s/named.conf' % named_directory
       named_conf_file_string = self.MakeNamedConf(data, cooked_data,
                                                   dns_server_set)
       named_conf_file_handle = open(named_conf_file, 'w')
@@ -212,6 +216,7 @@ class BindTreeExport(object):
       raise Error('Named conf global options missing for server set "%s"' % (
           dns_server_set))
     named_conf_lines.append(named_conf_header)
+    named_conf_lines.extend(['options {', '  directory "/etc/named";', '};'])
     for acl in data['acls']:
       if( not acl['acl_name'] in acl_dict ):
         acl_dict[acl['acl_name']] = {}
@@ -247,7 +252,8 @@ class BindTreeExport(object):
                   'zone_origin'].rstrip('.')))
           named_conf_lines.append('\t\ttype %s;' % cooked_data[
               dns_server_set]['views'][view_name]['zones'][zone]['zone_type'])
-          named_conf_lines.append('\t\tfile "%s/%s.db";' % (view_name, zone))
+          named_conf_lines.append('\t\tfile "/etc/named/%s/%s.db";' % (
+              view_name, zone))
           zone_options = cooked_data[dns_server_set]['views'][view_name][
               'zones'][zone]['zone_options'].replace('\n', '\n\t\t')
           named_conf_lines.append('\t\t%s' % zone_options.rsplit('\n\t\t', 1)[0])
