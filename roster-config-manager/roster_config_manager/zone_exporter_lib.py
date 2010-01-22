@@ -120,7 +120,6 @@ def MakeZoneString(records, zone_origin, argument_definitions, zone_name,
   Outputs:
     string of exported zone file.
   """
-  ### Need to run dupe checks here at some point
   records = FormatRecordsForZone(records, zone_origin, zone_name, view_name)
   if( not records.has_key('soa') ):
     raise ZoneError('SOA not found for zone %s' % zone_name)
