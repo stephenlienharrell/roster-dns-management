@@ -75,7 +75,7 @@ def main(args):
   file_dict = {}
   for server_set in os.listdir(options.root_directory):
     config_parser = ConfigParser.SafeConfigParser()
-    config_file_handle = config_parser.read('%s/%s/%s' % (
+    config_file_handle = config_parser.read('%s/%s/named/%s' % (
         options.root_directory, server_set,
         server_set.replace('servers', 'config')))
     for dns_server in config_parser.get(
