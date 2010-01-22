@@ -269,7 +269,7 @@ def main(args):
     cli_record_lib_instance.RemoveRecord('ptr', options, record_args_dict,
                                 quiet=options.quiet)
   else:
-    self.DnsError('Must specify a record type.', 1)
+    cli_common_lib_instance.DnsError('Must specify a record type.', 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])
