@@ -611,9 +611,8 @@ class CoreHelpers(object):
             log_dict['add'].append(record)
             row_count += 1
 
-          if( record['record_type'] != u'soa' ):
-            self.core_instance._IncrementSoa(record['view_name'],
-                                             record['record_zone_name'])
+          self.core_instance._IncrementSoa(record['view_name'],
+                                           record['record_zone_name'])
 
       except:
         self.db_instance.EndTransaction(rollback=True)

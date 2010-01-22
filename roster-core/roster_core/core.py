@@ -2317,8 +2317,7 @@ class Core(object):
              'argument_value': unicode(record_args_dict[k])}
           self.db_instance.MakeRow('record_arguments_records_assignments',
                                    record_argument_assignments_dict)
-        if( record_type != u'soa' ):
-          self._IncrementSoa(view_name, zone_name)
+        self._IncrementSoa(view_name, zone_name)
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -2924,8 +2923,9 @@ class Core(object):
         zone_view_assignments[zv_zone_name] = []
       zone_view_assignments[zv_zone_name].append(zv_view_name)
 
+    view_deps = [view_name]
     if( view_name != u'any' and not view_name.endswith('_dep') ):
-      views = [u'%s_dep' % view_name]
+      view_deps = [u'%s_dep' % view_name]
     elif( view_name == u'any' ):
       view_deps = zone_view_assignments[zone_name]
 
