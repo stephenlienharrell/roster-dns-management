@@ -2317,8 +2317,8 @@ class Core(object):
              'argument_value': unicode(record_args_dict[k])}
           self.db_instance.MakeRow('record_arguments_records_assignments',
                                    record_argument_assignments_dict)
-          if( record_type != u'soa' ):
-            self._IncrementSoa(view_name, zone_name)
+        if( record_type != u'soa' ):
+          self._IncrementSoa(view_name, zone_name)
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
