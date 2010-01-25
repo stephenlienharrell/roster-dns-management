@@ -141,6 +141,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.assertEqual(self.core_instance.ListZones(), {u'test_zone':
         {u'any': {'zone_type': u'master', 'zone_options': u'',
                   'zone_origin': u'test_zone.'},
@@ -169,7 +176,7 @@ class TestDnsMkRecord(unittest.TestCase):
                      '    assignment_ip: 10.10.10.0\n')
     #The command will succeed, return 0 (False)
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'a'),
                      [{'target': u'machine1', 'ttl': 3600,
                        'record_type': u'a', 'view_name': u'test_view',
                        'last_user': USERNAME, 'zone_name': u'test_zone',
@@ -207,6 +214,13 @@ class TestDnsMkRecord(unittest.TestCase):
                   'zone_origin': u'test_zone.'},
          u'test_view': {'zone_type': u'master', 'zone_options': u'',
                         'zone_origin': u'test_zone.'}}})
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'aaaa', u'machine1', u'test_zone',
                                   {u'assignment_ip':
                                       u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
@@ -232,7 +246,7 @@ class TestDnsMkRecord(unittest.TestCase):
                      '    assignment_ip: '
                      'fe80:0000:0000:0000:0200:f8ff:fe21:67cf\n')
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'aaaa'),
                      [{'target': u'machine1', 'ttl': 3600,
                        'record_type': u'aaaa', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
@@ -249,6 +263,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'hinfo', u'machine1', u'test_zone',
                                   {u'hardware': u'Pear', u'os': u'ipear'},
                                   view_name=u'test_view')
@@ -267,7 +288,7 @@ class TestDnsMkRecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'hinfo'),
                      [{'target': u'machine1', 'ttl': 3600, u'hardware': u'Pear',
                        'record_type': u'hinfo', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
@@ -282,6 +303,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'txt', u'machine1', u'test_zone',
                                   {u'quoted_text': u'et tu brute'},
                                   view_name=u'test_view')
@@ -305,7 +333,7 @@ class TestDnsMkRecord(unittest.TestCase):
         'ttl: 3600\n'
         '    quoted_text: et tu brute\n')
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'txt'),
                      [{'target': u'machine1', 'ttl': 3600,
                        'record_type': u'txt', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
@@ -320,6 +348,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'cname', u'machine1', u'test_zone',
                                   {u'assignment_host': u'university.edu.'},
                                   view_name=u'test_view')
@@ -338,7 +373,7 @@ class TestDnsMkRecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'cname'),
                      [{'target': u'machine1', 'ttl': 3600,
                        'record_type': u'cname', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
@@ -364,7 +399,7 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--soa --soa-name-server="ns.university.edu." '
                        '--soa-admin-email="university.edu." '
-                       '--soa-serial-number=123456789 --soa-refresh-seconds=30 '
+                       '--soa-serial-number=123456790 --soa-refresh-seconds=30 '
                        '--soa-retry-seconds=30 --soa-minimum-seconds=30 '
                        '--soa-expiry-seconds=30 '
                        '-q -t machine1 -v test_view -z test_zone -u '
@@ -376,26 +411,20 @@ class TestDnsMkRecord(unittest.TestCase):
     command = os.popen('python %s '
                        '--soa --soa-name-server="ns.university.edu." '
                        '--soa-admin-email="university.edu." '
-                       '--soa-serial-number=123456789 --soa-refresh-seconds=30 '
+                       '--soa-serial-number=123456791 --soa-refresh-seconds=30 '
                        '--soa-retry-seconds=30 --soa-minimum-seconds=30 '
                        '--soa-expiry-seconds=30 '
                        '-q -t machine -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
-    self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
-                     [{u'serial_number': 123456789,
+    self.assertEqual(command.read(),
+                     "SERVER ERROR: <class 'roster_core.errors.CoreError'>:"
+                     "Multiple SOA records found.\n")
+    self.assertTrue(self.retCode(command.close()))
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'soa'),
+                     [{u'serial_number': 123456790,
                        u'refresh_seconds': 30, 'target': u'machine1',
-                       u'name_server': u'ns.university.edu.',
-                       u'retry_seconds': 30, 'ttl': 3600,
-                       u'minimum_seconds': 30, 'record_type': u'soa',
-                       'view_name': u'test_view', 'last_user': u'sharrell',
-                       'zone_name': u'test_zone',
-                       u'admin_email': u'university.edu.',
-                       u'expiry_seconds': 30},
-                      {u'serial_number': 123456789, u'refresh_seconds': 30,
-                       'target': u'machine',
                        u'name_server': u'ns.university.edu.',
                        u'retry_seconds': 30, 'ttl': 3600,
                        u'minimum_seconds': 30, 'record_type': u'soa',
@@ -409,6 +438,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'srv', u'machine1', u'test_zone',
                                   {u'priority': 5, u'weight': 6, u'port': 80,
                                    u'assignment_host': u'university.edu.'},
@@ -430,7 +466,7 @@ class TestDnsMkRecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'srv'),
                      [{'target': u'machine1', u'weight': 6,
                        'ttl': 3600, u'priority': 5, 'record_type': u'srv',
                        'view_name': u'test_view', 'last_user': u'sharrell',
@@ -448,6 +484,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'ns', u'machine1', u'test_zone',
                                   {u'name_server': u'university.edu.'},
                                   view_name=u'test_view')
@@ -466,7 +509,7 @@ class TestDnsMkRecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'ns'),
                      [{'target': u'machine1',
                        u'name_server': u'university.edu.',
                        'ttl': 3600, 'record_type': u'ns',
@@ -482,6 +525,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'mx', u'machine1', u'test_zone',
                                   {u'mail_server': u'university.edu.',
                                    u'priority': 5},
@@ -501,7 +551,7 @@ class TestDnsMkRecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'mx'),
                      [{'target': u'machine1', 'ttl': 3600, u'priority': 5,
                        'record_type': u'mx', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
@@ -518,6 +568,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master',
                                 u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeReverseRangeZoneAssignment(u'test_zone',
                                                       u'192.168.1.4/30')
     self.core_instance.MakeRecord(u'ptr', u'4', u'test_zone',
@@ -542,7 +599,7 @@ class TestDnsMkRecord(unittest.TestCase):
                      'view_name: test_view ttl: 3600\n'
                      '    assignment_host: university.edu.\n')
     self.assertFalse(self.retCode(command.close()))
-    self.assertEqual(self.core_instance.ListRecords(),
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
                      [{'target': u'4', 'ttl': 3600,
                        'record_type': u'ptr', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
