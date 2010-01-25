@@ -505,6 +505,7 @@ class CoreHelpers(object):
     """
     log_dict = {'delete': [], 'add': []}
     row_count = 0
+    changed_view_dep = []
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -521,6 +522,7 @@ class CoreHelpers(object):
           if( not record['view_name'].endswith('_dep') and record[
                 'view_name'] != u'any'):
             view_name = '%s_dep' % record['view_name']
+          changed_view_dep.append((view_name, record['record_zone_name']))
           records_dict['record_view_dependency'] = view_name
           if( 'record_ttl' in record ):
             records_dict['record_ttl'] = record['record_ttl']
@@ -574,6 +576,7 @@ class CoreHelpers(object):
           if( not record['view_name'].endswith('_dep') and record[
                 'view_name'] != u'any'):
             view_name = '%s_dep' % record['view_name']
+          changed_view_dep.append((view_name, record['record_zone_name']))
           ttl = None
           if( 'ttl' in record ):
             ttl = record['ttl']
@@ -611,8 +614,9 @@ class CoreHelpers(object):
             log_dict['add'].append(record)
             row_count += 1
 
-          self.core_instance._IncrementSoa(record['view_name'],
-                                           record['record_zone_name'])
+        changed_view_dep = set(changed_view_dep)
+        for view_dep_pair in changed_view_dep:
+          self.core_instance._IncrementSoa(*view_dep_pair)
 
       except:
         self.db_instance.EndTransaction(rollback=True)
