@@ -142,6 +142,41 @@ class TestDnsMkHost(unittest.TestCase):
                                 u'ipv6.net.',
                                 view_name=u'test_view')
     self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'forward_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'forward_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view3')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'reverse_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'reverse_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view2')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'ipv6zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
         u'aaaa', u'host2', u'forward_zone', {u'assignment_ip':
             u'4321:0000:0001:0002:0003:0004:0567:89ab'}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'host1', u'forward_zone',
