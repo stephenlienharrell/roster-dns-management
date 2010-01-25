@@ -448,6 +448,13 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeZone(u'university.edu', u'master',
                                 u'university.edu.', view_name=u'test_view')
     self.assertFalse(self.core_instance.ListRecords())
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'university.edu',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'mx', u'university.edu.',
                                   u'university.edu',
                                   {u'priority': 10,
@@ -459,7 +466,16 @@ class TestCore(unittest.TestCase):
                                    u'mail_server': u'smtp-2.university.edu.'},
                                   ttl=10)
     self.assertEquals(self.core_instance.ListRecords(),
-                      [{'target': u'university.edu.', 'ttl': 10,
+                      [{u'serial_number': 4, u'refresh_seconds': 5,
+                        u'target': u'soa1',
+                        u'name_server': u'ns1.university.edu.',
+                        u'retry_seconds': 5, 'ttl': 3600,
+                        u'minimum_seconds': 5, 'record_type': u'soa',
+                        'view_name': u'test_view', 'last_user': u'sharrell',
+                        'zone_name': u'university.edu',
+                        u'admin_email': u'admin.university.edu.',
+                        u'expiry_seconds': 5}, 
+                       {'target': u'university.edu.', 'ttl': 10,
                         u'priority': 10, 'record_type': u'mx',
                         'view_name': u'any', 'last_user': u'sharrell',
                         'zone_name': u'university.edu',
@@ -569,30 +585,31 @@ class TestCore(unittest.TestCase):
                        'record_type': u'soa', 'last_user': u'sharrell',
                        u'minimum_seconds': 4, u'retry_seconds': 4,
                        'view_name': u'test_view', 'ttl': 10,
-                       u'serial_number': 4294967294, u'admin_email': u'test.',
+                       u'serial_number': 4294967295, u'admin_email': u'test.',
                        u'expiry_seconds': 4}])
     self.core_instance.UpdateRecord(u'soa', u'university.edu.',
                                     u'university.edu',
                                     {u'name_server': u'test.',
                                      u'admin_email': u'test.',
-                                     u'serial_number': 4294967294,
+                                     u'serial_number': 4294967295,
                                      u'refresh_seconds': 4,
                                      u'retry_seconds': 4,
                                      u'expiry_seconds': 4,
                                      u'minimum_seconds': 4}, u'test_view',
                                     update_target=u'newtarget.')
     self.assertEqual(self.core_instance.ListRecords(),
-                     [{u'serial_number': 4294967295, u'refresh_seconds': 4,
+                     [{u'serial_number': 1, u'refresh_seconds': 4,
                        'target': u'newtarget.', u'name_server': u'test.',
                        u'retry_seconds': 4, 'ttl': 10, u'minimum_seconds': 4,
                        'record_type': u'soa', 'view_name': u'test_view',
-                       'last_user': u'sharrell', 'zone_name': u'university.edu',
+                       'last_user': u'sharrell',
+                       'zone_name': u'university.edu',
                        u'admin_email': u'test.', u'expiry_seconds': 4}])
     self.core_instance.db_instance.StartTransaction()
     self.core_instance._IncrementSoa(u'test_view', u'university.edu')
     self.core_instance.db_instance.EndTransaction()
     self.assertEqual(self.core_instance.ListRecords(),
-                     [{u'serial_number': 1, u'refresh_seconds': 4,
+                     [{u'serial_number': 2, u'refresh_seconds': 4,
                        'target': u'newtarget.', u'name_server': u'test.',
                        u'retry_seconds': 4, 'ttl': 10, u'minimum_seconds': 4,
                        'record_type': u'soa', 'view_name': u'test_view',
