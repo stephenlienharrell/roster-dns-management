@@ -143,6 +143,20 @@ class TestDnsMkHost(unittest.TestCase):
                                 u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view2')
     self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'forward_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'reverse_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
         u'aaaa', u'host2', u'forward_zone', {u'assignment_ip':
             u'4321:0000:0001:0002:0003:0004:0567:89ab'}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'host3', u'forward_zone',
@@ -192,20 +206,31 @@ class TestDnsMkHost(unittest.TestCase):
 
   def testWriteFileToDB(self):
     # Check initial records
-    self.assertEqual(self.core_instance.ListRecords(view_name=u'test_view'),
-                     [{'target': u'host2', 'ttl': 3600, 'record_type': u'aaaa',
-                       'view_name': u'test_view', 'last_user': u'sharrell',
-                       'zone_name': u'forward_zone',
-                       u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567'
-                                          ':89ab'},
-                      {'target': u'host3', 'ttl': 3600, 'record_type': u'a',
-                       'view_name': u'test_view', 'last_user': u'sharrell',
-                       'zone_name': u'forward_zone',
-                       u'assignment_ip': u'192.168.1.5'},
-                      {'target': u'4', 'ttl': 3600, 'record_type': u'ptr',
-                       'view_name': u'test_view', 'last_user': u'sharrell',
-                       'zone_name': u'reverse_zone',
-                       u'assignment_host': u'host2.university.edu.'}])
+    self.assertEqual(
+        self.core_instance.ListRecords(view_name=u'test_view'),
+        [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
+          'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
+         {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
+          'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
+         {'target': u'host2', 'ttl': 3600, 'record_type': u'aaaa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+         {'target': u'host3', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
+         {'target': u'4', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'host2.university.edu.'}])
 
     # Get file previously written
     handle = open(TEST_FILE, 'r')
@@ -264,25 +289,35 @@ class TestDnsMkHost(unittest.TestCase):
     output.close()
 
     # Check final records
-    self.assertEqual(self.core_instance.ListRecords(view_name=u'test_view'),
-                     [{'target': u'host2', 'ttl': 3600,
-                       'record_type': u'aaaa', 'view_name': u'test_view',
-                       'last_user': u'sharrell',
-                       'zone_name': u'forward_zone',
-                       u'assignment_ip': u'4321:0000:0001:0002:0003:0004'
-                                          ':0567:89ab'},
-                      {'target': u'4', 'ttl': 3600, 'record_type': u'ptr',
-                       'view_name': u'test_view', 'last_user': u'sharrell',
-                       'zone_name': u'reverse_zone',
-                       u'assignment_host': u'host2.university.edu.'},
-                      {'target': u'host5', 'ttl': 3600, 'record_type': u'a',
-                       'view_name': u'test_view', 'last_user': u'sharrell',
-                       'zone_name': u'forward_zone',
-                       u'assignment_ip': u'192.168.1.6'},
-                      {'target': u'6', 'ttl': 3600, 'record_type': u'ptr',
-                       'view_name': u'test_view', 'last_user': u'sharrell',
-                       'zone_name': u'reverse_zone',
-                       u'assignment_host': u'host5.university.edu.'}])
+    self.assertEqual(
+        self.core_instance.ListRecords(view_name=u'test_view'),
+        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1',
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
+          'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
+         {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
+          'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
+         {'target': u'host2', 'ttl': 3600, 'record_type': u'aaaa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+         {'target': u'4', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'host2.university.edu.'},
+         {'target': u'host5', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.6'},
+         {'target': u'6', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'host5.university.edu.'}])
     output = os.popen('python %s -r 192.168.1.4/30 -f %s '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
