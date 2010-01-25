@@ -119,7 +119,7 @@ class CliRecordLib:
           self.cli_common_lib_instance.DnsError('Duplicate record!', 4)
       roster_client_lib.RunFunction(
           u'MakeRecord', options.username, credfile=options.credfile,
-          args=[u'aaaa', options.target, options.zone_name, record_args_dict],
+          args=[record_type, options.target, options.zone_name, record_args_dict],
           kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
           server_name=options.server, raise_errors=raise_errors)
       if( options.view_name is None ):
