@@ -51,7 +51,7 @@ class InvalidCredentials(Exception):
 
 def RunFunction(function, user_name, credfile=None, credstring=None,
                 args=[], kwargs={}, server_name=None,
-                raise_errors=False):
+                raise_errors=False, password=None):
   """Runs an arbitrary function for SERVER
 
   Inputs:
@@ -81,7 +81,8 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
       except OSError:
         pass
     else:
-      if( not CheckCredentials(user_name, credfile, server_name) ):
+      if( not CheckCredentials(user_name, credfile, server_name,
+                               password=password) ):
         print "ERROR: Credential file not found, invalid credentials."
         sys.exit(1)
   try:
@@ -94,7 +95,8 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
 
 
   if( core_return == 'ERROR: Invalid Credentials' ):
-      if( not CheckCredentials(user_name, credfile, server_name) ):
+      if( not CheckCredentials(user_name, credfile, server_name,
+                               password=password) ):
         print "ERROR: Credential file not found, invalid credentials."
         sys.exit(1)
   elif( core_return['new_credential'] is not None and

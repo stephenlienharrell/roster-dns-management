@@ -181,19 +181,6 @@ class Testdnslshost(unittest.TestCase):
         records_dictionary, [u'192.168.1.5'], view_name='any'),
         u'192.168.1.5 host3.university.edu host3 # No reverse assignment\n')
 
-  def testCheckCredentials(self):
-    options.server = self.server_name
-    cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-    cli_common_lib_instance.DnsError = self.NewDnsError
-    self.assertEqual(cli_common_lib_instance.CheckCredentials(), None)
-
-    cli_common_lib_instance.options.credfile = None
-    self.assertRaises(DnsError, cli_common_lib_instance.CheckCredentials)
-
-    cli_common_lib_instance.options.credfile = options.credfile
-    cli_common_lib_instance.username = u'fakeuser'
-    self.assertRaises(DnsError, cli_common_lib_instance.CheckCredentials)
-
   def testDisallowFlags(self):
     parser = OptionParser()
     parser.add_option('-u', '--username', action='store', dest='username')

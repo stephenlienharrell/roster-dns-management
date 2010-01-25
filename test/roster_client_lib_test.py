@@ -134,7 +134,7 @@ class TestRosterClientLib(unittest.TestCase):
     self.core_instance = roster_core.Core(USERNAME, self.config_instance)
     self.password = 'test'
     time.sleep(1)
-    roster_client_lib.GetCredentials(USERNAME, u'test', credfile=CREDFILE,
+    roster_client_lib.GetCredentials(USERNAME, PASSWORD, credfile=CREDFILE,
                                      server_name=self.server_name)
 
   def tearDown(self):
@@ -157,7 +157,7 @@ class TestRosterClientLib(unittest.TestCase):
 
     zones = roster_client_lib.RunFunction(
         u'ListZones', USERNAME, CREDFILE,
-        server_name=self.server_name)['core_return']
+        server_name=self.server_name, password=PASSWORD)['core_return']
     self.assertEqual(
         zones,
         {'test_zone': {'test_view': {'zone_type':
@@ -168,21 +168,32 @@ class TestRosterClientLib(unittest.TestCase):
     credfile_handle = open(CREDFILE, 'w')
     credfile_handle.writelines('invalid_file')
     credfile_handle.close()
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
     self.assertRaises(
-        roster_client_lib.InvalidCredentials, roster_client_lib.RunFunction,
+        SystemExit, roster_client_lib.RunFunction,
         u'ListZones', USERNAME, CREDFILE,
-        server_name=self.server_name)
+        server_name=self.server_name, password='wrong')
 
     invalid_credfile = '/fake/credfile'
+    self.assertEqual(sys.stdout.flush(),
+                     'ERROR: Incorrect username/password.\n')
     self.assertRaises(
-        roster_client_lib.InvalidCredentials, roster_client_lib.RunFunction,
+        SystemExit, roster_client_lib.RunFunction,
         u'ListZones', USERNAME, CREDFILE,
-        server_name=self.server_name)
+        server_name=self.server_name, password='wrong')
+    self.assertEqual(sys.stdout.flush(),
+                     'ERROR: Incorrect username/password.\n')
+    sys.stdout = oldstdout
 
   def testGetCredentials(self):
     credential = roster_client_lib.GetCredentials(
         USERNAME, PASSWORD, CREDFILE, server_name=self.server_name)
     self.assertEqual(len(str(credential)), 36)
+
+  def testCheckCredentials(self):
+    self.assertEqual(roster_client_lib.CheckCredentials(
+        USERNAME, CREDFILE, self.server_name, password=PASSWORD), None)
 
   def testIsAuthenticated(self):
     self.assertTrue(roster_client_lib.IsAuthenticated(
