@@ -40,7 +40,6 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import time #FIXME
 import os
 import sys
 import shutil
