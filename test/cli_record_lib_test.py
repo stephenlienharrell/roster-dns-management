@@ -197,7 +197,13 @@ class TestCliRecordLib(unittest.TestCase):
     self.core_instance.MakeZone(options.zone_name, u'master',
                                 u'university.edu.',
                                 view_name=options.view_name)
-
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     cli_record_lib_instance.MakeRecord(
         u'a', options, {u'assignment_ip': u'192.168.1.1'})
     self.assertEqual(
@@ -216,6 +222,13 @@ class TestCliRecordLib(unittest.TestCase):
     self.core_instance.MakeReverseRangeZoneAssignment(
         options.zone_name, u'192.168.1/24')
     options.target = '192.168.1.6'
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'reverse_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     cli_record_lib_instance.MakeRecord(
         u'ptr', options, {u'assignment_host': u'server.university.edu.'})
     self.assertEqual(sys.stdout.flush(),
@@ -228,6 +241,13 @@ class TestCliRecordLib(unittest.TestCase):
                                 u'university.edu.',
                                 view_name=options.view_name)
     options.target = u'ipv6host'
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'ipv6_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     cli_record_lib_instance.MakeRecord(
         u'aaaa', options, {u'assignment_ip': u'2001:db8::1428:57ab'})
     self.assertEqual(sys.stdout.flush(),
@@ -241,6 +261,13 @@ class TestCliRecordLib(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'a', u'server', u'test_zone',
         {u'assignment_ip': u'192.168.1.1'}, view_name=u'test_view', ttl=3600)
@@ -256,6 +283,7 @@ class TestCliRecordLib(unittest.TestCase):
     sys.stdout = StdOutStream()
     options.ttl = 3600
     options.target = u'server'
+    options.zone_name = u'fake_zone'
 
     self.assertRaises(DnsErrorException,cli_record_lib_instance.RemoveRecord,
         u'a', options, {u'assignment_ip': u'192.168.1.1'})
@@ -284,6 +312,13 @@ class TestCliRecordLib(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'a', u'server', u'test_zone',
         {u'assignment_ip': u'192.168.1.1'}, view_name=u'test_view', ttl=3600)
