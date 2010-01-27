@@ -2569,7 +2569,7 @@ class Core(object):
           self.db_instance.RemoveRow('records', new_records[0])
         else:
           raise errors.CoreError('Duplicate records found.')
-        missing_ok = True
+        missing_ok = False
         if( record_type == u'soa' ):
           missing_ok = True
         self._IncrementSoa(view_name, zone_name, missing_ok=missing_ok)
