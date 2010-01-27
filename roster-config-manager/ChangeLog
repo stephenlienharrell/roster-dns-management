@@ -1,5 +1,3 @@
-Current Release
-
 2010-01-27 release-0.11
 - Added missing named conf error in tree_exporter.py
 - Added missing soa record error in zone_exporter.py
