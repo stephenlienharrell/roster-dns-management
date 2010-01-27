@@ -2905,7 +2905,7 @@ class Core(object):
     zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
         'zone_view_assignments')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = zone_name
-
+    row_count = 0
 
     soa_dict['record_type'] = u'soa'
     if( view_name is None ):
@@ -2936,8 +2936,6 @@ class Core(object):
       soa_dict['record_zone_name'] = zone_name
 
       soa_records_list = self.db_instance.ListRow('records', soa_dict)
-
-      row_count = 0
 
       if( len(soa_records_list) > 1 ):
         raise errors.CoreError('Multiple SOA records found.')
