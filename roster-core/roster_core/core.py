@@ -2569,7 +2569,10 @@ class Core(object):
           self.db_instance.RemoveRow('records', new_records[0])
         else:
           raise errors.CoreError('Duplicate records found.')
-        self._IncrementSoa(view_name, zone_name)
+        missing_ok = True
+        if( record_type == u'soa' ):
+          missing_ok = True
+        self._IncrementSoa(view_name, zone_name, missing_ok=missing_ok)
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -2885,7 +2888,7 @@ class Core(object):
 
     return row_count
 
-  def _IncrementSoa(self, view_name, zone_name, missing_ok=True):
+  def _IncrementSoa(self, view_name, zone_name, missing_ok=False):
     """Increments soa serial number.
 
     Inputs:
@@ -2941,8 +2944,8 @@ class Core(object):
         raise errors.CoreError('Multiple SOA records found.')
 
       if( len(soa_records_list) == 0 ):
-        missing_ok = False
         if( not missing_ok ):
+          pass
           raise errors.CoreError('No SOA record found for zone "%s" view "%s".' % (
               zone_name, view_name))
       else:
