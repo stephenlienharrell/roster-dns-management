@@ -114,7 +114,7 @@ class TestZoneImport(unittest.TestCase):
                                                             u'sharrell')
     importer_instance.MakeRecordsFromZone()
     self.assertEquals(self.core_instance.ListRecords(record_type=u'soa'),
-                      [{u'serial_number': 804, u'refresh_seconds': 10800,
+                      [{u'serial_number': 794, u'refresh_seconds': 10800,
                         'target': u'@',
                         u'name_server': u'ns.university.edu.',
                         u'retry_seconds': 3600, 'ttl': 3600,
