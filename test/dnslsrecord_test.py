@@ -109,6 +109,18 @@ class TestDnslsRecord(unittest.TestCase):
     self.password = 'test'
     time.sleep(1)
 
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
+                                view_name=u'test_view')
+    self.core_instance.MakeRecord(u'soa', u'machine1', u'test_zone',
+                                  {u'name_server': u'ns.university.edu.',
+                                   u'admin_email': u'university.edu.',
+                                   u'serial_number': 123456789,
+                                   u'refresh_seconds': 30,
+                                   u'retry_seconds': 30, u'expiry_seconds': 30,
+                                   u'minimum_seconds': 30},
+                                  view_name=u'test_view')
+
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
@@ -119,9 +131,6 @@ class TestDnslsRecord(unittest.TestCase):
     return os.WEXITSTATUS(code)
 
   def testListAll(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
                                   {u'assignment_ip': u'10.10.10.0'},
                                   view_name=u'test_view')
@@ -140,32 +149,34 @@ class TestDnslsRecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
+        'zone_name refresh_seconds target   name_server        record_type '
+        'last_user minimum_seconds retry_seconds view_name ttl  serial_number '
+        'admin_email     expiry_seconds\n'
+        '------------------------------------------------------------------'
+        '---------------------------------------------------------------------'
+        '------------------------------\n'
+        'test_zone 30              machine1 ns.university.edu. soa         '
+        'sharrell  30              30            test_view 3600 123456794     '
+        'university.edu. 30\n\n'
         'target   ttl  record_type view_name last_user zone_name '
         'assignment_ip\n'
         '--------------------------------------------------------'
         '-------------\n'
-        'machine1 3600 a           test_view sharrell  test_zone '
-        '10.10.10.0\n'
-        'machine2 3600 a           test_view sharrell  test_zone '
-        '10.10.10.1\n\n'
-        'target   ttl  hardware record_type view_name last_user zone_name '
-        'os\n'
-        '-----------------------------------------------------------------'
-        '--\n'
-        'machine1 3600 Pear     hinfo       test_view sharrell  test_zone '
-        'ipear\n\n'
+        'machine1 3600 a           test_view sharrell  test_zone 10.10.10.0\n'
+        'machine2 3600 a           test_view sharrell  test_zone 10.10.10.1\n\n'
         'target   ttl  record_type view_name last_user zone_name '
         'assignment_host\n'
         '--------------------------------------------------------'
         '---------------\n'
-        'machine3 3600 cname       test_view sharrell  '
-        'test_zone machine1.university.edu.\n\n')
+        'machine3 3600 cname       test_view sharrell  test_zone '
+        'machine1.university.edu.\n\n'
+        'target   ttl  hardware record_type view_name last_user zone_name os\n'
+        '-------------------------------------------------------------------\n'
+        'machine1 3600 Pear     hinfo       test_view sharrell  test_zone '
+        'ipear\n\n')
     command.close()
 
   def testListSameRecord(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
                                   {u'assignment_ip': u'10.10.10.0'},
                                   view_name=u'test_view')
@@ -186,10 +197,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testAList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.assertEqual(self.core_instance.ListZones(), {u'test_zone':
         {u'any': {'zone_type': u'master', 'zone_options': u'',
                   'zone_origin': u'test_zone.'},
@@ -228,10 +235,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testAListNoHeader(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
                                   {u'assignment_ip': u'10.10.10.0'},
                                   view_name=u'test_view')
@@ -249,10 +252,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testCnameAList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
                                   {u'assignment_ip': u'10.10.10.0'},
                                   view_name=u'test_view')
@@ -283,19 +282,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testAAAAList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
-    self.core_instance.MakeRecord(
-        u'aaaa', u'machine1', u'test_zone',
-        {u'assignment_ip': u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
-        view_name=u'test_view')
-  def testAAAAList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'aaaa', u'machine1', u'test_zone',
         {u'assignment_ip': u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
@@ -316,10 +302,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testHINFOList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'hinfo', u'machine1', u'test_zone',
                                   {u'hardware': u'Pear', u'os': u'ipear'},
                                   view_name=u'test_view')
@@ -337,10 +319,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testTXTList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'txt', u'machine1', u'test_zone',
                                   {u'quoted_text': u'et tu brute'},
                                   view_name=u'test_view')
@@ -358,10 +336,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testCNAMEList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'cname', u'machine1', u'test_zone',
                                   {u'assignment_host': u'university.edu.'},
                                   view_name=u'test_view')
@@ -381,24 +355,11 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testSOAList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
-    self.core_instance.MakeRecord(u'soa', u'machine1', u'test_zone',
-                                  {u'name_server': u'ns.university.edu.',
-                                   u'admin_email': u'university.edu.',
-                                   u'serial_number': 123456789,
-                                   u'refresh_seconds': 30,
-                                   u'retry_seconds': 30, u'expiry_seconds': 30,
-                                   u'minimum_seconds': 30},
-                                  view_name=u'test_view')
     command = os.popen('python %s '
                        '--soa --soa-name-server="ns.university.edu." '
-                       '--soa-admin-email="university.edu." '
-                       '--soa-serial-number=123456789 --soa-refresh-seconds=30 '
+                       '--soa-serial-number=123456790 --soa-refresh-seconds=30 '
                        '--soa-retry-seconds=30 --soa-minimum-seconds=30 '
-                       '--soa-expiry-seconds=30 '
+                       '--soa-expiry-seconds=30 --ttl=3600 '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -411,15 +372,11 @@ class TestDnslsRecord(unittest.TestCase):
         '---------------------------------------------------------------------'
         '------------------------------\n'
         'test_zone 30              machine1 ns.university.edu. soa         '
-        'sharrell  30              30            test_view 3600 123456789     '
+        'sharrell  30              30            test_view 3600 123456790     '
         'university.edu. 30\n\n')
     command.close()
 
   def testSRVList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'srv', u'machine1', u'test_zone',
                                   {u'priority': 5, u'weight': 6, u'port': 80,
                                    u'assignment_host': u'university.edu.'},
@@ -441,10 +398,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testNSList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'ns', u'machine1', u'test_zone',
                                   {u'name_server': u'university.edu.'},
                                   view_name=u'test_view')
@@ -464,10 +417,6 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testMXList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
-                                view_name=u'test_view')
     self.core_instance.MakeRecord(u'mx', u'machine1', u'test_zone',
                                   {u'mail_server': u'university.edu.',
                                    u'priority': 5},
@@ -488,29 +437,33 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testPTRList(self):
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'test_zone', u'master',
-                                u'1.168.192.in-addr.arpa.')
-    self.core_instance.MakeZone(u'test_zone', u'master',
+    self.core_instance.MakeZone(u'reverse_zone', u'master',
                                 u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view')
-    self.core_instance.MakeReverseRangeZoneAssignment(u'test_zone',
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'reverse_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.4/30')
-    self.core_instance.MakeRecord(u'ptr', u'4', u'test_zone',
+    self.core_instance.MakeRecord(u'ptr', u'4', u'reverse_zone',
                                   {u'assignment_host': u'university.edu.'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
                        '--ptr --ptr-assignment-host="university.edu." '
-                       '-t 192.168.1.4 -v test_view -z test_zone -u '
+                       '-t 192.168.1.4 -v test_view -z reverse_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-         'target ttl  record_type view_name last_user zone_name '
+         'target ttl  record_type view_name last_user zone_name    '
          'assignment_host\n'
-         '------------------------------------------------------'
+         '---------------------------------------------------------'
          '---------------\n'
-         '4      3600 ptr         test_view sharrell  test_zone '
+         '4      3600 ptr         test_view sharrell  reverse_zone '
          'university.edu.\n\n')
     command.close()
 
