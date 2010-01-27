@@ -118,7 +118,7 @@ class BindTreeExport(object):
             'zone_view_assignments_zone_name']] = []
       zone_view_assignments[zone_view_assignment[
           'zone_view_assignments_zone_name']].append(zone_view_assignment[
-          'zone_view_assignments_view_dependency'].rstrip('_dep'))
+          'zone_view_assignments_view_dependency'].split('_dep')[0])
     for zone_view_assignment in zone_view_assignments:
       if( zone_view_assignments[zone_view_assignment] == [u'any'] ):
         raise Error('Zone "%s" has no view assignments.' % zone_view_assignment)
