@@ -814,13 +814,13 @@ class TestTreeExporter(unittest.TestCase):
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
 
-    # Make 'soa' record for 'any' view / 'university.edu' zone
+    # Make 'soa' record for 'external' view / 'university.edu' zone
     records_dict['records_id'] = None
     records_dict['record_type'] = u'soa'
     records_dict['record_target'] = u'university.edu.'
     records_dict['record_ttl'] = 3600
     records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'any'
+    records_dict['record_view_dependency'] = u'external_dep'
     db_instance.MakeRow('records', records_dict)
     record_arguments_record_assignments_dict = {}
     record_arguments_record_assignments_dict[
@@ -849,7 +849,7 @@ class TestTreeExporter(unittest.TestCase):
         'record_arguments_records_assignments_type'] = u'soa'
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_argument_name'] = u'serial_number'
-    record_arguments_record_assignments_dict['argument_value'] = u'20091226'
+    record_arguments_record_assignments_dict['argument_value'] = u'20091227'
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
     record_arguments_record_assignments_dict[
@@ -893,13 +893,13 @@ class TestTreeExporter(unittest.TestCase):
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
 
-    # Make 'soa' record for 'external' view / 'university.edu' zone
+    # Make 'soa' record for 'private' view / 'university.edu' zone
     records_dict['records_id'] = None
     records_dict['record_type'] = u'soa'
     records_dict['record_target'] = u'university.edu.'
     records_dict['record_ttl'] = 3600
     records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'external_dep'
+    records_dict['record_view_dependency'] = u'private_dep'
     db_instance.MakeRow('records', records_dict)
     record_arguments_record_assignments_dict = {}
     record_arguments_record_assignments_dict[
@@ -928,7 +928,7 @@ class TestTreeExporter(unittest.TestCase):
         'record_arguments_records_assignments_type'] = u'soa'
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_argument_name'] = u'serial_number'
-    record_arguments_record_assignments_dict['argument_value'] = u'20091227'
+    record_arguments_record_assignments_dict['argument_value'] = u'20091225'
     db_instance.MakeRow('record_arguments_records_assignments',
                         record_arguments_record_assignments_dict)
     record_arguments_record_assignments_dict[
@@ -1059,7 +1059,7 @@ class TestTreeExporter(unittest.TestCase):
     named_conf_global_options_dict['global_options'] = (
         u'options {\n\tdirectory "/var/domain";\n\trecursion no;\n'
         '\tmax-cache-size 512M;\n};\n\nlogging {\n\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tfile "/etc/named//var/log/named-security.log" versions 10 size 10m;\n'
         '\t\tprint-time yes;\n\t};\n\tchannel "query_logging" {\n'
         '\t\tsyslog local5;\n\t\tseverity info;\n\t};\n'
         '\tcategory "client" { "null"; };\n'
@@ -1079,7 +1079,7 @@ class TestTreeExporter(unittest.TestCase):
     named_conf_global_options_dict['global_options'] = (
         u'options {\n\tdirectory "/var/domain";\n\trecursion no;\n'
         '\tmax-cache-size 512M;\n};\n\nlogging {\n\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tfile "/etc/named//var/log/named-security.log" versions 10 size 10m;\n'
         '\t\tprint-time yes;\n\t};\n\tchannel "query_logging" {\n'
         '\t\tsyslog local5;\n\t\tseverity info;\n\t};\n'
         '\tcategory "client" { "null"; };\n'
@@ -1099,7 +1099,7 @@ class TestTreeExporter(unittest.TestCase):
     named_conf_global_options_dict['global_options'] = (
         u'options {\n\tdirectory "/var/domain";\n\trecursion no;\n'
         '\tmax-cache-size 512M;\n};\n\nlogging {\n\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tfile "/etc/named//var/log/named-security.log" versions 10 size 10m;\n'
         '\t\tprint-time yes;\n\t};\n\tchannel "query_logging" {\n'
         '\t\tsyslog local5;\n\t\tseverity info;\n\t};\n'
         '\tcategory "client" { "null"; };\n'
@@ -1179,7 +1179,78 @@ class TestTreeExporter(unittest.TestCase):
       self.db_instance.EndTransaction()
 
     self.assertEqual(self.tree_exporter_instance.SortRecords(records),
-                     {(u'university.edu', u'internal_dep'):
+                     {(u'university.edu', u'external_dep'):
+                          {13: {u'serial_number': 20091227,
+                                u'refresh_seconds': 5,
+                                'target': u'university.edu.',
+                                u'name_server': u'ns1.university.edu.',
+                                u'retry_seconds': 5, 'ttl': 3600,
+                                u'minimum_seconds': 5, 'record_type': u'soa',
+                                'view_name': u'external',
+                                'last_user': u'sharrell',
+                                'zone_name': u'university.edu',
+                                u'admin_email': u'admin@university.edu.',
+                                u'expiry_seconds': 5},
+                           6: {'target': u'computer1', 'ttl': 3600,
+                               'record_type': u'a', 'view_name': u'external',
+                               'last_user': u'sharrell',
+                               'zone_name': u'university.edu',
+                               u'assignment_ip': u'1.2.3.5'}, 
+                           7: {'target': u'computer3', 'ttl': 3600,
+                               'record_type': u'a', 'view_name': u'external',
+                               'last_user': u'sharrell',
+                               'zone_name': u'university.edu',
+                               u'assignment_ip': u'1.2.3.6'}},
+                      (u'4.3.2.1.in-addr', u'external_dep'):
+                          {5: {u'serial_number': 20091224,
+                               u'refresh_seconds': 5,
+                               'target': u'4.3.2.1.in-addr.arpa.',
+                               u'name_server': u'ns1.university.edu.',
+                               u'retry_seconds': 5, 'ttl': 3600,
+                               u'minimum_seconds': 5, 'record_type': u'soa',
+                               'view_name': u'external',
+                               'last_user': u'sharrell',
+                               'zone_name': u'4.3.2.1.in-addr',
+                               u'admin_email': u'admin@university.edu.',
+                               u'expiry_seconds': 5},
+                           15: {'target': u'1', 'ttl': 3600,
+                                'record_type': u'ptr',
+                                'view_name': u'external',
+                                'last_user': u'sharrell',
+                                'zone_name': u'4.3.2.1.in-addr',
+                                u'assignment_host': u'computer1'}},
+                      (u'168.192.in-addr', u'internal_dep'):
+                          {16: {'target': u'4', 'ttl': 3600,
+                                'record_type': u'ptr',
+                                'view_name': u'internal',
+                                'last_user': u'sharrell',
+                                'zone_name': u'168.192.in-addr',
+                                u'assignment_host': u'computer4'},
+                           2: {u'serial_number': 20091223,
+                               u'refresh_seconds': 5,
+                               'target': u'168.192.in-addr.arpa.',
+                               u'name_server': u'ns1.university.edu.',
+                               u'retry_seconds': 5, 'ttl': 3600,
+                               u'minimum_seconds': 5,
+                               'record_type': u'soa',
+                               'view_name': u'internal',
+                               'last_user': u'sharrell',
+                               'zone_name': u'168.192.in-addr',
+                               u'admin_email': u'admin@university.edu.',
+                               u'expiry_seconds': 5}},
+                      (u'university.edu', u'private_dep'):
+                          {14: {u'serial_number': 20091225,
+                                u'refresh_seconds': 5,
+                                'target': u'university.edu.',
+                                u'name_server': u'ns1.university.edu.',
+                                u'retry_seconds': 5, 'ttl': 3600,
+                                u'minimum_seconds': 5, 'record_type': u'soa',
+                                'view_name': u'private',
+                                'last_user': u'sharrell',
+                                'zone_name': u'university.edu',
+                                u'admin_email': u'admin@university.edu.',
+                                u'expiry_seconds': 5}},
+                      (u'university.edu', u'internal_dep'):
                           {11: {'target': u'computer4', 'ttl': 3600,
                                 'record_type': u'a', 'view_name': u'internal',
                                 'last_user': u'sharrell',
@@ -1197,7 +1268,8 @@ class TestTreeExporter(unittest.TestCase):
                                 u'admin_email': u'admin@university.edu.',
                                 u'expiry_seconds': 5},
                            3: {'target': u'computer1', 'ttl': 3600,
-                               'record_type': u'a', 'view_name': u'internal',
+                               'record_type': u'a',
+                               'view_name': u'internal',
                                'last_user': u'sharrell',
                                'zone_name': u'university.edu',
                                u'assignment_ip': u'192.168.1.1'},
@@ -1206,102 +1278,29 @@ class TestTreeExporter(unittest.TestCase):
                                'last_user': u'sharrell',
                                'zone_name': u'university.edu',
                                u'assignment_ip': u'192.168.1.2'}},
-                       (u'4.3.2.1.in-addr', u'external_dep'):
-                           {5: {u'serial_number': 20091224,
-                                u'refresh_seconds': 5,
-                                'target': u'4.3.2.1.in-addr.arpa.',
-                                u'name_server': u'ns1.university.edu.',
-                                u'retry_seconds': 5, 'ttl': 3600,
-                                u'minimum_seconds': 5, 'record_type': u'soa',
-                                'view_name': u'external',
+                      (u'university.edu', u'any'):
+                          {8: {'target': u'@', 'ttl': 3600, u'priority': 1,
+                               'record_type': u'mx', 'view_name': u'any',
+                               'last_user': u'sharrell',
+                               'zone_name': u'university.edu',
+                               u'mail_server': u'mail2.university.edu.'},
+                           1: {'target': u'@', 'ttl': 3600, u'priority': 1,
+                               'record_type': u'mx', 'view_name': u'any',
+                               'last_user': u'sharrell',
+                               'zone_name': u'university.edu',
+                               u'mail_server': u'mail1.university.edu.'},
+                           10: {'target': u'@',
+                                u'name_server': u'ns2.university.edu',
+                                'ttl': 3600, 'record_type': u'ns',
+                                'view_name': u'any',
                                 'last_user': u'sharrell',
-                                'zone_name': u'4.3.2.1.in-addr',
-                                u'admin_email': u'admin@university.edu.',
-                                u'expiry_seconds': 5},
-                            15: {'target': u'1', 'ttl': 3600,
-                                 'record_type': u'ptr',
-                                 'view_name': u'external',
-                                 'last_user': u'sharrell',
-                                 'zone_name': u'4.3.2.1.in-addr',
-                                 u'assignment_host': u'computer1'}},
-                        (u'168.192.in-addr', u'internal_dep'):
-                            {16: {'target': u'4', 'ttl': 3600,
-                                  'record_type': u'ptr',
-                                  'view_name': u'internal',
-                                  'last_user': u'sharrell',
-                                  'zone_name': u'168.192.in-addr',
-                                  u'assignment_host': u'computer4'},
-                             2: {u'serial_number': 20091223,
-                                 u'refresh_seconds': 5,
-                                 'target': u'168.192.in-addr.arpa.',
-                                 u'name_server': u'ns1.university.edu.',
-                                 u'retry_seconds': 5, 'ttl': 3600,
-                                 u'minimum_seconds': 5, 'record_type': u'soa',
-                                 'view_name': u'internal',
-                                 'last_user': u'sharrell',
-                                 'zone_name': u'168.192.in-addr',
-                                 u'admin_email': u'admin@university.edu.',
-                                 u'expiry_seconds': 5}},
-                         (u'university.edu', u'any'):
-                             {8: {'target': u'@', 'ttl': 3600, u'priority': 1,
-                                  'record_type': u'mx', 'view_name': u'any',
-                                  'last_user': u'sharrell',
-                                  'zone_name': u'university.edu',
-                                  u'mail_server': u'mail2.university.edu.'},
-                              1: {'target': u'@', 'ttl': 3600, u'priority': 1,
-                                  'record_type': u'mx', 'view_name': u'any',
-                                  'last_user': u'sharrell',
-                                  'zone_name': u'university.edu',
-                                  u'mail_server': u'mail1.university.edu.'},
-                              10: {'target': u'@',
-                                   u'name_server': u'ns2.university.edu',
-                                   'ttl': 3600, 'record_type': u'ns',
-                                   'view_name': u'any',
-                                   'last_user': u'sharrell',
-                                   'zone_name': u'university.edu'},
-                              13: {u'serial_number': 20091226,
-                                   u'refresh_seconds': 5,
-                                   'target': u'university.edu.',
-                                   u'name_server': u'ns1.university.edu.',
-                                   u'retry_seconds': 5, 'ttl': 3600,
-                                   u'minimum_seconds': 5,
-                                   'record_type': u'soa',
-                                   'view_name': u'any',
-                                   'last_user': u'sharrell',
-                                   'zone_name': u'university.edu',
-                                   u'admin_email': u'admin@university.edu.',
-                                   u'expiry_seconds': 5},
-                              9: {'target': u'@',
-                                  u'name_server': u'ns1.university.edu',
-                                  'ttl': 3600, 'record_type': u'ns',
-                                  'view_name': u'any',
-                                  'last_user': u'sharrell',
-                                  'zone_name': u'university.edu'}},
-                          (u'university.edu', u'external_dep'):
-                              {14: {u'serial_number': 20091227,
-                                    u'refresh_seconds': 5,
-                                    'target': u'university.edu.',
-                                    u'name_server': u'ns1.university.edu.',
-                                    u'retry_seconds': 5, 'ttl': 3600,
-                                    u'minimum_seconds': 5,
-                                    'record_type': u'soa',
-                                    'view_name': u'external',
-                                    'last_user': u'sharrell',
-                                    'zone_name': u'university.edu',
-                                    u'admin_email': u'admin@university.edu.',
-                                    u'expiry_seconds': 5},
-                               6: {'target': u'computer1', 'ttl': 3600,
-                                   'record_type': u'a',
-                                   'view_name': u'external',
-                                   'last_user': u'sharrell',
-                                   'zone_name': u'university.edu',
-                                   u'assignment_ip': u'1.2.3.5'},
-                               7: {'target': u'computer3', 'ttl': 3600,
-                                   'record_type': u'a',
-                                   'view_name': u'external',
-                                   'last_user': u'sharrell',
-                                   'zone_name': u'university.edu',
-                                   u'assignment_ip': u'1.2.3.6'}}})
+                                'zone_name': u'university.edu'},
+                           9: {'target': u'@',
+                               u'name_server': u'ns1.university.edu',
+                               'ttl': 3600, 'record_type': u'ns',
+                               'view_name': u'any',
+                               'last_user': u'sharrell',
+                               'zone_name': u'university.edu'}}})
 
   def testTreeExporterMakeNamedConf(self):
     self.tree_exporter_instance.ExportAllBindTrees()
@@ -1315,7 +1314,7 @@ class TestTreeExporter(unittest.TestCase):
         '};\n\n'
         'logging {\n'
         '\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tfile "/etc/named//var/log/named-security.log" versions 10 size 10m;\n'
         '\t\tprint-time yes;\n'
         '\t};\n\tchannel "query_logging" {\n'
         '\t\tsyslog local5;\n'
@@ -1329,6 +1328,9 @@ class TestTreeExporter(unittest.TestCase):
         '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
         '};\n\n'
         'include "/etc/rndc.key";\n\n'
+        'options {\n'
+        '  directory "/etc/named";\n'
+        '};\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
         '};\n\n'
@@ -1340,13 +1342,13 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { public; secret; };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "internal/university.edu.db";\n'
+        '\t\tfile "/etc/named/internal/university.edu.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "168.192.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "internal/168.192.in-addr.db";\n'
+        '\t\tfile "/etc/named/internal/168.192.in-addr.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
@@ -1355,19 +1357,19 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { public; };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "external/university.edu.db";\n'
+        '\t\tfile "/etc/named/external/university.edu.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "external/4.3.2.1.in-addr.db";\n'
+        '\t\tfile "/etc/named/external/4.3.2.1.in-addr.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n};')
     ##Test Files
     handle = open(
-        './bind_configs/external_dns_servers/external_dns_config', 'r')
+        './bind_configs/external_dns_servers/named/external_dns_config', 'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                      'dns_servers = ns1.university.edu,dns2.university.edu,'
                      'dns3.university.edu\n'
@@ -1384,7 +1386,7 @@ class TestTreeExporter(unittest.TestCase):
                      '\n'
                      'logging {\n'
                      '\tchannel "security" {\n'
-                     '\t\tfile "/var/log/named-security.log" versions 10 size '
+                     '\t\tfile "/etc/named//var/log/named-security.log" versions 10 size '
                      '10m;\n'
                      '\t\tprint-time yes;\n'
                      '\t};\n'
@@ -1403,6 +1405,9 @@ class TestTreeExporter(unittest.TestCase):
                      '\n'
                      'include "/etc/rndc.key";\n'
                      '\n'
+                     'options {\n'
+                     '  directory "/etc/named";\n'
+                     '};\n'
                      'acl secret {\n'
                      '\t!10.10/32;\n'
                      '};\n'
@@ -1416,20 +1421,20 @@ class TestTreeExporter(unittest.TestCase):
                      '\tmatch-clients { public; };\n'
                      '\tzone "university.edu" {\n'
                      '\t\ttype master;\n'
-                     '\t\tfile "external/university.edu.db";\n'
+                     '\t\tfile "/etc/named/external/university.edu.db";\n'
                      '\t\t#Allow update\n'
                      '\t\tallow-update { none; };\n'
                      '\t};\n'
                      '\tzone "4.3.2.1.in-addr.arpa" {\n'
                      '\t\ttype master;\n'
-                     '\t\tfile "external/4.3.2.1.in-addr.db";\n'
+                     '\t\tfile "/etc/named/external/4.3.2.1.in-addr.db";\n'
                      '\t\t#Allow update\n'
                      '\t\tallow-update { none; };\n'
                      '\t};\n'
                      '};')
     handle.close()
     handle = open(
-        './bind_configs/external_dns_servers/external/4.3.2.1.in-addr.db', 'r')
+        './bind_configs/external_dns_servers/named/external/4.3.2.1.in-addr.db', 'r')
     self.assertEqual(handle.read(),
                      '; This zone file is autogenerated. DO NOT EDIT.\n'
                      '$ORIGIN 4.3.2.1.in-addr.arpa.\n'
@@ -1438,16 +1443,20 @@ class TestTreeExporter(unittest.TestCase):
                      '1 3600 in ptr computer1\n')
     handle.close()
     handle = open(
-        './bind_configs/external_dns_servers/external/university.edu.db', 'r')
+        './bind_configs/external_dns_servers/named/external/university.edu.db', 'r')
     self.assertEqual(
         handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN university.edu.\n'
         'university.edu. 3600 in soa ns1.university.edu. '
         'admin@university.edu. 20091227 5 5 5 5\n'
+        '@ 3600 in ns ns1.university.edu\n'
+        '@ 3600 in ns ns2.university.edu\n'
+        '@ 3600 in mx 1 mail2.university.edu.\n'
+        '@ 3600 in mx 1 mail1.university.edu.\n'
         'computer1 3600 in a 1.2.3.5\n'
         'computer3 3600 in a 1.2.3.6\n')
     handle.close()
-    handle = open('./bind_configs/internal_dns_servers/internal_dns_config', 'r')
+    handle = open('./bind_configs/internal_dns_servers/named/internal_dns_config', 'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                                     'dns_servers = ns1.int.university.edu,'
                                     'dns1.university.edu\n'
@@ -1464,7 +1473,7 @@ class TestTreeExporter(unittest.TestCase):
         '\n'
         'logging {\n'
         '\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tfile "/etc/named//var/log/named-security.log" versions 10 size 10m;\n'
         '\t\tprint-time yes;\n'
         '\t};\n'
         '\tchannel "query_logging" {\n'
@@ -1482,6 +1491,9 @@ class TestTreeExporter(unittest.TestCase):
         '\n'
         'include "/etc/rndc.key";\n'
         '\n'
+        'options {\n'
+        '  directory "/etc/named";\n'
+        '};\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
         '};\n'
@@ -1495,13 +1507,13 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { public; secret; };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "internal/university.edu.db";\n'
+        '\t\tfile "/etc/named/internal/university.edu.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "168.192.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "internal/168.192.in-addr.db";\n'
+        '\t\tfile "/etc/named/internal/168.192.in-addr.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
@@ -1510,20 +1522,20 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { public; };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "external/university.edu.db";\n'
+        '\t\tfile "/etc/named/external/university.edu.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "external/4.3.2.1.in-addr.db";\n'
+        '\t\tfile "/etc/named/external/4.3.2.1.in-addr.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};')
     handle.close()
     handle = open(
-        './bind_configs/internal_dns_servers/external/4.3.2.1.in-addr.db', 'r')
+        './bind_configs/internal_dns_servers/named/external/4.3.2.1.in-addr.db', 'r')
     self.assertEqual(
         handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN 4.3.2.1.in-addr.arpa.\n'
@@ -1532,17 +1544,21 @@ class TestTreeExporter(unittest.TestCase):
         '1 3600 in ptr computer1\n')
     handle.close()
     handle = open(
-        './bind_configs/internal_dns_servers/external/university.edu.db', 'r')
+        './bind_configs/internal_dns_servers/named/external/university.edu.db', 'r')
     self.assertEqual(
         handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN university.edu.\n'
         'university.edu. 3600 in soa ns1.university.edu. '
         'admin@university.edu. 20091227 5 5 5 5\n'
+        '@ 3600 in ns ns1.university.edu\n'
+        '@ 3600 in ns ns2.university.edu\n'
+        '@ 3600 in mx 1 mail2.university.edu.\n'
+        '@ 3600 in mx 1 mail1.university.edu.\n'
         'computer1 3600 in a 1.2.3.5\n'
         'computer3 3600 in a 1.2.3.6\n')
     handle.close()
     handle = open(
-        './bind_configs/internal_dns_servers/internal/168.192.in-addr.db', 'r')
+        './bind_configs/internal_dns_servers/named/internal/168.192.in-addr.db', 'r')
     self.assertEqual(
         handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN 168.192.in-addr.arpa.\n'
@@ -1551,18 +1567,22 @@ class TestTreeExporter(unittest.TestCase):
         '4 3600 in ptr computer4\n')
     handle.close()
     handle = open(
-        './bind_configs/internal_dns_servers/internal/university.edu.db', 'r')
+        './bind_configs/internal_dns_servers/named/internal/university.edu.db', 'r')
     self.assertEqual(
         handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN university.edu.\n'
         'university.edu. 3600 in soa ns1.university.edu. '
         'admin@university.edu. 20091225 5 5 5 5\n'
+        '@ 3600 in ns ns1.university.edu\n'
+        '@ 3600 in ns ns2.university.edu\n'
+        '@ 3600 in mx 1 mail2.university.edu.\n'
+        '@ 3600 in mx 1 mail1.university.edu.\n'
         'computer1 3600 in a 192.168.1.1\n'
         'computer2 3600 in a 192.168.1.2\n'
         'computer4 3600 in a 192.168.1.4\n')
     handle.close()
     handle = open(
-        './bind_configs/private_dns_servers/private_dns_config', 'r')
+        './bind_configs/private_dns_servers/named/private_dns_config', 'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                                     'dns_servers = ns1.int.university.edu,'
                                     'dns4.university.edu\n'
@@ -1579,7 +1599,7 @@ class TestTreeExporter(unittest.TestCase):
         '\n'
         'logging {\n'
         '\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tfile "/etc/named//var/log/named-security.log" versions 10 size 10m;\n'
         '\t\tprint-time yes;\n'
         '\t};\n'
         '\tchannel "query_logging" {\n'
@@ -1597,6 +1617,9 @@ class TestTreeExporter(unittest.TestCase):
         '\n'
         'include "/etc/rndc.key";\n'
         '\n'
+        'options {\n'
+        '  directory "/etc/named";\n'
+        '};\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
         '};\n'
@@ -1610,19 +1633,19 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { secret; };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "private/university.edu.db";\n'
+        '\t\tfile "/etc/named/private/university.edu.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};')
     handle.close()
     handle = open(
-        './bind_configs/private_dns_servers/private/university.edu.db', 'r')
+        './bind_configs/private_dns_servers/named/private/university.edu.db', 'r')
     self.assertEqual(
         handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN university.edu.\n'
         'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091226 5 5 5 5\n'
+        'admin@university.edu. 20091225 5 5 5 5\n'
         '@ 3600 in ns ns1.university.edu\n'
         '@ 3600 in ns ns2.university.edu\n'
         '@ 3600 in mx 1 mail2.university.edu.\n'
