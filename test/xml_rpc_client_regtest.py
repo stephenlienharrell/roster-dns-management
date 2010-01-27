@@ -62,6 +62,35 @@ USERNAME = u'sharrell'
 KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='test_data/dnscred'
+PASSWORD='test'
+
+class StdOutStream():
+  """Std out redefined"""
+  def __init__(self):
+    """Appends stdout to stdout array
+    
+       Inputs:
+         text: String of stdout
+    """
+    self.stdout = []
+
+  def write(self, text):
+    """Appends stdout to stdout array
+    
+    Inputs:
+      text: String of stdout
+    """
+    self.stdout.append(text)
+
+  def flush(self):
+    """Flushes stdout array and outputs string of contents
+
+    Outputs:
+      String: String of stdout
+    """
+    std_array = self.stdout
+    self.stdout = []
+    return ''.join(std_array)
 
 class DaemonThread(threading.Thread):
   def __init__(self, config_instance, port, daemon_instance):
@@ -113,7 +142,7 @@ class TestXMLServerClient(unittest.TestCase):
     time.sleep(1)
     ## Will create a core_instance in core_store
     self.credential = roster_client_lib.GetCredentials(
-        USERNAME, u'test', server_name=self.server_name)
+        USERNAME, PASSWORD, server_name=self.server_name)
     self.daemon_instance.core_store = [] # Clear out core instance from above
 
     if( os.path.exists(CREDFILE) ):
@@ -126,10 +155,14 @@ class TestXMLServerClient(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testCredFile(self):
-    self.assertRaises(roster_client_lib.InvalidCredentials,
-                      roster_client_lib.RunFunction,
-                      u'ListUsers', USERNAME, server_name=self.server_name,
-                      credfile=CREDFILE)
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.assertRaises(
+        SystemExit, roster_client_lib.RunFunction, u'ListUsers', USERNAME,
+        server_name=self.server_name, password=PASSWORD, credfile=CREDFILE)
+    self.assertEqual(sys.stdout.flush(),
+                     'ERROR: Credential file not found, invalid credentials.\n')
+    sys.stdout = oldstdout
     # create credential file for RunFunction
     roster_client_lib.GetCredentials(u'shuey', u'testpass',
                                      server_name=self.server_name,
@@ -137,7 +170,8 @@ class TestXMLServerClient(unittest.TestCase):
     # using file from function above
     self.assertEqual(roster_client_lib.RunFunction(
                          u'ListUsers', u'shuey', credfile=CREDFILE,
-                         server_name=self.server_name)['core_return'],
+                         server_name=self.server_name,
+                         password=PASSWORD)['core_return'],
                     {'shuey': 64, 'jcollins': 32, 'sharrell': 128})
 
   def testCredsStrings(self):
@@ -145,64 +179,66 @@ class TestXMLServerClient(unittest.TestCase):
     self.core_instance._MakeCredential(credstring, u'shuey', infinite_cred=True)
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=credstring,
-        server_name=self.server_name)['core_return'],
+        server_name=self.server_name, password=PASSWORD)['core_return'],
                      {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=credstring,
-        server_name=self.server_name)['core_return'],
+        server_name=self.server_name, password=PASSWORD)['core_return'],
                      {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
     time.sleep(10)
     function_return = roster_client_lib.RunFunction(
         u'ListUsers', USERNAME,credstring=credstring,
-        server_name=self.server_name)
+        server_name=self.server_name, password=PASSWORD)
     self.assertEqual(function_return['core_return'],
                      {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
     if( function_return['new_credential'] != u'' ):
       credstring = function_return['new_credential']
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=credstring,
-        server_name=self.server_name)['core_return'],
+        server_name=self.server_name, password=PASSWORD)['core_return'],
             {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
 
   def testNoArgsClient(self):
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=self.credential,
-        server_name=self.server_name)['core_return'],
+        server_name=self.server_name, password=PASSWORD)['core_return'],
             {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
 
   def testArgsOnlyClient(self):
     roster_client_lib.RunFunction(u'MakeUser', USERNAME, args=[u'jake\xc6', 64],
                                   credstring=self.credential,
-                                  server_name=self.server_name)
+                                  server_name=self.server_name,
+                                  password=PASSWORD)
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=self.credential,
-        server_name=self.server_name)['core_return'],
+        server_name=self.server_name, password=PASSWORD)['core_return'],
             {u'shuey': 64, u'jcollins': 32, u'sharrell': 128, u'jake\xc6': 64})
     self.assertTrue(roster_client_lib.RunFunction(
         u'RemoveUser', USERNAME, args=[u'shuey'], credstring=self.credential,
-        server_name=self.server_name)['core_return'])
+        server_name=self.server_name, password=PASSWORD)['core_return'])
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=self.credential,
-        server_name=self.server_name)['core_return'],
+        server_name=self.server_name, password=PASSWORD)['core_return'],
             {u'jcollins': 32, u'jake\xc6': 64, u'sharrell': 128})
 
   def testKWArgsOnlyClient(self):
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUserGroupAssignments', USERNAME, credstring=self.credential,
-        kwargs={'key_by_group': True}, server_name=self.server_name)[
-            'core_return'], {'bio': ['shuey'], 'cs': ['sharrell', 'shuey']})
+        kwargs={'key_by_group': True}, server_name=self.server_name,
+        password=PASSWORD)['core_return'],
+        {'bio': ['shuey'], 'cs': ['sharrell', 'shuey']})
 
   def testKWArgsAndArgsClient(self):
     roster_client_lib.RunFunction(
           u'MakeUserGroupAssignment', USERNAME, credstring=self.credential,
-          args=[u'sharrell', u'bio'], server_name=self.server_name)[
-              'core_return']
+          args=[u'sharrell', u'bio'], server_name=self.server_name,
+          password=PASSWORD)['core_return']
     self.assertEqual(
         roster_client_lib.RunFunction(
             u'ListUserGroupAssignments', USERNAME, credstring=self.credential,
-            kwargs={'key_by_group': True}, server_name=self.server_name)[
-                'core_return'], {'bio': ['sharrell', 'shuey'],
-                                 'cs': ['sharrell', 'shuey']})
+            kwargs={'key_by_group': True}, server_name=self.server_name,
+            password=PASSWORD)['core_return'], {'bio': ['sharrell', 'shuey'],
+                               'cs': ['sharrell', 'shuey']})
 
   def testMultipleThreadedConnections(self):
     self.daemon_instance.core_die_time = 7200
@@ -210,7 +246,8 @@ class TestXMLServerClient(unittest.TestCase):
                                   credstring=self.credential,
                                   args=['new_zone', 'forward',
                                         'zone.com.'],
-                                  server_name=self.server_name)
+                                  server_name=self.server_name,
+                                  password=PASSWORD)
     client_threads = []
     for current_number in range(50):
       new_client_thread = ClientRecordModifyThread(
@@ -229,7 +266,8 @@ class TestXMLServerClient(unittest.TestCase):
                                   credstring=self.credential,
                                   args=['new_zone', 'forward',
                                         'zone.com.'],
-                                  server_name=self.server_name)
+                                  server_name=self.server_name,
+                                  password=PASSWORD)
 
     cred_dict = {}
     for user_number in range(40):
@@ -239,7 +277,7 @@ class TestXMLServerClient(unittest.TestCase):
                                     args=['user%s' % user_number, 128],
                                     server_name=self.server_name)
       cred_dict['user%s' % user_number] = roster_client_lib.GetCredentials(
-          'user%s' % user_number, u'tost', server_name=self.server_name)
+          'user%s' % user_number, 'tost', server_name=self.server_name)
 
     client_threads = []
     for record_number in range(5):
