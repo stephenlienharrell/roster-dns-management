@@ -1,5 +1,16 @@
 Current Release
 
+2010-01-27 release-0.11
+- Added missing named conf error in tree_exporter.py
+- Added missing soa record error in zone_exporter.py
+- Added sane defaults in dnslstreexport
+- Fixed tree_exporter skipping certain records
+- Fixed view/zone combination in tree_exporter
+- Added soa in any view error in zone_exporter
+- Fixed tree exporter file locations
+- Fixed dnsconfigsync config file location
+- Fixed view dependency conversion in the tree exporter
+
 2009-12-18 release-0.10
 
 2009-12-09 release-0.9

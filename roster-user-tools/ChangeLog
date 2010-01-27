@@ -1,5 +1,11 @@
 Current Release
 
+2010-01-27 release-0.11
+- Fixed dnsmkacl warning with no arguments
+- Fixed make all arugments in dnsmkusergroup and dnsmkzone
+- Fixed DnsError in dnsrmrecord
+- Fixed record being identified as IPv6 when it's not problem.
+
 2009-12-18 release-0.10
 - Moved CheckCredentials function to roster_client_lib from cli_common_lib
 - Made CheckCredentials run when credential file is invalid.
