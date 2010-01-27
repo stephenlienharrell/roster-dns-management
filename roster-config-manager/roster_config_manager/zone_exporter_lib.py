@@ -100,7 +100,8 @@ def FormatRecordsForZone(unsorted_records, origin, zone_name, view_name):
         if( record['view_name'] == u'any' ):
           raise Error('SOA record found in "any" view in "%s" zone.' % (
               record['zone_name']))
-      raise Error('Multiple SOA records found.')
+      raise Error('Multiple SOA records found for "%s" zone "%s" view' % (
+          zone_name, view_name))
   else:
     raise Error('No SOA records found for zone "%s" view "%s"' % (zone_name,
                                                                   view_name))
