@@ -53,7 +53,8 @@ class ZoneImport(object):
   from a file using dns.zone and then use the core API to put it in 
   the database.
   """
-  def __init__(self, zone_file_name, config_file_name, user_name, view=None):
+  def __init__(self, zone_file_name, config_file_name, user_name, zone_view,
+               records_view=None):
     """Sets self.core_instance, self.zone self.domain and self.view.
 
     Inputs:
@@ -67,7 +68,8 @@ class ZoneImport(object):
     self.zone = dns.zone.from_file(zone_file_name)
     self.origin = unicode(self.zone.origin)
     self.zone_name = self.origin.strip('.')
-    self.view = view
+    self.view = records_view
+    self.zone_view = zone_view
 
   def MakeViewAndZone(self):
     """Makes view and zone.
@@ -75,14 +77,14 @@ class ZoneImport(object):
     Inputs:
       self.zone_name: unicode of zone name
     """
-    if( self.view is not None and
-        not self.core_instance.ListViews(view_name=self.view) ):
-      self.core_instance.MakeView(self.view)
+    if( self.zone_view is not None and
+        not self.core_instance.ListViews(view_name=self.zone_view) ):
+      self.core_instance.MakeView(self.zone_view)
    
     existing_zones = self.core_instance.ListZones(zone_origin=self.origin)
     if( not existing_zones ):
       self.core_instance.MakeZone(self.zone_name, u'master',
-                                  self.origin, view_name=self.view)
+                                  self.origin, view_name=self.zone_view)
     else:
       self.zone_name = existing_zones.keys()[0]
 
@@ -137,7 +139,7 @@ class ZoneImport(object):
       cidr_block = self.ReverseZoneToCIDRBlock()
       self.core_instance.MakeReverseRangeZoneAssignment(self.zone_name,
                                                         cidr_block)
-
+    make_record_args_list = []
     for record_tuple in self.zone.items():
       record_target = unicode(record_tuple[0])
 
@@ -203,9 +205,18 @@ class ZoneImport(object):
             print 'Unkown record type: %s.\n %s' % (record_object.rdtype,
                                                     record_object)
             continue
-          self.core_instance.MakeRecord(record_type, record_target,
-                                        self.zone_name, record_args_dict,
-                                        ttl=ttl, view_name=self.view)
-          record_count += 1
+
+          if( record_type == u'soa' ):
+            make_record_args_list.insert(0, (record_type, record_target,
+                                             self.zone_name, record_args_dict,
+                                             self.zone_view, ttl))
+          else:
+            make_record_args_list.append((record_type, record_target,
+                                          self.zone_name, record_args_dict,
+                                          self.view, ttl))
+
+    for make_record_args in make_record_args_list:
+      self.core_instance.MakeRecord(*make_record_args)
+      record_count += 1
 
     return record_count

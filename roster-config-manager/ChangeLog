@@ -1,4 +1,6 @@
 Current Release
+- Reordered records in zone_importer_lib so SOA comes first
+- Fixed bug that was making an extra any view dependency in zone_importer_lib
 - Added duplicate record checking in zone_exporter_lib
 
 2010-01-27 release-0.11

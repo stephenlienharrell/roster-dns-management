@@ -140,8 +140,6 @@ def MakeZoneString(records, zone_origin, argument_definitions, zone_name,
     for record_b in dupe_check_records[next_index:]:
       if( record_a == record_b ):
         raise DuplicateRecordError('Duplicate record: %s' % record_b)
-
-    
     
   records = FormatRecordsForZone(records, zone_origin, zone_name, view_name)
   if( not records.has_key('soa') ):
