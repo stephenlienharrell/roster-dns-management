@@ -94,20 +94,20 @@ class TestZoneExport(unittest.TestCase):
       records, '@', u'sub.university.edu', u'external'),
                      {'bulk': [
                          {'target': u'@', 'ttl': 3600,
-                          'record_type': u'a', 'view_name': u'external',
+                          'record_type': u'a', 'view_name': u'any',
                           'last_user': u'sharrell',
                           'zone_name': u'sub.university.edu',
                           u'assignment_ip': u'192.168.0.1'},
                          {'target': u'desktop-1',
                           'ttl': 3600,
-                          'record_type': u'a', 'view_name': u'external',
+                          'record_type': u'a', 'view_name': u'any',
                           'last_user': u'sharrell',
                           'zone_name': u'sub.university.edu',
                           u'assignment_ip': u'192.168.1.100'},
                          {'target': u'desktop-1',
                           'ttl': 3600,
                           u'hardware': u'PC', 'record_type': u'hinfo',
-                          'view_name': u'external', 'last_user': u'sharrell',
+                          'view_name': u'any', 'last_user': u'sharrell',
                           'zone_name': u'sub.university.edu', u'os': u'NT'},
                          {'target': u'desktop-2',
                           'ttl': 3600,
@@ -117,11 +117,11 @@ class TestZoneExport(unittest.TestCase):
                           u'assignment_ip': u'192.168.2.102'},
                          {'target': u'localhost',
                            'ttl': 3600, 'record_type': u'a',
-                           'view_name': u'external', 'last_user': u'sharrell',
+                           'view_name': u'any', 'last_user': u'sharrell',
                            'zone_name': u'sub.university.edu',
                            u'assignment_ip': u'127.0.0.1'},
                          {'target': u'www', 'ttl': 3600,
-                          'record_type': u'cname', 'view_name': u'external',
+                          'record_type': u'cname', 'view_name': u'any',
                           'last_user': u'sharrell',
                           'zone_name': u'sub.university.edu',
                           u'assignment_host': u'sub.university.edu.'}],
@@ -138,17 +138,17 @@ class TestZoneExport(unittest.TestCase):
                       u'ns': [
                          {'target': u'@',
                           u'name_server': u'ns.university.edu.', 'ttl': 3600,
-                          'record_type': u'ns', 'view_name': u'external',
+                          'record_type': u'ns', 'view_name': u'any',
                           'last_user': u'sharrell',
                           'zone_name': u'sub.university.edu'},
                          {'target': u'@',
                           u'name_server': u'ns2.university.edu.', 'ttl': 3600,
-                          'record_type': u'ns', 'view_name': u'external',
+                          'record_type': u'ns', 'view_name': u'any',
                           'last_user': u'sharrell',
                           'zone_name':u'sub.university.edu'}],
                       u'txt': [
                          {'target': u'@', 'ttl': 3600,
-                          'record_type': u'txt', 'view_name': u'external',
+                          'record_type': u'txt', 'view_name': u'any',
                           'last_user': u'sharrell',
                           'zone_name': u'sub.university.edu',
                           u'quoted_text': u'"Contact 1:  Stephen Harrell '
@@ -156,12 +156,12 @@ class TestZoneExport(unittest.TestCase):
                       u'mx': [
                          {'target': u'@', 'ttl': 3600,
                           u'priority': 10, 'record_type': u'mx',
-                          'view_name': u'external', 'last_user': u'sharrell',
+                          'view_name': u'any', 'last_user': u'sharrell',
                           'zone_name': u'sub.university.edu',
                           u'mail_server': u'mail1.university.edu.'},
                          {'target': u'@', 'ttl': 3600,
                           u'priority': 20, 'record_type': u'mx',
-                          'view_name': u'external', 'last_user': u'sharrell',
+                          'view_name': u'any', 'last_user': u'sharrell',
                           'zone_name': u'sub.university.edu',
                           u'mail_server': u'mail2.university.edu.'}]})
 
@@ -187,6 +187,17 @@ class TestZoneExport(unittest.TestCase):
         'desktop-1 3600 in hinfo PC NT\n'
         'localhost 3600 in a 127.0.0.1\n'
         'www 3600 in cname sub.university.edu.\n')
+
+    self.core_instance.MakeRecord(u'a', u'desktop-1',
+                                  u'sub.university.edu',
+                                  {u'assignment_ip': '192.168.1.100'},
+                                  view_name=u'any')
+    records = self.core_instance.ListRecords(zone_name=u'sub.university.edu')
+    argument_definitions = self.core_instance.ListRecordArgumentDefinitions()
+    self.assertRaises(zone_exporter_lib.DuplicateRecordError,
+                      zone_exporter_lib.MakeZoneString, records, 
+                      u'sub.university.edu.', argument_definitions,
+                      u'sub.university.edu', u'external')
 
 
 if( __name__ == '__main__' ):
