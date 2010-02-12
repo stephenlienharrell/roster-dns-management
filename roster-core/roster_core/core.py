@@ -2461,7 +2461,8 @@ class Core(object):
                     'record_arguments_records_assignments',
                     search_args, update_args)
         else:
-          raise errors.CoreError('Duplicate records found.')
+          raise errors.CoreError('Multiple records found for used search '
+                                 'terms.')
         if( update_view_name is None ):
           update_view_name = search_view_name
         if( update_zone_name is None ):
@@ -2568,7 +2569,8 @@ class Core(object):
                     records_dict['record_ttl']))
           self.db_instance.RemoveRow('records', new_records[0])
         else:
-          raise errors.CoreError('Duplicate records found.')
+          raise errors.CoreError('Multiple records found for used search '
+                                 'terms.')
         missing_ok = False
         if( record_type == u'soa' ):
           missing_ok = True
