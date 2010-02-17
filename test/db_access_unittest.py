@@ -211,26 +211,24 @@ class TestdbAccess(unittest.TestCase):
     search_dict['acl_name'] = u'test'
     self.assertEquals((), self.db_instance.ListRow('acls', search_dict))
 
-    self.db_instance.MakeRow('acls', {'acl_name': u'test',
-                                      'acl_range_allowed': 1,
-                                      'acl_cidr_block': '192.168.0/24'})
+    self.db_instance.MakeRow('acls', {'acl_name': u'test'})
 
     rows = self.db_instance.ListRow('acls', search_dict)
     self.assertNotEquals(rows, ())
     self.assertEquals(len(rows), 1)
-    self.assertEquals(rows[0]['acl_range_allowed'], 1)
+    self.assertEquals(rows[0]['acl_name'], u'test')
 
     update_dict = self.db_instance.GetEmptyRowDict('acls')
-    update_dict['acl_range_allowed'] = 0
+    update_dict['acl_name'] = u'test2'
     self.db_instance.UpdateRow('acls', search_dict, update_dict)
-    rows = self.db_instance.ListRow('acls', search_dict)
+    rows = self.db_instance.ListRow('acls', update_dict)
     self.assertNotEquals(rows, ())
     self.assertEquals(len(rows), 1)
-    self.assertEquals(rows[0]['acl_range_allowed'], 0)
+    self.assertFalse(self.db_instance.ListRow('acls', search_dict))
 
     self.assertTrue(self.db_instance.RemoveRow('acls', rows[0]))
 
-    self.assertFalse(self.db_instance.ListRow('acls', search_dict))
+    self.assertFalse(self.db_instance.ListRow('acls', update_dict))
 
     users_dict = self.db_instance.GetEmptyRowDict('users')
     user_group_assignments_dict = (
@@ -357,7 +355,7 @@ class TestdbAccess(unittest.TestCase):
     self.db_instance.StartTransaction()
     self.assertEqual(
       self.db_instance.ListTableNames(),
-      [u'acls', u'audit_log', u'credentials', u'data_types',
+      [u'acl_ranges', u'acls', u'audit_log', u'credentials', u'data_types',
        u'dns_server_set_assignments', u'dns_server_set_view_assignments',
        u'dns_server_sets', u'dns_servers', u'forward_zone_permissions',
        u'groups', u'locks', u'named_conf_global_options', u'record_arguments',

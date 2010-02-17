@@ -139,6 +139,7 @@ DROP TABLE IF EXISTS `dns_servers`;
 DROP TABLE IF EXISTS `view_dependency_assignments`;
 DROP TABLE IF EXISTS `view_acl_assignments`;
 DROP TABLE IF EXISTS `views`;
+DROP TABLE IF EXISTS `acl_ranges`;
 DROP TABLE IF EXISTS `acls`;
 DROP TABLE IF EXISTS `record_arguments_records_assignments`;
 DROP TABLE IF EXISTS `records`;
@@ -367,15 +368,28 @@ CREATE TABLE `record_arguments_records_assignments` (
 
 CREATE TABLE `acls` (
 
-  `acl_id` mediumint unsigned NOT NULL auto_increment,
+  `acl_id` smallint unsigned NOT NULL auto_increment,
   `acl_name` varchar(255) NOT NULL,
-  `acl_range_allowed` boolean,
-  `acl_cidr_block` varchar(43),
 
   PRIMARY KEY (`acl_id`),
   INDEX `acl_name_1` (`acl_name`),
+  CONSTRAINT `acl_name_3` UNIQUE (`acl_name`)
 
-  CONSTRAINT `acl_name_cidr_block_1` UNIQUE (`acl_name`, `acl_cidr_block`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `acl_ranges` (
+  `acl_range_id` mediumint unsigned NOT NULL auto_increment,
+  `acl_ranges_acl_name` varchar(255) NOT NULL,
+  `acl_range_allowed` boolean,
+  `acl_range_cidr_block` varchar(43),
+
+  PRIMARY KEY (`acl_range_id`),
+
+  CONSTRAINT `acl_name_cidr_block_1` UNIQUE 
+      (`acl_ranges_acl_name`, `acl_range_cidr_block`),
+  CONSTRAINT `acl_name_1` FOREIGN KEY (`acl_ranges_acl_name`)
+    REFERENCES `acls` (`acl_name`) ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -400,7 +414,7 @@ CREATE TABLE `view_acl_assignments` (
 
   PRIMARY KEY (`view_acl_assignments_id`),
 
-  CONSTRAINT `acl_name_1` FOREIGN KEY (`view_acl_assignments_acl_name`)
+  CONSTRAINT `acl_name_2` FOREIGN KEY (`view_acl_assignments_acl_name`)
     REFERENCES `acls` (`acl_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `view_name_2` FOREIGN KEY (`view_acl_assignments_view_name`)
     REFERENCES `views` (`view_name`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -675,5 +689,7 @@ INSERT INTO record_arguments (record_arguments_type, argument_name,
 INSERT INTO reserved_words (reserved_word) VALUES ('damn');
 
 # make acl any keyword for named.conf
-INSERT INTO acls (acl_name, acl_range_allowed) VALUES ('any', 1);
+INSERT INTO acls (acl_name) VALUES ('any');
+INSERT INTO acl_ranges (acl_ranges_acl_name, acl_range_allowed) VALUES 
+    ('any', 1);
 """

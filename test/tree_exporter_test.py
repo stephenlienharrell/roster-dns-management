@@ -1017,17 +1017,21 @@ class TestTreeExporter(unittest.TestCase):
     ## Make ACLs
     acls_dict = {}
     acls_dict['acl_name'] = u'public'
-    acls_dict['acl_range_allowed'] = 1
-    acls_dict['acl_cidr_block'] = u'192.168.1.4/30'
-    db_instance.MakeRow('acls', acls_dict)
-    acls_dict['acl_name'] = u'public'
-    acls_dict['acl_range_allowed'] = 1
-    acls_dict['acl_cidr_block'] = u'10.10/32'
     db_instance.MakeRow('acls', acls_dict)
     acls_dict['acl_name'] = u'secret'
-    acls_dict['acl_range_allowed'] = 0
-    acls_dict['acl_cidr_block'] = u'10.10/32'
     db_instance.MakeRow('acls', acls_dict)
+    acl_ranges_dict = {}
+    acl_ranges_dict['acl_ranges_acl_name'] = u'public'
+    acl_ranges_dict['acl_range_allowed'] = 1
+    acl_ranges_dict['acl_range_cidr_block'] = u'192.168.1.4/30'
+    db_instance.MakeRow('acl_ranges', acl_ranges_dict)
+    acl_ranges_dict['acl_range_allowed'] = 1
+    acl_ranges_dict['acl_range_cidr_block'] = u'10.10/32'
+    db_instance.MakeRow('acl_ranges', acl_ranges_dict)
+    acl_ranges_dict['acl_ranges_acl_name'] = u'secret'
+    acl_ranges_dict['acl_range_allowed'] = 0
+    acl_ranges_dict['acl_range_cidr_block'] = u'10.10/32'
+    db_instance.MakeRow('acl_ranges', acl_ranges_dict)
 
     ## Make view ACL assignments
     view_acl_assignments_dict = {}

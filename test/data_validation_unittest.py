@@ -128,50 +128,52 @@ class TestDataValidation(unittest.TestCase):
         '09-06-04 05:25:30'))
 
   def testValidateAclsDict(self):
-    acls_dict = {'acl_range_allowed': None,
-                 'acl_cidr_block': None}
+    acl_ranges_dict = {'acl_range_allowed': None,
+                       'acl_range_cidr_block': None}
     self.assertRaises(data_validation.InvalidInputError,
-                      self.data_validation_instance.ValidateRowDict, 'acls',
-                      acls_dict)
+                      self.data_validation_instance.ValidateRowDict,
+                      'acl_ranges', acl_ranges_dict)
 
-    acls_dict['acl_name'] = None
+    acl_ranges_dict['acl_ranges_acl_name'] = None
 
     self.assertRaises(data_validation.UnexpectedDataError,
-                      self.data_validation_instance.ValidateRowDict, 'acls',
-                      acls_dict, True)
+                      self.data_validation_instance.ValidateRowDict,
+                      'acl_ranges', acl_ranges_dict, True)
 
-    self.data_validation_instance.ValidateRowDict('acls', acls_dict,
+    self.data_validation_instance.ValidateRowDict('acl_ranges', acl_ranges_dict,
                                                   none_ok=True,
                                                   all_none_ok=True)
 
     self.assertRaises(data_validation.UnexpectedDataError,
-                      self.data_validation_instance.ValidateRowDict, 'acls',
-                      acls_dict, False)
+                      self.data_validation_instance.ValidateRowDict,
+                      'acl_ranges', acl_ranges_dict, False)
 
-    acls_dict['acl_cidr_block'] = '192.168.0.1'
+    acl_ranges_dict['acl_range_cidr_block'] = '192.168.0.1'
 
     self.assertRaises(data_validation.UnexpectedDataError,
-                      self.data_validation_instance.ValidateRowDict, 'acls',
-                      acls_dict, False)
-    self.data_validation_instance.ValidateRowDict('acls', acls_dict, 
+                      self.data_validation_instance.ValidateRowDict,
+                      'acl_ranges', acl_ranges_dict, False)
+    self.data_validation_instance.ValidateRowDict('acl_ranges',
+                                                  acl_ranges_dict, 
                                                   none_ok=True)
     
 
-    acls_dict['acl_name'] = u'name'
+    acl_ranges_dict['acl_ranges_acl_name'] = u'name'
 
     self.assertRaises(data_validation.UnexpectedDataError,
-                      self.data_validation_instance.ValidateRowDict, 'acls',
-                      acls_dict, False)
-    self.data_validation_instance.ValidateRowDict('acls', acls_dict,
+                      self.data_validation_instance.ValidateRowDict,
+                      'acl_ranges',
+                      acl_ranges_dict, False)
+    self.data_validation_instance.ValidateRowDict('acl_ranges', acl_ranges_dict,
                                                   none_ok=True)
 
-    acls_dict['acl_range_allowed'] = 1
-    acls_dict['acl_cidr_block'] = None
+    acl_ranges_dict['acl_range_allowed'] = 1
+    acl_ranges_dict['acl_range_cidr_block'] = None
 
     self.assertRaises(data_validation.UnexpectedDataError,
-                      self.data_validation_instance.ValidateRowDict, 'acls',
-                      acls_dict, False)
-    self.data_validation_instance.ValidateRowDict('acls', acls_dict,
+                      self.data_validation_instance.ValidateRowDict,
+                      'acl_ranges', acl_ranges_dict, False)
+    self.data_validation_instance.ValidateRowDict('acl_ranges', acl_ranges_dict,
                                                   none_ok=True)
 
   def testTableEnumerationAndValidationConsistency(self):

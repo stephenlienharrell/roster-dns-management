@@ -211,7 +211,8 @@ SUPPORTED_METHODS = {
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
 
-    'UpdateACL':    {'check': False,
+    'RemoveCIDRBlockFromACL':
+                    {'check': False,
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
 
@@ -417,9 +418,11 @@ TABLES = {
          'record_arguments_records_assignments_argument_name': 'UnicodeString',
          'argument_value': 'UnicodeString'},
 
-    'acls':              {'acl_name': 'UnicodeString',
+    'acls':              {'acl_name': 'UnicodeString'},
+
+    'acl_ranges':        {'acl_ranges_acl_name': 'UnicodeString',
                           'acl_range_allowed': 'IntBool',
-                          'acl_cidr_block': 'CIDRBlock'},
+                          'acl_range_cidr_block': 'CIDRBlock'},
 
     'views':             {'view_name': 'UnicodeString',
                           # This should probably be it's own data type

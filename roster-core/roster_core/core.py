@@ -472,22 +472,22 @@ class Core(object):
                                            'range_allowed': 0}]}
     """
     self.user_instance.Authorize('ListACLs')
-    acl_dict = self.db_instance.GetEmptyRowDict('acls')
-    acl_dict['acl_name'] = acl_name
-    acl_dict['acl_cidr_block'] = cidr_block
+    acl_dict = self.db_instance.GetEmptyRowDict('acl_ranges')
+    acl_dict['acl_ranges_acl_name'] = acl_name
+    acl_dict['acl_range_cidr_block'] = cidr_block
     acl_dict['acl_range_allowed'] = range_allowed
     self.db_instance.StartTransaction()
     try:
-      acls = self.db_instance.ListRow('acls', acl_dict)
+      acls = self.db_instance.ListRow('acl_ranges', acl_dict)
     finally:
       self.db_instance.EndTransaction()
 
     acl_cidr_range_dict = {}
     for acl in acls:
-      if( not acl_cidr_range_dict.has_key(acl['acl_name']) ):
-        acl_cidr_range_dict[acl['acl_name']] = []
-      acl_cidr_range_dict[acl['acl_name']].append(
-          {'cidr_block': acl['acl_cidr_block'],
+      if( not acl_cidr_range_dict.has_key(acl['acl_ranges_acl_name']) ):
+        acl_cidr_range_dict[acl['acl_ranges_acl_name']] = []
+      acl_cidr_range_dict[acl['acl_ranges_acl_name']].append(
+          {'cidr_block': acl['acl_range_cidr_block'],
            'range_allowed': acl['acl_range_allowed']})
 
     return acl_cidr_range_dict
@@ -505,14 +505,17 @@ class Core(object):
       CoreError  Raised for any internal problems.
     """
     self.user_instance.Authorize('MakeACL')
-    acls_dict = {'acl_name': acl_name,
-                 'acl_cidr_block': cidr_block,
-                 'acl_range_allowed': range_allowed}
+    acls_dict = {'acl_name': acl_name}
+    acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
+                       'acl_range_cidr_block': cidr_block,
+                       'acl_range_allowed': range_allowed}
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        self.db_instance.MakeRow('acls', acls_dict)
+        if( not self.db_instance.ListRow('acls', acls_dict) ):
+          self.db_instance.MakeRow('acls', acls_dict)
+        self.db_instance.MakeRow('acl_ranges', acl_ranges_dict)
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -525,14 +528,11 @@ class Core(object):
                                                          range_allowed),
                                   success)
 
-  def RemoveACL(self, acl_name=None, cidr_block=None, range_allowed=None):
+  def RemoveACL(self, acl_name):
     """Removes an acl from args. Will also remove relevant acl-view assignments.
 
     Inputs:
       acl_name: string of acl name
-      cidr_block: string of valid CIDR block or IP address
-      range_allowed: integer boolean of if the acl is allowing or disallowing
-                     the ip range
 
     Raises:
       CoreError  Raised for any internal problems.
@@ -541,18 +541,14 @@ class Core(object):
       int: number of rows modified
     """
     self.user_instance.Authorize('RemoveACL')
-    acl_dict = {'acl_name': acl_name,
-                'acl_cidr_block': cidr_block,
-                'acl_range_allowed': range_allowed}
+    acls_dict = {'acl_name': acl_name}
+
     row_count = 0
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        found_acls = self.db_instance.ListRow('acls', acl_dict, lock_rows=True)
-        if( found_acls ):
-          for found_acl in found_acls:
-            row_count += self.db_instance.RemoveRow('acls', found_acl)
+         row_count += self.db_instance.RemoveRow('acls', acls_dict)
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -560,33 +556,18 @@ class Core(object):
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveACL', u'acl_name: %s cidr_block: %s '
-                                  'range_allowed: %s' % (acl_name, cidr_block,
-                                                         range_allowed),
-                                  success)
+                                  u'RemoveACL', u'acl_name: %s' % (
+                                      acl_name), success)
     return row_count
 
-  def UpdateACL(self, search_acl_name=None, search_cidr_block=None,
-                search_range_allowed=None, update_acl_name=None,
-                update_cidr_block=None, update_range_allowed=None):
-    """Updates an acl from search_dict with params in update_dict.
 
-    Will also update any relevant acl-view assignments.
-
-    It should be known that this table in the database is unique only on
-    acl_name and cidr_block as a pair. What this means is that there are
-    most likely multiple entries per acl_name and cidr_block.
+  def RemoveCIDRBlockFromACL(self, acl_name, cidr_block, range_allowed=None):
+    """Makes CIDR Block from ACL
 
     Inputs:
-      search_acl_name: string of acl name to be modified
-      search_cidr_block: string of valid CIDR block or IP address to be modified
-      search_range_allowed: integer boolean of if the acl is allowing or
-                            disallowing  the ip range to be modified
-      update_acl_name: string of acl name to overwrite old value
-      update_cidr_block: string of valid CIDR block or IP address to overwrite
-                         old value
-      update_range_allowed: integer boolean of if the acl is allowing or
-                            disallowing the ip range to overwrite old value
+      acl_name: string of acl name
+      cidr_block: string of valid CIDR block or IP address
+      range_allowed: Int bool of if range should be allowed or denied
 
     Raises:
       CoreError  Raised for any internal problems.
@@ -594,18 +575,21 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('UpdateACL')
-    search_dict = {'acl_name': search_acl_name,
-                   'acl_cidr_block': search_cidr_block,
-                   'acl_range_allowed': search_range_allowed}
-    update_dict = {'acl_name': update_acl_name,
-                   'acl_cidr_block': update_cidr_block,
-                   'acl_range_allowed': update_range_allowed}
+    self.user_instance.Authorize('RemoveCIDRBlockFromACL')
+    acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
+                       'acl_range_cidr_block': cidr_block,
+                       'acl_range_allowed': range_allowed}
+
+    row_count = 0
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        row_count = self.db_instance.UpdateRow('acls', search_dict, update_dict)
+         # Will only be one ACL because acl_name/cidr_block are unique
+         acls = self.db_instance.ListRow('acl_ranges', acl_ranges_dict)
+         if( acls ):
+           row_count += self.db_instance.RemoveRow('acl_ranges',
+                                                   acls[0])
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -613,15 +597,11 @@ class Core(object):
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'UpdateACL', u'search_acl_name: %s '
-                                  'search_cidr_block: %s search_range_allowed: '
-                                  '%s update_acl_name: %s update_cidr_block: '
-                                  '%s update_range_allowed %s' % (
-                                      search_acl_name, search_cidr_block,
-                                      search_range_allowed, update_acl_name,
-                                      update_cidr_block, update_range_allowed),
-                                  success)
+                                  u'RemoveCIDRBlockFromACL',
+                                  u'acl_name: %s cidr_block: %s' % (
+                                      acl_name, cidr_block), success)
     return row_count
+
 
   def ListDnsServers(self):
     """List dns servers.

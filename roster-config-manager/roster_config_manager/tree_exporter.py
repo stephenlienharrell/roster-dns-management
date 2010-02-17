@@ -217,16 +217,21 @@ class BindTreeExport(object):
           dns_server_set))
     named_conf_lines.append(named_conf_header)
     named_conf_lines.extend(['options {', '  directory "/etc/named";', '};'])
-    for acl in data['acls']:
-      if( not acl['acl_name'] in acl_dict ):
-        acl_dict[acl['acl_name']] = {}
-      if( acl['acl_cidr_block'] is None ):
-        acl_dict[acl['acl_cidr_block']] = None
+    for acl_range in data['acl_ranges']:
+      if( not acl_range['acl_ranges_acl_name'] in acl_dict ):
+        acl_dict[acl_range['acl_ranges_acl_name']] = {}
+      if( acl_range['acl_range_cidr_block'] is None ):
+        acl_dict[acl_range['acl_range_cidr_block']] = None
       else:
-        if( not acl['acl_cidr_block'] in acl_dict[acl['acl_name']] ):
-          acl_dict[acl['acl_name']][acl['acl_cidr_block']] = {}
-        acl_dict[acl['acl_name']][acl['acl_cidr_block']] = acl[
-            'acl_range_allowed']
+        if( not acl_range['acl_range_cidr_block'] in
+            acl_dict[acl_range['acl_ranges_acl_name']] ):
+          acl_dict[
+              acl_range['acl_ranges_acl_name']][acl_range[
+                  'acl_range_cidr_block']] = {}
+        acl_dict[
+            acl_range['acl_ranges_acl_name']][acl_range[
+              'acl_range_cidr_block']] = acl_range['acl_range_allowed']
+
     for acl in acl_dict:
       if( acl_dict[acl] is not None and acl != 'any' ):
         named_conf_lines.append('acl %s {' % acl)
@@ -314,8 +319,8 @@ class BindTreeExport(object):
     data['view_acl_assignments'] = self.db_instance.ListRow(
         'view_acl_assignments', view_acl_assignments_dict)
 
-    acls_dict = self.db_instance.GetEmptyRowDict('acls')
-    data['acls'] = self.db_instance.ListRow('acls', acls_dict)
+    acl_ranges_dict = self.db_instance.GetEmptyRowDict('acl_ranges')
+    data['acl_ranges'] = self.db_instance.ListRow('acl_ranges', acl_ranges_dict)
 
     record_arguments_records_assignments_dict = (
         self.db_instance.GetEmptyRowDict(
