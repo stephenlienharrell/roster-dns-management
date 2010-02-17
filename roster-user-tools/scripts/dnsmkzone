@@ -152,11 +152,18 @@ def main(args):
                'zone_origin: %s zone_options: %s view_name: %s' % (
                    options.zone, options.type, options.origin, options.options,
                    options.view))
-      roster_client_lib.RunFunction(
-          u'MakeReverseRangeZoneAssignment', options.username,
+      reverse_range_zone_assignments = roster_client_lib.RunFunction(
+          u'ListReverseRangeZoneAssignments', options.username,
           credfile=options.credfile, credstring=options.credstring,
           server_name=options.server,
-          args=[options.zone, options.cidr_block])
+          kwargs={'zone_name': options.zone, 'cidr_block': options.cidr_block})[
+              'core_return']
+      if( len(reverse_range_zone_assignments) == 0 ):
+        roster_client_lib.RunFunction(
+            u'MakeReverseRangeZoneAssignment', options.username,
+            credfile=options.credfile, credstring=options.credstring,
+            server_name=options.server,
+            args=[options.zone, options.cidr_block])
       if( not options.quiet ):
         print ('ADDED REVERSE RANGE ZONE ASSIGNMENT: zone_name: %s '
                'cidr_block: %s ' % (
