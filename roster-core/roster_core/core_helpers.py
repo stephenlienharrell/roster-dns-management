@@ -282,8 +282,6 @@ class CoreHelpers(object):
     if( user_cidr.version() == 6 ):
       record_type = u'aaaa'
     zones = self.core_instance.ListZones()
-    if( not view_name ):
-      view_name = u'any'
 
     ptr_record_list = []
     fwd_record_list = []
@@ -299,6 +297,12 @@ class CoreHelpers(object):
 
     fwd_dict = self.db_instance.GetEmptyRowDict('records')
     fwd_dict['record_type'] = record_type
+    if( not view_name ):
+      view_name = u'any'
+    elif( view_name.endswith('_dep') or view_name == u'any' ):
+      fwd_dict['record_view_dependency'] = view_name
+    else:
+      fwd_dict['record_view_dependency'] = '%s_dep' % view_name
     fwd_args_dict = self.db_instance.GetEmptyRowDict(
         'record_arguments_records_assignments')
     fwd_args_dict['record_arguments_records_assignments_argument_name'] = (

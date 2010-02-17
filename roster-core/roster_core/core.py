@@ -2523,6 +2523,7 @@ class Core(object):
     try:
       self.db_instance.StartTransaction()
       try:
+        new_records = self.db_instance.ListRow('records', records_dict)
         args_search_list = []
         record_ids = []
         final_id = []
@@ -2543,12 +2544,13 @@ class Core(object):
               record_id_dict[search_id] = 1
         for record_id in record_id_dict:
           if( record_id_dict[record_id] == len(args_list) ):
-            final_id.append(record_id)
+            for record in new_records:
+              if( record['records_id'] == record_id ):
+                final_id.append(record_id)
         if( len(final_id) == 0 ):
           raise errors.CoreError('No records found.')
         elif( len(final_id) == 1 ):
           records_dict['records_id'] = final_id[0]
-          new_records = self.db_instance.ListRow('records', records_dict)
           if( len(new_records) == 0 ):
             raise errors.CoreError(
                 'Tried to find record with ID "%s" type "%s" target "%s" '

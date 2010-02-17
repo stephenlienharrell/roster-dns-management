@@ -1,4 +1,5 @@
 Current Release
+- Fixed dnsrmhost's duplicate errors
 
 2010-01-27 release-0.11
 - Fixed dnsmkacl warning with no arguments
