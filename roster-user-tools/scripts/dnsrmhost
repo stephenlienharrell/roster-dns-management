@@ -70,9 +70,6 @@ def main(args):
   parser.add_option('-t', '--target', action='store', dest='target',
                     help='Target machine host name.', metavar='<target>',
                     default=None)
-  parser.add_option('-l', '--list', action='store_true', dest='list_data',
-                    help='Set this flag to only list DNS configuration without'
-                         ' making any changes.', default=False)
   parser.add_option('--ttl', action='store', dest='ttl',
                     help='Time to live.', metavar='<ttl>', default=3600)
   parser.add_option('-z', '--zone', action='store', dest='zone_name',
@@ -112,76 +109,69 @@ def main(args):
     else:
       cli_common_lib_instance.DnsError('Incorrectly formatted IP address.', 1)
 
-    if( options.list_data ):
-      records_dict = roster_client_lib.RunFunction(
-          'ListRecordsByCIDRBlock', options.username, credfile=options.credfile,
-          server_name=options.server, args=[options.ip_address],
-          kwargs={'view_name': options.view_name})['core_return']
-      print cli_common_lib_instance.PrintRecords(records_dict, [options.ip_address])
+    records_dict = roster_client_lib.RunFunction(
+        'ListRecordsByCIDRBlock', options.username, credfile=options.credfile,
+        server_name=options.server, args=[options.ip_address],
+        kwargs={'view_name': options.view_name})['core_return']
+    reverse_zone_name = roster_client_lib.RunFunction(
+        'ListZoneByIPAddress', options.username, credfile=options.credfile,
+        server_name=options.server, args=[options.ip_address])['core_return']
+    zone_info = roster_client_lib.RunFunction(
+        'ListZones', options.username, credfile=options.credfile,
+        server_name=options.server, kwargs={'zone_name': reverse_zone_name})[
+            'core_return']
+    try:
+      reverse_zone_origin = zone_info[reverse_zone_name][
+          options.view_name]['zone_origin']
+    except KeyError:
+      cli_common_lib_instance.DnsError('Reverse zone not found.', 1)
+    try:
+      records_list = []
+      for record in records_dict[options.view_name][options.ip_address]:
+        if( record['zone'] == options.zone_name ):
+          records_list.append(record)
+    except KeyError:
+      cli_common_lib_instance.DnsError('Record not found.', 1)
+    if( len(records_list) == 0 ):
+      cli_common_lib_instance.DnsError('Record not found.', 1)
+    if( len(records_list) == 1 ):
+      hostname = records_list[0]['host']
+      if( not hostname.endswith('.') ):
+        hostname = '%s.' % hostname
     else:
-      records_dict = roster_client_lib.RunFunction(
-          'ListRecordsByCIDRBlock', options.username, credfile=options.credfile,
-          server_name=options.server, args=[options.ip_address],
-          kwargs={'view_name': options.view_name})['core_return']
-      reverse_zone_name = roster_client_lib.RunFunction(
-          'ListZoneByIPAddress', options.username, credfile=options.credfile,
-          server_name=options.server, args=[options.ip_address])['core_return']
-      zone_info = roster_client_lib.RunFunction(
-          'ListZones', options.username, credfile=options.credfile,
-          server_name=options.server, kwargs={'zone_name': reverse_zone_name})[
-              'core_return']
-      try:
-        reverse_zone_origin = zone_info[reverse_zone_name][
-            options.view_name]['zone_origin']
-      except KeyError:
-        cli_common_lib_instance.DnsError('Reverse zone not found.', 1)
-      try:
-        records_list = []
-        for record in records_dict[options.view_name][options.ip_address]:
-          if( record['zone'] == options.zone_name ):
-            records_list.append(record)
-      except KeyError:
-        cli_common_lib_instance.DnsError('Record not found.', 1)
-      if( len(records_list) == 0 ):
-        cli_common_lib_instance.DnsError('Record not found.', 1)
-      if( len(records_list) == 1 ):
-        hostname = records_list[0]['host']
-        if( not hostname.endswith('.') ):
-          hostname = '%s.' % hostname
+      cli_common_lib_instance.DnsError('Multiple records found.', 1)
+    record_type = u'a'
+    if( version == 6 ):
+      record_type = u'aaaa'
+    try:
+      cli_record_lib_instance.RemoveRecord(record_type, options,
+                                  {u'assignment_ip': options.ip_address},
+                                  quiet=options.quiet, raise_errors=True)
+      removed_type = True
+    except xmlrpclib.Fault, error:
+      error_string = error.faultString.split(':')[1]
+      if(  error_string == 'Record not found.' ):
+        removed_type = False
       else:
-        cli_common_lib_instance.DnsError('Multiple records found.', 1)
-      record_type = u'a'
-      if( version == 6 ):
-        record_type = u'aaaa'
-      try:
-        cli_record_lib_instance.RemoveRecord(record_type, options,
-                                    {u'assignment_ip': options.ip_address},
-                                    quiet=options.quiet, raise_errors=True)
-        removed_type = True
-      except xmlrpclib.Fault, error:
-        error_string = error.faultString.split(':')[1]
-        if(  error_string == 'Record not found.' ):
-          removed_type = False
-        else:
-          raise
-      reverse_ip = roster_client_lib.RunFunction(
-          'ReverseIP', options.username, credfile=options.credfile,
-          server_name=options.server, args=[options.ip_address])['core_return']
-      options.zone_name = reverse_zone_name
-      options.target = reverse_ip
-      try:
-        cli_record_lib_instance.RemoveRecord(u'ptr', options,
-                                    {u'assignment_host': hostname},
-                                    quiet=options.quiet, raise_errors=True)
-        removed_ptr = True
-      except xmlrpclib.Fault, error:
-        error_string = error.faultString.split(':')[1]
-        if( error_string == 'No records found.' ):
-          removed_ptr = False
-        else:
-          raise
-      if( not removed_type and not removed_ptr ):
-        cli_common_lib_instance.DnsError('Record not found.')
+        raise
+    reverse_ip = roster_client_lib.RunFunction(
+        'ReverseIP', options.username, credfile=options.credfile,
+        server_name=options.server, args=[options.ip_address])['core_return']
+    options.zone_name = reverse_zone_name
+    options.target = reverse_ip
+    try:
+      cli_record_lib_instance.RemoveRecord(u'ptr', options,
+                                  {u'assignment_host': hostname},
+                                  quiet=options.quiet, raise_errors=True)
+      removed_ptr = True
+    except xmlrpclib.Fault, error:
+      error_string = error.faultString.split(':')[1]
+      if( error_string == 'No records found.' ):
+        removed_ptr = False
+      else:
+        raise
+    if( not removed_type and not removed_ptr ):
+      cli_common_lib_instance.DnsError('Record not found.')
 
 
   elif( options.range is not None ):

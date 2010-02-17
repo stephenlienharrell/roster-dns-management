@@ -230,58 +230,41 @@ class Testdnsrmhost(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
-  def testListSingleIP(self):
-    output = os.popen('python %s -i 192.168.0.5 -l '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name,
-                          USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
-        '192.168.0.5 Forward host3.university.edu forward_zone any\n\n')
-    output.close()
-    output = os.popen('python %s -i 192.168.0.4 -l '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name,
-                          USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        '192.168.0.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
-    output.close()
-
   def testRemoveHost(self):
-    output = os.popen('python %s -i 192.168.0.5 -l '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name,
-                          USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
-        '192.168.0.5 Forward host3.university.edu forward_zone any\n\n')
-    output.close()
+    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'192.168.0/24', view_name=u'test_view'),
+        {u'test_view': {u'192.168.0.8':
+            [{u'forward': False, u'host': u'host6.university.edu',
+              'zone_origin': u'0.168.192.in-addr.arpa.',
+              u'zone': u'reverse_zone'},
+        {u'forward': True, u'host': u'host6.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.1': [{u'forward': True, u'host': u'host1.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.10': [{u'forward': True, u'host': u'host4.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.5': [{u'forward': False, u'host': u'host3.university.edu',
+         'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'},
+        {u'forward': True, u'host': u'host3.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
     output = os.popen('python %s -q -i 192.168.0.5 '
                       '-z forward_zone -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     output.close()
-    output = os.popen('python %s -i 192.168.0.5 -l '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name,
-                          USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), '\n')
-    output.close()
-
-  def testListCIDR(self):
-    output = os.popen('python %s -r 192.168.0.4/30 -z '
-                      'forward_zone -v test_view -s %s -u %s -p %s '
-                      '--config-file %s' % (
-                           EXEC, self.server_name,
-                           USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        '192.168.0.4 --      --                   --           --\n'
-        '192.168.0.5 Reverse host3.university.edu reverse_zone test_view\n'
-        '192.168.0.5 Forward host3.university.edu forward_zone test_view\n'
-        '192.168.0.6 --      --                   --           --\n'
-        '192.168.0.7 --      --                   --           --\n\n')
-    output.close()
+    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'192.168.0/24', view_name=u'test_view'),
+        {u'test_view': {u'192.168.0.8':
+            [{u'forward': False, u'host': u'host6.university.edu',
+              'zone_origin': u'0.168.192.in-addr.arpa.',
+              u'zone': u'reverse_zone'},
+        {u'forward': True, u'host': u'host6.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.1': [{u'forward': True, u'host': u'host1.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.10': [{u'forward': True, u'host': u'host4.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
 
   def testErrors(self):
     output = os.popen('python %s -i notipaddress -t '
