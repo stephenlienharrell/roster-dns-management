@@ -50,6 +50,7 @@ import roster_core
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 ZONE_FILE = 'test_data/test_zone.db'
 REVERSE_ZONE_FILE = 'test_data/test_reverse_zone.db'
+REVERSE_IPV6_ZONE_FILE = 'test_data/test_reverse_ipv6_zone.db'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 
@@ -98,6 +99,16 @@ class TestZoneImport(unittest.TestCase):
                       importer_instance.ReverseZoneToCIDRBlock)
     importer_instance.origin = '0.10.in-addr.arpa.'
     self.assertEqual(importer_instance.ReverseZoneToCIDRBlock(), '10.0/16')
+    importer_instance.origin = '4.5.6.7.8.9.1.f.3.3.0.8.e.f.f.3.ip6.arpa.'
+    self.assertEqual(importer_instance.ReverseZoneToCIDRBlock(),
+                     '3ffe:8033:f198:7654:0000:0000:0000:0000/64')
+    importer_instance.origin = '4.8.e.f.f.3.ip6.arpa.'
+    self.assertEqual(importer_instance.ReverseZoneToCIDRBlock(),
+                     '3ffe:8400:0000:0000:0000:0000:0000:0000/24')
+    importer_instance.origin = '4.8.e.f.f.z.ip6.arpa.'
+    self.assertRaises(zone_importer_lib.Error,
+                      importer_instance.ReverseZoneToCIDRBlock)
+
 
   def testFixHostname(self):
     importer_instance = zone_importer_lib.ZoneImport(ZONE_FILE,
@@ -118,7 +129,7 @@ class TestZoneImport(unittest.TestCase):
                                                      u'external')
     importer_instance.MakeRecordsFromZone()
     self.assertEquals(self.core_instance.ListRecords(record_type=u'soa'),
-                      [{u'serial_number': 805, u'refresh_seconds': 10800,
+                      [{u'serial_number': 806, u'refresh_seconds': 10800,
                         'target': u'@',
                         u'name_server': u'ns.university.edu.',
                         u'retry_seconds': 3600, 'ttl': 3600,
@@ -183,6 +194,11 @@ class TestZoneImport(unittest.TestCase):
                         u'hardware': u'PC', 'record_type': u'hinfo',
                         'view_name': u'any', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu', u'os': u'NT'}])
+    self.assertEquals(self.core_instance.ListRecords(record_type=u'aaaa'),
+                      [{'target': u'desktop-1', 'ttl': 3600, 'record_type':
+                        u'aaaa', 'view_name': u'any', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu', u'assignment_ip':
+                        u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'}])
 
   def testMakeRecordsFromReverseZone(self):
     importer_instance = zone_importer_lib.ZoneImport(REVERSE_ZONE_FILE,
@@ -208,6 +224,29 @@ class TestZoneImport(unittest.TestCase):
                         'last_user': u'sharrell',
                         'zone_name': u'0.168.192.in-addr.arpa',
                         u'assignment_host': u'desktop-2.university.edu.'}])
+
+  def testMakeRecordsFromIPV6ReverseZone(self):
+    importer_instance = zone_importer_lib.ZoneImport(REVERSE_IPV6_ZONE_FILE,
+                                                            CONFIG_FILE,
+                                                            u'sharrell',
+                                                            u'external')
+    importer_instance.MakeRecordsFromZone()
+    self.assertEquals(self.core_instance.ListReverseRangeZoneAssignments(),
+                      {u'8.0.e.f.f.3.ip6.arpa': 
+                          u'3ffe:0800:0000:0000:0000:0000:0000:0000/24'})
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
+                     [{'target':
+                       u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0.0',
+                       'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any',
+                       'last_user': u'sharrell', 'zone_name':
+                       u'8.0.e.f.f.3.ip6.arpa', u'assignment_host':
+                       u'router.university.edu.'}, 
+                      {'target':
+                         u'0.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0',
+                         'ttl': 86400, 'record_type': u'ptr', 'view_name':
+                         u'any', 'last_user': u'sharrell', 'zone_name':
+                         u'8.0.e.f.f.3.ip6.arpa', u'assignment_host':
+                         u'desktop-1.university.edu.'}])
 
 if( __name__ == '__main__' ):
   unittest.main()

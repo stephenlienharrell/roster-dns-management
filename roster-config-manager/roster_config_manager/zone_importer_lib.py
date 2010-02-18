@@ -41,6 +41,7 @@ __version__ = '#TRUNK#'
 import dns.zone
 import dns.rdatatype
 from dns.exception import DNSException
+import IPy
 import roster_core
 
 
@@ -94,21 +95,44 @@ class ZoneImport(object):
     Outputs:
       string of cidr block
     """
-    ip_parts = self.origin.split('.in-')[0].split('.')
-    ip_parts.reverse()
-    for ip_part in ip_parts:
-      if( not ip_part.isdigit() ):
+    if( self.origin.endswith('in-addr.arpa.') ):
+      ip_parts = self.origin.split('.in-')[0].split('.')
+      ip_parts.reverse()
+      for ip_part in ip_parts:
+        if( not ip_part.isdigit() ):
+          raise Error('%s is not a reverse zone.' % self.zone_name)
+
+      cidr_block = '.'.join(ip_parts)
+      ip_octets = len(ip_parts)
+
+      if( ip_octets > 3 or ip_octets < 1 ):
         raise Error('%s is not a reverse zone.' % self.zone_name)
-    cidr_block = '.'.join(ip_parts)
-    ip_octets = len(ip_parts)
-    if( ip_octets == 1 ):
-      cidr_block = '%s/8' % cidr_block
-    elif( ip_octets == 2 ):
-      cidr_block = '%s/16' % cidr_block
-    elif( ip_octets == 3 ):
-      cidr_block = '%s/24' % cidr_block
+
+      cidr_block = '%s/%s' % (cidr_block, ip_octets * 8)
+
+    elif( self.origin.endswith('ip6.arpa.') ):
+      ip_parts = self.origin.split('.ip6')[0].split('.')
+      ip_parts.reverse()
+      ip_quartets = len(ip_parts)
+
+      for ip_part in ip_parts:
+        try:
+          int(ip_part, 16)
+        except ValueError:
+          raise Error('Invalid hexidecimal number in ipv6 origin: %s' % 
+                      self.origin)
+      # fill out the rest of the ipv6 address
+      ip_parts.extend(['0' for x in range(32-ip_quartets)])
+       
+      for x in range(1,8):
+        # Put colons every 4 quartets
+        ip_parts.insert((x*4)+(x-1), ':')
+      cidr_block = ''.join(ip_parts)
+
+      cidr_block = '%s/%s' % (cidr_block, ip_quartets * 4)
+
     else:
-      raise Error('%s is not a reverse zone.' % self.zone_name)
+        raise Error('%s is not a reverse zone.' % self.zone_name)
 
     return cidr_block
 
@@ -135,7 +159,8 @@ class ZoneImport(object):
     """
     record_count = 0
     self.MakeViewAndZone()
-    if( self.origin.endswith('in-addr.arpa.') ):
+    if( self.origin.endswith('in-addr.arpa.') or
+        self.origin.endswith('ip6.arpa.') ):
       cidr_block = self.ReverseZoneToCIDRBlock()
       self.core_instance.MakeReverseRangeZoneAssignment(self.zone_name,
                                                         cidr_block)
@@ -155,6 +180,12 @@ class ZoneImport(object):
           elif( record_object.rdtype == dns.rdatatype.A ):
             record_type = u'a'
             record_args_dict = {u'assignment_ip': unicode(record_object)}
+
+          elif( record_object.rdtype == dns.rdatatype.AAAA ):
+            record_type = u'aaaa'
+            record_args_dict = {u'assignment_ip': 
+                                    unicode(IPy.IP(str(
+                                        record_object)).strFullsize())}
 
           elif( record_object.rdtype == dns.rdatatype.CNAME ):
             record_type = u'cname'
