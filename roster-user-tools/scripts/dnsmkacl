@@ -112,6 +112,9 @@ def main(args):
     if( options.allow is not None and options.deny is not None ):
       cli_common_lib_instance.DnsError('--allow and --deny cannot be used '
                                        'simultaneously.', 1)
+    if( options.allow is None and options.deny is None ):
+      cli_common_lib_instance.DnsError('Either --allow or --deny must be used.',
+                                       1)
     allowed=0
     if( options.allow ):
       allowed=1

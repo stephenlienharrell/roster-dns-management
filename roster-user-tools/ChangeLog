@@ -3,6 +3,7 @@ Current Release
 - Fixed dnsmkzone reverse zone reverse range assignment creation
 - Removed list functionality from dnsrmhost
 - Removed list functionality from dnsrmusergroup
+- Made allow/deny flags required for dnsmkacl.
 
 2010-01-27 release-0.11
 - Fixed dnsmkacl warning with no arguments

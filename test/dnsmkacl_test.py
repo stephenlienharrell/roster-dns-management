@@ -150,6 +150,20 @@ class Testdnsmkacl(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(), 'WARNING: ACL already exists.\n')
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
+                       '--allow --deny -u %s -p %s --config-file %s -s %s '
+                       '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
+                                  self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        "CLIENT ERROR: --allow and --deny cannot be used simultaneously.\n")
+    command.close()
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
+                       '-u %s -p %s --config-file %s -s %s '
+                       '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
+                                  self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        "CLIENT ERROR: Either --allow or --deny must be used.\n")
+    command.close()
 
 
 if( __name__ == '__main__' ):
