@@ -4,6 +4,7 @@ Current Release
 - Removed list functionality from dnsrmhost
 - Removed list functionality from dnsrmusergroup
 - Made allow/deny flags required for dnsmkacl.
+- Made dnsmkzone require a zone name.
 
 2010-01-27 release-0.11
 - Fixed dnsmkacl warning with no arguments

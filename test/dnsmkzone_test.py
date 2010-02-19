@@ -261,6 +261,13 @@ class TestDnsMkZone(unittest.TestCase):
                      'CLIENT ERROR: Either an origin or cidr block must be '
                      'specified when making reverse zones.\n')
     output.close()
+    output = os.popen('python %s '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'CLIENT ERROR: A zone name must be specified.\n')
+    output.close()
 
 if( __name__ == '__main__' ):
       unittest.main()

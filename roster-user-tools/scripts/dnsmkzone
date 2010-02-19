@@ -185,6 +185,8 @@ def main(args):
                'zone_origin: %s zone_options: %s view_name: %s' % (
                    options.zone, options.type, options.origin, options.options,
                    options.view))
+  else:
+    cli_common_lib_instance.DnsError('A zone name must be specified.', 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])
