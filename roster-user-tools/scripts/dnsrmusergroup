@@ -54,9 +54,6 @@ def main(args):
   """
   parser = OptionParser(version='%%prog (Roster %s)' % __version__)
 
-  parser.add_option('-l', '--list', action='store_true', dest='list',
-                    help='List users, apply -u flag to filter.',
-                    default=False)
   parser.add_option('-n', '--user-name', action='store', dest='user_name',
                     help='String of the user to remove.',
                     metavar='<new-user>', default=None)
@@ -110,25 +107,7 @@ def main(args):
     print 'ERROR: %s' % e
     sys.exit(1)
 
-  if( options.list ):
-    users = roster_client_lib.RunFunction(
-        u'ListUsers', options.username, credfile=options.credfile,
-        credstring=options.credstring, server_name=options.server,
-        kwargs={'user_name': options.user_name})['core_return']
-    groups = roster_client_lib.RunFunction(
-        u'ListUserGroupAssignments', options.username,
-        credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server,
-        kwargs={'user_name': options.user_name, 'group_name': options.group})[
-             'core_return']
-    print_list = []
-    for user in users:
-      group = ['--']
-      if( user in groups ):
-        group = groups[user]
-      print_list.append([user, ','.join(group), users[user]])
-    print cli_common_lib_instance.PrintColumns(print_list)
-  elif( options.user_name ):
+  if( options.user_name ):
     cli_common_lib_instance.DisallowFlags([
         'group', 'forward_zone_permission', 'reverse_range_permission'],
         parser)

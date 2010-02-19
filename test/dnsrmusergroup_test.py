@@ -190,22 +190,6 @@ class Testdnsrmusergroup(unittest.TestCase):
     output.close()
     self.assertEqual(self.core_instance.ListReverseRangePermissions(), {})
 
-  def testListUsers(self):
-    output = os.popen('python %s -l '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),'shuey    bio,cs 64\n'
-                                   'jcollins --     32\n'
-                                   'sharrell cs     128\n\n')
-    output.close()
-    output = os.popen('python %s -l -n shuey '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'shuey cs,bio 64\n\n')
-    output.close()
-
   def testErrors(self):
     output = os.popen('python %s -n shuey '
                       '-g test_group_error '
@@ -325,8 +309,6 @@ class Testdnsrmusergroup(unittest.TestCase):
                      '  --version             show program\'s version number '
                      'and exit\n'
                      '  -h, --help            show this help message and exit\n'
-                     '  -l, --list            List users, apply -u flag to'
-                     ' filter.\n'
                      '  -n <new-user>, --user-name=<new-user>\n'
                      '                        String of the user to remove.\n'
                      '  -g <group>, --group=<group>\n'
