@@ -66,7 +66,7 @@ setup(name='RosterConfigManager',
                    'Operating System :: Unix',
                    'Programming Language :: Python :: 2.5',
                    'Topic :: Internet :: Name Service (DNS)'],
-      install_requires = ['dnspython>=1.6.0', 'IPy>=0.62'
+      install_requires = ['dnspython>=1.6.0', 'IPy>=0.62',
                           'RosterCore>=%s' % current_version],
       scripts = ['scripts/dnsconfigsync', 'scripts/dnszoneimporter',
                  'scripts/dnstreeexport', 'scripts/dnscheckconfig',

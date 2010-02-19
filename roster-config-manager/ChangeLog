@@ -4,6 +4,7 @@ Current Release
 - Added duplicate record checking in zone_exporter_lib
 - Fixed tree exporter to work with new acl_range table
 - Added ipv6 support to zone_importer for both forward and reverse zones
+- Fixed the install_requires in setup.py.
 
 2010-01-27 release-0.11
 - Added missing named conf error in tree_exporter.py
