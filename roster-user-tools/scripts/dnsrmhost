@@ -101,6 +101,9 @@ def main(args):
     sys.exit(1)
   cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
 
+  if( not options.target ):
+    cli_common_lib_instance.DnsError('A target must be specified.', 1)
+
   if( options.ip_address is not None ):
     if( options.ip_address.find('.') != -1 ):
       version = 4

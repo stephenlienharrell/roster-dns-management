@@ -121,6 +121,12 @@ def main(args):
     if( options.view not in views and options.view ):
       cli_common_lib_instance.DnsError('The view specified does not exist.', 1)
     if( options.reverse ):
+      reverse_range_zone_assignments = roster_client_lib.RunFunction(
+          u'ListReverseRangeZoneAssignments', options.username,
+          credfile=options.credfile, credstring=options.credstring,
+          server_name=options.server,
+          kwargs={'zone_name': options.zone, 'cidr_block': options.cidr_block})[
+              'core_return']
       if( options.origin and options.cidr_block ):
         cli_common_lib_instance.DnsError(
             'Origin and cidr block cannot be given simultaneously for '
@@ -152,12 +158,6 @@ def main(args):
                'zone_origin: %s zone_options: %s view_name: %s' % (
                    options.zone, options.type, options.origin, options.options,
                    options.view))
-      reverse_range_zone_assignments = roster_client_lib.RunFunction(
-          u'ListReverseRangeZoneAssignments', options.username,
-          credfile=options.credfile, credstring=options.credstring,
-          server_name=options.server,
-          kwargs={'zone_name': options.zone, 'cidr_block': options.cidr_block})[
-              'core_return']
       if( len(reverse_range_zone_assignments) == 0 ):
         roster_client_lib.RunFunction(
             u'MakeReverseRangeZoneAssignment', options.username,

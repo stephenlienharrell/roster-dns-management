@@ -247,7 +247,7 @@ class Testdnsrmhost(unittest.TestCase):
          'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'},
         {u'forward': True, u'host': u'host3.university.edu',
          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
-    output = os.popen('python %s -q -i 192.168.0.5 '
+    output = os.popen('python %s -q -i 192.168.0.5 -t host3 '
                       '-z forward_zone -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name,
@@ -289,6 +289,14 @@ class Testdnsrmhost(unittest.TestCase):
                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: An ip address or range must be specified.\n')
+    output.close()
+    output = os.popen('python %s '
+                      '-z test_zone -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: A target must be specified.\n')
     output.close()
 
 
