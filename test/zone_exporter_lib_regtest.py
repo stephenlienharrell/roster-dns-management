@@ -90,80 +90,87 @@ class TestZoneExport(unittest.TestCase):
                                   {u'assignment_ip': '192.168.2.102'},
                                   view_name=u'any')
     records = self.core_instance.ListRecords(zone_name=u'sub.university.edu')
-    self.assertEqual(zone_exporter_lib.FormatRecordsForZone(
-      records, '@', u'sub.university.edu', u'external'),
-                     {'bulk': [
-                         {'target': u'@', 'ttl': 3600,
-                          'record_type': u'a', 'view_name': u'any',
-                          'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu',
-                          u'assignment_ip': u'192.168.0.1'},
-                         {'target': u'desktop-1',
-                          'ttl': 3600,
-                          'record_type': u'a', 'view_name': u'any',
-                          'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu',
-                          u'assignment_ip': u'192.168.1.100'},
-                         {'target': u'desktop-1',
-                          'ttl': 3600,
-                          u'hardware': u'PC', 'record_type': u'hinfo',
-                          'view_name': u'any', 'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu', u'os': u'NT'},
-                         {'target': u'desktop-2',
-                          'ttl': 3600,
-                          'record_type': u'a', 'view_name': u'any',
-                          'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu',
-                          u'assignment_ip': u'192.168.2.102'},
-                         {'target': u'localhost',
-                           'ttl': 3600, 'record_type': u'a',
-                           'view_name': u'any', 'last_user': u'sharrell',
-                           'zone_name': u'sub.university.edu',
-                           u'assignment_ip': u'127.0.0.1'},
-                         {'target': u'www', 'ttl': 3600,
-                          'record_type': u'cname', 'view_name': u'any',
-                          'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu',
-                          u'assignment_host': u'sub.university.edu.'}],
-                      u'soa': [
-                         {u'serial_number': 806, u'refresh_seconds': 10800,
-                          'target': u'@',
-                          u'name_server': u'ns.university.edu.',
-                          u'retry_seconds': 3600, 'ttl': 3600,
-                          u'minimum_seconds': 86400, 'record_type': u'soa',
-                          'view_name': u'external', 'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu',
-                          u'admin_email': u'hostmaster.ns.university.edu.',
-                          u'expiry_seconds': 3600000}],
-                      u'ns': [
-                         {'target': u'@',
-                          u'name_server': u'ns.university.edu.', 'ttl': 3600,
-                          'record_type': u'ns', 'view_name': u'any',
-                          'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu'},
-                         {'target': u'@',
-                          u'name_server': u'ns2.university.edu.', 'ttl': 3600,
-                          'record_type': u'ns', 'view_name': u'any',
-                          'last_user': u'sharrell',
-                          'zone_name':u'sub.university.edu'}],
-                      u'txt': [
-                         {'target': u'@', 'ttl': 3600,
-                          'record_type': u'txt', 'view_name': u'any',
-                          'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu',
-                          u'quoted_text': u'"Contact 1:  Stephen Harrell '
-                                          u'(sharrell@university.edu)"'}],
-                      u'mx': [
-                         {'target': u'@', 'ttl': 3600,
-                          u'priority': 10, 'record_type': u'mx',
-                          'view_name': u'any', 'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu',
-                          u'mail_server': u'mail1.university.edu.'},
-                         {'target': u'@', 'ttl': 3600,
-                          u'priority': 20, 'record_type': u'mx',
-                          'view_name': u'any', 'last_user': u'sharrell',
-                          'zone_name': u'sub.university.edu',
-                          u'mail_server': u'mail2.university.edu.'}]})
+    zone_records = zone_exporter_lib.FormatRecordsForZone(
+        records, '@', u'sub.university.edu', u'external')
+    self.assertEquals(zone_records['bulk'], 
+                      [{'target': u'@', 'ttl': 3600,
+                        'record_type': u'a', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip': u'192.168.0.1'},
+                       {'target': u'desktop-1',
+                        'ttl': 3600,
+                        'record_type': u'a', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip': u'192.168.1.100'},
+                       {'target': u'desktop-1',
+                        'ttl': 3600,
+                        'record_type': u'aaaa', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip':
+                            u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'},
+                       {'target': u'desktop-1',
+                        'ttl': 3600,
+                        u'hardware': u'PC', 'record_type': u'hinfo',
+                        'view_name': u'any', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu', u'os': u'NT'},
+                       {'target': u'desktop-2',
+                        'ttl': 3600,
+                        'record_type': u'a', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip': u'192.168.2.102'},
+                       {'target': u'localhost',
+                        'ttl': 3600, 'record_type': u'a',
+                        'view_name': u'any', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip': u'127.0.0.1'},
+                       {'target': u'www', 'ttl': 3600,
+                        'record_type': u'cname', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_host': u'sub.university.edu.'}])
+    self.assertEquals(zone_records['soa'],
+                      [{u'serial_number': 807, u'refresh_seconds': 10800,
+                        'target': u'@',
+                        u'name_server': u'ns.university.edu.',
+                        u'retry_seconds': 3600, 'ttl': 3600,
+                        u'minimum_seconds': 86400, 'record_type': u'soa',
+                        'view_name': u'external', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'admin_email': u'hostmaster.ns.university.edu.',
+                        u'expiry_seconds': 3600000}])
+    self.assertEquals(zone_records['ns'], 
+                      [{'target': u'@',
+                        u'name_server': u'ns.university.edu.', 'ttl': 3600,
+                        'record_type': u'ns', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu'},
+                       {'target': u'@',
+                        u'name_server': u'ns2.university.edu.', 'ttl': 3600,
+                        'record_type': u'ns', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name':u'sub.university.edu'}])
+    self.assertEquals(zone_records['txt'], 
+                      [{'target': u'@', 'ttl': 3600,
+                        'record_type': u'txt', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'quoted_text': u'"Contact 1:  Stephen Harrell '
+                                        u'(sharrell@university.edu)"'}])
+    self.assertEquals(zone_records['mx'], 
+                      [{'target': u'@', 'ttl': 3600,
+                        u'priority': 10, 'record_type': u'mx',
+                        'view_name': u'any', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'mail_server': u'mail1.university.edu.'},
+                       {'target': u'@', 'ttl': 3600,
+                        u'priority': 20, 'record_type': u'mx',
+                        'view_name': u'any', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'mail_server': u'mail2.university.edu.'}])
 
 
   def testMakeZoneString(self):
@@ -175,7 +182,7 @@ class TestZoneExport(unittest.TestCase):
         '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN sub.university.edu.\n'
         '@ 3600 in soa ns.university.edu. '
-            'hostmaster.ns.university.edu. 805 10800 3600 3600000 86400\n'
+            'hostmaster.ns.university.edu. 806 10800 3600 3600000 86400\n'
         '@ 3600 in ns ns.university.edu.\n'
         '@ 3600 in ns ns2.university.edu.\n'
         '@ 3600 in mx 10 mail1.university.edu.\n'
@@ -184,6 +191,7 @@ class TestZoneExport(unittest.TestCase):
             '(sharrell@university.edu)"\n'
         '@ 3600 in a 192.168.0.1\n'
         'desktop-1 3600 in a 192.168.1.100\n'
+        'desktop-1 3600 in aaaa 3ffe:0800:0000:0000:02a8:79ff:fe32:1982\n'
         'desktop-1 3600 in hinfo PC NT\n'
         'localhost 3600 in a 127.0.0.1\n'
         'www 3600 in cname sub.university.edu.\n')
