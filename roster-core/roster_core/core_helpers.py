@@ -642,6 +642,4 @@ class CoreHelpers(object):
                                            record['view_name']), success)
     return row_count
 
-  def CIDRtoOrigin(self, cidr_block):
-    ip = IPy.IP(cidr_block)
-
+# vi: set ai aw sw=2:
