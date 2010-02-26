@@ -209,13 +209,19 @@ class CliCommonLib:
         forward_zone_origin = print_dict[ip_address]['zone_origin'].rstrip('.')
         if( print_dict[ip_address]['forward'] and print_dict[ip_address][
             'reverse'] ):
-          print_list.append([ip_address, print_dict[ip_address]['host'],
-                             print_dict[ip_address]['host'].rsplit(
-                                 '.%s' % forward_zone_origin, 1)[0], ''])
+          shorthost = print_dict[ip_address]['host'].rsplit(
+              '.%s' % forward_zone_origin, 1)[0]
+          longhost = print_dict[ip_address]['host']
+          if( longhost.startswith('@.') ):
+            longhost = print_dict[ip_address]['host'].lstrip('@.')
+          print_list.append([ip_address, longhost, shorthost, ''])
         elif( print_dict[ip_address]['forward'] ):
-          print_list.append([ip_address, print_dict[ip_address]['host'],
-                             print_dict[ip_address]['host'].rsplit(
-                                 '.%s' % forward_zone_origin, 1)[0],
+          shorthost = print_dict[ip_address]['host'].rsplit(
+              '.%s' % forward_zone_origin, 1)[0]
+          longhost = print_dict[ip_address]['host']
+          if( longhost.startswith('@.') ):
+            longhost = print_dict[ip_address]['host'].lstrip('@.')
+          print_list.append([ip_address, longhost, shorthost,
                              '# No reverse assignment'])
         else:
           print_list.append(['#%s' % ip_address, print_dict[ip_address]['host'],

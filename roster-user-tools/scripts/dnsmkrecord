@@ -279,7 +279,7 @@ def main(args):
   elif( options.ptr ):
     record_args_dict = {'assignment_host': options.ptr_assignment_host}
     cli_record_lib_instance.MakeRecord('ptr', options, record_args_dict,
-                              quiet=options.quiet)
+                              quiet=options.quiet, fix_ptr_origin=False)
   else:
     cli_common_lib_instance.DnsError('Must specify a record type.', 1)
 

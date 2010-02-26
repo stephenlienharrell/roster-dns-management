@@ -344,7 +344,8 @@ def main(args):
       if( update_hosts_dict[host]['host'] is not None and
             update_hosts_dict[host]['alias'] is not None ):
         if( not update_hosts_dict[host]['host'].startswith(
-              update_hosts_dict[host]['alias']) ):
+              update_hosts_dict[host]['alias'])
+              and update_hosts_dict[host]['alias'] != u'@' ):
           cli_common_lib_instance.DnsError(
               'Fully qualified domain name "%s" and alias "%s" do not match.' % (
                   update_hosts_dict[host]['host'],
@@ -401,8 +402,11 @@ def main(args):
                                   '%s.' % original_hosts_dict[host]['host']}})
         print 'Host: %s with ip address %s will be ADDED' % (
             update_hosts_dict[host]['host'], host)
-        zone_origin = '%s.' % update_hosts_dict[host]['host'].split(
-            '%s.' % (update_hosts_dict[host]['alias']), 1)[1]
+        if( update_hosts_dict[host]['alias'] == u'@' ):
+          zone_origin = '%s.' % update_hosts_dict[host]['host']
+        else:
+          zone_origin = '%s.' % update_hosts_dict[host]['host'].split(
+              '%s.' % (update_hosts_dict[host]['alias']), 1)[1]
         add_list.append({'record_type': record_type,
                          'record_target': update_hosts_dict[host]['alias'],
                          'view_name': options.view_name,

@@ -240,10 +240,11 @@ class TestDnsMkHost(unittest.TestCase):
       handle.close()
 
     # Replace some information in the file
-    new_file_contents = file_contents.replace('192.168.1.5', '#192.168.1.5')
-    new_file_contents = new_file_contents.replace(
+    new_file_contents = file_contents.replace(
         '#192.168.1.6', '192.168.1.6 host5.university.edu host5')
     new_file_contents = new_file_contents.replace('host2', 'host7')
+    new_file_contents = new_file_contents.replace('host3.', '')
+    new_file_contents = new_file_contents.replace('host3', '@')
     handle = open(TEST_FILE, 'w')
     try:
       handle.writelines(new_file_contents)
@@ -269,7 +270,7 @@ class TestDnsMkHost(unittest.TestCase):
         '# Columns are arranged as so:\n'
         '# Ip_Address Fully_Qualified_Domain Hostname\n'
         '#192.168.1.4 host7.university.edu       # No forward assignment\n'
-        '#192.168.1.5  host3.university.edu host3 # No reverse assignment\n'
+        '192.168.1.5  university.edu @ # No reverse assignment\n'
         '192.168.1.6 host5.university.edu host5\n'
         '#192.168.1.7\n')
     handle.close()
@@ -285,7 +286,9 @@ class TestDnsMkHost(unittest.TestCase):
                      'Host: host5.university.edu with ip address '
                      '192.168.1.6 will be ADDED\n'
                      'Host: host3.university.edu with ip address '
-                     '192.168.1.5 will be REMOVED\n')
+                     '192.168.1.5 will be REMOVED\n'
+                     'Host: university.edu with ip address '
+                     '192.168.1.5 will be ADDED\n')
     output.close()
 
     # Check final records
@@ -317,7 +320,14 @@ class TestDnsMkHost(unittest.TestCase):
          {'target': u'6', 'ttl': 3600, 'record_type': u'ptr',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'reverse_zone',
-          u'assignment_host': u'host5.university.edu.'}])
+          u'assignment_host': u'host5.university.edu.'},
+         {'target': u'@', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
+         {'target': u'5', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'university.edu.'}])
     output = os.popen('python %s -r 192.168.1.4/30 -f %s '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
@@ -343,7 +353,7 @@ class TestDnsMkHost(unittest.TestCase):
         '# Columns are arranged as so:\n'
         '# Ip_Address Fully_Qualified_Domain Hostname\n'
         '#192.168.1.4 host2.university.edu       # No forward assignment\n'
-        '#192.168.1.5\n'
+        '192.168.1.5  university.edu       @\n'
         '192.168.1.6  host5.university.edu host5\n'
         '#192.168.1.7\n')
     handle.close()

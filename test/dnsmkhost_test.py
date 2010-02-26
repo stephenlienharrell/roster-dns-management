@@ -231,6 +231,41 @@ class TestDnsMkHost(unittest.TestCase):
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     output.close()
+    output = os.popen('python %s -q -i 192.168.1.10 -z forward_zone -t '
+                      '@ -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    output.close()
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
+        [{'target': u'8', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'host6.university.edu.'},
+         {'target': u'4', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view2', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'host2.university.edu.'},
+         {'target': u'5', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'host3.university.edu.'},
+         {'target': u'10', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view2', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'host4.university.edu.'},
+         {'target': u'7', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view2', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'host5.university.edu.'},
+         {'target': u'6', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'machine1.university.edu.'},
+         {'target': u'10', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'university.edu.'}])
     self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
         [{'target': u'machine1', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',

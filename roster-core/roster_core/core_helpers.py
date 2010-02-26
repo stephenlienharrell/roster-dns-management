@@ -260,8 +260,27 @@ class CoreHelpers(object):
       ttl: string of ttl
     """
     target, zone_assignment = self.GetPTRTarget(target, view_name)
+    if( record_args_dict['assignment_host'].startswith('@.') ):
+      record_args_dict['assignment_host'] = record_args_dict[
+          'assignment_host'].lstrip('@.')
     self.core_instance.MakeRecord(u'ptr', target, zone_assignment,
                                   record_args_dict, view_name, ttl)
+
+  def RemovePTRRecord(self, record_type, target, zone_name, record_args_dict,
+                      view_name, ttl=None):
+    """Removes a ptr record.
+
+    Inputs:
+      target: string of target
+      record_args_dict: dictionary of record arguments
+      view_name: string of view name
+      ttl: string of ttl
+    """
+    if( record_args_dict['assignment_host'].startswith('@.') ):
+      record_args_dict['assignment_host'] = record_args_dict[
+          'assignment_host'].lstrip('@.')
+    self.core_instance.RemoveRecord(u'ptr', target, zone_name,
+                                    record_args_dict, view_name, ttl)
 
   def ListRecordsByCIDRBlock(self, cidr_block, view_name=None):
     """Lists records in user given cidr block.
@@ -580,6 +599,11 @@ class CoreHelpers(object):
           if( not record['view_name'].endswith('_dep') and record[
                 'view_name'] != u'any'):
             view_name = '%s_dep' % record['view_name']
+          if( record['record_type'] == u'ptr' ):
+            if( record['record_arguments'][
+                'assignment_host'].startswith('@.') ):
+              record['record_arguments']['assignment_host'] = record[
+                  'record_arguments']['assignment_host'].lstrip('@.')
           changed_view_dep.append((view_name, record['record_zone_name']))
           ttl = None
           if( 'ttl' in record ):

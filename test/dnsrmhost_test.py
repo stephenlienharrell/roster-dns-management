@@ -200,10 +200,18 @@ class Testdnsrmhost(unittest.TestCase):
     self.core_instance.MakeRecord(u'a', u'host6', u'forward_zone',
                                   {u'assignment_ip': u'192.168.0.8'},
                                   view_name=u'test_view')
+    self.core_instance.MakeRecord(u'a', u'@', u'forward_zone',
+                                  {u'assignment_ip': u'192.168.0.9'},
+                                  view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'8',
                                   u'reverse_zone',
                                   {u'assignment_host':
                                       u'host6.university.edu.'},
+                                  view_name=u'test_view')
+    self.core_instance.MakeRecord(u'ptr', u'9',
+                                  u'reverse_zone',
+                                  {u'assignment_host':
+                                      u'university.edu.'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'4',
                                   u'reverse_zone',
@@ -241,6 +249,10 @@ class Testdnsrmhost(unittest.TestCase):
          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
          u'192.168.0.1': [{u'forward': True, u'host': u'host1.university.edu',
          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.9': [{u'forward': False, u'host': u'university.edu',
+         'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'},
+        {u'forward': True, u'host': u'@.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
          u'192.168.0.10': [{u'forward': True, u'host': u'host4.university.edu',
          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
          u'192.168.0.5': [{u'forward': False, u'host': u'host3.university.edu',
@@ -253,6 +265,29 @@ class Testdnsrmhost(unittest.TestCase):
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     output.close()
+    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'192.168.0/24', view_name=u'test_view'),
+        {u'test_view': {u'192.168.0.8':
+            [{u'forward': False, u'host': u'host6.university.edu',
+              'zone_origin': u'0.168.192.in-addr.arpa.',
+              u'zone': u'reverse_zone'},
+        {u'forward': True, u'host': u'host6.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.1': [{u'forward': True, u'host': u'host1.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.9': [{u'forward': False, u'host': u'university.edu',
+         'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'},
+        {u'forward': True, u'host': u'@.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
+         u'192.168.0.10': [{u'forward': True, u'host': u'host4.university.edu',
+         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
+    output = os.popen('python %s -q -i 192.168.0.9 -t @ '
+                      '-z forward_zone -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
+    output.close()
+
     self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
         u'192.168.0/24', view_name=u'test_view'),
         {u'test_view': {u'192.168.0.8':

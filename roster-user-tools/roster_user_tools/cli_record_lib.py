@@ -55,7 +55,8 @@ class CliRecordLib:
     self.cli_common_lib_instance = cli_common_lib_instance
 
   def MakeRecord(self, record_type, options, record_args_dict,
-                 allow_duplicate=False, quiet=False, raise_errors=False):
+                 allow_duplicate=False, quiet=False, raise_errors=False,
+                 fix_ptr_origin=True):
     """Connects to server and makes a DNS record.
 
     Inputs:
@@ -117,8 +118,11 @@ class CliRecordLib:
             break
         else:
           self.cli_common_lib_instance.DnsError('Duplicate record!', 4)
+      function = u'MakeRecord'
+      if( fix_ptr_origin and record_type == u'ptr' ):
+        function = u'MakePTRRecord'
       roster_client_lib.RunFunction(
-          u'MakeRecord', options.username, credfile=options.credfile,
+          function, options.username, credfile=options.credfile,
           args=[record_type, options.target, options.zone_name, record_args_dict],
           kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
           server_name=options.server, raise_errors=raise_errors)
@@ -185,7 +189,7 @@ class CliRecordLib:
         print '    %s' % ' '.join(arg_list)
 
   def RemoveRecord(self, record_type, options, record_args_dict, quiet=False,
-                   raise_errors=False):
+                   raise_errors=False, fix_ptr_origin=True):
     """Connects to server and removes a DNS record.
 
     Inputs:
@@ -225,8 +229,11 @@ class CliRecordLib:
     ## Check if zone exists
     if( options.zone_name not in zones ):
       self.cli_common_lib_instance.DnsError('Zone does not exist!', 3)
+    function = u'RemoveRecord'
+    if( fix_ptr_origin and record_type == u'ptr' ):
+      function = u'RemovePTRRecord'
     removed_records = roster_client_lib.RunFunction(
-        u'RemoveRecord', options.username, credfile=options.credfile,
+        function, options.username, credfile=options.credfile,
         args=[record_type, options.target, options.zone_name, record_args_dict,
               options.view_name], kwargs={'ttl': int(options.ttl)},
         server_name=options.server, raise_errors=raise_errors)['core_return']
