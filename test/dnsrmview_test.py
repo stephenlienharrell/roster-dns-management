@@ -164,21 +164,19 @@ class Testdnsrmview(unittest.TestCase):
 
   def testRemoveAcl(self):
     self.core_instance.MakeACL(u'acl', u'192.168.0.0/24', 1)
-    self.assertEqual(self.core_instance.ListACLs(),
-                     {u'any': [{'cidr_block': None, 'range_allowed': 1}],
-                      u'acl': [{'cidr_block': u'192.168.0.0/24',
-                       'range_allowed': 1}]})
-    output = os.popen('python %s --acl acl '
-                      '--cidr-block 192.168.0.0/24 --allow '
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl')
+    self.assertEqual(self.core_instance.ListViewToACLAssignments(),
+                     [{'view_name': u'test_view', 'acl_name': u'acl'}])
+    output = os.popen('python %s --acl acl -v test_view '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'REMOVED ACL: acl_name: acl cidr_block: 192.168.0.0/24 '
-                     'range_allowed: True\n')
+                     'REMOVED VIEW TO ACL ASSIGNMENT: view_name: test_view '
+                     'acl_name: acl\n')
     output.close()
-    self.assertEqual(self.core_instance.ListACLs(),
-                     {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
+    self.assertEqual(self.core_instance.ListViewToACLAssignments(), [])
 
   def testErrors(self):
     output = os.popen('python %s -e test '
@@ -190,30 +188,11 @@ class Testdnsrmview(unittest.TestCase):
                                     'specified with the -v flag.\n')
     output.close()
     output = os.popen('python %s --acl acl '
-                      '--allow '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: To remove an ACL a CIDR '
-                                    'block or ip address must be specified '
-                                    'with the --cidr-block flag.\n')
-    output.close()
-    output = os.popen('python %s --acl acl '
-                      '--cidr-block 192.168.0.0/24 --allow --deny '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: --allow and --deny '
-                                    'cannot be used simultaneously.\n')
-    output.close()
-    output = os.popen('python %s -v test --acl '
-                      'test --cidr-block test '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-                     'CLIENT ERROR: The --acl flag cannot be used.\n'
-                     'CLIENT ERROR: The --cidr-block flag cannot be used.\n')
+    self.assertEqual(output.read(), 'CLIENT ERROR: To remove a view ACL '
+                                    'assignment a view must be supplied.\n')
     output.close()
 
 if( __name__ == '__main__' ):

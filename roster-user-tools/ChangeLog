@@ -9,6 +9,7 @@ Current Release
 - Fixed @ targets
 - Added dnslsacl tool
 - Added dnsrmacl tool
+- Removed remove acl functionality from dnsrmview
 
 2010-01-27 release-0.11
 - Fixed dnsmkacl warning with no arguments

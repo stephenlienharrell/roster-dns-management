@@ -61,13 +61,6 @@ def main(args):
                     help='Modify a view.', default=None)
   parser.add_option('--acl', action='store', dest='acl',
                     help='Modify an access control list. (name)', default=None)
-  parser.add_option('--cidr-block', action='store', dest='cidr_block',
-                    help='Cidr block or single IP address. Used for making'
-                         ' ACLs.', default=None)
-  parser.add_option('--allow', action='store_true', dest='allow',
-                    help='Allow access for specified ACL.', default=None)
-  parser.add_option('--deny', action='store_false', dest='deny',
-                    help='Deny access for specified ACL.', default=None)
   parser.add_option('-s', '--server', action='store', dest='server',
                     help='XML RPC Server URL.', metavar='<server>',
                     default=None)
@@ -115,8 +108,20 @@ def main(args):
     if( not options.quiet ):
       print ('REMOVED DNS SERVER SET VIEW ASSIGNMENT: view_name %s '
              'dns_server_set: %s' % (options.view, options.dns_server_set))
+  elif( options.acl ):
+    if( not options.view ):
+      cli_common_lib_instance.DnsError(
+          'To remove a view ACL assignment a view must be supplied.', 1)
+    roster_client_lib.RunFunction(u'RemoveViewToACLAssignments',
+                                  options.username,
+                                  credfile=options.credfile,
+                                  credstring=options.credstring,
+                                  server_name=options.server,
+                                  args=[options.view, options.acl])
+    if( not options.quiet ):
+      print ('REMOVED VIEW TO ACL ASSIGNMENT: view_name: %s acl_name: %s' % (
+                 options.view, options.acl))
   elif( options.view ):
-    cli_common_lib_instance.DisallowFlags([u'cidr_block', u'acl'], parser)
     roster_client_lib.RunFunction(u'RemoveView', options.username,
                                   credfile=options.credfile,
                                   credstring=options.credstring,
@@ -124,27 +129,6 @@ def main(args):
                                   args=[options.view])
     if( not options.quiet ):
       print 'REMOVED VIEW: %s' % options.view
-  elif( options.acl ):
-    if( options.cidr_block is None ):
-      cli_common_lib_instance.DnsError('To remove an ACL a CIDR block or ip address '
-                              'must be specified with the --cidr-block flag.',
-                              1)
-    if( options.allow is not None and options.deny is not None ):
-      cli_common_lib_instance.DnsError('--allow and --deny cannot be used '
-                              'simultaneously.', 1)
-    allowed=0
-    if( options.allow ):
-      allowed=1
-    roster_client_lib.RunFunction(u'RemoveACL', options.username,
-                                  credfile=options.credfile,
-                                  credstring=options.credstring,
-                                  server_name=options.server,
-                                  kwargs={'acl_name': options.acl,
-                                          'cidr_block': options.cidr_block,
-                                          'range_allowed': allowed})
-    if( not options.quiet ):
-      print 'REMOVED ACL: acl_name: %s cidr_block: %s range_allowed: %s' % (
-          options.acl, options.cidr_block, options.allow)
   else:
     parser.print_help()
     cli_common_lib_instance.DnsError('Must specify a flag.', 1)
