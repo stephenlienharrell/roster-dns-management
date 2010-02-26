@@ -268,14 +268,14 @@ class TestDnsMkZone(unittest.TestCase):
     self.assertEqual(output.read(),
                      'CLIENT ERROR: A zone name must be specified.\n')
     output.close()
-    output = os.popen('python %s -z test_rev -t master --origin foo.com.'
+    output = os.popen('python %s -z test_rev -t master --origin foo.com '
                       '--reverse -s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'SERVER ERROR: <class \'roster_core.data_validation.'
                      'UnexpectedDataError\'>:Invalid data type Hostname '
-                     'for zone_origin: foo.com.\n')
+                     'for zone_origin: foo.com\n')
     output.close()
 
 if( __name__ == '__main__' ):
