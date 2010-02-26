@@ -7,6 +7,7 @@ Current Release
 - Made dnsmkzone require a zone name.
 - Made dnsrmhost require the target, fixed unittest.
 - Fixed @ targets
+- Added dnslsacl tool
 
 2010-01-27 release-0.11
 - Fixed dnsmkacl warning with no arguments
