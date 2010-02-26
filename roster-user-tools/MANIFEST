@@ -15,6 +15,7 @@ scripts/dnslsviews
 scripts/dnslszones
 scripts/dnsmkacl
 scripts/dnslsacl
+scripts/dnsrmacl
 scripts/dnsmkdnsserver
 scripts/dnsmkhost
 scripts/dnsmkrecord

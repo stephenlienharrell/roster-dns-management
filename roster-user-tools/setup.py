@@ -79,5 +79,5 @@ setup(name='RosterUserTools',
                  'scripts/dnsrmview', 'scripts/dnsrmzone',
                  'scripts/dnsuphost', 'scripts/dnsupnamedglobals',
                  'scripts/roster-user-tools-bootstrap',
-                 'scripts/dnslsacl']
+                 'scripts/dnslsacl', 'scripts/dnsrmacl']
      )
