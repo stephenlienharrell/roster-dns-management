@@ -59,6 +59,7 @@ CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TEST_FILE = 'test_data/test_hosts'
+TEST_FILE_IPV6 = 'test_data/test_hosts_ipv6'
 INVALID_HOSTS = 'test_data/invalid_hosts'
 HOST = u'localhost'
 USERNAME = u'sharrell'
@@ -139,6 +140,13 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeZone(u'forward_zone', u'master',
                                 u'university.edu.',
                                 view_name=u'test_view3')
+    self.core_instance.MakeZone(u'ipv6_zone', u'master',
+                                u'university.edu.',
+                                view_name=u'test_view')
+    self.core_instance.MakeZone(
+        u'ipv6_zone_rev', u'master',
+        u'0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.'
+        '0.0.0.1.0.0.2.ip6.arpa.', view_name=u'test_view')
     self.core_instance.MakeZone(u'reverse_zone', u'master',
                                 u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view2')
@@ -173,8 +181,33 @@ class TestDnsMkHost(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testReadFileFromDB(self):
+    self.core_instance.MakeRecord(
+        u'soa', u'soa2', u'ipv6_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa2', u'ipv6_zone_rev',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'ipv6host', u'ipv6_zone', {u'assignment_ip':
+          u'2001:0000:0000:0000:0000:0000:0000:0001'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'host_ipv6', u'ipv6_zone', {u'assignment_ip':
+          u'2001:0000:0000:0000:0000:0000:0000:0002'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
+          u'ipv6host.university.edu.'}, view_name=u'test_view')
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6_zone_rev',
+                                                      u'2001::/124')
     output = os.popen('python %s -r 192.168.1.4/30 -f %s '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
@@ -202,6 +235,122 @@ class TestDnsMkHost(unittest.TestCase):
         '192.168.1.5  host3.university.edu host3 # No reverse assignment\n'
         '#192.168.1.6\n'
         '#192.168.1.7\n')
+    handle.close()
+    output = os.popen('python %s -r 2001::/124 -f %s -z ipv6_zone '
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
+                           EXEC, TEST_FILE_IPV6, self.server_name, USERNAME,
+                           PASSWORD, USER_CONFIG))
+    output.close()
+    handle = open(TEST_FILE_IPV6, 'r')
+    self.assertEqual(handle.read(),
+        '#:range:2001::/124\n'
+        '#:view_dependency:test_view_dep\n'
+        '# Do not delete any lines in this file!\n'
+        '# To remove a host, comment it out, to add a host,\n'
+        '# uncomment the desired ip address and specify a\n'
+        '# hostname. To change a hostname, edit the hostname\n'
+        '# next to the desired ip address.\n#\n'
+        '# The "@" symbol in the host column signifies inheritance\n'
+        '# of the origin of the zone, this is just shorthand.\n'
+        '# For example, @.university.edu. would be the same as\n'
+        '# university.edu.\n#\n'
+        '# Columns are arranged as so:\n'
+        '# Ip_Address Fully_Qualified_Domain Hostname\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0000\n'
+        '2001:0000:0000:0000:0000:0000:0000:0001  ipv6host.university.edu  '
+        'ipv6host\n'
+        '2001:0000:0000:0000:0000:0000:0000:0002  host_ipv6.university.edu '
+        'host_ipv6 # No reverse assignment\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0003\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0004\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0005\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0006\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0007\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0008\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0009\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000a\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000b\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000c\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000d\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000e\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000f\n')
+    handle.close()
+
+  def testWriteIPV6ToDB(self):
+    self.core_instance.MakeRecord(
+        u'soa', u'soa2', u'ipv6_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa2', u'ipv6_zone_rev',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'ipv6host', u'ipv6_zone', {u'assignment_ip':
+          u'2001:0000:0000:0000:0000:0000:0000:0001'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'host_ipv6', u'ipv6_zone', {u'assignment_ip':
+          u'2001:0000:0000:0000:0000:0000:0000:0002'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
+          u'ipv6host.university.edu.'}, view_name=u'test_view')
+    output = os.popen('python %s -r 2001::/124 -f %s -z ipv6_zone '
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
+                           EXEC, TEST_FILE, self.server_name, USERNAME,
+                           PASSWORD, USER_CONFIG))
+    output.close()
+    handle = open(TEST_FILE_IPV6, 'r')
+    try:
+      contents = handle.read()
+    finally:
+      handle.close()
+
+    contents = contents.replace('host_ipv6', 'newhost')
+
+    handle = open(TEST_FILE_IPV6, 'w')
+    try:
+      handle.writelines(contents)
+    finally:
+      handle.close()
+    handle = open(TEST_FILE_IPV6, 'r')
+    self.assertEqual(handle.read(),
+        '#:range:2001::/124\n'
+        '#:view_dependency:test_view_dep\n'
+        '# Do not delete any lines in this file!\n'
+        '# To remove a host, comment it out, to add a host,\n'
+        '# uncomment the desired ip address and specify a\n'
+        '# hostname. To change a hostname, edit the hostname\n'
+        '# next to the desired ip address.\n#\n'
+        '# The "@" symbol in the host column signifies inheritance\n'
+        '# of the origin of the zone, this is just shorthand.\n'
+        '# For example, @.university.edu. would be the same as\n'
+        '# university.edu.\n#\n'
+        '# Columns are arranged as so:\n'
+        '# Ip_Address Fully_Qualified_Domain Hostname\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0000\n'
+        '2001:0000:0000:0000:0000:0000:0000:0001  ipv6host.university.edu  '
+        'ipv6host\n'
+        '2001:0000:0000:0000:0000:0000:0000:0002  newhost.university.edu '
+        'newhost # No reverse assignment\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0003\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0004\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0005\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0006\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0007\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0008\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0009\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000a\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000b\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000c\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000d\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000e\n'
+        '#2001:0000:0000:0000:0000:0000:0000:000f\n')
     handle.close()
 
   def testWriteFileToDB(self):
