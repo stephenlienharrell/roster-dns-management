@@ -301,6 +301,76 @@ class Testdnsrmhost(unittest.TestCase):
          u'192.168.0.10': [{u'forward': True, u'host': u'host4.university.edu',
          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
 
+  def testRemoveIPV6(self):
+    self.core_instance.MakeZone(u'ipv6_zone', u'master',
+                                u'university.edu.',
+                                view_name=u'test_view')
+    self.core_instance.MakeZone(
+        u'ipv6_zone_rev', u'master',
+        u'0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.'
+        '0.0.0.1.0.0.2.ip6.arpa.', view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa2', u'ipv6_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa2', u'ipv6_zone_rev',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'ipv6host', u'ipv6_zone', {u'assignment_ip':
+            u'2001:0000:0000:0000:0000:0000:0000:0001'}, 
+        view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'host_ipv6', u'ipv6_zone', {u'assignment_ip':
+            u'2001:0000:0000:0000:0000:0000:0000:0002'}, 
+        view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
+          u'ipv6host.university.edu.'}, view_name=u'test_view')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6_zone_rev',
+                                                      u'2001::/124')
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'aaaa'),
+        [{'target': u'ipv6host', 'ttl': 3600, 'record_type': u'aaaa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'ipv6_zone',
+          u'assignment_ip': u'2001:0000:0000:0000:0000:0000:0000:0001'},
+         {'target': u'host2', 'ttl': 3600, 'record_type': u'aaaa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+         {'target': u'host_ipv6', 'ttl': 3600, 'record_type': u'aaaa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'ipv6_zone',
+          u'assignment_ip': u'2001:0000:0000:0000:0000:0000:0000:0002'}])
+    output = os.popen('python %s -i 2001:0000:0000:0000:0000:0000:0000:0001 -t '
+                      'ipv6host -z ipv6_zone -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (EXEC, self.server_name,
+                                                  USERNAME, PASSWORD,
+                                                  USER_CONFIG))
+    self.assertEqual(output.read(),
+        'REMOVED AAAA: ipv6host zone_name: ipv6_zone view_name: test_view '
+        'ttl: 3600\n'
+        '    assignment_ip: 2001:0000:0000:0000:0000:0000:0000:0001\n'
+        'REMOVED PTR: 1 zone_name: ipv6_zone_rev view_name: test_view '
+        'ttl: 3600\n    assignment_host: ipv6host.university.edu.\n')
+    output.close()
+    self.assertEqual(self.core_instance.ListRecords(record_type=u'aaaa'),
+        [{'target': u'host2', 'ttl': 3600, 'record_type': u'aaaa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+         {'target': u'host_ipv6', 'ttl': 3600, 'record_type': u'aaaa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'ipv6_zone',
+          u'assignment_ip': u'2001:0000:0000:0000:0000:0000:0000:0002'}])
+
   def testErrors(self):
     output = os.popen('python %s -i notipaddress -t '
                       'host3. -z forward_zone -v test_view -s %s -u %s '
