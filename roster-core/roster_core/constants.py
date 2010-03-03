@@ -367,7 +367,13 @@ SUPPORTED_METHODS = {
     'ListRecordArgumentDefinitions':
                     {'check': False,
                      'write': True,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
+
+    'ListAuditLog':
+                    {'check': True,
+                     'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']}}
+
 
 
 # These are a subset of tables in the dtabase. They are enumerated here to
