@@ -1,4 +1,6 @@
 Current Release
+
+2010-03-03 release-0.12
 - Fixed dnsrmhost's duplicate errors
 - Fixed dnsmkzone reverse zone reverse range assignment creation
 - Removed list functionality from dnsrmhost
