@@ -1,5 +1,3 @@
-Current Release
-
 2010-03-03 release-0.12
 - Reordered records in zone_importer_lib so SOA comes first
 - Fixed bug that was making an extra any view dependency in zone_importer_lib

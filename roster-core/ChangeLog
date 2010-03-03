@@ -1,5 +1,3 @@
-Current Release
-
 2010-03-03 release-0.12
 - Fixed view handling of ListRecordsByCidrBlock
 - Fixed RemoveRecord in core

@@ -32,7 +32,7 @@
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.12'
 
 
 # This is the default TTL for all records inserted into the database.
@@ -367,13 +367,7 @@ SUPPORTED_METHODS = {
     'ListRecordArgumentDefinitions':
                     {'check': False,
                      'write': True,
-                     'access_level': ACCESS_LEVELS['dns_admin']},
-
-    'ListAuditLog':
-                    {'check': True,
-                     'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']}}
-
 
 
 # These are a subset of tables in the dtabase. They are enumerated here to
