@@ -41,6 +41,7 @@ __version__ = '#TRUNK#'
 
 
 import datetime
+import time
 import unittest
 import os
 
@@ -685,6 +686,26 @@ class TestCore(unittest.TestCase):
     self.assertEqual(self.core_instance.ListReservedWords(),
                      [u'word1'])
 
+  def testListAuditLog(self):
+    begin_time = datetime.datetime.now().replace(microsecond=0)
+    time.sleep(0.1)
+    self.core_instance.MakeReservedWord(u'word1')
+    time.sleep(0.1)
+    end_time = datetime.datetime.now().replace(microsecond=0)
+    time.sleep(1.1)
+    self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.')
+    self.assertEqual(self.core_instance.ListAuditLog(
+        begin_timestamp=begin_time, end_timestamp=end_time),
+        ({'action': u'MakeReservedWord', 'data': u'reserved_word: word1',
+          'audit_log_timestamp': begin_time,
+          'audit_log_user_name': u'sharrell', 'success': 1},))
+    self.core_instance.MakeView(u'test_view')
+    self.assertEqual(len(self.core_instance.ListAuditLog(action=u'MakeView')),
+                     1)
+    self.assertEqual(len(self.core_instance.ListAuditLog(action=u'Action')),
+                     0)
+    self.assertEqual(len(self.core_instance.ListAuditLog(
+        user_name=u'sharrell')), 3)
 
 if( __name__ == '__main__' ):
     unittest.main()
