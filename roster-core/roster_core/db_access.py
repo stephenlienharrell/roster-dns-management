@@ -537,6 +537,10 @@ class dbAccess(object):
     Inputs:
       args: pairs of string of table name and dict of rows
       kwargs: lock_rows: default False
+              date_column: column to search date range on, if using multiple
+                           tables, date column must be in the first table
+                           in args.
+              date_range: range of dates to search for on date_column
 
       example usage: ListRow('users', user_row_dict,
                              'user_group_assignments', user_assign_row_dict,
@@ -565,10 +569,21 @@ class dbAccess(object):
     tables = {}
     table_names = []
     lock_rows = False
+    date_column = None
+    date_range = ()
     if( kwargs ):
       if( 'lock_rows' in kwargs ):
-        lock_rows=kwargs['lock_rows']
+        lock_rows = kwargs['lock_rows']
         del kwargs['lock_rows']
+      if( 'date_column' in kwargs ):
+        date_column = kwargs['date_column']
+        del kwargs['date_column']
+      if( 'date_range' in kwargs ):
+        date_range = kwargs['date_range']
+        del kwargs['date_range']
+      if( bool(date_column) ^ bool(date_range) ):
+        raise InvalidInputError('If date_column or date_range is specified '
+                                'both are needed')
       if( kwargs ):
         raise InvalidInputError('Found unknown option(s): %s' % kwargs.keys())
 
@@ -593,7 +608,19 @@ class dbAccess(object):
                                                       all_none_ok=True)
         tables[current_table_name] = arg
         table_names.append(current_table_name)
-     
+
+    if( date_range ):
+      if( date_column not in args[1] ):
+        raise InvalidInputError('Column %s from date_column not found in row'
+                                'dictionary: %s' % (date_column, args[1]))
+
+      if( constants.TABLES[args[0]][date_column] != 'DateTime' ):
+        raise InvalidInputError('date_column: %s in table %s is not a'
+                                'DateTime type' % (date_column, args[0]))
+      for date in date_range:
+        if( not self.data_validation_instance.isDateTime(date) ):
+          raise InvalidInputError('Date: %s from date_range is not a valid '
+                                  'datetime object' % date)
     query_where = []
     if( len(tables) > 1 ):
       if( not self.foreign_keys ):
@@ -613,7 +640,6 @@ class dbAccess(object):
       if( not query_where ):
         raise InvalidInputError('Multiple tables were passed in but no joins '
                                 'were found')
-
     column_names = []
     search_dict = {}
     for table_name, row_dict in tables.iteritems():
@@ -622,6 +648,12 @@ class dbAccess(object):
         if( v is not None ):
           search_dict[k] = v
           query_where.append('%s%s%s%s' % (k, '=%(', k, ')s'))
+
+    if( date_range ):
+      search_dict['begin_date'] = date_range[0]
+      search_dict['end_date'] = date_range[1]
+      query_where.append('%s%s%s%s' % (date_column, '>=%(begin_date)s AND ',
+                                       date_column, '<=%(end_date)s'))
 
     query_end = ''
     if( query_where ):

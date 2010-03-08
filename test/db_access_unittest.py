@@ -40,6 +40,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import datetime
 import unittest
 import time
 import MySQLdb
@@ -198,6 +199,61 @@ class TestdbAccess(unittest.TestCase):
     self.assertRaises(db_access.InvalidInputError,
                       self.db_instance.ListRow, 'onearg')
 
+    audit_log_dict = {'audit_log_user_name': u'sharrell',
+                      'action': u'DoThis',
+                      'data': u'I did it',
+                      'success': 1,
+                      'audit_log_timestamp': datetime.datetime(2001, 1, 1, 1)}
+
+    self.db_instance.MakeRow('audit_log', audit_log_dict)
+    audit_log_dict['audit_log_timestamp'] = datetime.datetime(2001, 1, 1, 2)
+    self.db_instance.MakeRow('audit_log', audit_log_dict)
+    audit_log_dict['audit_log_timestamp'] = datetime.datetime(2001, 1, 1, 3)
+    audit_log_dict['data'] = u'You did it'
+    self.db_instance.MakeRow('audit_log', audit_log_dict)
+    audit_log_dict['audit_log_timestamp'] = datetime.datetime(2001, 1, 1, 4)
+    self.db_instance.MakeRow('audit_log', audit_log_dict)
+
+    search_dict = self.db_instance.GetEmptyRowDict('audit_log')
+    simple_date = datetime.datetime(2001,1,1,1)
+    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
+                      'audit_log', search_dict,
+                      date_column='audit_log_timestamp')
+    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
+                      'audit_log', search_dict,
+                      date_range='audit_log_timestamp')
+    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
+                      'audit_log', search_dict, date_column='action',
+                      date_range=(simple_date, simple_date))
+    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
+                      'audit_log', search_dict, date_column='not_there',
+                      date_range=(simple_date, simple_date))
+    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
+                      'audit_log', search_dict, date_column='not_there',
+                      date_range=('bleh', simple_date))
+    self.assertEquals(self.db_instance.ListRow(
+        'audit_log', search_dict, date_column='audit_log_timestamp',
+        date_range=(datetime.datetime(2001, 1, 1, 2),
+                    datetime.datetime(2001, 1, 1, 3))),
+        ({'action': u'DoThis',
+          'audit_log_timestamp': datetime.datetime(2001, 1, 1, 2, 0),
+          'data': u'I did it', 'audit_log_user_name': u'sharrell',
+          'success': 1},
+         {'action': u'DoThis',
+          'audit_log_timestamp': datetime.datetime(2001, 1, 1, 3, 0),
+          'data': u'You did it', 'audit_log_user_name': u'sharrell',
+          'success': 1}))
+
+    search_dict['data'] = u'I did it'
+    self.assertEquals(self.db_instance.ListRow(
+        'audit_log', search_dict, date_column='audit_log_timestamp',
+        date_range=(datetime.datetime(2001, 1, 1, 2),
+                    datetime.datetime(2001, 1, 1, 3))),
+        ({'action': u'DoThis',
+          'audit_log_timestamp': datetime.datetime(2001, 1, 1, 2, 0),
+          'data': u'I did it', 'audit_log_user_name': u'sharrell',
+          'success': 1},))
+
     search_dict = self.db_instance.GetEmptyRowDict('acls')
     second_search_dict = self.db_instance.GetEmptyRowDict('users')
     self.assertRaises(db_access.InvalidInputError,
@@ -206,7 +262,6 @@ class TestdbAccess(unittest.TestCase):
     self.assertRaises(db_access.InvalidInputError,
                       self.db_instance.ListRow, 'acls', search_dict,
                       'users', second_search_dict)
-
 
     search_dict['acl_name'] = u'test'
     self.assertEquals((), self.db_instance.ListRow('acls', search_dict))
