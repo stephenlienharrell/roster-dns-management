@@ -3047,6 +3047,27 @@ class Core(object):
 
     return credentials_dict
 
+  def ListAuditLog(self, user_name=None, action=None, success=None,
+                   begin_timestamp=None, end_timestamp=None):
+    if( (begin_timestamp or end_timestamp) and not 
+        (begin_timestamp or end_timestamp) ):
+      raise errors.CoreError('Missing begin_timestamp or end_timestamp.')
+    audit_dict = {'audit_log_user_name': user_name,
+                  'action': action, 'data': None, 'success': success,
+                  'audit_log_timestamp': None}
+    self.db_instance.StartTransaction()
+    try:
+      if( begin_timestamp and end_timestamp ):
+        audit_log = self.db_instance.ListRow(
+            'audit_log', audit_dict, date_column='audit_log_timestamp',
+            date_range=(begin_timestamp, end_timestamp))
+      else:
+        audit_log = self.db_instance.ListRow('audit_log', audit_dict)
+    finally:
+      self.db_instance.EndTransaction()
+
+    return audit_log
+
   def _RemoveCredential(self, credential=None, user_name=None):
     """Removes a credential.
 
