@@ -45,7 +45,6 @@ from roster_config_manager import zone_importer_lib
 
 
 def main(args):
-  user = unicode(getpass.getuser())
   parser = OptionParser()
 
   parser.add_option('-c', '--config-file', action='store', dest='config',
@@ -66,8 +65,15 @@ def main(args):
   parser.add_option('-z', '--zone_view', action='store', dest='zone_view',
                     help='View to display records (Cannot be the any view).',
                     metavar='<view>', default=None)
+  parser.add_option('-u', '--username', action='store', dest='user_name',
+                    help='Override default username.', metavar='<user_name>',
+                    default=None)
 
   (globals()["options"], args) = parser.parse_args(args)
+
+  user = unicode(getpass.getuser())
+  if( options.user_name ):
+    user = unicode(options.user_name)
 
   if( options.config is None ):
     print "Must specify --config flag."
