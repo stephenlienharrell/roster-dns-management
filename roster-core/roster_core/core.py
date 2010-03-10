@@ -3112,6 +3112,21 @@ class Core(object):
 
   def ListAuditLog(self, user_name=None, action=None, success=None,
                    begin_timestamp=None, end_timestamp=None):
+    """Lists audit log
+
+    Inputs:
+      user_name: string of user name
+      action: string of function
+      success: intbool of success
+      begin_timestamp: datetime object of beginning timestamp
+      end_timestamp: datetime object of ending timestamp
+
+    Outputs:
+      dict: Dictionary of audit log
+        ex: {'action': u'Action', 'data', u'Data',
+             'audit_log_timestamp': datetime.datetime,
+             'audit_log_user_name': u'username'}
+    """
     if( (begin_timestamp or end_timestamp) and not 
         (begin_timestamp or end_timestamp) ):
       raise errors.CoreError('Missing begin_timestamp or end_timestamp.')
