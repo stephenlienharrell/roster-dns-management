@@ -2976,23 +2976,14 @@ class Core(object):
                        'credential_user_name': user_name,
                        'infinite_cred': infinite_cred,
                        'last_used_timestamp': last_used}
-    success = False
+
+    self.db_instance.StartTransaction()
     try:
-      self.db_instance.StartTransaction()
-      try:
-        self.db_instance.MakeRow('credentials', credential_dict)
-      except:
-        self.db_instance.EndTransaction(rollback=True)
-        raise
-      self.db_instance.EndTransaction()
-      success = True
-    finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'_MakeCredential',
-                                  u'credential: %s user_name: %s '
-                                  'infinite_cred: %s' % (
-                                      credential, user_name, infinite_cred),
-                                  success)
+      self.db_instance.MakeRow('credentials', credential_dict)
+    except:
+      self.db_instance.EndTransaction(rollback=True)
+      raise
+    self.db_instance.EndTransaction()
 
   def _ListCredentials(self, credential=None, user_name=None,
                        infinite_cred=None, key_by_user=False):
@@ -3047,27 +3038,6 @@ class Core(object):
 
     return credentials_dict
 
-  def ListAuditLog(self, user_name=None, action=None, success=None,
-                   begin_timestamp=None, end_timestamp=None):
-    if( (begin_timestamp or end_timestamp) and not 
-        (begin_timestamp or end_timestamp) ):
-      raise errors.CoreError('Missing begin_timestamp or end_timestamp.')
-    audit_dict = {'audit_log_user_name': user_name,
-                  'action': action, 'data': None, 'success': success,
-                  'audit_log_timestamp': None}
-    self.db_instance.StartTransaction()
-    try:
-      if( begin_timestamp and end_timestamp ):
-        audit_log = self.db_instance.ListRow(
-            'audit_log', audit_dict, date_column='audit_log_timestamp',
-            date_range=(begin_timestamp, end_timestamp))
-      else:
-        audit_log = self.db_instance.ListRow('audit_log', audit_dict)
-    finally:
-      self.db_instance.EndTransaction()
-
-    return audit_log
-
   def _RemoveCredential(self, credential=None, user_name=None):
     """Removes a credential.
 
@@ -3087,28 +3057,20 @@ class Core(object):
     else:
       search_credential_dict['credential_user_name'] = user_name
     row_count = 0
-    success = False
+
+    self.db_instance.StartTransaction()
     try:
-      self.db_instance.StartTransaction()
-      try:
-        found_credential = self.db_instance.ListRow('credentials',
-                                              search_credential_dict,
-                                              lock_rows=True)
-        if( found_credential ):
-          # credential is a unique field, we know there is only one.
-          row_count += self.db_instance.RemoveRow('credentials',
-                                                  found_credential[0])
-      except:
-        self.db_instance.EndTransaction(rollback=True)
-        raise
-      self.db_instance.EndTransaction()
-      success = True
-    finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'_RemoveCredential',
-                                  u'credential: %s user_name: %s' % (
-                                      credential, user_name),
-                                  success)
+      found_credential = self.db_instance.ListRow('credentials',
+                                            search_credential_dict,
+                                            lock_rows=True)
+      if( found_credential ):
+        # credential is a unique field, we know there is only one.
+        row_count += self.db_instance.RemoveRow('credentials',
+                                                found_credential[0])
+    except:
+      self.db_instance.EndTransaction(rollback=True)
+      raise
+    self.db_instance.EndTransaction()
 
     return row_count
 
@@ -3134,27 +3096,45 @@ class Core(object):
     else:
       search_credential_dict['credential_user_name'] = search_user_name
     update_credential_dict['credential'] = update_credential
-    success = False
-    try:
-      self.db_instance.StartTransaction()
-      try:
-        row_count = self.db_instance.UpdateRow('credentials',
-                                               search_credential_dict,
-                                               update_credential_dict)
-      except:
-        self.db_instance.EndTransaction(rollback=True)
-        raise
 
-      self.db_instance.EndTransaction()
-      success = True
-    finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'_UpdateCredential',
-                                  u'search_credential: %s search_user_name: '
-                                  u'%s update_credential: %s' % (
-                                      search_credential, search_user_name,
-                                      update_credential), success)
+    self.db_instance.StartTransaction()
+    try:
+      row_count = self.db_instance.UpdateRow('credentials',
+                                             search_credential_dict,
+                                             update_credential_dict)
+    except:
+      self.db_instance.EndTransaction(rollback=True)
+      raise
+
+    self.db_instance.EndTransaction()
 
     return row_count
+
+  def ListAuditLog(self, user_name=None, action=None, success=None,
+                   begin_timestamp=None, end_timestamp=None):
+    if( (begin_timestamp or end_timestamp) and not 
+        (begin_timestamp or end_timestamp) ):
+      raise errors.CoreError('Missing begin_timestamp or end_timestamp.')
+    audit_dict = {'audit_log_user_name': user_name,
+                  'action': action, 'data': None, 'success': success,
+                  'audit_log_timestamp': None}
+    self.db_instance.StartTransaction()
+    try:
+      if( begin_timestamp and end_timestamp ):
+        if( type(begin_timestamp) != datetime.datetime ):
+          begin_timestamp = datetime.datetime.strptime(
+              begin_timestamp.value, "%Y%m%dT%H:%M:%S")
+        if( type(end_timestamp) != datetime.datetime ):
+          end_timestamp = datetime.datetime.strptime(
+              end_timestamp.value, "%Y%m%dT%H:%M:%S")
+        audit_log = self.db_instance.ListRow(
+            'audit_log', audit_dict, date_column='audit_log_timestamp',
+            date_range=(begin_timestamp, end_timestamp))
+      else:
+        audit_log = self.db_instance.ListRow('audit_log', audit_dict)
+    finally:
+      self.db_instance.EndTransaction()
+
+    return audit_log
 
 # vi: set ai aw sw=2:
