@@ -122,8 +122,6 @@ def main(args):
   if( os.getuid() != 0 ):
     print '%s: Need to be root.' % sys.argv[0]
     sys.exit(1)
-  password = getpass.getpass(
-      'Enter database password for %s: ' % options.user_name)
 
   args_dict = {'-c/--config-file': options.config_file,
                '-u/--user-name': options.user_name,
@@ -140,6 +138,8 @@ def main(args):
     parser.print_help()
     sys.exit(1)
 
+  password = getpass.getpass(
+      'Enter database password for %s: ' % options.user_name)
   module_list = []
   for module in dir(roster_server):
     if( module.startswith('_') ):
