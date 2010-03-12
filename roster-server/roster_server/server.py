@@ -43,6 +43,7 @@ import os
 import inspect
 import SocketServer
 import time
+import xmlrpclib
 
 import roster_core
 
@@ -143,6 +144,9 @@ class Server(object):
       for index, item in enumerate(object_to_convert):
         object_to_convert[index] = self.StringToUnicode(item)
       converted_object = object_to_convert
+    elif( isinstance(object_to_convert, xmlrpclib.DateTime) ):
+      converted_object = datetime.datetime.strptime(
+          object_to_convert.value, "%Y%m%dT%H:%M:%S")
     return converted_object
 
   def GetCoreInstance(self, user_name):

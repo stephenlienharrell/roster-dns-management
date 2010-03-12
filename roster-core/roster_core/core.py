@@ -3136,12 +3136,6 @@ class Core(object):
     self.db_instance.StartTransaction()
     try:
       if( begin_timestamp and end_timestamp ):
-        if( type(begin_timestamp) != datetime.datetime ):
-          begin_timestamp = datetime.datetime.strptime(
-              begin_timestamp.value, "%Y%m%dT%H:%M:%S")
-        if( type(end_timestamp) != datetime.datetime ):
-          end_timestamp = datetime.datetime.strptime(
-              end_timestamp.value, "%Y%m%dT%H:%M:%S")
         audit_log = self.db_instance.ListRow(
             'audit_log', audit_dict, date_column='audit_log_timestamp',
             date_range=(begin_timestamp, end_timestamp))

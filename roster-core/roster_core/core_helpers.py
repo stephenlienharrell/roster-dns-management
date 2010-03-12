@@ -412,9 +412,6 @@ class CoreHelpers(object):
     Outputs:
       list: list of dictionarires from ListNamedConfGlobalOptions
     """
-    if( timestamp is not None ):
-      timestamp = datetime.datetime.strptime(timestamp.value,
-                                             "%Y%m%dT%H:%M:%S")
     return self.core_instance.ListNamedConfGlobalOptions(
         option_id, dns_server_set, timestamp)
 
