@@ -1440,5 +1440,15 @@ class TestDnsMkHost(unittest.TestCase):
         '@ 3600 in mx 1 mail1.university.edu.\n')
     handle.close()
 
+    output = os.popen('python %s -d %s -c %s' % (
+        EXEC, ROOT_DIR, CONFIG_FILE))
+    self.assertEquals(output.read(), 'No changes made to database. In order '
+                                     'to export use the --force flag.\n')
+    output.close()
+    output = os.popen('python %s -d %s -c %s --force' % (
+        EXEC, ROOT_DIR, CONFIG_FILE))
+    self.assertEquals(output.read(), '')
+    output.close()
+
 if( __name__ == '__main__' ):
       unittest.main()

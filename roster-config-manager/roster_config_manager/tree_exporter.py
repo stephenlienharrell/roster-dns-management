@@ -42,13 +42,20 @@ import os
 import ConfigParser
 import datetime
 
+from roster_core import audit_log
 from roster_core import config
 from roster_core import constants
+from roster_core import core
 from roster_config_manager import zone_exporter_lib
 
 
 class Error(Exception):
   pass
+
+
+class ChangesNotFoundError(Error):
+  pass
+
 
 class BindTreeExport(object):
   """This class exports zones"""
@@ -63,6 +70,8 @@ class BindTreeExport(object):
     self.raw_data = {}
     self.cooked_data = {}
     self.root_config_dir = root_config_dir
+    self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
+                                           db_instance=self.db_instance)
 
   def ListRecordArgumentDefinitions(self, record_arguments):
     """Lists record argument definitions given table from database
@@ -98,80 +107,113 @@ class BindTreeExport(object):
           key=lambda k: k['argument_order'])
     return sorted_record_arguments
 
-  def ExportAllBindTrees(self):
-    """Exports bind trees to files"""
-    self.db_instance.StartTransaction()
+  def ExportAllBindTrees(self, force=False):
+    """Exports bind trees to files
+    
+    Inputs:
+      force: boolean of if the export should continue if no changes are found
+             in the database
+    """
+    success = False
     try:
-      self.db_instance.LockDb()
+      self.db_instance.StartTransaction()
       try:
-        data = self.GetRawData()
+        self.db_instance.LockDb()
+        try:
+          if( not force ):
+            audit_log_dict = self.db_instance.GetEmptyRowDict('audit_log')
+            audit_log_dict['action'] = u'ExportAllBindTrees'
+            audit_log_dict['success'] = 1
+            audit_rows = self.db_instance.ListRow('audit_log', audit_log_dict)
+            if( audit_rows ):
+              audit_rows = self.db_instance.ListRow(
+                  'audit_log', self.db_instance.GetEmptyRowDict('audit_log'),
+                  date_column='audit_log_timestamp',
+                  date_range=(audit_rows[-1]['audit_log_timestamp'],
+                              datetime.datetime.now()))
+              for row in audit_rows:
+                if( row['action'] == u'ExportAllBindTrees' ):
+                  continue
+                else:
+                  break
+              else:
+                raise ChangesNotFoundError('No changes have been made to the '
+                                             'database since last export, '
+                                             'no export needed.')
+          data = self.GetRawData()
+        finally:
+          self.db_instance.UnlockDb()
       finally:
-        self.db_instance.UnlockDb()
-    finally:
-        self.db_instance.EndTransaction()
-    cooked_data = self.CookData(data)
-    zone_view_assignments = {}
-    for zone_view_assignment in data['zone_view_assignments']:
-      if( not zone_view_assignment['zone_view_assignments_zone_name']
-              in zone_view_assignments):
+          self.db_instance.EndTransaction()
+      cooked_data = self.CookData(data)
+      zone_view_assignments = {}
+      for zone_view_assignment in data['zone_view_assignments']:
+        if( not zone_view_assignment['zone_view_assignments_zone_name']
+            in zone_view_assignments):
+          zone_view_assignments[zone_view_assignment[
+              'zone_view_assignments_zone_name']] = []
         zone_view_assignments[zone_view_assignment[
-            'zone_view_assignments_zone_name']] = []
-      zone_view_assignments[zone_view_assignment[
-          'zone_view_assignments_zone_name']].append(zone_view_assignment[
-          'zone_view_assignments_view_dependency'].split('_dep')[0])
-    for zone_view_assignment in zone_view_assignments:
-      if( zone_view_assignments[zone_view_assignment] == [u'any'] ):
-        raise Error('Zone "%s" has no view assignments.' % zone_view_assignment)
+            'zone_view_assignments_zone_name']].append(zone_view_assignment[
+            'zone_view_assignments_view_dependency'].split('_dep')[0])
+      for zone_view_assignment in zone_view_assignments:
+        if( zone_view_assignments[zone_view_assignment] == [u'any'] ):
+          raise Error('Zone "%s" has no view assignments.' %
+                      zone_view_assignment)
 
-    record_arguments = data['record_arguments']
-    record_argument_definitions = self.ListRecordArgumentDefinitions(
-        record_arguments)
-    for dns_server_set in cooked_data:
-      config_parser = ConfigParser.SafeConfigParser()
-      ## Make Files
-      named_directory = '%s/%s_servers' % (self.root_config_dir,
-          dns_server_set)
-      if( not os.path.exists(named_directory) ):
-        os.makedirs(named_directory)
-      dns_server_set_directory = '%s/%s_servers/named' % (self.root_config_dir,
-          dns_server_set)
-      if( not os.path.exists(dns_server_set_directory) ):
-        os.makedirs(dns_server_set_directory)
-      config_file = '%s/%s_config' % (dns_server_set_directory, dns_server_set)
-      config_parser.add_section('dns_server_set_parameters')
-      config_parser.set('dns_server_set_parameters', 'dns_servers', ','.join(
-          cooked_data[dns_server_set]['dns_servers']))
-      config_parser.set('dns_server_set_parameters', 'dns_server_set_name',
-                        dns_server_set)
-      config_parser_file = open(config_file, 'wb')
-      config_parser.write(config_parser_file)
-      for view in cooked_data[dns_server_set]['views']:
-        view_directory = '%s/%s' % (dns_server_set_directory, view)
-        if( not os.path.exists(view_directory) ):
-          os.makedirs(view_directory)
-        for zone in cooked_data[dns_server_set]['views'][view]['zones']:
-          if( view not in zone_view_assignments[zone] ):
-            continue
-          zone_file = '%s/%s/%s.db' % (dns_server_set_directory, view, zone)
-          zone_file_string = zone_exporter_lib.MakeZoneString(
-              cooked_data[dns_server_set]['views'][view]['zones'][zone][
-                  'records'],
-              cooked_data[dns_server_set]['views'][view]['zones'][zone][
-                  'zone_origin'],
-              record_argument_definitions, zone, view)
-          zone_file_handle = open(zone_file, 'w')
-          try:
-            zone_file_handle.writelines(zone_file_string)
-          finally:
-            zone_file_handle.close()
-      named_conf_file = '%s/named.conf' % named_directory
-      named_conf_file_string = self.MakeNamedConf(data, cooked_data,
-                                                  dns_server_set)
-      named_conf_file_handle = open(named_conf_file, 'w')
-      try:
-        named_conf_file_handle.writelines(named_conf_file_string)
-      finally:
-        named_conf_file_handle.close()
+      record_arguments = data['record_arguments']
+      record_argument_definitions = self.ListRecordArgumentDefinitions(
+          record_arguments)
+      for dns_server_set in cooked_data:
+        config_parser = ConfigParser.SafeConfigParser()
+        ## Make Files
+        named_directory = '%s/%s_servers' % (self.root_config_dir,
+            dns_server_set)
+        if( not os.path.exists(named_directory) ):
+          os.makedirs(named_directory)
+        dns_server_set_directory = ('%s/%s_servers/named' % 
+                                   (self.root_config_dir, dns_server_set))
+        if( not os.path.exists(dns_server_set_directory) ):
+          os.makedirs(dns_server_set_directory)
+        config_file = '%s/%s_config' % (dns_server_set_directory,
+                                        dns_server_set)
+        config_parser.add_section('dns_server_set_parameters')
+        config_parser.set('dns_server_set_parameters', 'dns_servers', ','.join(
+            cooked_data[dns_server_set]['dns_servers']))
+        config_parser.set('dns_server_set_parameters', 'dns_server_set_name',
+                          dns_server_set)
+        config_parser_file = open(config_file, 'wb')
+        config_parser.write(config_parser_file)
+        for view in cooked_data[dns_server_set]['views']:
+          view_directory = '%s/%s' % (dns_server_set_directory, view)
+          if( not os.path.exists(view_directory) ):
+            os.makedirs(view_directory)
+          for zone in cooked_data[dns_server_set]['views'][view]['zones']:
+            if( view not in zone_view_assignments[zone] ):
+              continue
+            zone_file = '%s/%s/%s.db' % (dns_server_set_directory, view, zone)
+            zone_file_string = zone_exporter_lib.MakeZoneString(
+                cooked_data[dns_server_set]['views'][view]['zones'][zone][
+                    'records'],
+                cooked_data[dns_server_set]['views'][view]['zones'][zone][
+                    'zone_origin'],
+                record_argument_definitions, zone, view)
+            zone_file_handle = open(zone_file, 'w')
+            try:
+              zone_file_handle.writelines(zone_file_string)
+            finally:
+              zone_file_handle.close()
+        named_conf_file = '%s/named.conf' % named_directory
+        named_conf_file_string = self.MakeNamedConf(data, cooked_data,
+                                                    dns_server_set)
+        named_conf_file_handle = open(named_conf_file, 'w')
+        try:
+          named_conf_file_handle.writelines(named_conf_file_string)
+        finally:
+          named_conf_file_handle.close()
+      success = True
+    finally:
+      self.log_instance.LogAction(u'tree_export_user', u'ExportAllBindTrees',
+                                  u'', success)
 
   def ListLatestNamedConfGlobalOptions(self, data, dns_server_set):
     """Lists latest named.conf global options

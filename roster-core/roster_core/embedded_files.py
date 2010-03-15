@@ -692,4 +692,8 @@ INSERT INTO reserved_words (reserved_word) VALUES ('damn');
 INSERT INTO acls (acl_name) VALUES ('any');
 INSERT INTO acl_ranges (acl_ranges_acl_name, acl_range_allowed) VALUES 
     ('any', 1);
+
+# Tree exporter needs to audit log with no active user. Here is a user for the
+# exporter.
+INSERT INTO users (user_name, access_level) VALUES ('tree_export_user', 0);
 """

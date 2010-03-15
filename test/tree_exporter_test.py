@@ -1657,5 +1657,8 @@ class TestTreeExporter(unittest.TestCase):
         '@ 3600 in mx 1 mail1.university.edu.\n')
     handle.close()
 
+    self.assertRaises(tree_exporter.ChangesNotFoundError,
+                      self.tree_exporter_instance.ExportAllBindTrees)
+
 if( __name__ == '__main__' ):
   unittest.main()
