@@ -3127,6 +3127,7 @@ class Core(object):
              'audit_log_timestamp': datetime.datetime,
              'audit_log_user_name': u'username'}
     """
+    self.user_instance.Authorize('ListAuditLog')
     if( (begin_timestamp or end_timestamp) and not 
         (begin_timestamp or end_timestamp) ):
       raise errors.CoreError('Missing begin_timestamp or end_timestamp.')
