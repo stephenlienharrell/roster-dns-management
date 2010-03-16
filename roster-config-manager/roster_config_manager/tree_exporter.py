@@ -132,9 +132,7 @@ class BindTreeExport(object):
                   date_range=(audit_rows[-1]['audit_log_timestamp'],
                               datetime.datetime.now()))
               for row in audit_rows:
-                if( row['action'] == u'ExportAllBindTrees' ):
-                  continue
-                else:
+                if( row['action'] != u'ExportAllBindTrees' ):
                   break
               else:
                 raise ChangesNotFoundError('No changes have been made to the '
