@@ -172,7 +172,8 @@ class TestXMLServerClient(unittest.TestCase):
                          u'ListUsers', u'shuey', credfile=CREDFILE,
                          server_name=self.server_name,
                          password=PASSWORD)['core_return'],
-                    {'shuey': 64, 'jcollins': 32, 'sharrell': 128})
+                     {'shuey': 64, 'tree_export_user': 0, 'jcollins': 32,
+                      'sharrell': 128})
 
   def testCredsStrings(self):
     credstring = u'81ffc6ea-4b38-45e2-8fce-e24636672b27'
@@ -180,29 +181,34 @@ class TestXMLServerClient(unittest.TestCase):
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=credstring,
         server_name=self.server_name, password=PASSWORD)['core_return'],
-                     {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
+                     {u'shuey': 64, u'tree_export_user': 0, u'jcollins': 32,
+                      u'sharrell': 128})
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=credstring,
         server_name=self.server_name, password=PASSWORD)['core_return'],
-                     {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
+                     {u'shuey': 64, 'tree_export_user': 0, u'jcollins': 32,
+                      u'sharrell': 128})
     time.sleep(10)
     function_return = roster_client_lib.RunFunction(
         u'ListUsers', USERNAME,credstring=credstring,
         server_name=self.server_name, password=PASSWORD)
     self.assertEqual(function_return['core_return'],
-                     {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
+                     {u'shuey': 64, 'tree_export_user': 0, u'jcollins': 32,
+                      u'sharrell': 128})
     if( function_return['new_credential'] != u'' ):
       credstring = function_return['new_credential']
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=credstring,
         server_name=self.server_name, password=PASSWORD)['core_return'],
-            {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
+                     {u'shuey': 64, 'tree_export_user': 0, u'jcollins': 32,
+                      u'sharrell': 128})
 
   def testNoArgsClient(self):
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=self.credential,
         server_name=self.server_name, password=PASSWORD)['core_return'],
-            {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
+                     {u'shuey': 64, 'tree_export_user': 0, u'jcollins': 32,
+                      u'sharrell': 128})
 
   def testArgsOnlyClient(self):
     roster_client_lib.RunFunction(u'MakeUser', USERNAME, args=[u'jake\xc6', 64],
@@ -212,14 +218,16 @@ class TestXMLServerClient(unittest.TestCase):
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=self.credential,
         server_name=self.server_name, password=PASSWORD)['core_return'],
-            {u'shuey': 64, u'jcollins': 32, u'sharrell': 128, u'jake\xc6': 64})
+        {u'shuey': 64, u'tree_export_user': 0, u'jcollins': 32,
+         u'sharrell': 128, u'jake\xc6': 64})
     self.assertTrue(roster_client_lib.RunFunction(
         u'RemoveUser', USERNAME, args=[u'shuey'], credstring=self.credential,
         server_name=self.server_name, password=PASSWORD)['core_return'])
     self.assertEqual(roster_client_lib.RunFunction(
         u'ListUsers', USERNAME, credstring=self.credential,
         server_name=self.server_name, password=PASSWORD)['core_return'],
-            {u'jcollins': 32, u'jake\xc6': 64, u'sharrell': 128})
+        {u'jcollins': 32, u'tree_export_user': 0, u'jake\xc6': 64,
+         u'sharrell': 128})
 
   def testKWArgsOnlyClient(self):
     self.assertEqual(roster_client_lib.RunFunction(

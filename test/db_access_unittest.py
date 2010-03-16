@@ -290,11 +290,13 @@ class TestdbAccess(unittest.TestCase):
         self.db_instance.GetEmptyRowDict('user_group_assignments'))
     forward_zone_permissions_dict = (
         self.db_instance.GetEmptyRowDict('forward_zone_permissions'))
-    self.assertEqual(self.db_instance.ListRow('users', users_dict,
-                                              'user_group_assignments',
-                                              user_group_assignments_dict,
-                                              'forward_zone_permissions',
-                                              forward_zone_permissions_dict),
+    self.assertEqual(sorted(self.db_instance.ListRow(
+                            'users', users_dict,
+                            'user_group_assignments',
+                            user_group_assignments_dict,
+                            'forward_zone_permissions',
+                            forward_zone_permissions_dict)),
+        sorted(
         ({'user_group_assignments_user_name': u'sharrell',
           'forward_zone_permissions_group_name': u'cs', 'access_level': 128,
           'forward_zone_permissions_access_right': u'rw', 'user_name':
@@ -339,7 +341,7 @@ class TestdbAccess(unittest.TestCase):
             'forward_zone_permissions_group_name': u'bio', 'access_level': 64,
             'forward_zone_permissions_access_right': u'rw', 'user_name':
             u'shuey', 'user_group_assignments_group_name': u'bio',
-            'forward_zone_permissions_zone_name': u'bio.university.edu'}))
+            'forward_zone_permissions_zone_name': u'bio.university.edu'})))
                                               
     self.db_instance.EndTransaction()
 
@@ -404,7 +406,7 @@ class TestdbAccess(unittest.TestCase):
 
   def testTableRowCount(self):
     self.db_instance.StartTransaction()
-    self.assertEqual(self.db_instance.TableRowCount('users'), 3)
+    self.assertEqual(self.db_instance.TableRowCount('users'), 4)
 
   def testListTables(self):
     self.db_instance.StartTransaction()

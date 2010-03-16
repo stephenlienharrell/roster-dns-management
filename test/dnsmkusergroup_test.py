@@ -143,7 +143,7 @@ class Testdnsmkusergroup(unittest.TestCase):
     output.close()
     self.assertEqual(self.core_instance.ListUsers(),
                      {u'shuey': 64, u'new_user': 128, u'jcollins': 32,
-                      u'sharrell': 128})
+                      u'tree_export_user': 0, u'sharrell': 128})
     self.assertEqual(self.core_instance.ListGroups(), [u'bio', u'cs', u'eas'])
     self.assertEqual(self.core_instance.ListUserGroupAssignments(),
                      {u'shuey': [u'bio', u'cs'], u'new_user': [u'cs'],

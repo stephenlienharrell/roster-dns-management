@@ -131,7 +131,8 @@ class Testdnsrmusergroup(unittest.TestCase):
 
   def testRemoveUserGroupUserGroupAssignments(self):
     self.assertEqual(self.core_instance.ListUsers(),
-                     {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
+                     {u'shuey': 64, 'tree_export_user': 0, u'jcollins': 32,
+                      u'sharrell': 128})
     self.assertEqual(self.core_instance.ListUserGroupAssignments(),
                      {u'shuey': [u'bio', u'cs'], u'sharrell': [u'cs']})
     output = os.popen('python %s -n shuey '
@@ -141,7 +142,8 @@ class Testdnsrmusergroup(unittest.TestCase):
     self.assertEqual(output.read(), 'REMOVED USER: shuey\n')
     output.close()
     self.assertEqual(self.core_instance.ListUsers(),
-                     {u'jcollins': 32, u'sharrell': 128})
+                     {u'jcollins': 32, u'sharrell': 128,
+                      u'tree_export_user': 0})
     self.assertEqual(self.core_instance.ListUserGroupAssignments(),
                      {u'sharrell': [u'cs']})
     output = os.popen('python %s -g cs '
@@ -151,7 +153,7 @@ class Testdnsrmusergroup(unittest.TestCase):
     self.assertEqual(output.read(), 'REMOVED GROUP: cs\n')
     output.close()
     self.assertEqual(self.core_instance.ListUsers(),
-                     {u'jcollins': 32, u'sharrell': 128})
+                     {u'jcollins': 32, u'sharrell': 128, 'tree_export_user': 0})
     self.assertEqual(self.core_instance.ListUserGroupAssignments(), {})
 
   def testRemovePermissions(self):

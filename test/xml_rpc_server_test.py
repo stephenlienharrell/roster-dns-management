@@ -85,11 +85,13 @@ class TestCredentialsLibrary(unittest.TestCase):
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
+                                      u'tree_export_user': 0,
                                       u'sharrell': 128}})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
+                                      u'tree_export_user': 0,
                                       u'sharrell': 128}})
     self.assertTrue(len(self.server_instance.core_store))
     time.sleep(6)
@@ -99,16 +101,19 @@ class TestCredentialsLibrary(unittest.TestCase):
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
+                                      u'tree_export_user': 0,
                                       u'sharrell': 128}})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
+                                      u'tree_export_user': 0,
                                       u'sharrell': 128}})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
+                                      u'tree_export_user': 0,
                                       u'sharrell': 128}})
     self.assertEqual(len(self.server_instance.core_store), 1)
 
@@ -116,12 +121,15 @@ class TestCredentialsLibrary(unittest.TestCase):
     self.assertEqual(self.server_instance.core_store, [])
     self.assertEqual(self.server_instance.CoreRun(u'ListUsers', USERNAME,
                                         self.credential)['core_return'],
-                     {'shuey': 64, 'jcollins': 32, 'sharrell': 128})
+                                        {'tree_export_user': 0,
+                                         'shuey': 64, 'jcollins': 32,
+                                         'sharrell': 128})
     self.assertTrue(len(self.server_instance.core_store))
     time.sleep(6)
     self.assertEqual(self.server_instance.CoreRun(u'ListUsers', USERNAME,
                                         self.credential)['core_return'],
-                     {'shuey': 64, 'jcollins': 32, 'sharrell': 128})
+                     {'shuey': 64, 'tree_export_user': 0, 'jcollins': 32,
+                      'sharrell': 128})
     self.server_instance.CleanupCoreStore()
     self.assertFalse(len(self.server_instance.core_store))
 

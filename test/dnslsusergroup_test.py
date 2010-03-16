@@ -133,11 +133,13 @@ class Testdnslsusergroup(unittest.TestCase):
   def testListUserGroupUserGroupAssignments(self):
     output = os.popen('python %s -s %s -u %s -p %s --config-file %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'Username Groups Access Level\n'
-                                    '----------------------------\n'
-                                    'shuey    bio,cs 64\n'
-                                    'jcollins        32\n'
-                                    'sharrell cs     128\n\n')
+    self.assertEqual(output.read(), 
+                     'Username         Groups Access Level\n'
+                     '------------------------------------\n'
+                     'shuey            bio,cs 64\n'
+                     'jcollins                32\n'
+                     'tree_export_user        0\n'
+                     'sharrell         cs     128\n\n')
     output.close()
     output = os.popen('python %s -U sharrell -s %s -u %s -p %s '
                       '--config-file %s' % (

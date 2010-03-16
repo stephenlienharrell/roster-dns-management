@@ -77,7 +77,8 @@ class TestCore(unittest.TestCase):
 
   def testUserMakeRemoveListUpdate(self):
     self.assertEquals(self.core_instance.ListUsers(),
-                      {u'shuey': 64, u'jcollins': 32, u'sharrell': 128})
+                      {u'shuey': 64, u'jcollins': 32, 'tree_export_user': 0,
+                       u'sharrell': 128})
     self.core_instance.MakeUser(u'ahoward', 64)
     self.assertEqual(self.core_instance.ListUsers(user_name=u'ahoward'),
                      {u'ahoward': 64})
