@@ -40,7 +40,6 @@ import core
 import errors
 
 import datetime
-import inspect
 import math
 
 import IPy
@@ -449,21 +448,7 @@ class CoreHelpers(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+    function_name, current_args = self.core_instance._getFunctionNameAndArgs()
 
     record_arguments_record_assignments_dict = (
         self.db_instance.GetEmptyRowDict(
@@ -538,21 +523,7 @@ class CoreHelpers(object):
     Outputs:
       int: row count
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+    function_name, current_args = self.core_instance._getFunctionNameAndArgs()
 
     log_dict = {'delete': [], 'add': []}
     row_count = 0

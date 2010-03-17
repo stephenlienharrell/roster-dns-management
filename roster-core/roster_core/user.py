@@ -104,21 +104,9 @@ class User(object):
       UserError if no target is provided (and one is required)
       AuthError on authorization failure
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+    function_name = 'Authorize'
+    current_args = {'audit_args': {'method': method, 'target': target},
+                    'replay_args': [method, target]}
 
     if( target is not None ):
       target_string = ' on %s' % target
@@ -136,11 +124,11 @@ class User(object):
         if( target is None ):
           raise UserError('No target provided for access method %s' % method)
         try:
-          i = IPy.IP(target)
+          ip = IPy.IP(target)
 
           # Good, we have an IP.  See if we hit any delegated ranges.
           for reverse_range in self.reverse_ranges:
-            if( IPy.IP(reverse_range['cidr_block']).overlaps(i) ):
+            if( IPy.IP(reverse_range['cidr_block']).overlaps(ip) ):
               return
 
           # fail to find a matching IP range with appropriate perms

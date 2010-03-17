@@ -71,6 +71,42 @@ class Core(object):
     self.user_instance = user.User(user_name, self.db_instance,
                                    self.log_instance)
 
+  def _getFunctionNameAndArgs(self):
+    """Grabs the current frame and adjacent frames then finds the calling
+    function name and arguments and returns them.
+
+    Outputs:
+      tuple: function name and current args
+        ex: ('MakeUser', {'replay_args': [u'ahoward', 64],
+                          'audit_args': {'access_level': 64,
+                                         'user_name': u'ahoward'}}
+    """
+    current_frame = inspect.currentframe()
+    try:
+      outer_frames = inspect.getouterframes(current_frame)
+      try:
+        function_name = unicode(outer_frames[1][3])
+        calling_frame = outer_frames[1][0]
+        try:
+          arg_values = inspect.getargvalues(calling_frame)
+        finally:
+          del calling_frame
+      finally:
+        del outer_frames
+    finally:
+      del current_frame
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+    return (function_name, current_args)
+
+
   def MakeUser(self, user_name, access_level):
     """Create a user.
 
@@ -81,22 +117,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     user_dict = {'user_name': user_name,
                  'access_level': access_level}
@@ -157,22 +179,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_user_dict = self.db_instance.GetEmptyRowDict('users')
     search_user_dict['user_name'] = user_name
@@ -212,22 +220,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_user_dict = self.db_instance.GetEmptyRowDict('users')
     search_user_dict['user_name'] = search_user_name
@@ -284,22 +278,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     group_dict = self.db_instance.GetEmptyRowDict('groups')
     group_dict['group_name'] = group_name
@@ -330,22 +310,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     group_dict = self.db_instance.GetEmptyRowDict('groups')
     group_dict['group_name'] = group_name
@@ -378,22 +344,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_group_dict = self.db_instance.GetEmptyRowDict('groups')
     search_group_dict['group_name'] = search_group_name
@@ -480,22 +432,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     assignment_dict = self.db_instance.GetEmptyRowDict('user_group_assignments')
     assignment_dict['user_group_assignments_group_name'] = group_name
@@ -528,22 +466,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     assignment_dict = self.db_instance.GetEmptyRowDict('user_group_assignments')
     assignment_dict['user_group_assignments_group_name'] = group_name
@@ -622,22 +546,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     acls_dict = {'acl_name': acl_name}
     acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
@@ -671,22 +581,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     acls_dict = {'acl_name': acl_name}
 
@@ -721,22 +617,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
                        'acl_range_cidr_block': cidr_block,
@@ -794,22 +676,8 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     dns_server_dict['dns_server_name'] = dns_server_name
@@ -837,22 +705,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     dns_server_dict['dns_server_name'] = dns_server_name
@@ -885,22 +739,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     search_dns_server_dict['dns_server_name'] = search_dns_server_name
@@ -959,22 +799,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     dns_server_set_dict = self.db_instance.GetEmptyRowDict('dns_server_sets')
     dns_server_set_dict['dns_server_set_name'] = dns_server_set_name
@@ -1005,22 +831,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     dns_server_set_dict = self.db_instance.GetEmptyRowDict('dns_server_sets')
     dns_server_set_dict['dns_server_set_name'] = dns_server_set_name
@@ -1055,22 +867,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_dns_server_set_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_sets')
@@ -1149,22 +947,8 @@ class Core(object):
     Raises:
       CoreError: Raised for internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     assignment_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_set_assignments')
@@ -1197,22 +981,8 @@ class Core(object):
     Raises:
       CoreError: Raised for internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     assignment_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_set_assignments')
@@ -1306,22 +1076,8 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     assignment_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_set_view_assignments')
@@ -1357,22 +1113,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     assignment_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_set_view_assignments')
@@ -1438,22 +1180,8 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     if( view_options is None ):
       view_options = u''
@@ -1503,22 +1231,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     if( view_name == u'any' ):
       raise errors.CoreError('Cannot remove view any')
@@ -1565,22 +1279,8 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     if( search_view_name == u'any' ):
       raise errors.CoreError('Cannot update view any')
@@ -1688,22 +1388,8 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     view_dependency_assignments_dict = {
         'view_dependency_assignments_view_name': view_superset,
@@ -1736,22 +1422,8 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     view_dependency_assignments_dict = {
         'view_dependency_assignments_view_name': view_superset,
@@ -1820,22 +1492,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
@@ -1867,22 +1525,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
@@ -1989,22 +1633,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     if( zone_options is None ):
       zone_options = u''
@@ -2061,22 +1691,8 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     zone_dict = {'zone_name': zone_name}
     zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
@@ -2136,22 +1752,8 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     if( search_view_name is not None and search_view_name != u'any' ):
       search_view_name = '%s_dep' % search_view_name
@@ -2237,22 +1839,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     assignment_dict = {'reverse_range_zone_assignments_zone_name': zone_name,
                        'reverse_range_zone_assignments_cidr_block': cidr_block}
@@ -2285,22 +1873,8 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     assignment_dict = {'reverse_range_zone_assignments_zone_name': zone_name,
                        'reverse_range_zone_assignments_cidr_block': cidr_block}
@@ -2379,22 +1953,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
                         'forward_zone_permissions_zone_name': zone_name,
@@ -2428,22 +1988,8 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
                         'forward_zone_permissions_zone_name': zone_name,
@@ -2524,22 +2070,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
                         'reverse_range_permissions_cidr_block': cidr_block,
@@ -2573,22 +2105,8 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
                         'reverse_range_permissions_cidr_block': cidr_block,
@@ -2761,22 +2279,8 @@ class Core(object):
                         (example: {u'priority': 10,
                                    u'mail_server': 'mail.sub.university.edu.'})
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name, target=target)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
     if( view_name is None or view_name == u'any'):
@@ -2851,23 +2355,9 @@ class Core(object):
     Raises:
       CoreError Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name, target=search_target)
     self.user_instance.Authorize(function_name, target=update_target)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_records_dict = self.db_instance.GetEmptyRowDict('records')
     search_records_dict['record_type'] = search_record_type
@@ -3002,22 +2492,8 @@ class Core(object):
     Raises:
       CoreError Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name, target=target)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     records_dict = self.db_instance.GetEmptyRowDict('records')
     records_dict['record_type'] = record_type
@@ -3182,22 +2658,8 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     zone_types_dict = {'zone_type': zone_type}
     success = False
@@ -3226,22 +2688,8 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_zone_type_dict = self.db_instance.GetEmptyRowDict('zone_types')
     search_zone_type_dict['zone_type'] = zone_type
@@ -3313,22 +2761,8 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     named_conf_global_options_dict = self.db_instance.GetEmptyRowDict(
         'named_conf_global_options')
@@ -3364,22 +2798,8 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
     
     reserved_word_dict = {'reserved_word': reserved_word}
     success = False
@@ -3433,22 +2853,8 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    current_frame = inspect.currentframe()
-    try:
-      arg_values = inspect.getargvalues(current_frame)
-      function_name = unicode(inspect.getframeinfo(current_frame)[2])
-    finally:
-      del current_frame
+    function_name, current_args = self._getFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_reserved_word_dict = self.db_instance.GetEmptyRowDict(
         'reserved_words')
