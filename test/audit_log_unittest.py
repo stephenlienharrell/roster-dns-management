@@ -40,6 +40,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import cPickle
 import datetime
 import os
 import time
@@ -80,9 +81,12 @@ class TestAuditLog(unittest.TestCase):
 
   def testPrettyPrintLogString(self):
     self.assertEqual(self.audit_log_instance._PrettyPrintLogString(
-      'sharrell', 'MakeUser', 'user=ahoward user_level=64', True,
+      'sharrell', 'MakeUser', {'audit_args':
+                                  {'user': 'ahoward', 'user_level': 64},
+                               'replay_args': ['ahoward', 64]}, True,
       '2009-04-28 10:46:50'),  'User sharrell SUCCEEDED while executing '
-      'MakeUser with data user=ahoward user_level=64 at 2009-04-28 10:46:50')
+      "MakeUser with data {'user_level': 64, 'user': 'ahoward'} at "
+      '2009-04-28 10:46:50')
 
   def testLogToSyslog(self):
     current_time = time.time()
@@ -114,12 +118,14 @@ class TestAuditLog(unittest.TestCase):
     audit_log_dict = self.db_instance.GetEmptyRowDict('audit_log')
     self.db_instance.StartTransaction()
     try:
-      self.assertEqual(self.db_instance.ListRow('audit_log', audit_log_dict),
-                       ({'action': u'MakeUser', 
-                         'audit_log_timestamp':
-                             datetime.datetime(2009, 4, 28, 10, 46, 50), 
-                         'data': u'user=ahoward user_level=64', 
-                         'audit_log_user_name': u'sharrell', 'success': 1},))
+      audit_row = self.db_instance.ListRow('audit_log', audit_log_dict)
+      self.assertEqual(audit_row[0]['action'], u'MakeUser')
+      self.assertEqual(audit_row[0]['audit_log_timestamp'],
+                       datetime.datetime(2009, 4, 28, 10, 46, 50))
+      self.assertEqual(cPickle.loads(str(audit_row[0]['data'])),
+                       u'user=ahoward user_level=64')
+      self.assertEqual(audit_row[0]['audit_log_user_name'], u'sharrell')
+      self.assertEqual(audit_row[0]['success'], 1)
     finally:
       self.db_instance.EndTransaction()
 

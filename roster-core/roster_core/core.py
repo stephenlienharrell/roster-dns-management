@@ -35,12 +35,13 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import datetime
 import audit_log
 import constants
 import errors
 import user
 
+import datetime
+import inspect
 
 class RecordError(errors.CoreError):
   pass
@@ -80,9 +81,26 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeUser')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     user_dict = {'user_name': user_name,
                  'access_level': access_level}
+
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -94,9 +112,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name, u'MakeUser',
-                                  u'user_name: %s access_level: %s' % (
-                                      user_name, access_level), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def ListUsers(self, user_name=None, access_level=None):
     """Lists one or many users, if all args are None then list them all.
@@ -140,7 +157,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveUser')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     search_user_dict = self.db_instance.GetEmptyRowDict('users')
     search_user_dict['user_name'] = user_name
     row_count = 0
@@ -159,8 +192,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name, u'RemoveUser',
-                                  u'user_name: %s' % user_name, success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
     return row_count
 
@@ -179,7 +212,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('UpdateUser')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     search_user_dict = self.db_instance.GetEmptyRowDict('users')
     search_user_dict['user_name'] = search_user_name
     update_user_dict = self.db_instance.GetEmptyRowDict('users')
@@ -198,12 +247,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name, u'UpdateUser',
-                                  u'search_user_name: %s update_user_name: %s '
-                                  'update_access_level: %s' % (
-                                      search_user_name, update_user_name,
-                                      update_access_level),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListGroups(self):
@@ -239,7 +284,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeGroup')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     group_dict = self.db_instance.GetEmptyRowDict('groups')
     group_dict['group_name'] = group_name
 
@@ -254,8 +315,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name, u'MakeGroup',
-                                  u'group_name: %s' % group_name, success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveGroup(self, group_name):
     """Remove group.
@@ -269,7 +330,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveGroup')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     group_dict = self.db_instance.GetEmptyRowDict('groups')
     group_dict['group_name'] = group_name
 
@@ -284,8 +361,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name, u'RemoveGroup',
-                                  u'group_name: %s' % group_name, success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def UpdateGroup(self, search_group_name, update_group_name):
@@ -301,7 +378,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('UpdateGroup')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     search_group_dict = self.db_instance.GetEmptyRowDict('groups')
     search_group_dict['group_name'] = search_group_name
 
@@ -320,11 +413,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name, u'UpdateGroup',
-                                  u'search_group_name: %s '
-                                  'update_group_name: %s' % (search_group_name,
-                                                             update_group_name),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListUserGroupAssignments(self, user_name=None, group_name=None,
@@ -390,7 +480,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeUserGroupAssignment')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     assignment_dict = self.db_instance.GetEmptyRowDict('user_group_assignments')
     assignment_dict['user_group_assignments_group_name'] = group_name
     assignment_dict['user_group_assignments_user_name'] = user_name
@@ -406,10 +512,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeUserGroupAssignments',
-                                  u'user_name: %s group_name: %s' % (
-                                      user_name, group_name), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveUserGroupAssignment(self, user_name, group_name):
     """Remove user-group.
@@ -424,7 +528,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveUserGroupAssignment')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     assignment_dict = self.db_instance.GetEmptyRowDict('user_group_assignments')
     assignment_dict['user_group_assignments_group_name'] = group_name
     assignment_dict['user_group_assignments_user_name'] = user_name
@@ -441,10 +561,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       return row_count
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveUserGroupAssignments',
-                                  u'user_name: %s group_name: %s' % (
-                                      user_name, group_name), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def ListACLs(self, acl_name=None, cidr_block=None, range_allowed=None):
     """List one or many acls, if all args are none it will them all, or just
@@ -504,7 +622,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeACL')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     acls_dict = {'acl_name': acl_name}
     acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
                        'acl_range_cidr_block': cidr_block,
@@ -522,11 +656,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success  = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name, u'MakeACL',
-                                  u'acl_name: %s cidr_block: %s '
-                                  'range_allowed: %s' % (acl_name, cidr_block,
-                                                         range_allowed),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveACL(self, acl_name):
     """Removes an acl from args. Will also remove relevant acl-view assignments.
@@ -540,7 +671,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveACL')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     acls_dict = {'acl_name': acl_name}
 
     row_count = 0
@@ -555,9 +702,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveACL', u'acl_name: %s' % (
-                                      acl_name), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
 
@@ -575,7 +721,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveCIDRBlockFromACL')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
                        'acl_range_cidr_block': cidr_block,
                        'acl_range_allowed': range_allowed}
@@ -596,10 +758,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveCIDRBlockFromACL',
-                                  u'acl_name: %s cidr_block: %s' % (
-                                      acl_name, cidr_block), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
 
@@ -634,7 +794,23 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    self.user_instance.Authorize('MakeDnsServer')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     dns_server_dict['dns_server_name'] = dns_server_name
 
@@ -649,9 +825,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeDnsServer', u'dns_server_name: %s' % (
-                                      dns_server_name), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveDnsServer(self, dns_server_name):
     """Removes dns server.
@@ -662,7 +837,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveDnsServer')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     dns_server_dict['dns_server_name'] = dns_server_name
 
@@ -677,9 +868,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveDnsServer', u'dns_server_name: %s' % (
-                                      dns_server_name), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def UpdateDnsServer(self, search_dns_server_name, update_dns_server_name):
@@ -695,7 +885,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('UpdateDnsServer')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     search_dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     search_dns_server_dict['dns_server_name'] = search_dns_server_name
 
@@ -715,13 +921,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'UpdateDnsServer',
-                                  u'search_dns_server_name: %s '
-                                  'update_dns_server_name: %s' % (
-                                      search_dns_server_name,
-                                      update_dns_server_name), success)
-
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListDnsServerSets(self):
@@ -758,7 +959,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeDnsServerSet')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     dns_server_set_dict = self.db_instance.GetEmptyRowDict('dns_server_sets')
     dns_server_set_dict['dns_server_set_name'] = dns_server_set_name
 
@@ -773,10 +990,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeDnsServerSet',
-                                  u'dns_server_set_name: %s' %
-                                  dns_server_set_name, success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveDnsServerSet(self, dns_server_set_name):
     """Remove dns server set.
@@ -790,7 +1005,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveDnsServerSet')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     dns_server_set_dict = self.db_instance.GetEmptyRowDict('dns_server_sets')
     dns_server_set_dict['dns_server_set_name'] = dns_server_set_name
 
@@ -806,10 +1037,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveDnsServerSet',
-                                  u'dns_server_set_name: %s' %
-                                  dns_server_set_name, success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def UpdateDnsServerSet(self, search_dns_server_set_name,
@@ -826,7 +1055,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('UpdateDnsServerSet')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     search_dns_server_set_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_sets')
     search_dns_server_set_dict[
@@ -850,13 +1095,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'UpdateDnsServerSet',
-                                  u'search_dns_server_set_name: %s '
-                                  'update_dns_server_set_name: %s' % (
-                                      search_dns_server_set_name,
-                                      update_dns_server_set_name),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
 
@@ -909,7 +1149,23 @@ class Core(object):
     Raises:
       CoreError: Raised for internal problems.
     """
-    self.user_instance.Authorize('MakeDnsServerSetAssignments')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     assignment_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_set_assignments')
     assignment_dict['dns_server_set_assignments_dns_server_name'] = (
@@ -928,12 +1184,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeDnsServerSetAssignments',
-                                  u'dns_server_name: %s '
-                                  'dns_server_set_name: %s' % (
-                                      dns_server_name, dns_server_set_name),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveDnsServerSetAssignments(self, dns_server_name, dns_server_set_name):
     """Remove a dns server set assignment
@@ -945,7 +1197,23 @@ class Core(object):
     Raises:
       CoreError: Raised for internal problems.
     """
-    self.user_instance.Authorize('RemoveDnsServerSetAssignments')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     assignment_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_set_assignments')
     assignment_dict['dns_server_set_assignments_dns_server_name'] = (
@@ -965,12 +1233,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       return row_count
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveDnsServerSetAssignments',
-                                  u'dns_server_name: %s '
-                                  'dns_server_set_name: %s' % (
-                                      dns_server_name, dns_server_set_name),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def ListDnsServerSetViewAssignments(self, view_name=None,
                                       dns_server_set_name=None,
@@ -1042,7 +1306,23 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    self.user_instance.Authorize('MakeDnsServerSetViewAssignments')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     assignment_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_set_view_assignments')
     assignment_dict['dns_server_set_view_assignments_view_name'] = view_name
@@ -1061,10 +1341,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeDnsServerSetViewAssignments',
-                                  u'view_name: %s dns_server_set_name: %s' % (
-                                      view_name, dns_server_set_name), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveDnsServerSetViewAssignments(self, view_name, dns_server_set_name):
     """Remove dns server set view assignment
@@ -1079,7 +1357,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveDnsServerSetViewAssignments')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     assignment_dict = self.db_instance.GetEmptyRowDict(
         'dns_server_set_view_assignments')
     assignment_dict['dns_server_set_view_assignments_view_name'] = view_name
@@ -1099,10 +1393,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       return row_count
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveDnsServerSetViewAssignments',
-                                  u'view_name: %s dns_server_set_name: %s' % (
-                                      view_name, dns_server_set_name), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def ListViews(self, view_name=None):
     """Lists all views.
@@ -1146,7 +1438,23 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    self.user_instance.Authorize('MakeView')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     if( view_options is None ):
       view_options = u''
 
@@ -1176,11 +1484,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeView', u'view_name: %s '
-                                  'view_options: %s' % (
-                                      view_name, view_options),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveView(self, view_name):
     """Removes a view.
@@ -1198,7 +1503,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveView')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     if( view_name == u'any' ):
       raise errors.CoreError('Cannot remove view any')
     search_view_dict = self.db_instance.GetEmptyRowDict('views')
@@ -1223,9 +1544,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveView', u'view_name: %s' % (view_name),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def UpdateView(self, search_view_name, update_view_name=None,
@@ -1245,7 +1565,23 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    self.user_instance.Authorize('UpdateView')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     if( search_view_name == u'any' ):
       raise errors.CoreError('Cannot update view any')
     search_view_dict = self.db_instance.GetEmptyRowDict('views')
@@ -1269,13 +1605,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'UpdateView', u'search_view_name: %s '
-                                  'update_view_name %s '
-                                  'update_view_options %s' % (
-                                      search_view_name, update_view_name,
-                                      update_view_options),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListViewAssignments(self, view_superset=None, view_subset=None):
@@ -1357,7 +1688,23 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    self.user_instance.Authorize('MakeViewAssignment')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     view_dependency_assignments_dict = {
         'view_dependency_assignments_view_name': view_superset,
         'view_dependency_assignments_view_dependency': '%s_dep' % view_subset}
@@ -1373,10 +1720,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeViewAssignment', u'view_superset: %s '
-                                  'view_subset: %s' % (view_superset,
-                                                        view_subset), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveViewAssignment(self, view_superset, view_subset):
     """Removes a view assignment.
@@ -1391,7 +1736,23 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    self.user_instance.Authorize('RemoveViewAssignment')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     view_dependency_assignments_dict = {
         'view_dependency_assignments_view_name': view_superset,
         'view_dependency_assignments_view_dependency': '%s_dep' % view_subset}
@@ -1407,10 +1768,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                   u'RemoveViewAssignemnt',
-                                   u'view_superset: %s view_subset %s' % (
-                                        view_superset, view_subset), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListViewToACLAssignments(self, view_name=None, acl_name=None):
@@ -1461,7 +1820,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeViewToACLAssignments')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
         'view_acl_assignments_view_name': view_name}
@@ -1476,10 +1851,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeViewToACLAssignments', u'view_name %s '
-                                  'acl_name %s' % (view_name, acl_name),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveViewToACLAssignments(self, view_name, acl_name):
     """Removes view to acl assignment
@@ -1494,7 +1867,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveViewToACLAssignments')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
         'view_acl_assignments_view_name': view_name}
@@ -1510,11 +1899,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveViewToACLAssignments',
-                                  u'view_name: %s acl_name: %s' % (view_name,
-                                                                   acl_name),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListZones(self, zone_name=None, zone_type=None, zone_origin=None,
@@ -1603,7 +1989,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeZone')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     if( zone_options is None ):
       zone_options = u''
     if( view_name is None ):
@@ -1643,13 +2045,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeZone', u'zone_name: %s zone_type: %s '
-                                  'zone_origin: %s view_name: %s '
-                                  'zone_options: %s make_any %s' % (
-                                      zone_name, zone_type, zone_origin,
-                                      view_name, zone_options, make_any),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveZone(self, zone_name, view_name=None):
     """Removes a zone.
@@ -1664,7 +2061,23 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    self.user_instance.Authorize('RemoveZone')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     zone_dict = {'zone_name': zone_name}
     zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
         'zone_view_assignments')
@@ -1699,10 +2112,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveZone', u'zone_name: %s '
-                                  'view_name: %s' % (zone_name, view_name),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def UpdateZone(self, search_zone_name, search_view_name=None,
@@ -1725,7 +2136,22 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    self.user_instance.Authorize('UpdateZone')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     if( search_view_name is not None and search_view_name != u'any' ):
       search_view_name = '%s_dep' % search_view_name
@@ -1764,15 +2190,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'UpdateZone', u'search_zone_name: %s '
-                                  'search_view_name: %s update_zone_name: %s '
-                                  'update_zone_type: %s '
-                                  'update_zone_options %s' % (
-                                      search_zone_name, search_view_name,
-                                      update_zone_name, update_zone_type,
-                                      update_zone_options),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListReverseRangeZoneAssignments(self, zone_name=None, cidr_block=None):
@@ -1818,19 +2237,40 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeReverseRangeZoneAssignment')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     assignment_dict = {'reverse_range_zone_assignments_zone_name': zone_name,
                        'reverse_range_zone_assignments_cidr_block': cidr_block}
-
-    self.db_instance.StartTransaction()
+    success = False
     try:
-      self.db_instance.MakeRow('reverse_range_zone_assignments',
-                               assignment_dict)
-    except:
-      self.db_instance.EndTransaction(rollback=True)
-      raise
+      self.db_instance.StartTransaction()
+      try:
+        self.db_instance.MakeRow('reverse_range_zone_assignments',
+                                 assignment_dict)
+      except:
+        self.db_instance.EndTransaction(rollback=True)
+        raise
+      self.db_instance.EndTransaction()
+      success = True
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
-    self.db_instance.EndTransaction()
 
   def RemoveReverseRangeZoneAssignment(self, zone_name, cidr_block):
     """Remove reverse range to zone assignment.
@@ -1845,7 +2285,23 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    self.user_instance.Authorize('RemoveReverseRangeZoneAssignment')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     assignment_dict = {'reverse_range_zone_assignments_zone_name': zone_name,
                        'reverse_range_zone_assignments_cidr_block': cidr_block}
     success = False
@@ -1860,11 +2316,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveReverseRangeZoneAssignment',
-                                  u'zone_name: %s cidr_block %s' % (zone_name,
-                                                                    cidr_block),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListForwardZonePermissions(self, zone_name=None, group_name=None,
@@ -1926,7 +2379,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeForwardZonePermission')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
                         'forward_zone_permissions_zone_name': zone_name,
                         'forward_zone_permissions_access_right': access_right}
@@ -1942,11 +2411,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeForwardZonePermission',
-                                  u'zone_name: %s group_name: %s '
-                                  'access_right: %s' % (zone_name, group_name,
-                                                        access_right), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveForwardZonePermission(self, zone_name, group_name, access_right):
     """Remove forward zone permisions.
@@ -1962,7 +2428,23 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    self.user_instance.Authorize('RemoveForwardZonePermission')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
                         'forward_zone_permissions_zone_name': zone_name,
                         'forward_zone_permissions_access_right': access_right}
@@ -1978,11 +2460,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveForwardZonePermission',
-                                  u'zone_name: %s group_name %s '
-                                  'access_right: %s' % (zone_name, group_name,
-                                                        access_right), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
 
@@ -2045,7 +2524,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeReverseRangePermission')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
                         'reverse_range_permissions_cidr_block': cidr_block,
                         'reverse_range_permissions_access_right': access_right}
@@ -2061,11 +2556,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeReverseRangePermission',
-                                  u'cidr_block: %s group_name: %s '
-                                  'access_right: %s' % (cidr_block, group_name,
-                                                        access_right), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveReverseRangePermission(self, cidr_block, group_name, access_right):
     """Remove reverse range permisions.
@@ -2081,7 +2573,23 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    self.user_instance.Authorize('RemoveReverseRangePermission')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
                         'reverse_range_permissions_cidr_block': cidr_block,
                         'reverse_range_permissions_access_right': access_right}
@@ -2097,11 +2605,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveReverseRangePermission',
-                                  u'cidr_block: %s group_name: %s '
-                                  'access_right: %s' % (cidr_block, group_name,
-                                                        access_right), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def GetEmptyRecordArgsDict(self, record_type):
@@ -2256,7 +2761,23 @@ class Core(object):
                         (example: {u'priority': 10,
                                    u'mail_server': 'mail.sub.university.edu.'})
     """
-    self.user_instance.Authorize('MakeRecord', target=target)
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name, target=target)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
     if( view_name is None or view_name == u'any'):
       view_name = u'any'
@@ -2304,14 +2825,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeRecord', u'record_type: %s target: %s '
-                                  'zone_name: %s record_args_dict: %s '
-                                  'view_name: %s ttl: %s' % (record_type,
-                                                             target, zone_name,
-                                                             record_args_dict,
-                                                             view_name, ttl),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def UpdateRecord(self, search_record_type, search_target, search_zone_name,
                    search_record_args_dict, search_view_name=None,
@@ -2336,8 +2851,23 @@ class Core(object):
     Raises:
       CoreError Raised for any internal problems.
     """
-    self.user_instance.Authorize('UpdateRecord', target=search_target)
-    self.user_instance.Authorize('UpdateRecord', target=update_target)
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name, target=search_target)
+    self.user_instance.Authorize(function_name, target=update_target)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
 
     search_records_dict = self.db_instance.GetEmptyRowDict('records')
     search_records_dict['record_type'] = search_record_type
@@ -2454,16 +2984,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(
-          self.user_instance.user_name, u'UpdateRecord',
-          u'search_record_type: %s search_target: %s update_target %s '
-           'search_zone_name: %s update_zone_name: %s '
-           'search_record_args_dict: %s update_record_args_dict: %s '
-           'search_view_name: %s update_view_name %s' % (
-               search_record_type, search_target, update_target,
-               search_zone_name, update_zone_name, search_record_args_dict,
-               update_record_args_dict, search_view_name, update_view_name),
-           success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveRecord(self, record_type, target, zone_name, record_args_dict,
                    view_name, ttl=None):
@@ -2480,7 +3002,23 @@ class Core(object):
     Raises:
       CoreError Raised for any internal problems.
     """
-    self.user_instance.Authorize('RemoveRecord', target=target)
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name, target=target)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     records_dict = self.db_instance.GetEmptyRowDict('records')
     records_dict['record_type'] = record_type
     records_dict['record_target'] = target
@@ -2563,15 +3101,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveRecord',
-                                  u'record_type: %s target: %s '
-                                   'zone_name: %s record_args_dict: %s '
-                                   'view_name: %s' % (record_type, target,
-                                                      zone_name,
-                                                      record_args_dict,
-                                                      view_name), success)
-
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def ListRecordArgumentDefinitions(self, record_type=None):
     """List record argument definitions. This is mainly for the exporter to
@@ -2651,7 +3182,23 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    self.user_instance.Authorize('MakeZoneType')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     zone_types_dict = {'zone_type': zone_type}
     success = False
     try:
@@ -2664,9 +3211,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeZoneType',
-                                  u'zone_type: %s' % zone_type, success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def RemoveZoneType(self, zone_type):
     """Removes a zone type.
@@ -2680,7 +3226,23 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    self.user_instance.Authorize('RemoveZoneType')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     search_zone_type_dict = self.db_instance.GetEmptyRowDict('zone_types')
     search_zone_type_dict['zone_type'] = zone_type
     row_count = 0
@@ -2700,9 +3262,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveZoneType',
-                                  u'zone_type: %s' % zone_type, success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ListNamedConfGlobalOptions(self, option_id=None, dns_server_set=None,
@@ -2752,7 +3313,23 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    self.user_instance.Authorize('MakeNamedConfGlobalOption')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     named_conf_global_options_dict = self.db_instance.GetEmptyRowDict(
         'named_conf_global_options')
     named_conf_global_options_dict[
@@ -2775,11 +3352,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeNamedConfGlobalOption',
-                                  u'dns_server_set: %s timestamp: %s' % (
-                                      dns_server_set, timestamp),
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def MakeReservedWord(self, reserved_word):
     """Create a reserved word.
@@ -2790,7 +3364,23 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    self.user_instance.Authorize('MakeReservedWord')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+    
     reserved_word_dict = {'reserved_word': reserved_word}
     success = False
     try:
@@ -2803,10 +3393,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'MakeReservedWord',
-                                  u'reserved_word: %s' % reserved_word,
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def ListReservedWords(self):
     """Lists reserved words.
@@ -2845,7 +3433,23 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    self.user_instance.Authorize('RemoveReservedWord')
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    self.user_instance.Authorize(function_name)
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     search_reserved_word_dict = self.db_instance.GetEmptyRowDict(
         'reserved_words')
     search_reserved_word_dict['reserved_word'] = reserved_word
@@ -2865,10 +3469,8 @@ class Core(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name,
-                                  u'RemoveReservedWord',
-                                  u'reserved_word: %s' % reserved_word,
-                                  success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
     return row_count
 

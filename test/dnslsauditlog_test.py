@@ -40,6 +40,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import cPickle
 import os
 import sys
 import socket
@@ -134,8 +135,13 @@ class Testdnslsauditlog(unittest.TestCase):
                   'audit_log_timestamp': None}
 
     self.core_instance.MakeACL(u'acl1', u'192.168.1/24', 1)
-    audit_dict['data'] = (u'acl_name: acl1 cidr_block: 192.168.1/24 '
-                           'range_allowed: 1')
+    audit_dict['data'] = cPickle.dumps({'replay_args':
+                                            [u'acl1', u'192.168.1/24', 1],
+                                        'audit_args':
+                                            {'cidr_block': u'192.168.1/24',
+                                             'range_allowed': 1, 'acl_name':
+                                             u'acl1'}})
+
     self.db_instance.StartTransaction()
     try:
       entry1 = self.db_instance.ListRow('audit_log', audit_dict)
@@ -146,8 +152,12 @@ class Testdnslsauditlog(unittest.TestCase):
     time.sleep(2)
     self.core_instance.MakeACL(u'acl2', u'10.10.1/24', 0)
 
-    audit_dict['data'] = (u'acl_name: acl2 cidr_block: 10.10.1/24 '
-                           'range_allowed: 0')
+    audit_dict['data'] = cPickle.dumps({'replay_args':
+                                            [u'acl2', u'10.10.1/24', 0],
+                                        'audit_args':
+                                            {'cidr_block': u'10.10.1/24',
+                                             'range_allowed': 0,
+                                             'acl_name': u'acl2'}})
     self.db_instance.StartTransaction()
     try:
       entry2 = self.db_instance.ListRow('audit_log', audit_dict)
@@ -157,7 +167,11 @@ class Testdnslsauditlog(unittest.TestCase):
 
     self.core_instance.MakeView(u'test_view')
 
-    audit_dict['data'] = u'view_name: test_view view_options:'
+    audit_dict['data'] = cPickle.dumps({'replay_args':
+                                            [u'test_view', None],
+                                        'audit_args':
+                                            {'view_options': None,
+                                             'view_name': u'test_view'}})
     self.db_instance.StartTransaction()
     try:
       entry3 = self.db_instance.ListRow('audit_log', audit_dict)
@@ -171,18 +185,16 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        'Action   Timestamp           Data'
-        '                                                     Username '
-        'Success\n'
-        '---------------------------------'
-        '--------------------------------------------------------------'
-        '-------\n'
-        'MakeACL  %s acl_name: acl1 cidr_block: 192.168.1/24 '
-        'range_allowed: 1 sharrell 1\n'
-        'MakeACL  %s acl_name: acl2 cidr_block: 10.10.1/24 '
-        'range_allowed: 0   sharrell 1\n'
-        'MakeView %s view_name: test_view view_options:'
-        '                       sharrell 1\n\n' % (
+        "Action   Timestamp           Username Success Data\n"
+        "--------------------------------------------------\n"
+        "MakeACL  %s sharrell 1       "
+            "{'cidr_block': u'192.168.1/24', 'range_allowed': 1, " 
+            "'acl_name': u'acl1'}\n"
+        "MakeACL  %s sharrell 1       "
+            "{'cidr_block': u'10.10.1/24', 'range_allowed': 0, "
+            "'acl_name': u'acl2'}\n"
+        "MakeView %s sharrell 1       "
+            "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
     command.close()
     command = os.popen('python %s -b %s -e %s '
@@ -192,15 +204,14 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        'Action   Timestamp           Data'
-        '                                                   Username Success\n'
-        '---------------------------------'
-        '-------------------------------------------------------------------\n'
-        'MakeACL  %s acl_name: acl2 cidr_block: 10.10.1/24 '
-        'range_allowed: 0 sharrell 1\n'
-        'MakeView %s view_name: test_view view_options:'
-        '                     sharrell 1\n\n' % (entry2_timestamp,
-                                                 entry3_timestamp))
+        "Action   Timestamp           Username Success Data\n"
+        "--------------------------------------------------\n"
+        "MakeACL  %s sharrell 1       "
+            "{'cidr_block': u'10.10.1/24', 'range_allowed': 0, "
+              "'acl_name': u'acl2'}\n"
+        "MakeView %s sharrell 1       "
+          "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
+          entry2_timestamp, entry3_timestamp))
     command.close()
     command = os.popen('python %s -a MakeACL '
                        '-u %s -p %s --config-file %s -s %s '
@@ -208,17 +219,15 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        'Action  Timestamp           Data'
-        '                                                     '
-        'Username Success\n'
-        '--------------------------------'
-        '-----------------------------------------------------'
-        '----------------\n'
-        'MakeACL %s acl_name: acl1 cidr_block: 192.168.1/24 '
-        'range_allowed: 1 sharrell 1\n'
-        'MakeACL %s acl_name: acl2 cidr_block: 10.10.1/24 '
-        'range_allowed: 0   sharrell 1\n\n' % (entry1_timestamp,
-                                               entry2_timestamp))
+        "Action  Timestamp           Username Success Data\n"
+        "-------------------------------------------------\n"
+        "MakeACL %s sharrell 1       "
+            "{'cidr_block': u'192.168.1/24', 'range_allowed': 1, "
+             "'acl_name': u'acl1'}\n"
+        "MakeACL %s sharrell 1       "
+            "{'cidr_block': u'10.10.1/24', 'range_allowed': 0, "
+             "'acl_name': u'acl2'}\n\n" % (entry1_timestamp,
+                                           entry2_timestamp))
     command.close()
     command = os.popen('python %s -a MakeACL --success 0 '
                        '-u %s -p %s --config-file %s -s %s '
@@ -226,7 +235,7 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        'Action Timestamp Data Username Success\n'
+        'Action Timestamp Username Success Data\n'
         '--------------------------------------\n\n')
     command.close()
     command = os.popen('python %s -U sharrell '
@@ -235,18 +244,16 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        'Action   Timestamp           Data'
-        '                                                     Username '
-        'Success\n'
-        '---------------------------------'
-        '--------------------------------------------------------------'
-        '-------\n'
-        'MakeACL  %s acl_name: acl1 cidr_block: 192.168.1/24 '
-        'range_allowed: 1 sharrell 1\n'
-        'MakeACL  %s acl_name: acl2 cidr_block: 10.10.1/24 '
-        'range_allowed: 0   sharrell 1\n'
-        'MakeView %s view_name: test_view view_options:'
-        '                       sharrell 1\n\n' % (
+        "Action   Timestamp           Username Success Data\n"
+        "--------------------------------------------------\n"
+        "MakeACL  %s sharrell 1       "
+            "{'cidr_block': u'192.168.1/24', 'range_allowed': 1, "
+            "'acl_name': u'acl1'}\n"
+        "MakeACL  %s sharrell 1       "
+            "{'cidr_block': u'10.10.1/24', 'range_allowed': 0, "
+            "'acl_name': u'acl2'}\n"
+        "MakeView %s sharrell 1       "
+            "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
     command.close()
 

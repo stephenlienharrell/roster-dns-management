@@ -486,7 +486,7 @@ TABLES = {
     'audit_log':
                          {'audit_log_user_name': 'UnicodeString',
                           'action': 'UnicodeString',
-                          'data': 'ReservedWord',
+                          'data': 'PickleString',
                           'success': 'IntBool',
                           'audit_log_timestamp': 'DateTime'}}
 

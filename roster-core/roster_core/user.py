@@ -40,8 +40,11 @@ __version__ = '#TRUNK#'
 
 
 import constants
-import IPy
 import errors
+
+import IPy
+
+import inspect
 
 
 class UserError(errors.CoreError):
@@ -117,6 +120,22 @@ class User(object):
       UserError if no target is provided (and one is required)
       AuthError on authorization failure
     """
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     if( target is not None ):
       target_string = ' on %s' % target
     else:
@@ -141,8 +160,8 @@ class User(object):
               return
 
           # fail to find a matching IP range with appropriate perms
-          self.log_instance.LogAction(self.user_name, u'Authorize',
-                                      auth_fail_string, False)
+          self.log_instance.LogAction(self.user_name, function_name,
+                                      current_args, False)
           raise AuthError(auth_fail_string)
 
         except ValueError:
@@ -152,15 +171,15 @@ class User(object):
               return
 
           # fail to find a matching zone with appropriate perms
-          self.log_instance.LogAction(self.user_name, u'Authorize',
-                                      auth_fail_string, False)
+          self.log_instance.LogAction(self.user_name, function_name,
+                                      current_args, False)
           raise AuthError(auth_fail_string)
       else:
         return
     else:
       # fail to find a matching method
-      self.log_instance.LogAction(self.user_name, u'Authorize',
-                                  auth_fail_string, False)
+      self.log_instance.LogAction(self.user_name, function_name,
+                                  current_args, False)
       raise AuthError(auth_fail_string)
 
   def GetUserName(self):

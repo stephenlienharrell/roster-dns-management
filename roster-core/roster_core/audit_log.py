@@ -37,6 +37,7 @@ __license__ = 'BSD'
 __version__ = "#TRUNK#"
 
 
+import cPickle
 import datetime
 import syslog
 import unicodedata
@@ -66,8 +67,12 @@ class AuditLog(object):
 
     Inputs:
       user: string of user name
-      action: string of action
-      data: string of data
+      action: string of function name that is being logged
+      data: dictionary of arguments
+        ex: {'replay_args': [u'test_acl', u'192.168.0/24', 1],
+             'audit_args': {'cidr_block': u'192.168.0/24',
+                            'range_allowed': 1,
+                            'acl_name': u'test_acl'}}
       success: bool of success of action
     """
     current_datetime = datetime.datetime.now()
@@ -116,6 +121,7 @@ class AuditLog(object):
       success = 1
     else:
       success = 0
+    data = cPickle.dumps(data)
     log_dict = {'audit_log_user_name': user,
                 'action': action,
                 'data': data,
@@ -167,7 +173,7 @@ class AuditLog(object):
       success_string = 'FAILED'
 
     return 'User %s %s while executing %s with data %s at %s' % (
-        user, success_string, action, data, current_timestamp)
+        user, success_string, action, data['audit_args'], current_timestamp)
 
 
 # vi: set ai aw sw=2:

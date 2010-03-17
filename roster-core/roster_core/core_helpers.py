@@ -35,12 +35,15 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import datetime
-import IPy
 import constants
 import core
 import errors
+
+import datetime
+import inspect
 import math
+
+import IPy
 
 class CoreHelpers(object):
   """Library of helper functions that extend the core functions."""
@@ -446,6 +449,22 @@ class CoreHelpers(object):
     Outputs:
       int: number of rows modified
     """
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     record_arguments_record_assignments_dict = (
         self.db_instance.GetEmptyRowDict(
             'record_arguments_records_assignments'))
@@ -502,12 +521,8 @@ class CoreHelpers(object):
       if( log_list ):
         remove_record_string = ' '.join(log_list)
     finally:
-      self.core_instance.log_instance.LogAction(
-          self.core_instance.user_instance.user_name,
-          u'RemoveCNamesByAssignmentHost',
-          u'hostname: %s cnames_removed: (%s)' % (
-              hostname, remove_record_string), success)
-
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
   def ProcessRecordsBatch(self, delete_records=[], add_records=[]):
@@ -523,6 +538,22 @@ class CoreHelpers(object):
     Outputs:
       int: row count
     """
+    current_frame = inspect.currentframe()
+    try:
+      arg_values = inspect.getargvalues(current_frame)
+      function_name = unicode(inspect.getframeinfo(current_frame)[2])
+    finally:
+      del current_frame
+    replay_args = []
+    audit_args = {}
+    for arg in arg_values[0]:
+      if( arg == 'self' ):
+        continue
+      else:
+        audit_args[arg] = arg_values[3][arg]
+        replay_args.append(arg_values[3][arg])
+    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+
     log_dict = {'delete': [], 'add': []}
     row_count = 0
     changed_view_dep = []
@@ -649,18 +680,8 @@ class CoreHelpers(object):
       self.db_instance.EndTransaction()
       success = True
     finally:
-      for operation in log_dict:
-        for record in log_dict[operation]:
-          self.log_instance.LogAction(self.user_instance.user_name,
-                                      u'ProcessRecordsBatch(%s)' % operation,
-                                      u'record_type: %s target: %s '
-                                       'zone_name: %s record_args_dict: %s '
-                                       'view_name: %s' % (
-                                           record['record_type'],
-                                           record['record_target'],
-                                           record['record_zone_name'],
-                                           record['record_arguments'],
-                                           record['view_name']), success)
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return row_count
 
 # vi: set ai aw sw=2:

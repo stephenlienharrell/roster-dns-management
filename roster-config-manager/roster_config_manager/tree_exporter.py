@@ -211,7 +211,8 @@ class BindTreeExport(object):
       success = True
     finally:
       self.log_instance.LogAction(u'tree_export_user', u'ExportAllBindTrees',
-                                  u'', success)
+                                  {'audit_args': {}, 'replay_args': []},
+                                  success)
 
   def ListLatestNamedConfGlobalOptions(self, data, dns_server_set):
     """Lists latest named.conf global options

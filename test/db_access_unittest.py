@@ -40,6 +40,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import cPickle
 import datetime
 import unittest
 import time
@@ -201,7 +202,7 @@ class TestdbAccess(unittest.TestCase):
 
     audit_log_dict = {'audit_log_user_name': u'sharrell',
                       'action': u'DoThis',
-                      'data': u'I did it',
+                      'data': cPickle.dumps('I did it'),
                       'success': 1,
                       'audit_log_timestamp': datetime.datetime(2001, 1, 1, 1)}
 
@@ -209,7 +210,7 @@ class TestdbAccess(unittest.TestCase):
     audit_log_dict['audit_log_timestamp'] = datetime.datetime(2001, 1, 1, 2)
     self.db_instance.MakeRow('audit_log', audit_log_dict)
     audit_log_dict['audit_log_timestamp'] = datetime.datetime(2001, 1, 1, 3)
-    audit_log_dict['data'] = u'You did it'
+    audit_log_dict['data'] = cPickle.dumps('You did it')
     self.db_instance.MakeRow('audit_log', audit_log_dict)
     audit_log_dict['audit_log_timestamp'] = datetime.datetime(2001, 1, 1, 4)
     self.db_instance.MakeRow('audit_log', audit_log_dict)
@@ -237,21 +238,21 @@ class TestdbAccess(unittest.TestCase):
                     datetime.datetime(2001, 1, 1, 3))),
         ({'action': u'DoThis',
           'audit_log_timestamp': datetime.datetime(2001, 1, 1, 2, 0),
-          'data': u'I did it', 'audit_log_user_name': u'sharrell',
+          'data': u"S'I did it'\np1\n.", 'audit_log_user_name': u'sharrell',
           'success': 1},
          {'action': u'DoThis',
           'audit_log_timestamp': datetime.datetime(2001, 1, 1, 3, 0),
-          'data': u'You did it', 'audit_log_user_name': u'sharrell',
+          'data': u"S'You did it'\np1\n.", 'audit_log_user_name': u'sharrell',
           'success': 1}))
 
-    search_dict['data'] = u'I did it'
+    search_dict['data'] = cPickle.dumps('I did it')
     self.assertEquals(self.db_instance.ListRow(
         'audit_log', search_dict, date_column='audit_log_timestamp',
         date_range=(datetime.datetime(2001, 1, 1, 2),
                     datetime.datetime(2001, 1, 1, 3))),
         ({'action': u'DoThis',
           'audit_log_timestamp': datetime.datetime(2001, 1, 1, 2, 0),
-          'data': u'I did it', 'audit_log_user_name': u'sharrell',
+          'data': u"S'I did it'\np1\n.", 'audit_log_user_name': u'sharrell',
           'success': 1},))
 
     search_dict = self.db_instance.GetEmptyRowDict('acls')

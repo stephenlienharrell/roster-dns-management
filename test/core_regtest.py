@@ -40,6 +40,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import cPickle
 import datetime
 import time
 import unittest
@@ -689,17 +690,22 @@ class TestCore(unittest.TestCase):
 
   def testListAuditLog(self):
     begin_time = datetime.datetime.now().replace(microsecond=0)
-    time.sleep(0.1)
     self.core_instance.MakeReservedWord(u'word1')
     time.sleep(0.1)
     end_time = datetime.datetime.now().replace(microsecond=0)
     time.sleep(1.1)
     self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.')
-    self.assertEqual(self.core_instance.ListAuditLog(
-        begin_timestamp=begin_time, end_timestamp=end_time),
-        ({'action': u'MakeReservedWord', 'data': u'reserved_word: word1',
-          'audit_log_timestamp': begin_time,
-          'audit_log_user_name': u'sharrell', 'success': 1},))
+    log_list = self.core_instance.ListAuditLog(begin_timestamp=begin_time,
+                                               end_timestamp=end_time)
+    self.assertEqual(len(log_list), 1)
+    self.assertEqual(log_list[0]['action'], u'MakeReservedWord')
+    self.assertEqual(cPickle.loads(str(log_list[0]['data'])),
+                     {'replay_args': [u'word1'],
+                      'audit_args': {'reserved_word': u'word1'}})
+    self.assertEqual(log_list[0]['audit_log_timestamp'], begin_time)
+    self.assertEqual(log_list[0]['audit_log_user_name'], u'sharrell')
+    self.assertEqual(log_list[0]['success'], 1)
+
     self.core_instance.MakeView(u'test_view')
     self.assertEqual(len(self.core_instance.ListAuditLog(action=u'MakeView')),
                      1)

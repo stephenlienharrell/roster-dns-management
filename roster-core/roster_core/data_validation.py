@@ -36,6 +36,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import cPickle
 import constants
 import datetime
 import errors
@@ -246,6 +247,22 @@ class DataValidation(object):
     if( isinstance(date_time, datetime.datetime) ):
       return True
     return False
+
+
+  def isPickleString(self, pickle_string):
+    """Checks that the string can be unpickled.
+
+    Inputs:
+      pickle_string: string to be unpickled.
+
+    Outputs:
+      bool: if it is a valid pickle string
+    """
+    try:
+      cPickle.loads(pickle_string)
+    except (cPickle.PickleError, TypeError):
+      return False
+    return True
 
 
   def ValidateRowDict(self, table_name, row_dict, none_ok=False,
