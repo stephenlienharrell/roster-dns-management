@@ -92,22 +92,6 @@ class User(object):
       if( constants.SUPPORTED_METHODS[method]['access_level'] <= ual ):
         self.abilities[method] = constants.SUPPORTED_METHODS[method]
 
-
-  def Authenticate(self, passwd):
-    """Attempt to authenticate the user using the given password.
-
-    Inputs:
-      passwd:	password to attempt
-
-    Raises:
-      AuthError on Authenticate failure
-
-    Outputs:
-      bool, set to True (failures raise an error)
-    """
-    pass
-
-
   def Authorize(self, method, target=None):
     """Check to see if the user is authorized to run the given operation.
 
