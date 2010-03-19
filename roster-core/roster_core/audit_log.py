@@ -82,7 +82,8 @@ class AuditLog(object):
                                                          current_timestamp)
 
     if( self.log_to_db ):
-      self._LogToDatabase(user, action, data, success, current_datetime)
+      audit_log_id = self._LogToDatabase(user, action, data, success,
+                                         current_datetime)
 
     if( self.log_to_syslog ):
       self._LogToSyslog(pretty_print_log_string)
@@ -90,6 +91,8 @@ class AuditLog(object):
     if( self.log_to_file ):
       self._LogToFile(pretty_print_log_string)
 
+    if( self.log_to_db ):
+      return audit_log_id
 
   def _LogToSyslog(self, log_string):
     """Writes log string to syslog.
@@ -130,13 +133,14 @@ class AuditLog(object):
 
     self.db_instance.StartTransaction()
     try:
-      self.db_instance.MakeRow('audit_log', log_dict)
+      audit_log_id = self.db_instance.MakeRow('audit_log', log_dict)
     except:
       self.db_instance.EndTransaction(rollback=True)
       raise
 
     self.db_instance.EndTransaction()
 
+    return audit_log_id
 
   def _LogToFile(self, log_string):
     """Writes log string to file.

@@ -111,10 +111,11 @@ class TestAuditLog(unittest.TestCase):
       self.fail()
 
   def testLogToDatabase(self):
-    self.audit_log_instance._LogToDatabase(u'sharrell', u'MakeUser', 
-                                           u'user=ahoward user_level=64', True,
-                                           datetime.datetime(2009, 4, 28, 10,
-                                                             46, 50))
+    audit_log_id = self.audit_log_instance._LogToDatabase(
+        u'sharrell', u'MakeUser', u'user=ahoward user_level=64', True,
+        datetime.datetime(2009, 4, 28, 10, 46, 50))
+    self.assertEqual(audit_log_id, 1)
+
     audit_log_dict = self.db_instance.GetEmptyRowDict('audit_log')
     self.db_instance.StartTransaction()
     try:
