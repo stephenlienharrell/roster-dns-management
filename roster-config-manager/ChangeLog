@@ -1,4 +1,6 @@
 Current Release
+- Added username flag for dnszoneimporter
+- Added check to see if there are changes in the database before exporting
 
 2010-03-03 release-0.12
 - Reordered records in zone_importer_lib so SOA comes first

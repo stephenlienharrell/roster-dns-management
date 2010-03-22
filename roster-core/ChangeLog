@@ -1,4 +1,9 @@
 Current Release
+- Added date range listing to ListRows in db_access
+- Added ListAuditLog function to core
+- Fixed roster_database_bootstrap password prompt
+- Changed audit logging to include replayable arg and function information
+- made AuditLog return audit log id for reference later
 
 2010-03-03 release-0.12
 - Fixed view handling of ListRecordsByCidrBlock
