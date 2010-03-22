@@ -117,7 +117,32 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
+  name = sys.argv[0]
+  usage = ('\n'
+           '\n'
+           'To make a user:\n'
+           '\t%s -n <user-name> -a <access-level>\n'
+           '\n'
+           'To make a group:\n'
+           '\t%s -g <group>\n'
+           '\n'
+           'To make a user group assignment:\n'
+           '\t%s -n <user-name> -g <group>\n'
+           '\n'
+           'To make a forward zone permission:\n'
+           '\t%s -z <zone-name> -g <group> -f --access-right <access-right>\n'
+           '\n'
+           'To make a reverse range permission:\n'
+           '\t%s -b <cidr-block> -g <group> -r --access-right <access-right>\n'
+           '\n'
+           'Arguments above may be combined only while using the -m/--make-all '
+           'flag.\n'
+           'For example, to make a user, group and user group assignment:\n'
+           '\t%s -n <user-name> -a <access-level> -g <group> -m' % (
+               name, name, name, name, name, name))
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__,
+                        usage=usage)
 
   parser.add_option('-n', '--new-user', action='store', dest='new_user',
                     help='String of the new user to create.',
