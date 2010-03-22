@@ -52,7 +52,15 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
+  usage = ('\n'
+           '\n'
+           'To list acls:\n'
+           '\t%s -a <acl-name> --cidr-block <cidr_block> [--allow/--deny]\n'
+           '\n'
+           'You may use any or none of the arguments above to search ACLs' %
+           (sys.argv[0]))
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-a', '--acl', action='store', dest='acl',
                     help='ACL name', default=None)
