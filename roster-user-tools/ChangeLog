@@ -1,4 +1,5 @@
 Current Release
+- Added help text to dnsmkusergroup
 
 2010-03-03 release-0.12
 - Fixed dnsrmhost's duplicate errors
