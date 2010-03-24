@@ -429,7 +429,11 @@ class TestdbAccess(unittest.TestCase):
     self.assertFalse(self.db_instance.CheckMaintenanceFlag())
     self.db_instance.StartTransaction()
     cursor = self.db_instance.connection.cursor()
-    self.core_instance.SetMaintenanceFlag(True)
+    try:
+      cursor.execute(
+          'UPDATE locks SET locked = 1 WHERE lock_name = "maintenance"')
+    finally:
+      cursor.close()
     self.db_instance.EndTransaction()
 
     self.assertTrue(self.db_instance.CheckMaintenanceFlag())
