@@ -714,5 +714,16 @@ class TestCore(unittest.TestCase):
     self.assertEqual(len(self.core_instance.ListAuditLog(
         user_name=u'sharrell')), 3)
 
+  def testSetCheckMaintenanceFlag(self):
+    self.assertFalse(self.core_instance.CheckMaintenanceFlag())
+
+    self.core_instance.SetMaintenanceFlag(True)
+
+    self.assertTrue(self.core_instance.CheckMaintenanceFlag())
+
+    self.core_instance.SetMaintenanceFlag(False)
+
+    self.assertFalse(self.core_instance.CheckMaintenanceFlag())
+
 if( __name__ == '__main__' ):
     unittest.main()

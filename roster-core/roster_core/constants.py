@@ -372,7 +372,15 @@ SUPPORTED_METHODS = {
     'ListAuditLog':
                     {'check': True,
                      'write': True,
-                     'access_level': ACCESS_LEVELS['dns_admin']}}
+                     'access_level': ACCESS_LEVELS['dns_admin']},
+    'SetMaintenanceFlag':
+                    {'check': False,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
+    'CheckMaintenanceFlag':
+                    {'check': False,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['user']}}
 
 
 
@@ -488,6 +496,8 @@ TABLES = {
                           'action': 'UnicodeString',
                           'data': 'PickleString',
                           'success': 'IntBool',
-                          'audit_log_timestamp': 'DateTime'}}
+                          'audit_log_timestamp': 'DateTime'},
+    'locks':
+        {'lock_name': 'UnicodeString', 'locked': 'IntBool'}}
 
 # vi: set ai aw sw=2:

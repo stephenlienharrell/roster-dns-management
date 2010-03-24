@@ -7,6 +7,8 @@ Current Release
 - Added maintenance_flag to locks in db_schema
 - Added CheckMaintenanceFlag function to db_access
 - Made Authorize run CheckMaintenanceFlag
+- Made SetMaintenanceFlag function in core
+- Made CheckMaintenanceFlag function in core
 
 2010-03-03 release-0.12
 - Fixed view handling of ListRecordsByCidrBlock

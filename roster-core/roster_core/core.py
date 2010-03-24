@@ -3155,4 +3155,39 @@ class Core(object):
 
     return audit_log
 
+  def SetMaintenanceFlag(self, value):
+    """Sets maintenance flag
+
+    Inputs:
+      value: boolean of flag on or off
+    """
+    self.user_instance.Authorize('SetMaintenanceFlag')
+
+    search_dict = {'lock_name': u'maintenance', 'locked': None}
+    update_dict = {'lock_name': None, 'locked': int(value)}
+
+    self.db_instance.StartTransaction()
+    try:
+      self.db_instance.UpdateRow('locks', search_dict, update_dict)
+    finally:
+      self.db_instance.EndTransaction()
+
+  def CheckMaintenanceFlag(self):
+    """Checks maintenance flag
+
+    Outputs:
+      bool: value of flag on or off
+    """
+    self.user_instance.Authorize('CheckMaintenanceFlag')
+
+    search_dict = {'lock_name': u'maintenance', 'locked': None}
+
+    self.db_instance.StartTransaction()
+    try:
+      row = self.db_instance.ListRow('locks', search_dict)
+    finally:
+      self.db_instance.EndTransaction()
+
+    return bool(row[0]['locked'])
+
 # vi: set ai aw sw=2:
