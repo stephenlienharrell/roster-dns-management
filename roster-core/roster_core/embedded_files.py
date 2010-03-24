@@ -649,6 +649,7 @@ CREATE TABLE `audit_log` (
 ##########
 
 INSERT INTO locks (lock_name) VALUES ('db_lock_lock');
+INSERT INTO locks (lock_name) VALUES ('maintenance');
 
 INSERT INTO view_dependencies (view_dependency) VALUES ('any');
 INSERT INTO zone_types (zone_type) VALUES ('master'),('slave'),('forward');

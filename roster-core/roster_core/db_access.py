@@ -245,6 +245,22 @@ class dbAccess(object):
         else:
           self.now_serving = None
 
+  def CheckMaintenanceFlag(self):
+    """Checks the maintenance flag in the database.
+    
+    Outputs:
+      bool: boolean of maintenance being flagged
+    """
+    cursor = self.connection.cursor()
+    try:
+      cursor.execute(
+          'SELECT locked FROM locks WHERE lock_name = "maintenance"')
+      rows = cursor.fetchall()
+    finally:
+      cursor.close()
+
+    return bool(rows[0][0])
+
   def LockDb(self):
     """This function is to lock the whole database for consistent data
     retrevial.

@@ -107,6 +107,11 @@ class User(object):
     function_name = 'Authorize'
     current_args = {'audit_args': {'method': method, 'target': target},
                     'replay_args': [method, target]}
+    access_level = self.user_perms['user_access_level']
+    if( self.db_instance.CheckMaintenanceFlag()
+        and self.user_perms['user_access_level']
+        != constants.ACCESS_LEVELS['dns_admin'] ):
+      raise AuthError('Roster is currently under maintenance.')
 
     if( target is not None ):
       target_string = ' on %s' % target

@@ -54,3 +54,6 @@ class FakeDbAccess:
                                  {'cidr_block': '128.211.128.0/19',
                                   'access_right': 'rw'}]}
     return data
+
+  def CheckMaintenanceFlag(self):
+    return True

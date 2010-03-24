@@ -4,6 +4,9 @@ Current Release
 - Fixed roster_database_bootstrap password prompt
 - Changed audit logging to include replayable arg and function information
 - made AuditLog return audit log id for reference later
+- Added maintenance_flag to locks in db_schema
+- Added CheckMaintenanceFlag function to db_access
+- Made Authorize run CheckMaintenanceFlag
 
 2010-03-03 release-0.12
 - Fixed view handling of ListRecordsByCidrBlock

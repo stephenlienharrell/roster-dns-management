@@ -425,6 +425,18 @@ class TestdbAccess(unittest.TestCase):
        u'zone_view_assignments', u'zones'])
     self.db_instance.EndTransaction()
 
+  def testCheckMaintenanceFlag(self):
+    self.assertFalse(self.db_instance.CheckMaintenanceFlag())
+    self.db_instance.StartTransaction()
+    cursor = self.db_instance.connection.cursor()
+    try:
+      cursor.execute(
+          'UPDATE locks SET locked = 1 WHERE lock_name = "maintenance"')
+    finally:
+      cursor.close()
+    self.db_instance.EndTransaction()
+
+    self.assertTrue(self.db_instance.CheckMaintenanceFlag())
 
 if( __name__ == '__main__' ):
     unittest.main()
