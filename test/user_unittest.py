@@ -47,6 +47,7 @@ class TestUser(unittest.TestCase):
   # Use a FakeDbAccess, so we don't need to beat up a DB during testing
   def setUp(self):
     self.db_access = fake_db_access.FakeDbAccess(None,None,None,None)
+    self.db_access.maintenance_flag = False
     self.log_instance = audit_log.AuditLog(log_to_syslog=True)
 
   def testBadMethod(self):
@@ -87,6 +88,12 @@ class TestUser(unittest.TestCase):
     gooduser = user.User('shuey', self.db_access, self.log_instance)
     self.assertRaises(user.AuthError, gooduser.Authorize, 'MakeRecord',
                       '2000::4')
+
+  def testMaintenanceFlag(self):
+    gooduser = user.User('jcollins', self.db_access, self.log_instance)
+    gooduser.Authorize('MakeRecord', 'foo.mrzone.com')
+    self.db_access.maintenance_flag = True
+    self.assertRaises(user.AuthError, gooduser.Authorize, 'foo.mrzone.com')
 
 
 if( __name__ == '__main__' ):

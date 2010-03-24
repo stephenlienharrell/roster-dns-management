@@ -38,7 +38,7 @@ __version__ = '#TRUNK#'
 class FakeDbAccess:
 
   def __init__(self, db_host, db_user, db_passwd, db_name):
-    pass
+    self.maintenance_flag = True
 
   def GetUserAuthorizationInfo(self, user_name):
     if( user_name == 'nobody' ):
@@ -56,4 +56,4 @@ class FakeDbAccess:
     return data
 
   def CheckMaintenanceFlag(self):
-    return True
+    return self.maintenance_flag
