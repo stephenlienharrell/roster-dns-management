@@ -274,7 +274,7 @@ class dbAccess(object):
                         '`lock_name`="db_lock_lock"')
     time.sleep(self.big_lock_wait)
     self.cursor.execute(
-        'LOCK TABLES %s READ' % ' READ, '.join(constants.TABLES.keys()))
+        'LOCK TABLES %s READ' % ' READ, '.join(self.ListTableNames()))
     self.locked_db = True
 
   def UnlockDb(self):
@@ -816,5 +816,44 @@ class dbAccess(object):
       for table in table_dict:
         table_list.append(table_dict[table])
     return table_list
+
+  def DumpDatabase(self):
+    """This will dump the entire database to memory.
+
+    This would be done by mysqldump but it needs to be done in the same lock
+    as other processes. So this is a simple mysqldump function.
+
+    Outputs:
+      Dictionary: Dictionary with keys of table name and schema/data for each
+                  table as values.
+    """
+    table_data = {}
+    self.cursor.execute('SHOW TABLES')
+    table_names = self.cursor.fetchall()
+    self.cursor.execute('SET OPTION SQL_QUOTE_SHOW_CREATE=1')
+    for table_name in table_names:
+      table_name = table_name.values()[0]
+      table_data[table_name] = {}
+      self.cursor.execute('SHOW CREATE TABLE %s' % table_name)
+      table_data[table_name]['schema'] = self.cursor.fetchone()['Create Table']
+      self.cursor.execute('DESCRIBE %s' % table_name)
+      table_data[table_name]['columns'] = []
+      table_descriptions = self.cursor.fetchall()
+      for table_description in table_descriptions:
+        table_data[table_name]['columns'].append(table_description['Field'])
+      self.cursor.execute('SELECT %s FROM %s' % 
+                          (','.join(table_data[table_name]['columns']),
+                           table_name))
+      table_rows = self.cursor.fetchall()
+      table_data[table_name]['rows'] = []
+      for row in table_rows:
+        row_dict = {}
+        for k,v in row.iteritems():
+          row_dict[k] = self.connection.literal(v)
+
+        table_data[table_name]['rows'].append(row_dict)
+
+    return table_data
+
 
 # vi: set ai aw sw=2:

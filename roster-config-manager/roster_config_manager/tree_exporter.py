@@ -38,9 +38,10 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
+import bz2
 import ConfigParser
 import datetime
+import os
 
 from roster_core import audit_log
 from roster_core import config
@@ -138,7 +139,7 @@ class BindTreeExport(object):
                 raise ChangesNotFoundError('No changes have been made to the '
                                              'database since last export, '
                                              'no export needed.')
-          data = self.GetRawData()
+          data, raw_dump = self.GetRawData()
         finally:
           self.db_instance.UnlockDb()
       finally:
@@ -208,11 +209,91 @@ class BindTreeExport(object):
           named_conf_file_handle.writelines(named_conf_file_string)
         finally:
           named_conf_file_handle.close()
+
+      audit_log_replay_dump, full_database_dump = self.CookRawDump(raw_dump)
+
       success = True
     finally:
-      self.log_instance.LogAction(u'tree_export_user', u'ExportAllBindTrees',
-                                  {'audit_args': {}, 'replay_args': []},
-                                  success)
+      log_id = self.log_instance.LogAction(u'tree_export_user',
+                                           u'ExportAllBindTrees',
+                                           {'audit_args': {},
+                                            'replay_args': []},
+                                           success)
+
+    audit_log_replay_dump_file = bz2.BZ2File(
+        '%s/audit_log_replay_dump-%s.bz2' % (self.root_config_dir, log_id),
+        'w')
+    try:
+      audit_log_replay_dump_file.writelines(audit_log_replay_dump)
+    finally:
+      audit_log_replay_dump_file.close()
+                                          
+    full_dump_file = bz2.BZ2File('%s/full_database_dump-%s.bz2' % 
+                                 (self.root_config_dir, log_id), 'w')
+    try:
+      full_dump_file.writelines(full_database_dump)
+    finally:
+      full_dump_file.close()
+
+  def CookRawDump(self, raw_dump):
+    """This takes raw data from the database and turns it into a 
+    mysqldump-like output.
+
+    Inputs:
+      raw_dump: list of dictionaries that contain all of the tables
+                and their associated metadata
+
+    Outputs:
+      list: tuple of list of strings to be concatenated into mysql dump files
+    """
+    # Stole these lines from mysqldump output, not sure all are needed
+    header = ['SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT;\n',
+              'SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS;\n',
+              'SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION;\n',
+              'SET NAMES utf8;\n'
+              'SET @OLD_TIME_ZONE=@@TIME_ZONE;\n',
+              "SET TIME_ZONE='+00:00';\n",
+              'SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS;\n',
+              'SET UNIQUE_CHECKS=0;\n',
+              'SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS;\n',
+              'SET FOREIGN_KEY_CHECKS=0;\n',
+              'SET @OLD_SQL_MODE=@@SQL_MODE;\n',
+              "SET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\n",
+              'SET @OLD_SQL_NOTES=@@SQL_NOTES;\n'
+              'SET SQL_NOTES=0;\n']
+
+    footer = ['SET SQL_MODE=@OLD_SQL_MODE;\n',
+              'SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;\n',
+              'SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;\n',
+              'SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;\n',
+              'SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;\n',
+              'SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION;\n',
+              'SET SQL_NOTES=@OLD_SQL_NOTES;\n']
+
+    full_database_dump = []
+    full_database_dump.extend(header)
+    audit_log_replay_dump = []
+    audit_log_replay_dump.extend(header)
+
+    for table_name, table_data in raw_dump.iteritems():
+      table_lines = [] 
+      table_lines.append('DROP TABLE IF EXISTS `%s`;\n' % table_name)
+      table_lines.append(table_data['schema'])
+      table_lines[-1] = '%s;' % table_lines[-1]
+      for row in table_data['rows']:
+        insert_row = "INSERT INTO %s (%s) VALUES (%%(%s)s);\n" % (
+            table_name, ','.join(table_data['columns']),
+            ")s, %(".join(table_data['columns']))
+        table_lines.append(insert_row % row)
+
+      full_database_dump.extend(table_lines)
+      if( table_name not in constants.TABLES_NOT_AUDIT_LOGGED ):
+        audit_log_replay_dump.extend(table_lines)
+
+    full_database_dump.extend(footer)
+    audit_log_replay_dump.extend(footer)
+
+    return (audit_log_replay_dump, full_database_dump)
 
   def ListLatestNamedConfGlobalOptions(self, data, dns_server_set):
     """Lists latest named.conf global options
@@ -383,8 +464,9 @@ class BindTreeExport(object):
     record_arguments_dict = self.db_instance.GetEmptyRowDict('record_arguments')
     data['record_arguments'] = self.db_instance.ListRow('record_arguments',
                                                         record_arguments_dict)
+    raw_dump = self.db_instance.DumpDatabase()
 
-    return data
+    return (data, raw_dump)
 
   def SortRecords(self, records):
     """Sorts records for zone exporter

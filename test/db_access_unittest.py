@@ -425,6 +425,7 @@ class TestdbAccess(unittest.TestCase):
        u'zone_view_assignments', u'zones'])
     self.db_instance.EndTransaction()
 
+
   def testCheckMaintenanceFlag(self):
     self.assertFalse(self.db_instance.CheckMaintenanceFlag())
     self.db_instance.StartTransaction()
@@ -437,6 +438,29 @@ class TestdbAccess(unittest.TestCase):
     self.db_instance.EndTransaction()
 
     self.assertTrue(self.db_instance.CheckMaintenanceFlag())
+
+  def testDumpDatabase(self):
+    self.db_instance.StartTransaction()
+    dump = self.db_instance.DumpDatabase()
+    self.db_instance.EndTransaction()
+
+    self.assertTrue('acls' in dump)
+
+    self.assertEquals(dump['data_types']['schema'], (
+        'CREATE TABLE `data_types` (\n  '
+        '`data_types_id` smallint(5) unsigned NOT NULL auto_increment,\n  '
+        '`data_type` varchar(255) NOT NULL,\n  '
+        'PRIMARY KEY  (`data_types_id`),\n  '
+        'UNIQUE KEY `data_type` (`data_type`),\n  '
+        'KEY `data_types_1` (`data_type`)\n'
+        ') ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8'))
+
+    self.assertEquals(dump['groups']['columns'], [u'group_id', u'group_name'])
+
+    self.assertEquals(dump['users']['rows'][0],
+                      {'users_id': '1',
+                       'access_level': '0',
+                       'user_name': "'tree_export_user'"})
 
 if( __name__ == '__main__' ):
     unittest.main()

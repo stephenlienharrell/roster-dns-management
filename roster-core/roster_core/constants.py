@@ -55,10 +55,12 @@ ACCESS_LEVELS = {'dns_admin': 128,
                  'user': 32,
                  'noop': 0}
 
-
 # Valid access rights for forward or reverse perms in the database.
 ACCESS_RIGHTS = ['rw', 'r']
 
+# This is a list of tables that are not audit logged when changes are made.
+# it is important not to overwrite these tables when doing a partial replay
+TABLES_NOT_AUDIT_LOGGED = ['audit_log', 'locks']
 
 # The SUPPORTED_METHODS hash contains a hash for every supported method.
 # 'check' indicates whether the target zone/IP range should be checked.
