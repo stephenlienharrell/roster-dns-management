@@ -9,6 +9,7 @@ Current Release
 - Made Authorize run CheckMaintenanceFlag
 - Made SetMaintenanceFlag function in core
 - Made CheckMaintenanceFlag function in core
+- Made DatabaseDump function in db_access
 
 2010-03-03 release-0.12
 - Fixed view handling of ListRecordsByCidrBlock
