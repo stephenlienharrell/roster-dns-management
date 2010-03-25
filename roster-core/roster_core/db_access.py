@@ -249,7 +249,7 @@ class dbAccess(object):
     """Checks the maintenance flag in the database.
 
     Inputs:
-      urrent_transaction: bool of if this function is run from inside a 
+      current_transaction: bool of if this function is run from inside a 
                           transaction in the db_access class
 
     Outputs:
