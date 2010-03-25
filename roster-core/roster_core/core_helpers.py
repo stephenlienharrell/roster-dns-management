@@ -483,7 +483,8 @@ class CoreHelpers(object):
             raise errors.CoreError('Incorrect number of records found!')
           try:
             self.core_instance.user_instance.Authorize(
-                'RemoveRecord', target=found_records_dict[0]['record_target'])
+                'RemoveRecord', target=found_records_dict[0]['record_target'],
+                current_transaction=True)
           except self.core_instance.user_instance.AuthError:
             continue
           row_count += self.db_instance.RemoveRow(
@@ -535,7 +536,7 @@ class CoreHelpers(object):
         # REMOVE RECORDS
         for record in delete_records:
           self.user_instance.Authorize('RemoveRecord', target=record[
-              'record_target'])
+              'record_target'], current_transaction=True)
           records_dict = self.db_instance.GetEmptyRowDict('records')
           records_dict['record_type'] = record['record_type']
           records_dict['record_target'] = record['record_target']
@@ -593,7 +594,7 @@ class CoreHelpers(object):
         # ADD RECORDS
         for record in add_records:
           self.user_instance.Authorize('MakeRecord', target=record[
-              'record_target'])
+              'record_target'], current_transaction=True)
           view_name = record['view_name']
           if( not record['view_name'].endswith('_dep') and record[
                 'view_name'] != u'any'):

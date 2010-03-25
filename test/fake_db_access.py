@@ -55,5 +55,5 @@ class FakeDbAccess:
                                   'access_right': 'rw'}]}
     return data
 
-  def CheckMaintenanceFlag(self):
+  def CheckMaintenanceFlag(self, current_transaction=False):
     return self.maintenance_flag

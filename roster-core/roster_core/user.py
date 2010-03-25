@@ -92,13 +92,15 @@ class User(object):
       if( constants.SUPPORTED_METHODS[method]['access_level'] <= ual ):
         self.abilities[method] = constants.SUPPORTED_METHODS[method]
 
-  def Authorize(self, method, target=None):
+  def Authorize(self, method, target=None, current_transaction=False):
     """Check to see if the user is authorized to run the given operation.
 
     Inputs:
       method:	what the user's trying to do
       target:	what the user is trying to modify, if applicable (e.g.,
 		          a host name, domain name, IPv4 or IPv6 address, etc.)
+      current_transaction: bool of if this function is run from inside a 
+                           transaction in the db_access class
 
     Raises:
       UserError if no target is provided (and one is required)
@@ -108,7 +110,8 @@ class User(object):
     current_args = {'audit_args': {'method': method, 'target': target},
                     'replay_args': [method, target]}
     access_level = self.user_perms['user_access_level']
-    if( self.db_instance.CheckMaintenanceFlag()
+    if( self.db_instance.CheckMaintenanceFlag(
+            current_transaction=current_transaction)
         and self.user_perms['user_access_level']
         != constants.ACCESS_LEVELS['dns_admin'] ):
       raise AuthError('Roster is currently under maintenance.')

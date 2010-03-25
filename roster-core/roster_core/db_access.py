@@ -245,21 +245,27 @@ class dbAccess(object):
         else:
           self.now_serving = None
 
-  def CheckMaintenanceFlag(self):
+  def CheckMaintenanceFlag(self, current_transaction=False):
     """Checks the maintenance flag in the database.
-    
+
+    Inputs:
+      urrent_transaction: bool of if this function is run from inside a 
+                          transaction in the db_access class
+
     Outputs:
       bool: boolean of maintenance being flagged
     """
-    cursor = self.connection.cursor()
+    if( not current_transaction ):
+      self.StartTransaction()
     try:
-      cursor.execute(
-          'SELECT locked FROM locks WHERE lock_name = "maintenance"')
-      rows = cursor.fetchall()
+      self.cursor.execute(
+          'SELECT `locked` FROM `locks` WHERE `lock_name`="maintenance"')
+      row = self.cursor.fetchone()
     finally:
-      cursor.close()
+      if( not current_transaction ):
+        self.EndTransaction()
 
-    return bool(rows[0][0])
+    return bool(row['locked'])
 
   def LockDb(self):
     """This function is to lock the whole database for consistent data
