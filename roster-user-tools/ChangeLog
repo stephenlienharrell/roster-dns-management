@@ -1,6 +1,7 @@
 Current Release
 - Added dnslsauditlog tool
 - Added help text to dnsmkusergroup
+- Added dnsssetmaintenance tool
 
 2010-03-03 release-0.12
 - Fixed dnsrmhost's duplicate errors
