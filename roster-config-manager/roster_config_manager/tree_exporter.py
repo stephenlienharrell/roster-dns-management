@@ -42,6 +42,9 @@ import bz2
 import ConfigParser
 import datetime
 import os
+import StringIO
+import shutil
+import tarfile
 
 from roster_core import audit_log
 from roster_core import config
@@ -66,6 +69,7 @@ class BindTreeExport(object):
     Inputs:
       config_file_name: name of config file to load db info from
     """
+    self.tar_file_name = ''
     config_instance = config.Config(file_name=config_file_name)
     self.db_instance = config_instance.GetDb()
     self.raw_data = {}
@@ -73,6 +77,19 @@ class BindTreeExport(object):
     self.root_config_dir = root_config_dir
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
+
+
+  def AddToTarFile(self, tar_file, file_name, file_string):
+    """Adds file string to tarfile object
+
+    Inputs:
+      tarfile: tarfile object
+      file_name: string of filename to add
+      file_string: string of file
+    """
+    info = tarfile.TarInfo(name=file_name)
+    info.size = len(file_string)
+    tar_file.addfile(info, StringIO.StringIO(file_string))
 
   def ListRecordArgumentDefinitions(self, record_arguments):
     """Lists record argument definitions given table from database
@@ -162,7 +179,11 @@ class BindTreeExport(object):
       record_arguments = data['record_arguments']
       record_argument_definitions = self.ListRecordArgumentDefinitions(
           record_arguments)
+
+      temp_tar_file_name = 'temp_file.tar.bz2'
+      tar_file = tarfile.open(temp_tar_file_name, 'w:bz2')
       for dns_server_set in cooked_data:
+        dummy_config_file = StringIO.StringIO()
         config_parser = ConfigParser.SafeConfigParser()
         ## Make Files
         named_directory = '%s/%s_servers' % (self.root_config_dir,
@@ -180,8 +201,8 @@ class BindTreeExport(object):
             cooked_data[dns_server_set]['dns_servers']))
         config_parser.set('dns_server_set_parameters', 'dns_server_set_name',
                           dns_server_set)
-        config_parser_file = open(config_file, 'wb')
-        config_parser.write(config_parser_file)
+        config_parser.write(dummy_config_file)
+        self.AddToTarFile(tar_file, config_file, dummy_config_file.getvalue())
         for view in cooked_data[dns_server_set]['views']:
           view_directory = '%s/%s' % (dns_server_set_directory, view)
           if( not os.path.exists(view_directory) ):
@@ -196,19 +217,11 @@ class BindTreeExport(object):
                 cooked_data[dns_server_set]['views'][view]['zones'][zone][
                     'zone_origin'],
                 record_argument_definitions, zone, view)
-            zone_file_handle = open(zone_file, 'w')
-            try:
-              zone_file_handle.writelines(zone_file_string)
-            finally:
-              zone_file_handle.close()
+            self.AddToTarFile(tar_file, zone_file, zone_file_string)
         named_conf_file = '%s/named.conf' % named_directory
         named_conf_file_string = self.MakeNamedConf(data, cooked_data,
                                                     dns_server_set)
-        named_conf_file_handle = open(named_conf_file, 'w')
-        try:
-          named_conf_file_handle.writelines(named_conf_file_string)
-        finally:
-          named_conf_file_handle.close()
+        self.AddToTarFile(tar_file, named_conf_file, named_conf_file_string)
 
       audit_log_replay_dump, full_database_dump = self.CookRawDump(raw_dump)
 
@@ -219,6 +232,9 @@ class BindTreeExport(object):
                                            {'audit_args': {},
                                             'replay_args': []},
                                            success)
+
+    self.tar_file_name = 'dns_tree-%s.tar.bz2' % log_id
+    shutil.move(temp_tar_file_name, self.tar_file_name)
 
     audit_log_replay_dump_file = bz2.BZ2File(
         '%s/audit_log_replay_dump-%s.bz2' % (self.root_config_dir, log_id),

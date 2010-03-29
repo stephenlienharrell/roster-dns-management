@@ -43,6 +43,7 @@ __version__ = '#TRUNK#'
 import os
 import sys
 import shutil
+import tarfile
 import datetime
 
 import unittest
@@ -1142,11 +1143,16 @@ class TestDnsMkHost(unittest.TestCase):
   def tearDown(self):
     if( os.path.exists(ROOT_DIR) ):
       shutil.rmtree(ROOT_DIR)
+    if( os.path.exists('dns_tree-1.tar.bz2') ):
+      os.remove('dns_tree-1.tar.bz2')
 
   def testMakeFilesFromDB(self):
     output = os.popen('python %s -d %s -c %s' % (
         EXEC, ROOT_DIR, CONFIG_FILE))
     output.close()
+    tar = tarfile.open('dns_tree-1.tar.bz2')
+    tar.extractall()
+    tar.close()
     ##Test Files
     handle = open(
         './bind_configs/external_dns_servers/named/external_dns_config', 'r')
