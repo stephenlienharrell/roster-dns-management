@@ -106,7 +106,7 @@ class User(object):
       UserError if no target is provided (and one is required)
       AuthError on authorization failure
     """
-    function_name = 'Authorize'
+    function_name = u'Authorize'
     current_args = {'audit_args': {'method': method, 'target': target},
                     'replay_args': [method, target]}
     access_level = self.user_perms['user_access_level']

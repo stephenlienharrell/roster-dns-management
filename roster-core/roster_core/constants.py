@@ -370,9 +370,20 @@ SUPPORTED_METHODS = {
                     {'check': False,
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
-
     'ListAuditLog':
-                    {'check': True,
+                    {'check': False,
+                     'write': False,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
+    'ListCredentials':
+                    {'check': False,
+                     'write': False,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
+    'MakeInfiniteCredential':
+                    {'check': False,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
+    'RemoveCredential':
+                    {'check': False,
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
     'SetMaintenanceFlag':
@@ -381,7 +392,7 @@ SUPPORTED_METHODS = {
                      'access_level': ACCESS_LEVELS['dns_admin']},
     'CheckMaintenanceFlag':
                     {'check': False,
-                     'write': True,
+                     'write': False,
                      'access_level': ACCESS_LEVELS['user']}}
 
 

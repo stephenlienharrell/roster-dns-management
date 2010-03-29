@@ -123,6 +123,26 @@ class TestCore(unittest.TestCase):
         'user'],u'sharrell')
     self.assertEqual(credential_list['547ac10b-58aa-4372-a567-0e02b2c3d479'][
         'infinite_cred'],0)
+    self.assertRaises(roster_core.errors.CoreError,
+                      self.core_instance._RemoveCredential)
+
+    credential_list = self.core_instance.ListCredentials()
+    self.assertEqual(len(credential_list), 1)
+    self.assertEqual(credential_list['sharrell']['credential'],
+                     '547ac10b-58aa-4372-a567-0e02b2c3d479')
+    self.core_instance.MakeInfiniteCredential(u'shuey')
+    credential_list = self.core_instance.ListCredentials()
+    self.assertEqual(len(credential_list), 2)
+    self.core_instance.RemoveCredential(user_name=u'shuey')
+    credential_list = self.core_instance.ListCredentials()
+    self.assertEqual(len(credential_list), 1)
+    self.core_instance.RemoveCredential(
+        credential=u'547ac10b-58aa-4372-a567-0e02b2c3d479')
+    credential_list = self.core_instance.ListCredentials()
+    self.assertFalse(credential_list)
+
+    
+    
 
   def testGroupMakeRemoveListUpdate(self):
     self.assertEqual(set(self.core_instance.ListGroups()),

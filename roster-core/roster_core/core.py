@@ -39,6 +39,7 @@ import audit_log
 import constants
 import errors
 import user
+import uuid
 
 import datetime
 import inspect
@@ -3060,9 +3061,13 @@ class Core(object):
       int: number of rows modified
     """
     search_credential_dict = self.db_instance.GetEmptyRowDict('credentials')
+    
     if ( credential is not None ):
       search_credential_dict['credential'] = credential
     else:
+      if( user_name is None ):
+        raise errors.CoreError('Must specify at least one of the two '
+                               'possible arguments')
       search_credential_dict['credential_user_name'] = user_name
     row_count = 0
 
@@ -3117,6 +3122,72 @@ class Core(object):
     self.db_instance.EndTransaction()
 
     return row_count
+
+  def MakeInfiniteCredential(self, user_name, credential=None):
+    """Creates an infinite credential.
+
+    Inputs:
+      user_name: string of user to create credential for.
+
+    Outputs:
+      string: credential string created
+    """
+    function_name, current_args = self._getFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
+
+    if( credential is None ):
+      while( True ):
+        credential = unicode(uuid.uuid4())
+        if( not self._ListCredentials(credential) ):
+          break
+      # This will preserve the actual credential arg which is None in the 
+      # audit args, while letting the replay args keep the actual value
+      current_args['replay_args'][1] = credential
+
+    success = False
+    try:
+      self._MakeCredential(credential, user_name, infinite_cred=True)
+      success = True
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
+
+  def ListCredentials(self, credential=None, user_name=None,
+                      infinite_cred=None):
+    """Lists infinte credentials.
+
+    This function basically just calls _ListCredentials but runs Authorize
+    before.
+
+    Inputs:
+      credential: string of specific credential that is being searched for
+      user_name: string of name of user that is being searched for
+      infinite_cred: bool of search for infinite or non infinite creds
+    """
+    self.user_instance.Authorize(u'ListCredentials')
+    return self._ListCredentials(credential=credential, user_name=user_name,
+                                 infinite_cred=infinite_cred,
+                                 key_by_user=True)
+
+  def RemoveCredential(self, credential=None, user_name=None):
+    """Removes a credential
+    
+    This function will call _RemoveCredential after Authorize and then log it.
+  
+    Inputs:
+      credential: string of credential to remove
+      user_name: string of user name who has a credential to remove
+    """
+    function_name, current_args = self._getFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
+
+    success = False
+    try:
+      self._RemoveCredential(credential=credential, user_name=user_name)
+      success = True
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
 
   def ListAuditLog(self, user_name=None, action=None, success=None,
                    begin_timestamp=None, end_timestamp=None):
