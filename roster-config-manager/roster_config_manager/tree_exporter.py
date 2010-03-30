@@ -50,10 +50,15 @@ from roster_core import audit_log
 from roster_core import config
 from roster_core import constants
 from roster_core import core
+from roster_core import errors
 from roster_config_manager import zone_exporter_lib
 
 
-class Error(Exception):
+class Error(errors.CoreError):
+  pass
+
+
+class MaintenanceError(Error):
   pass
 
 
@@ -139,6 +144,9 @@ class BindTreeExport(object):
         self.db_instance.LockDb()
         try:
           if( not force ):
+            if( self.db_instance.CheckMaintenanceFlag(
+                current_transaction=True) ):
+              raise MaintenanceError('Database currently under maintenance.')
             audit_log_dict = self.db_instance.GetEmptyRowDict('audit_log')
             audit_log_dict['action'] = u'ExportAllBindTrees'
             audit_log_dict['success'] = 1
@@ -154,8 +162,8 @@ class BindTreeExport(object):
                   break
               else:
                 raise ChangesNotFoundError('No changes have been made to the '
-                                             'database since last export, '
-                                             'no export needed.')
+                                           'database since last export, '
+                                           'no export needed.')
           data, raw_dump = self.GetRawData()
         finally:
           self.db_instance.UnlockDb()

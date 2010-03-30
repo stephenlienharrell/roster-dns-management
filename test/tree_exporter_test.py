@@ -1308,6 +1308,10 @@ class TestTreeExporter(unittest.TestCase):
                                'zone_name': u'university.edu'}}})
 
   def testTreeExporterMakeNamedConf(self):
+    self.core_instance.SetMaintenanceFlag(1)
+    self.assertRaises(tree_exporter.MaintenanceError,
+                      self.tree_exporter_instance.ExportAllBindTrees)
+    self.core_instance.SetMaintenanceFlag(0)
     self.tree_exporter_instance.ExportAllBindTrees()
     tar = tarfile.open(self.tree_exporter_instance.tar_file_name)
     tar.extractall()
