@@ -3,6 +3,8 @@ Current Release
 - Added check to see if there are changes in the database before exporting
 - Database now being dumped every time the tree exporter is run
 - Made ExportAllBindTrees export to a single tar.bz2 file
+- Made dnsconfigsync use the new tarfiles
+- Made tarfiles embed date and time
 
 2010-03-03 release-0.12
 - Reordered records in zone_importer_lib so SOA comes first

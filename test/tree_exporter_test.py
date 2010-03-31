@@ -52,15 +52,16 @@ from roster_config_manager import tree_exporter
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
-BIND_CONFIG_DIR = './bind_configs'
 
 
 class TestTreeExporter(unittest.TestCase):
 
   def setUp(self):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
+    self.bind_config_dir = self.config_instance.config_file['exporter'][
+        'root_config_dir']
     self.tree_exporter_instance = tree_exporter.BindTreeExport(
-        CONFIG_FILE, BIND_CONFIG_DIR)
+        CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
@@ -1131,8 +1132,8 @@ class TestTreeExporter(unittest.TestCase):
     self.cooked_data = self.tree_exporter_instance.CookData(self.data[0])
 
   def tearDown(self):
-    if( os.path.exists(BIND_CONFIG_DIR) ):
-        shutil.rmtree(BIND_CONFIG_DIR)
+    if( os.path.exists(self.bind_config_dir) ):
+        shutil.rmtree(self.bind_config_dir)
 
   def testTreeExporterListRecordArgumentDefinitions(self):
     search_record_arguments_dict = self.db_instance.GetEmptyRowDict(
@@ -1664,6 +1665,10 @@ class TestTreeExporter(unittest.TestCase):
         '@ 3600 in mx 1 mail2.university.edu.\n'
         '@ 3600 in mx 1 mail1.university.edu.\n')
     handle.close()
+    for fname in ['audit_log_replay_dump-1.bz2', 'full_database_dump-1.bz2',
+                  self.tree_exporter_instance.tar_file_name]:
+      if( os.path.exists(fname) ):
+        os.remove(fname)
 
     self.assertRaises(tree_exporter.ChangesNotFoundError,
                       self.tree_exporter_instance.ExportAllBindTrees)

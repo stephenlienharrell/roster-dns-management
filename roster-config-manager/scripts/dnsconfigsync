@@ -37,7 +37,9 @@ __version__ = '#TRUNK#'
 
 
 import sys
+import shutil
 import os
+import tarfile
 
 from optparse import OptionParser
 import ConfigParser
@@ -52,16 +54,15 @@ def main(args):
 
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
-                    default=None)
-  parser.add_option('-r', '--root-directory', action='store',
-                    dest='root_directory',
-                    help='Root directory to store configuration files.',
-                    default='./bind_config')
+                    default='/etc/roster/roster_server.conf')
   parser.add_option('-d', '--destination-directory',
                     dest='destination_directory',
                     help='Destination directory on dns servers.',
                     metavar='<destination-directory>',
                     default='/etc/named')
+  parser.add_option('-i', '--id', dest='id',
+                    help='Tarfile with id output from Roster.',
+                    metavar='<id>', default=None)
   parser.add_option('-u', '--user-name', action='store', dest='user_name',
                     help='Rsync username.', metavar='<user-name>',
                     default=None)
@@ -71,42 +72,72 @@ def main(args):
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  dns_server_sets = None
-  file_dict = {}
-  for server_set in os.listdir(options.root_directory):
-    config_parser = ConfigParser.SafeConfigParser()
-    config_file_handle = config_parser.read('%s/%s/named/%s' % (
-        options.root_directory, server_set,
-        server_set.replace('servers', 'config')))
-    for dns_server in config_parser.get(
-          'dns_server_set_parameters', 'dns_servers').split(','):
-      rsync_dir = '%s/%s/*' % (options.root_directory, server_set)
-      rsync_url_parts = []
-      if( options.user_name ):
-        rsync_url_parts.append('%s@' % options.user_name)
-      rsync_url_parts.append(dns_server)
-      if( options.port ):
-        rsync_url_parts.append(':%s' % options.port)
-      rsync_url_string = ''.join(rsync_url_parts)
-      print 'Connecting to rsync on "%s"' % dns_server
-      rsync_string = 'rsync %s %s:%s -r' % (rsync_dir, rsync_url_string,
-                                            options.destination_directory)
-      handle = os.popen(rsync_string)
-      rsync_text = handle.read()
-      handle.close()
+  
+  server_config_file = ConfigParser.SafeConfigParser()
 
-      if( rsync_text != ''):
-        print rsync_text
+  server_config_file.read(options.config_file)
 
-      print 'Connecting to ssh on "%s"' % dns_server
-      ssh_string = 'ssh %s \'/usr/sbin/rndc reload\'' % rsync_url_string
 
-      handle = os.popen(ssh_string)
-      ssh_text = handle.read()
-      handle.close()
 
-      if( ssh_text != ''):
-        print ssh_text
+  backup_directory = server_config_file.get(
+      'exporter', 'backup_dir').rstrip('/')
+  temp_root_directory = server_config_file.get(
+      'exporter', 'root_config_dir').rstrip('/')
+
+  if( options.id ):
+    file_list = os.listdir(backup_directory)
+    for fname in file_list:
+      if( fname.split('-')[1].split('.')[0] == options.id ):
+        tar = tarfile.open('%s/%s' % (
+            backup_directory, fname))
+        tar.extractall()
+        tar.close()
+        root_directory = '%s_%s' % (temp_root_directory, options.id)
+        shutil.move(temp_root_directory, root_directory)
+        break
+  else:
+    print 'ERROR: An audit log id must be specified with -i/--id.'
+    sys.exit(1)
+  try:
+    dns_server_sets = None
+    file_dict = {}
+    for server_set in os.listdir(root_directory):
+      config_parser = ConfigParser.SafeConfigParser()
+      config_file_handle = config_parser.read('%s/%s/named/%s' % (
+          root_directory, server_set,
+          server_set.replace('servers', 'config')))
+      for dns_server in config_parser.get(
+            'dns_server_set_parameters', 'dns_servers').split(','):
+        rsync_dir = '%s/%s/*' % (root_directory, server_set)
+        rsync_url_parts = []
+        if( options.user_name ):
+          rsync_url_parts.append('%s@' % options.user_name)
+        rsync_url_parts.append(dns_server)
+        if( options.port ):
+          rsync_url_parts.append(':%s' % options.port)
+        rsync_url_string = ''.join(rsync_url_parts)
+        print 'Connecting to rsync on "%s"' % dns_server
+        rsync_string = 'rsync %s %s:%s -r' % (rsync_dir, rsync_url_string,
+                                              options.destination_directory)
+        handle = os.popen(rsync_string)
+        rsync_text = handle.read()
+        handle.close()
+
+        if( rsync_text != ''):
+          print rsync_text
+
+        print 'Connecting to ssh on "%s"' % dns_server
+        ssh_string = 'ssh %s \'/usr/sbin/rndc reload\'' % rsync_url_string
+
+        handle = os.popen(ssh_string)
+        ssh_text = handle.read()
+        handle.close()
+
+        if( ssh_text != ''):
+          print ssh_text
+  finally:
+    if( os.path.exists(root_directory) ):
+      shutil.rmtree(root_directory)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -79,7 +79,9 @@ class Config(object):
                               'lock_file': 'str', 'ssl_key_file': 'str',
                               'ssl_cert_file': 'str'},
                    'credentials': {'authentication_method': 'str',
-                                   'exp_time': 'int'}}
+                                   'exp_time': 'int'},
+                   'exporter': {'backup_dir': 'str',
+                                'root_config_dir': 'str'}}
 
     for section in file_schema:
       self.config_file[section] = {}

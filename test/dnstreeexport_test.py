@@ -82,6 +82,8 @@ class TestDnsMkHost(unittest.TestCase):
 
     db_instance.StartTransaction()
 
+    self.tarfile = ''
+
     # Make server sets
     dns_server_sets_dict = {}
 
@@ -1147,12 +1149,19 @@ class TestDnsMkHost(unittest.TestCase):
       os.remove('dns_tree-1.tar.bz2')
 
   def testMakeFilesFromDB(self):
-    output = os.popen('python %s -d %s -c %s' % (
-        EXEC, ROOT_DIR, CONFIG_FILE))
+    output = os.popen('python %s -c %s' % (
+        EXEC, CONFIG_FILE))
     output.close()
-    tar = tarfile.open('dns_tree-1.tar.bz2')
-    tar.extractall()
-    tar.close()
+    for fname in os.listdir('.'):
+      if( not fname.endswith('.tar.bz2') ):
+        continue
+      if( fname.split('-')[1].split('.')[0] == '1' ):
+        tar = tarfile.open(fname)
+        tar.extractall()
+        tar.close()
+        break
+    else:
+      raise Exception("File not found")
     ##Test Files
     handle = open(
         './bind_configs/external_dns_servers/named/external_dns_config', 'r')
@@ -1446,15 +1455,19 @@ class TestDnsMkHost(unittest.TestCase):
         '@ 3600 in mx 1 mail1.university.edu.\n')
     handle.close()
 
-    output = os.popen('python %s -d %s -c %s' % (
-        EXEC, ROOT_DIR, CONFIG_FILE))
+    output = os.popen('python %s -c %s' % (
+        EXEC, CONFIG_FILE))
     self.assertEquals(output.read(), 'No changes made to database. In order '
                                      'to export use the --force flag.\n')
     output.close()
-    output = os.popen('python %s -d %s -c %s --force' % (
-        EXEC, ROOT_DIR, CONFIG_FILE))
+    output = os.popen('python %s -c %s --force' % (
+        EXEC, CONFIG_FILE))
     self.assertEquals(output.read(), '')
     output.close()
+
+  for fname in os.listdir('.'):
+    if( fname.endswith('.bz2') ):
+      os.remove(fname)
 
 if( __name__ == '__main__' ):
       unittest.main()

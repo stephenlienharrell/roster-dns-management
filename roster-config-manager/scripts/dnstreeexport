@@ -60,15 +60,9 @@ def main(args):
   parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
                     help='Suppress program output.', default=False)
 
-  parser.add_option('-d', '--root-directory', action='store',
-                    dest='root_directory',
-                    help='Root directory to store configuration files.',
-                    default='./bind_config')
-
   (globals()["options"], args) = parser.parse_args(args)
 
-  tree_exporter_instance = tree_exporter.BindTreeExport(options.config_file,
-                                                        options.root_directory)
+  tree_exporter_instance = tree_exporter.BindTreeExport(options.config_file)
   try:
     tree_exporter_instance.ExportAllBindTrees(force=options.force)
   except tree_exporter.ChangesNotFoundError:

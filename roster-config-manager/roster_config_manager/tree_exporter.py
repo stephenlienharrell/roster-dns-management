@@ -68,7 +68,7 @@ class ChangesNotFoundError(Error):
 
 class BindTreeExport(object):
   """This class exports zones"""
-  def __init__(self, config_file_name, root_config_dir):
+  def __init__(self, config_file_name):
     """Sets self.db_instance
 
     Inputs:
@@ -79,7 +79,9 @@ class BindTreeExport(object):
     self.db_instance = config_instance.GetDb()
     self.raw_data = {}
     self.cooked_data = {}
-    self.root_config_dir = root_config_dir
+    self.root_config_dir = config_instance.config_file['exporter'][
+        'root_config_dir']
+    self.backup_dir = config_instance.config_file['exporter']['backup_dir']
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
 
@@ -241,11 +243,15 @@ class BindTreeExport(object):
                                             'replay_args': []},
                                            success)
 
-    self.tar_file_name = 'dns_tree-%s.tar.bz2' % log_id
+
+    datetime_now = datetime.datetime.now()
+    self.tar_file_name = '%s/dns_tree_%s-%s.tar.bz2' % (
+        self.backup_dir, datetime_now.strftime("%d_%m_%yT%H_%M"), log_id)
     shutil.move(temp_tar_file_name, self.tar_file_name)
 
     audit_log_replay_dump_file = bz2.BZ2File(
-        '%s/audit_log_replay_dump-%s.bz2' % (self.root_config_dir, log_id),
+        '%s/audit_log_replay_dump-%s.bz2' % (self.backup_dir, log_id),
+
         'w')
     try:
       audit_log_replay_dump_file.writelines(audit_log_replay_dump)
@@ -253,7 +259,7 @@ class BindTreeExport(object):
       audit_log_replay_dump_file.close()
                                           
     full_dump_file = bz2.BZ2File('%s/full_database_dump-%s.bz2' % 
-                                 (self.root_config_dir, log_id), 'w')
+                                 (self.backup_dir, log_id), 'w')
     try:
       full_dump_file.writelines(full_database_dump)
     finally:
