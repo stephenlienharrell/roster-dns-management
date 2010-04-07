@@ -41,6 +41,7 @@ import roster_core
 import tarfile
 import os
 import bz2
+import cPickle
 
 class Recover(object):
   """Roster Recovery
@@ -48,14 +49,16 @@ class Recover(object):
   This class contains methods pertaining to recover roster after
   catastrophic failure.
   """
-  def __init__(self, config_instance):
+  def __init__(self, username, config_instance):
     """Sets self.db_instance
     
     Inputs:
       config_instance: instantiated config class object
     """
+    self.username = username
     self.config_instance = config_instance
     self.db_instance = config_instance.GetDb()
+    self.core_instance = roster_core.Core(self.username, self.config_instance)
 
   def PushBackup(self, audit_log_id):
     """Restores database from sql backup with specified audit log id
@@ -84,4 +87,15 @@ class Recover(object):
     Inputs:
       audit_log_id: integer of audit_log_id
     """
-    pass
+    audit_dict = self.db_instance.GetEmptyRowDict('audit_log')
+    audit_dict['audit_log_id'] = audit_log_id
+    self.db_instance.StartTransaction()
+    try: 
+      audit_log = self.db_instance.ListRow('audit_log', audit_dict)
+    finally:
+      self.db_instance.EndTransaction()
+    action = audit_log[0]['action']
+    data = cPickle.loads(str(audit_log[0]['data']))['replay_args']
+
+    function = getattr(self.core_instance, action)
+    function(*data)

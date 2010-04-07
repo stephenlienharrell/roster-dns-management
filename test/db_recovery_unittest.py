@@ -80,7 +80,8 @@ class TestdbAccess(unittest.TestCase):
     db_instance.close()
 
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
-    self.db_recovery_instance = db_recovery.Recover(self.config_instance)
+    self.db_recovery_instance = db_recovery.Recover(u'sharrell',
+                                                    self.config_instance)
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
     self.db_instance = db_instance
 
@@ -135,6 +136,35 @@ class TestdbAccess(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
+
+  def testRunAuditStep(self):
+    self.core_instance.MakeView(u'test_view')
+    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.core_instance.MakeZone(u'university.edu', u'master',
+                                u'university.edu.', view_name=u'test_view')
+    self.assertEqual(
+        self.core_instance.ListZones(),
+        {u'university.edu':
+            {u'test_view': {'zone_type': u'master', 'zone_options': u'',
+                            'zone_origin': u'university.edu.'},
+             u'any': {'zone_type': u'master', 'zone_options': u'',
+                      'zone_origin': u'university.edu.'}}})
+    self.core_instance.MakeView(u'test_view2')
+    self.core_instance.RemoveView(u'test_view')
+    self.core_instance.RemoveView(u'test_view2')
+    self.core_instance.RemoveZone(u'university.edu')
+    self.assertEqual(self.core_instance.ListViews(), {})
+    self.assertEqual(self.core_instance.ListZones(), {})
+    self.db_recovery_instance.RunAuditStep(1)
+    self.db_recovery_instance.RunAuditStep(2)
+    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(
+        self.core_instance.ListZones(),
+        {u'university.edu':
+            {u'test_view': {'zone_type': u'master', 'zone_options': u'',
+                            'zone_origin': u'university.edu.'},
+             u'any': {'zone_type': u'master', 'zone_options': u'',
+                      'zone_origin': u'university.edu.'}}})
 
 if( __name__ == '__main__' ):
     unittest.main()

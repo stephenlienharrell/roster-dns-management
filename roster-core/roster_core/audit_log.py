@@ -125,7 +125,8 @@ class AuditLog(object):
     else:
       success = 0
     data = cPickle.dumps(data)
-    log_dict = {'audit_log_user_name': user,
+    log_dict = {'audit_log_id': None,
+                'audit_log_user_name': user,
                 'action': action,
                 'data': data,
                 'success': success,

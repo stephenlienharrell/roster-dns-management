@@ -3210,7 +3210,7 @@ class Core(object):
     if( (begin_timestamp or end_timestamp) and not 
         (begin_timestamp or end_timestamp) ):
       raise errors.CoreError('Missing begin_timestamp or end_timestamp.')
-    audit_dict = {'audit_log_user_name': user_name,
+    audit_dict = {'audit_log_id': None, 'audit_log_user_name': user_name,
                   'action': action, 'data': None, 'success': success,
                   'audit_log_timestamp': None}
     self.db_instance.StartTransaction()

@@ -505,7 +505,8 @@ TABLES = {
                          {'reserved_word': 'ReservedWord'},
 
     'audit_log':
-                         {'audit_log_user_name': 'UnicodeString',
+                         {'audit_log_id': 'UnsignedInt',
+                          'audit_log_user_name': 'UnicodeString',
                           'action': 'UnicodeString',
                           'data': 'PickleString',
                           'success': 'IntBool',

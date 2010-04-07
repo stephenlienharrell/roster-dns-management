@@ -200,7 +200,8 @@ class TestdbAccess(unittest.TestCase):
     self.assertRaises(db_access.InvalidInputError,
                       self.db_instance.ListRow, 'onearg')
 
-    audit_log_dict = {'audit_log_user_name': u'sharrell',
+    audit_log_dict = {'audit_log_id': None,
+                      'audit_log_user_name': u'sharrell',
                       'action': u'DoThis',
                       'data': cPickle.dumps('I did it'),
                       'success': 1,
@@ -239,11 +240,11 @@ class TestdbAccess(unittest.TestCase):
         ({'action': u'DoThis',
           'audit_log_timestamp': datetime.datetime(2001, 1, 1, 2, 0),
           'data': u"S'I did it'\np1\n.", 'audit_log_user_name': u'sharrell',
-          'success': 1},
+          'audit_log_id': 2L, 'success': 1},
          {'action': u'DoThis',
           'audit_log_timestamp': datetime.datetime(2001, 1, 1, 3, 0),
           'data': u"S'You did it'\np1\n.", 'audit_log_user_name': u'sharrell',
-          'success': 1}))
+          'audit_log_id': 3L, 'success': 1}))
 
     search_dict['data'] = cPickle.dumps('I did it')
     self.assertEquals(self.db_instance.ListRow(
@@ -253,7 +254,7 @@ class TestdbAccess(unittest.TestCase):
         ({'action': u'DoThis',
           'audit_log_timestamp': datetime.datetime(2001, 1, 1, 2, 0),
           'data': u"S'I did it'\np1\n.", 'audit_log_user_name': u'sharrell',
-          'success': 1},))
+          'audit_log_id': 2L, 'success': 1},))
 
     search_dict = self.db_instance.GetEmptyRowDict('acls')
     second_search_dict = self.db_instance.GetEmptyRowDict('users')

@@ -130,7 +130,7 @@ class Testdnslsauditlog(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testListAuditLog(self):
-    audit_dict = {'audit_log_user_name': None,
+    audit_dict = {'audit_log_id': None, 'audit_log_user_name': None,
                   'action': None, 'data': None, 'success': None,
                   'audit_log_timestamp': None}
 
