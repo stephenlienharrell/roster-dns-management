@@ -213,26 +213,27 @@ def main(args):
                                                       'core_return']
     access_rights_string = '|'.join(access_rights)
     if( not options.group ):
-      cli_common_lib_instance.DnsError('A username must be accompanied by a group name '
-                              'with the -g flag.', 1)
+      cli_common_lib_instance.DnsError('A username must be accompanied by '
+                                       'a group name with the -g flag.', 1)
     if( not options.access_level ):
-      cli_common_lib_instance.DnsError('A username must be accompanied by an access '
-                              'level with the -a flag.', 1)
+      cli_common_lib_instance.DnsError('A username must be accompanied by '
+                                       'an access level with the -a flag.', 1)
     if( options.zone and not options.access_right and not options.cidr_block ):
-      cli_common_lib_instance.DnsError('A zone must be accompanied with an access'
-                              ' right, CIDR block or both.', 1)
+      cli_common_lib_instance.DnsError('A zone must be accompanied with an '
+                                       'access right, CIDR block or both.', 1)
     if( options.zone and (not options.access_right or options.access_right
           not in access_rights) ):
       cli_common_lib_instance.DnsError('An access right of either %s is'
-                              ' required if specifying a zone.' % (
-                                  access_rights_string), 1)
+                                       ' required if specifying a zone.' % (
+                                           access_rights_string), 1)
     users = roster_client_lib.RunFunction(
         u'ListUsers', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
         args=[options.new_user])['core_return']
 
     if( options.new_user in users ):
-      cli_common_lib_instance.DnsError('A username of that name already exists.', 1)
+      cli_common_lib_instance.DnsError('A username of that name already '
+                                       'exists.', 1)
     else:
       MakeGroup(options, cli_common_lib_instance)
       roster_client_lib.RunFunction(u'MakeUser', options.username,
