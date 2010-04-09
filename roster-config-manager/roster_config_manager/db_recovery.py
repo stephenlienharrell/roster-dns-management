@@ -77,6 +77,8 @@ class Recover(object):
     finally:
       full_dump_file.close()
 
+    print 'Loading database from backup with ID %s' % audit_log_id
+
     self.db_instance.StartTransaction()
     self.db_instance.cursor.execute(full_dump_file_contents)
     self.db_instance.EndTransaction()
@@ -87,6 +89,7 @@ class Recover(object):
     Inputs:
       audit_log_id: integer of audit_log_id
     """
+    forbidden_actions = ['ExportAllBindTrees']
     audit_dict = self.db_instance.GetEmptyRowDict('audit_log')
     audit_dict['audit_log_id'] = audit_log_id
     self.db_instance.StartTransaction()
@@ -95,7 +98,38 @@ class Recover(object):
     finally:
       self.db_instance.EndTransaction()
     action = audit_log[0]['action']
-    data = cPickle.loads(str(audit_log[0]['data']))['replay_args']
+    success = audit_log[0]['success']
+    if( action in forbidden_actions ):
+      print 'Not replaying action with id %s, action not allowed.' % action
+    elif( not success ):
+      print 'Not replaying action with id %s, action was unsuccessful.' % (
+          audit_log_id)
+    else:
+      data = cPickle.loads(str(audit_log[0]['data']))['replay_args']
+      print 'Replaying action with id %s: %s\nwith arguments: %s' % (
+          audit_log_id, action, str(data))
+      function = getattr(self.core_instance, action)
+      function(*data)
 
-    function = getattr(self.core_instance, action)
-    function(*data)
+  def RunAuditRange(self, audit_log_id):
+    """Runs a range of audit steps
+
+    Inputs:
+      audit_log_id: integer of audit_log_id
+    """
+    backup_dir = self.config_instance.config_file['exporter']['backup_dir']
+    root_config_dir = self.config_instance.config_file[
+        'exporter']['root_config_dir']
+    file_list = os.listdir(backup_dir)
+    db_dumps = []
+
+    for fname in file_list:
+      if( fname.startswith('audit_log_replay_dump-') ):
+        db_dumps.append(int(fname.split('-')[1].split('.')[0]))
+    for audit_id in reversed(sorted(db_dumps)):
+      if( audit_id < audit_log_id ):
+        break
+    self.PushBackup(audit_id)
+
+    for current_id in range(audit_id + 1, audit_log_id):
+      RunAuditStep(current_id)

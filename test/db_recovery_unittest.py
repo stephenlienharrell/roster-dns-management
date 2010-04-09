@@ -46,8 +46,10 @@ import unittest
 import time
 import MySQLdb
 import os
+import sys
 import threading
 
+from roster_core import audit_log
 import roster_config_manager
 import roster_core
 from roster_config_manager import db_recovery
@@ -60,6 +62,33 @@ CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 
+class StdOutStream():
+  """Std out redefined"""
+  def __init__(self):
+    """Appends stdout to stdout array
+    
+       Inputs:
+         text: String of stdout
+    """
+    self.stdout = []
+
+  def write(self, text):
+    """Appends stdout to stdout array
+    
+    Inputs:
+      text: String of stdout
+    """
+    self.stdout.append(text)
+
+  def flush(self):
+    """Flushes stdout array and outputs string of contents
+
+    Outputs:
+      String: String of stdout
+    """
+    std_array = self.stdout
+    self.stdout = []
+    return ''.join(std_array)
 
 class TestdbAccess(unittest.TestCase):
 
@@ -127,7 +156,12 @@ class TestdbAccess(unittest.TestCase):
           'zone_name': u'university.edu',
           u'mail_server': u'smtp.university.edu.'}])
 
+    old_stdout = sys.stdout
+    sys.stdout = StdOutStream()
     self.db_recovery_instance.PushBackup(4)
+    self.assertEqual(sys.stdout.flush(),
+                     'Loading database from backup with ID 4\n')
+    sys.stdout = old_stdout
 
     self.assertEqual(self.core_instance.ListRecords(),
         [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
@@ -155,8 +189,18 @@ class TestdbAccess(unittest.TestCase):
     self.core_instance.RemoveZone(u'university.edu')
     self.assertEqual(self.core_instance.ListViews(), {})
     self.assertEqual(self.core_instance.ListZones(), {})
+    old_stdout = sys.stdout
+    sys.stdout = StdOutStream()
     self.db_recovery_instance.RunAuditStep(1)
     self.db_recovery_instance.RunAuditStep(2)
+    self.assertEqual(
+        sys.stdout.flush(),
+        u"Replaying action with id 1: MakeView\n"
+         "with arguments: [u'test_view', None]\n"
+         "Replaying action with id 2: MakeZone\n"
+         "with arguments: [u'university.edu', u'master', "
+         "u'university.edu.', u'test_view', None, True]\n")
+    sys.stdout = old_stdout
     self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
     self.assertEqual(
         self.core_instance.ListZones(),
@@ -165,6 +209,63 @@ class TestdbAccess(unittest.TestCase):
                             'zone_origin': u'university.edu.'},
              u'any': {'zone_type': u'master', 'zone_options': u'',
                       'zone_origin': u'university.edu.'}}})
+  def testRunAuditRange(self):
+    self.assertFalse(self.core_instance.ListRecords())
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'university.edu', u'master',
+                                u'university.edu.', view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'university.edu',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.assertEqual(self.core_instance.ListRecords(), 
+        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
+          'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'university.edu',
+          u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
+    self.tree_exporter_instance.ExportAllBindTrees()
+    self.core_instance.MakeView(u'test_view2')
+    self.core_instance.MakeView(u'bad_view')
+    old_stdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.db_recovery_instance.RunAuditRange(5)
+    self.assertEqual(sys.stdout.flush(),
+        'Loading database from backup with ID 4\n')
+    sys.stdout = old_stdout
+    self.assertEqual(self.core_instance.ListRecords(), 
+        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
+          'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'university.edu',
+          u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
+    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.tree_exporter_instance.ExportAllBindTrees()
+    old_stdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.db_recovery_instance.RunAuditStep(7)
+    self.assertEqual(sys.stdout.flush(),
+        u'Not replaying action with id ExportAllBindTrees, '
+        'action not allowed.\n')
+    sys.stdout = old_stdout
+
+    log_instance = audit_log.AuditLog(log_to_syslog=False, log_to_db=True,
+                                           db_instance=self.db_instance)
+
+    log_id = log_instance.LogAction(
+        u'sharrell', u'failed', {u'audit_args': {u'arg1': 1},
+        u'replay_args': [1]}, 0)
+    old_stdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.db_recovery_instance.RunAuditStep(log_id)
+    self.assertEqual(sys.stdout.flush(),
+        'Not replaying action with id 8, action was unsuccessful.\n')
+    sys.stdout = old_stdout
 
 if( __name__ == '__main__' ):
     unittest.main()

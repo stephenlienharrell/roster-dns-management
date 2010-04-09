@@ -6,6 +6,7 @@ Current Release
 - Made dnsconfigsync use the new tarfiles
 - Made tarfiles embed date and time
 - Added db_recovery library
+- Added PushBackup, RunAuditStep and RunAuditRange functions
 
 2010-03-03 release-0.12
 - Reordered records in zone_importer_lib so SOA comes first
