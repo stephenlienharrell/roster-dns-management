@@ -36,13 +36,16 @@ __version__ = '#TRUNK#'
 
 
 from config import Config
+import core
 from core import Core
+import core_helpers
 from core_helpers import CoreHelpers
 from errors import CoreError
 import embedded_files
 
 
-__all__ = ['CoreError', 'Core', 'CoreHelpers', 'Config', 'embedded_files']
+__all__ = ['CoreError', 'core', 'Core', 'core_helpers', 'CoreHelpers',
+           'Config', 'embedded_files']
 
 
 # vi: set ai aw sw=2:

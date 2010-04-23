@@ -44,6 +44,9 @@ import math
 
 import IPy
 
+class RecordsBatchError(errors.CoreError):
+  pass
+
 class CoreHelpers(object):
   """Library of helper functions that extend the core functions."""
   def __init__(self, core_instance):
@@ -552,7 +555,8 @@ class CoreHelpers(object):
           args_list = []
           for argument in record['record_arguments']:
             if( record['record_arguments'][argument] is None ):
-              raise errors.CoreError('"%s" cannot be None' % argument)
+              raise errors.CoreErrore('%s: "%s" cannot be None' % (
+                  record['record_target'], argument))
             args_list.append(
                 {u'record_arguments_records_assignments_argument_name':
                      argument,
@@ -586,8 +590,8 @@ class CoreHelpers(object):
             new_records = self.db_instance.ListRow('records', records_dict)
             rows_deleted = self.db_instance.RemoveRow('records', new_records[0])
             if( not rows_deleted ):
-              raise core.RecordError('Record with record_id %s not found' %
-                                     final_id)
+              raise RecordsBatchError(
+                  '%s: Record not found' % record['record_target'])
             log_dict['delete'].append(record)
             row_count += 1
 
@@ -623,10 +627,12 @@ class CoreHelpers(object):
             for record in current_records:
               if( record['record_type'] == 'a' or
                   record['record_type'] == 'cname' ):
-                raise RecordError('Record already exists with that target '
-                                  'target: %s type: %s' %
-                                  (record['record_type'],
-                                   record['record_target']))
+                raise RecordsBatchError(
+                    '%s: Record already exists with that target '
+                    'target: %s type: %s' %
+                        (record['record_target'],
+                         record['record_target'],
+                         record['record_type']))
 
           records_dict['record_type'] = record['record_type']
           record_id = self.db_instance.MakeRow('records', records_dict)
