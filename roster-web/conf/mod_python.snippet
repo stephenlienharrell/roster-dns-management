@@ -1,0 +1,8 @@
+# this code goes into sites-enabled file, the directory is whatever directory it
+# gets dropped in
+
+  <Directory /var/www/>
+                AddHandler mod_python .py
+                PythonHandler roster_web.main
+                PythonDebug On
+  </Directory>
