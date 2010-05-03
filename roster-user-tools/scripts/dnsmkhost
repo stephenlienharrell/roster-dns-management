@@ -118,6 +118,9 @@ def main(args):
         'ListZones', options.username, credfile=options.credfile,
         server_name=options.server,
         kwargs={'zone_name': options.zone_name})['core_return']
+    if( options.zone_name is None ):
+      cli_common_lib_instance.DnsError(
+          'A zone must be specified with -z/--zone-name.', 1)
     if( options.zone_name not in zone_info ):
       cli_common_lib_instance.DnsError(
           'Zone "%s" does not exist.' % options.zone_name, 1)
@@ -153,25 +156,8 @@ def main(args):
                                   hostname, zone_origin)},
                               quiet=options.quiet)
 
-  elif( options.range is not None ):
-    records_dict = roster_client_lib.RunFunction('ListRecordsByCIDRBlock',
-                                                 options.username,
-                                                 credfile=options.credfile,
-                                                 server_name=options.server,
-                                                 args=[options.range],
-                                                 kwargs={'view_name':
-                                                     options.view_name})[
-                                                     'core_return']
-    ip_address_list = roster_client_lib.RunFunction('CIDRExpand',
-                                                    options.username,
-                                                    credfile=options.credfile,
-                                                    server_name=options.server,
-                                                    args=[options.range])[
-                                                        'core_return']
-
-    print cli_common_lib_instance.PrintRecords(records_dict, ip_address_list)
   else:
-    cli_common_lib_instance.DnsError('An ip address or range must be specified.', 1)
+    cli_common_lib_instance.DnsError('An ip address must be specified.', 1)
 
 
 if __name__ == "__main__":
