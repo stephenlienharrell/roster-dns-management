@@ -52,15 +52,15 @@ def MakePermissions(options, cli_common_lib_instance):
   Inputs:
     options: options object from optparse
   """
-  zones = roster_client_lib.RunFunction(u'ListZones', options.username,
-                                        credfile=options.credfile,
-                                        credstring=options.credstring,
-                                        server_name=options.server)[
-                                            'core_return']
-  if( options.zone not in zones ):
-    cli_common_lib_instance.DnsError('Zone does not exist.', 1)
-
   if( options.forward_zone_permission ):
+    zones = roster_client_lib.RunFunction(u'ListZones', options.username,
+                                          credfile=options.credfile,
+                                          credstring=options.credstring,
+                                          server_name=options.server)[
+                                              'core_return']
+    if( options.zone not in zones ):
+      cli_common_lib_instance.DnsError('Zone does not exist.', 1)
+
     roster_client_lib.RunFunction(u'MakeForwardZonePermission',
                                   options.username,
                                   credfile=options.credfile,
