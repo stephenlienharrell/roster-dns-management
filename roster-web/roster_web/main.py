@@ -42,8 +42,7 @@ import roster_core
 from roster_core import core_helpers
 from roster_web import web_lib
 
-CONFIG_FILE = '/etc/apache2/roster_web.conf'
-
+CONFIG_FILE = '/etc/roster/roster_web.conf'
 
 # set this variable from whatever authentication system that is used
 authenticated_user = u'sharrell'

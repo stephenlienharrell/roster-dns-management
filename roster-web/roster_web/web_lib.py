@@ -28,12 +28,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""This is a page used for mod_python. It gives the main page functions to use"""
+"""Roster web library"""
 
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
+
 
 def MakeHtmlHeader():
   """Makes html page header
@@ -62,6 +63,7 @@ def MakeHtmlHeader():
   html_page.append('<b><u>Roster Web</b></u><br /><br />')
 
   return html_page
+
 
 def MakeChangelist(records_dict, post_get_dict):
   """Makes organized lists of record changes from users changes
@@ -133,6 +135,7 @@ def MakeChangelist(records_dict, post_get_dict):
                             ip_address)
   return (add_dict, remove_dict, errors_to_show)
 
+
 def AddRow(html_page, record_html_data, color=None):
   """Adds row to html_page
 
@@ -189,6 +192,7 @@ def AddRow(html_page, record_html_data, color=None):
                    '</td>'
                    '</tr>' % record_html_data)
   return html_page
+
 
 def AddError(ip_address, error, error_ips):
   """Adds error to error_ips
@@ -294,6 +298,7 @@ def CheckChanges(records_dict, core_instance, view_name, error_ips,
           view_name, zone.keys()[0]), error_ips)
 
   return error_ips
+
 
 def PushChanges(add_dict, remove_dict, error_ips, html_page, core_instance,
                 helper_instance, view_name):
@@ -574,6 +579,7 @@ def PrintAllRecordsPage(view_name, records, all_ips, cidr_block,
   html_page.append('</form>')
   return html_page
 
+
 def UpdateInputBoxes(changed_records, record_html_data, error_ips):
   """Restores user input after data has been submitted
 
@@ -624,6 +630,7 @@ def UpdateInputBoxes(changed_records, record_html_data, error_ips):
               record_html_data['ip_address']]['host']
 
   return record_html_data
+
 
 def PrintGetCIDRPage():
   """Makes html page to get initial cidr

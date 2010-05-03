@@ -65,4 +65,6 @@ setup(name='RosterWeb',
                    'Operating System :: Unix',
                    'Programming Language :: Python :: 2.5',
                    'Topic :: Internet :: Name Service (DNS)'],
+     install_requires = ['mod_python>=3.3.1',
+                         'RosterCore>=%s' % current_version]
      )

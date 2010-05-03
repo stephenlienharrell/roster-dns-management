@@ -1,0 +1,8 @@
+Authors
+ChangeLog
+License
+setup.py
+roster_web/__init__.py
+roster_web/main.py
+roster_web/web_lib.py
+conf/mod_python.snippet
