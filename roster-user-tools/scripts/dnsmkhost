@@ -71,9 +71,6 @@ def main(args):
   parser.add_option('-t', '--target', action='store', dest='target',
                     help='Target machine host name.', metavar='<target>',
                     default=None)
-  parser.add_option('-l', '--list', action='store_true', dest='list_data',
-                    help='Set this flag to only list DNS configuration without'
-                         ' making any changes.', default=False)
   parser.add_option('--ttl', action='store', dest='ttl',
                     help='Time to live.', metavar='<ttl>', default=3600)
   parser.add_option('-z', '--zone', action='store', dest='zone_name',
