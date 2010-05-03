@@ -55,7 +55,7 @@ from roster_core import core_helpers
 import sys
 sys.path.append('../../branches/web-interface/roster-web/htdocs/')
 
-import functions # main web file
+import web_lib # main web file
 
 
 
@@ -106,14 +106,14 @@ class TestAuditLog(unittest.TestCase):
     self.helper_instance = roster_core.CoreHelpers(self.core_instance)
 
   def testMakeHtmlHeader(self):
-    self.assertEqual(functions.MakeHtmlHeader(),
+    self.assertEqual(web_lib.MakeHtmlHeader(),
                      ['<html><head><title>Roster Web</title></head>',
                       '<body>', '<style>\ntable {\n  border-collapse: '
                                 'collapse;\n}\ntd {\n  border: 1px solid '
                                 '#000000;\n}\nbody {\n  font-family: Arial;\n'
                                 '}\n</style>', '<b><u>Roster Web</b></u><br />'
                                 '<br />'])
-    self.assertEqual(functions.PrintGetCIDRPage(),
+    self.assertEqual(web_lib.PrintGetCIDRPage(),
                      ['<form action="edit_records.py" method="post">',
                       'Enter CIDR block to edit: ',
                       '<input type="text" name="cidr_block" /><br />',
@@ -132,7 +132,7 @@ class TestAuditLog(unittest.TestCase):
         'fqdn_192.168.1.1': 'newhost.newfqdn.',
         'default_host_192.168.1.1': 'oldhost',
         'host_192.168.1.1': 'newhost'}
-    add_dict, remove_dict, errors_to_show = functions.MakeChangelist(
+    add_dict, remove_dict, errors_to_show = web_lib.MakeChangelist(
         records_dict, post_get_dict)
     self.assertEqual(add_dict,
         {'192.168.1.1': {'host': 'newhost', 'fqdn': 'newhost.oldfqdn.'}})
@@ -146,7 +146,7 @@ class TestAuditLog(unittest.TestCase):
         'host': 'newhost'}}
     post_get_dict = {'ip_addresses': ['192.168.1.1'],
         'host_192.168.1.1': 'newhost'}
-    add_dict, remove_dict, errors_to_show = functions.MakeChangelist(
+    add_dict, remove_dict, errors_to_show = web_lib.MakeChangelist(
         records_dict, post_get_dict)
     self.assertEqual(add_dict,
         {'192.168.1.1': {'host': 'newhost', 'fqdn': 'newhost.oldfqdn.'}})
@@ -162,7 +162,7 @@ class TestAuditLog(unittest.TestCase):
         'default_fqdn': 'newhost1.com.', 'ip_address': '192.168.1.1-0',
         'forward': '1', 'default_forward': '1', 'reverse': '1',
         'default_reverse': '1'}
-    html_page = functions.AddRow(html_page, record_html_data)
+    html_page = web_lib.AddRow(html_page, record_html_data)
     self.assertEqual(html_page,
         ['<tr>', '<td><input type="hidden" name="ip_addresses" '
                  'value="192.168.1.1-0" />192.168.1.1</td><td><input '
@@ -185,7 +185,7 @@ class TestAuditLog(unittest.TestCase):
     error = 'Error string.'
     error_ips = {}
 
-    error_ips = functions.AddError(ip_address, error, error_ips)
+    error_ips = web_lib.AddError(ip_address, error, error_ips)
     self.assertEqual(error_ips, {'192.168.1.1-0': ['Error string.']})
 
   def testCheckChanges(self):
@@ -194,10 +194,10 @@ class TestAuditLog(unittest.TestCase):
                                    'fqdn': 'oldhost.oldfqdn'}}
     view_name = u'any'
     error_ips = {}
-    error_ips = functions.CheckChanges(remove_dict,
+    error_ips = web_lib.CheckChanges(remove_dict,
                                        self.core_instance, view_name, error_ips,
                                        action='remove')
-    error_ips = functions.CheckChanges(add_dict, self.core_instance, view_name,
+    error_ips = web_lib.CheckChanges(add_dict, self.core_instance, view_name,
                                        error_ips=error_ips, action='add')
     self.assertEqual(error_ips,
         {'192.168.1.1': ['No matching domain for oldhost.oldfqdn',
@@ -205,10 +205,10 @@ class TestAuditLog(unittest.TestCase):
 
     add_dict = {'192.168.1.1': {'host': 'newhost'}}
     error_ips = {}
-    error_ips = functions.CheckChanges(remove_dict,
+    error_ips = web_lib.CheckChanges(remove_dict,
                                        self.core_instance, view_name, error_ips,
                                        action='remove')
-    error_ips = functions.CheckChanges(add_dict, self.core_instance, view_name,
+    error_ips = web_lib.CheckChanges(add_dict, self.core_instance, view_name,
                                        error_ips=error_ips, action='add')
     self.assertEqual(error_ips,
         {'192.168.1.1': ['No matching domain for oldhost.oldfqdn',
@@ -216,10 +216,10 @@ class TestAuditLog(unittest.TestCase):
 
     error_ips = {}
     add_dict = {'192.168.1.1': {'fqdn': 'newhost.oldfqdn.'}}
-    error_ips = functions.CheckChanges(remove_dict,
+    error_ips = web_lib.CheckChanges(remove_dict,
                                        self.core_instance, view_name,
                                        action='remove', error_ips=error_ips)
-    error_ips = functions.CheckChanges(add_dict, self.core_instance, view_name,
+    error_ips = web_lib.CheckChanges(add_dict, self.core_instance, view_name,
                                        error_ips=error_ips, action='add')
     self.assertEqual(error_ips,
         {'192.168.1.1': ['No matching domain for oldhost.oldfqdn',
@@ -227,10 +227,10 @@ class TestAuditLog(unittest.TestCase):
 
     error_ips = {}
     add_dict = {'192.168.1.1': {'host': 'newhost.', 'fqdn': 'newhost.oldfqdn.'}}
-    error_ips = functions.CheckChanges(remove_dict,
+    error_ips = web_lib.CheckChanges(remove_dict,
                                        self.core_instance, view_name,
                                        action='remove', error_ips=error_ips)
-    error_ips = functions.CheckChanges(add_dict, self.core_instance, view_name,
+    error_ips = web_lib.CheckChanges(add_dict, self.core_instance, view_name,
                                        error_ips=error_ips, action='add')
     self.assertEqual(error_ips,
         {'192.168.1.1': ['No matching domain for oldhost.oldfqdn',
@@ -238,10 +238,10 @@ class TestAuditLog(unittest.TestCase):
 
     error_ips = {}
     add_dict = {'192.168.1.1': {'host': 'newhost', 'fqdn': 'diff.oldfqdn.'}}
-    error_ips = functions.CheckChanges(remove_dict,
+    error_ips = web_lib.CheckChanges(remove_dict,
                                        self.core_instance, view_name,
                                        action='remove', error_ips=error_ips)
-    error_ips = functions.CheckChanges(add_dict, self.core_instance, view_name,
+    error_ips = web_lib.CheckChanges(add_dict, self.core_instance, view_name,
                                        error_ips=error_ips, action='add')
     self.assertEqual(error_ips,
         {'192.168.1.1': ['No matching domain for oldhost.oldfqdn',
@@ -265,7 +265,7 @@ class TestAuditLog(unittest.TestCase):
     self.core_instance.MakeRecord(u'a', u'host1', u'test_zone',
                                   {u'assignment_ip': u'192.168.1.1'},
                                   view_name=u'test_view')
-    error_ips = functions.CheckChanges(add_dict, self.core_instance, view_name,
+    error_ips = web_lib.CheckChanges(add_dict, self.core_instance, view_name,
                                        error_ips=error_ips, action='add')
     self.assertEqual(error_ips,
                      {'192.168.1.1': ['Record exists for 192.168.1.1']})
@@ -274,7 +274,7 @@ class TestAuditLog(unittest.TestCase):
     error_ips = {}
     remove_dict = {'192.168.1.1': {'host': 'host2',
                                    'fqdn': 'host2.university.edu'}}
-    error_ips = functions.CheckChanges(remove_dict, self.core_instance,
+    error_ips = web_lib.CheckChanges(remove_dict, self.core_instance,
                                        view_name, error_ips=error_ips,
                                        action='remove')
     self.assertEqual(error_ips,
@@ -284,7 +284,7 @@ class TestAuditLog(unittest.TestCase):
     view_name = u'dne'
     add_dict = {'192.168.1.1': {'host': 'host2',
                                 'fqdn': 'host2.university.edu'}}
-    error_ips = functions.CheckChanges(add_dict, self.core_instance,
+    error_ips = web_lib.CheckChanges(add_dict, self.core_instance,
                                        view_name, error_ips=error_ips,
                                        action='add')
     self.assertEqual(error_ips,
@@ -301,7 +301,7 @@ class TestAuditLog(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'oldfqdn.')
     self.core_instance.MakeReverseRangeZoneAssignment(u'test_zone',
                                                       u'192.168.1/24')
-    functions.PushChanges(add_dict, remove_dict, error_ips, html_page,
+    web_lib.PushChanges(add_dict, remove_dict, error_ips, html_page,
                           self.core_instance, self.helper_instance, view_name)
     self.assertEqual(self.core_instance.ListRecords(),
         [{'target': u'newhost', 'ttl': 3600, 'record_type': u'a',
@@ -335,7 +335,7 @@ class TestAuditLog(unittest.TestCase):
                u'123.210.23.3']
     cidr_block = '123.210.23/30'
     changed_records = {'add': {}, 'remove': {}}
-    html_page = functions.PrintAllRecordsPage(
+    html_page = web_lib.PrintAllRecordsPage(
         view_name, records, all_ips, cidr_block,
         changed_records=changed_records)
     self.assertEqual(html_page,
@@ -428,7 +428,7 @@ class TestAuditLog(unittest.TestCase):
                    '123.210.23.2-0': {'host': 'pdntest23'}}}
     error_ips = {'123.210.23.2-0':
         ['FQDN of 123.210.23.2-0 needs to be updated.']}
-    html_page = functions.PrintAllRecordsPage(
+    html_page = web_lib.PrintAllRecordsPage(
         view_name, records, all_ips, cidr_block,
         changed_records=changed_records, error_ips=error_ips)
     self.assertEqual(html_page,
@@ -523,7 +523,7 @@ class TestAuditLog(unittest.TestCase):
         '123.210.23.0-0': ['HOST of 123.210.23.0-0 needs to be updated.'],
         '123.210.23.3-0':
             ['The use of "." in the hostname is not allowed.']}
-    html_page = functions.PrintAllRecordsPage(
+    html_page = web_lib.PrintAllRecordsPage(
         view_name, records, all_ips, cidr_block,
         changed_records=changed_records, error_ips=error_ips)
     self.assertEqual(html_page,
@@ -637,7 +637,7 @@ class TestAuditLog(unittest.TestCase):
         '128.210.189.3-0':
             ['The use of "." in the hostname is not allowed.']}
 
-    record_html_data = functions.UpdateInputBoxes(
+    record_html_data = web_lib.UpdateInputBoxes(
         changed_records, record_html_data, error_ips)
     self.assertEqual(record_html_data,
         {'reverse': 'checked="checked"', 'real_ip_address': u'128.210.189.0',
@@ -670,7 +670,7 @@ class TestAuditLog(unittest.TestCase):
          'forward': 'checked="checked"', 'ip_address': u'128.210.189.1-0'})
 
   def testPrintGetCIDRPage(self):
-    self.assertEqual(functions.PrintGetCIDRPage(),
+    self.assertEqual(web_lib.PrintGetCIDRPage(),
         ['<form action="edit_records.py" method="post">',
          'Enter CIDR block to edit: ',
          '<input type="text" name="cidr_block" /><br />',
@@ -738,7 +738,7 @@ class TestAuditLog(unittest.TestCase):
                                        'tr.rcac.purdue.edu')],
         'host_128.210.189.1-0': [Field('host_128.210.189.1-0', 'changed')]}
 
-    records_dict = functions.ProcessPostDict(post_get_dict)
+    records_dict = web_lib.ProcessPostDict(post_get_dict)
     self.assertEqual(records_dict,
         {'addresses': {'forward': '0', 'reverse': '0', 'default_forward': '0',
                        'default_reverse': '0'},
