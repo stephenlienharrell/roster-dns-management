@@ -1,5 +1,7 @@
-# this code goes into sites-enabled file, the directory is whatever directory it
-# gets dropped in
+# this code goes into sites-enabled file, the directory is whatever directory 
+# you want it to be read as. For instance if /var/www is http://example.com/
+# and you want http://example.com/edit_records.py then keep the config file as
+# it is.
 
   <Directory /var/www/>
                 AddHandler mod_python .py
