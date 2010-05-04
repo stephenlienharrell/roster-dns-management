@@ -326,7 +326,7 @@ class TestDnsMkHost(unittest.TestCase):
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: An ip address or range must be specified.\n')
+                     'CLIENT ERROR: An ip address must be specified.\n')
     output.close()
     output = os.popen('python %s -s %s -u %s -i 192.168.0.1 -z reverse_zone '
                       '-v test_view -t machine1 '

@@ -51,11 +51,7 @@ from roster_core import audit_log
 
 import roster_core
 from roster_core import core_helpers
-
-import sys
-sys.path.append('../../branches/web-interface/roster-web/htdocs/')
-
-import web_lib # main web file
+from roster_web import web_lib # main web file
 
 
 
