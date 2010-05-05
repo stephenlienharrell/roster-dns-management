@@ -44,7 +44,12 @@ from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
+from roster_user_tools.data_flags import Acl
+from roster_user_tools.action_flags import List
 
+
+class Args(List, Acl):
+  pass
 
 def main(args):
   """Collects command line arguments.
@@ -60,39 +65,9 @@ def main(args):
            'You may use any or none of the arguments above to search ACLs' %
            (sys.argv[0]))
 
-  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
+  args_instance = Args(usage)
 
-  parser.add_option('-a', '--acl', action='store', dest='acl',
-                    help='ACL name', default=None)
-  parser.add_option('--cidr-block', action='store', dest='cidr_block',
-                    help='Cidr block or single IP address.', default=None)
-  parser.add_option('--allow', action='store_true', dest='allow',
-                    help='Search for allowed ACLs.', default=None)
-  parser.add_option('--deny', action='store_true', dest='deny',
-                    help='Search for denied ACLs.', default=None)
-  parser.add_option('-s', '--server', action='store', dest='server',
-                    help='XML RPC Server URL.', metavar='<server>',
-                    default=None)
-  parser.add_option('--config-file', action='store', dest='config_file',
-                    help='Config file location.', metavar='<file>',
-                    default=None)
-  parser.add_option('-u', '--username', action='store', dest='username',
-                    help='Run as a different username.', metavar='<username>',
-                    default=unicode(getpass.getuser()))
-  parser.add_option('-p', '--password', action='store', dest='password',
-                    help='Password string, NOTE: It is insecure to use this '
-                         'flag on the command line.', metavar='<password>',
-                    default=None)
-  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
-                    help='Location of credential file.', metavar='<cred-file>',
-                    default=None)
-  parser.add_option('--cred-string', action='store', dest='credstring',
-                    help='String of credential.', metavar='<cred-string>',
-                    default=None)
-  parser.add_option('--no-header', action='store_true', dest='no_header',
-                    help='Do not display a header.', default=False)
-
-  (globals()["options"], args) = parser.parse_args(args)
+  options = args_instance.GetOptionsObject(args)
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
