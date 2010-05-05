@@ -39,7 +39,7 @@ import datetime
 import unittest
 
 from roster_core import data_validation
-from roster_core import table_enumeration
+from roster_core import helpers_lib
 
 
 class TestDataValidation(unittest.TestCase):
@@ -178,9 +178,9 @@ class TestDataValidation(unittest.TestCase):
 
   def testTableEnumerationAndValidationConsistency(self):
     data_types = []
-    tables = table_enumeration.GetValidTables()
+    tables = helpers_lib.GetValidTables()
     for table in tables:
-      row_dict = table_enumeration.GetRowDict(table)
+      row_dict = helpers_lib.GetRowDict(table)
 
       for v in row_dict.values():
         if( not v in data_types ):

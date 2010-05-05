@@ -38,6 +38,7 @@ __version__ = '#TRUNK#'
 import constants
 import core
 import errors
+import helpers_lib
 
 import datetime
 import math
@@ -60,92 +61,22 @@ class CoreHelpers(object):
     self.user_instance = core_instance.user_instance
     self.log_instance = core_instance.log_instance
 
+  ### These functions just expose helpers_lib functions for the 
+  ### XML-RPC server. For doc strings see helpers_lib
   def ListAccessRights(self):
-    """Lists access rights.
-
-    Output:
-      list: list of access rights. ex: ['rw', 'r']
-    """
-    return constants.ACCESS_RIGHTS
+    return helpers_lib.ListAccessRights()
 
   def ReverseIP(self, ip_address):
-    """Reverse an IP address
-
-    Inputs:
-      ip_address: either an ipv4 or ipv6 string
-
-    Outputs:
-      string: reverse ip address
-    """
-    ip_object = IPy.IP(ip_address)
-    reverse_ip_string = ip_object.reverseName()
-    if( ip_object.version() == 4 ):
-      ip_parts = reverse_ip_string.split('.')
-      if( '-' in ip_parts[0] ):
-        range = ip_parts.pop(0).split('-')
-        num_ips = int(range[1]) - int(range[0]) + 1
-        netmask = int(32 - (math.log(num_ips) / math.log(2)))
-        last_octet = ip_parts.pop(0)
-        reverse_ip_string = '.'.join(ip_parts)
-        reverse_ip_string = '%s/%s.%s' % (last_octet, netmask,
-                                          reverse_ip_string)
-    return unicode(reverse_ip_string)
+    return helpers_lib.ReverseIP(ip_address)
 
   def UnReverseIP(self, ip_address):
-    """Un-Reverses reversed IP addresses
-
-    Inputs:
-      ip_address: either an ipv4 or ipv6 string (reversed)
-
-    Outputs:
-      string: forward ip address
-    """
-    mask = 0
-    cidr_parts = ip_address.split('/')
-    if( len(cidr_parts) == 2 ):
-      mask = cidr_parts[1].split('.')[0]
-      ip_address = ip_address.replace('/%s' % mask, '')
-    if( ip_address.endswith('in-addr.arpa.') ):
-      octets = 0
-      ip_array = ip_address.split('.')
-      ip_parts = []
-      while len(ip_array):
-        ip_part = ip_array.pop()
-        if( ip_part.isdigit() ):
-          ip_parts.append(ip_part)
-          octets += 1
-      new_ip = '.'.join(ip_parts)
-      if( mask ):
-        new_ip = '%s/%s' % (new_ip, mask)
-      elif( octets < 4 ):
-        new_ip = '%s/%s' % (new_ip, octets * 8)
-    elif( ip_address.endswith('ip6.arpa.') ):
-      ip_array = ip_address.split('.')[:-3]
-      ip_parts = []
-      while len(ip_array):
-        ip_parts.append('%s%s%s%s' % (ip_array.pop(), ip_array.pop(),
-                                      ip_array.pop(), ip_array.pop()))
-      new_ip = ':'.join(ip_parts)
-    else:
-      new_ip = ip_address
-
-    return new_ip
+    return helpers_lib.UnReverseIP(ip_address)
 
   def CIDRExpand(self, cidr_block):
-    """Expands a cidr block to a list of ip addreses
+    return helpers_lib.CIDRExpand(cidr_block)
 
-    Inputs:
-      cidr_block: string of cidr_block
-
-    Outputs:
-      list: list of ip addresses in strings
-    """
-    cidr_block = IPy.IP(cidr_block)
-    ip_address_list = []
-    for ip_address in cidr_block:
-      ip_address_list.append(unicode(ip_address.strFullsize()))
-
-    return ip_address_list
+  def ExpandIPV6(self, ip_address):
+    return helpers_lib.ExpandIPV6(ip_address)
 
   def ListLatestNamedConfig(self, dns_server_set):
     """Lists the latest named config string given dns server set
@@ -205,20 +136,6 @@ class CoreHelpers(object):
         'assignment_ip']).strFullsize())
     self.core_instance.MakeRecord(u'aaaa', target, zone_name, record_args_dict,
                                   view_name, ttl)
-
-  def ExpandIPV6(self, ip_address):
-    """Expands a shorthand ipv6 address to a full ipv6 address
-
-    Inputs:
-      ip_address: string of ipv6 address
-
-    Outputs:
-      string: string of long ipv6 address
-    """
-    ipv6_address = IPy.IP(ip_address)
-    if( ipv6_address.version() != 6 ):
-      raise errors.CoreError('"%s" is not a valid IPV6 address.' % ipv6_address)
-    return ipv6_address.strFullsize()
 
   def GetPTRTarget(self, long_target, view_name=u'any'):
     """Gets the short PTR target given the long PTR target

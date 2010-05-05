@@ -28,42 +28,42 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""These are some helper functions to make it easier to programatically grab
-table information from constants.
-"""
+"""Unittest for helper_lib.py"""
+
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import constants
-import copy
+import unittest
+from roster_core import helpers_lib
 
 
-def GetValidTables():
-  """Returns all of the tables in the database that are enumerated in this
-  modules.
+class TestCoreHelpers(unittest.TestCase):
 
-  Outputs:
-    list: list of valid tables.
-      example: ['acls', 'records', 'etc']
-  """
-  return constants.TABLES.keys()
+  def testUnReverseIP(self):
+    self.assertEqual(helpers_lib.UnReverseIP(
+        'b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.'
+        'ip6.arpa.'), '4321:0000:0001:0002:0003:0004:0567:89ab')
+    self.assertEqual(helpers_lib.UnReverseIP(
+        '4.1.168.192.in-addr.arpa.'), '192.168.1.4')
+    self.assertEqual(helpers_lib.UnReverseIP(
+        '64/27.23.168.192.in-addr.arpa.'), '192.168.23.64/27')
+    self.assertEqual(helpers_lib.UnReverseIP(
+        '0.168.192.in-addr.arpa.'), '192.168.0/24')
+    self.assertEqual(helpers_lib.UnReverseIP(
+        '168.192.in-addr.arpa.'), '192.168/16')
 
-def GetRowDict(table_name):
-  """Returns a specific dictionary keyed off of table name. 
+  def testReverseIP(self):
+    self.assertEqual(helpers_lib.ReverseIP(
+        u'192.168.0/26'), u'0/26.168.192.in-addr.arpa.')
+    self.assertEqual(helpers_lib.ReverseIP(
+        u'192.168.0/31'), u'0/31.168.192.in-addr.arpa.')
 
-  Inputs:
-    table_name: string of table name from db
-  
-  Outputs:
-    dictionary: dict of row that was requested (see constants above)
-  """
-  row_dict = {}
-  if( table_name in constants.TABLES.keys() ):
-    row_dict = copy.copy(constants.TABLES[table_name])
-  return row_dict
+  def testListAccessRights(self):
+    self.assertEqual(helpers_lib.ListAccessRights(), ['rw', 'r'])
 
 
-# vi: set ai aw sw=2:
+if( __name__ == '__main__' ):
+      unittest.main()

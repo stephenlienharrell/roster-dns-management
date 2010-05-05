@@ -79,9 +79,9 @@ import MySQLdb
 import MySQLdb.cursors
 
 import constants
+import helpers_lib
 import data_validation
 import errors
-import table_enumeration
 
 
 class TransactionError(errors.DbAccessError):
@@ -422,7 +422,7 @@ class dbAccess(object):
     """Creates a row in the database using the table name and row dict
     
     Inputs:
-      table_name: string of valid table name from table_enumeration
+      table_name: string of valid table name from constants
       row_dict: dictionary that coresponds to table_name
 
     Raises:
@@ -432,7 +432,7 @@ class dbAccess(object):
     Outputs:
       int: last insert id
     """
-    if( not table_name in table_enumeration.GetValidTables() ):
+    if( not table_name in helpers_lib.GetValidTables() ):
       raise InvalidInputError('Table name not valid: %s' % table_name)
     if( not self.transaction_init ):
       raise TransactionError('Must run StartTansaction before inserting.')
@@ -456,7 +456,7 @@ class dbAccess(object):
     """Counts the amount of records in a table and returns it.
 
     Inputs:
-      table_name: string of valid table name from table_enumeration
+      table_name: string of valid table name from constants
 
     Raises:
       InvalidInputError: Table name not valid
@@ -466,7 +466,7 @@ class dbAccess(object):
       int: number of rows found
     """
 
-    if( not table_name in table_enumeration.GetValidTables() ):
+    if( not table_name in helpers_lib.GetValidTables() ):
       raise InvalidInputError('Table name not valid: %s' % table_name)
     if( not self.transaction_init ):
       raise TransactionError('Must run StartTansaction before getting row '
@@ -479,7 +479,7 @@ class dbAccess(object):
     """Removes a row in the database using the table name and row dict
 
     Inputs:
-      table_name: string of valid table name from table_enumeration
+      table_name: string of valid table name from constants
       row_dict: dictionary that coresponds to table_name
 
     Raises:
@@ -489,7 +489,7 @@ class dbAccess(object):
     Outputs:
       int: number of rows affected
     """
-    if( not table_name in table_enumeration.GetValidTables() ):
+    if( not table_name in helpers_lib.GetValidTables() ):
       raise InvalidInputError('Table name not valid: %s' % table_name)
     if( not self.transaction_init ):
       raise TransactionError('Must run StartTansaction before deleting.')
@@ -509,7 +509,7 @@ class dbAccess(object):
     """Updates a row in the database using search and update dictionaries.
 
     Inputs:
-      table_name: string of valid table name from table_enumeration
+      table_name: string of valid table name from constants
       search_row_dict: dictionary that coresponds to table_name containing
                        search args
       update_row_dict: dictionary that coresponds to table_name containing
@@ -522,7 +522,7 @@ class dbAccess(object):
     Outputs:
       int: number of rows affected
     """
-    if( not table_name in table_enumeration.GetValidTables() ):
+    if( not table_name in helpers_lib.GetValidTables() ):
       raise InvalidInputError('Table name not valid: %s' % table_name)
     if( not self.transaction_init ):
       raise TransactionError('Must run StartTansaction before deleting.')
@@ -587,7 +587,7 @@ class dbAccess(object):
     if( self.data_validation_instance is None ):
       self.InitDataValidation()
 
-    valid_tables = table_enumeration.GetValidTables()
+    valid_tables = helpers_lib.GetValidTables()
     tables = {}
     table_names = []
     lock_rows = False
@@ -694,7 +694,7 @@ class dbAccess(object):
     the given table using the Make/Remove/ListRow functions.
 
     Inputs:
-      table_name: string of valid table name from table_enumeration
+      table_name: string of valid table name from constants
 
     Raises:
       InvalidInputError: Table name not valid
@@ -706,7 +706,7 @@ class dbAccess(object):
          'acl_range_allowed: None,
          'acl_cidr_block': None }
     """
-    row_dict = table_enumeration.GetRowDict(table_name)
+    row_dict = helpers_lib.GetRowDict(table_name)
     if( not row_dict ):
       raise InvalidInputError('Table name not valid: %s' % table_name)
     for k in row_dict.iterkeys():
@@ -721,7 +721,7 @@ class dbAccess(object):
     Outputs:
       list: valid table names
     """
-    table_enumeration.GetValidTables()
+    helpers_lib.GetValidTables()
 
   def GetRecordArgsDict(self, record_type):
     """Get args for a specific record type from the db and shove them into

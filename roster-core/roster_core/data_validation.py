@@ -37,14 +37,14 @@ __version__ = '#TRUNK#'
 
 
 import cPickle
-import constants
 import datetime
-import errors
 import re
 
 import IPy
 
-import table_enumeration
+import constants
+import errors
+import helpers_lib
 
 
 class UnexpectedDataError(errors.DbAccessError):
@@ -282,7 +282,7 @@ class DataValidation(object):
       UnexpectedDataError: Invalid data type
       UnexpectedDataError: Need to fill out at least one value in dict
     """
-    main_dict = table_enumeration.GetRowDict(table_name)
+    main_dict = helpers_lib.GetRowDict(table_name)
 
     for k in main_dict.iterkeys():
       if( k not in row_dict ):
