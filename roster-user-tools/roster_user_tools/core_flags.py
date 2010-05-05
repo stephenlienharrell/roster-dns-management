@@ -44,6 +44,7 @@ class ArgumentError(Exception):
 class CoreFlags:
   """Command line common library"""
   def __init__(self, usage):
+    """Initializes parser, sets flags for all classes"""
     self.parser = OptionParser(version='%%prog (Roster %s)' % __version__,
                                usage=usage)
     self.SetDataFlags()
@@ -53,6 +54,7 @@ class CoreFlags:
       self.SetToolFlags()
 
   def SetCoreFlags(self):
+    """Sets core flags for parser"""
     self.parser.add_option(
         '-s', '--server', action='store', dest='server',
         help='XML RPC Server URL.', metavar='<server>', default=None)
@@ -76,5 +78,10 @@ class CoreFlags:
         help='Config file location.', metavar='<file>', default=None)
 
   def GetOptionsObject(self, args):
+    """Gets options object that tools use
+
+    Outputs:
+      options object
+    """
     (options, args) = self.parser.parse_args(args)
     return options
