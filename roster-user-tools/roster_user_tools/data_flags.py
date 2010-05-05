@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Acl flags lib, flags in all rm tools."""
+"""Data flags lib, flags for each group of tools."""
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
@@ -40,6 +40,7 @@ import core_flags
 class Acl(core_flags.CoreFlags):
   """Command line acl flags"""
   def SetDataFlags(self):
+    """Sets flags for parser"""
     self.parser.add_option('-a', '--acl', action='store', dest='acl',
                            help='ACL name', default=None)
     self.parser.add_option('--cidr-block', action='store', dest='cidr_block',

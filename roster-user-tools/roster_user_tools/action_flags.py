@@ -41,6 +41,7 @@ import core_flags
 class List(core_flags.CoreFlags):
   """Command line ls flags"""
   def SetActionFlags(self):
+    """Sets list flags for parser"""
     self.parser.add_option(
         '--no-header', action='store_true', dest='no_header',
         help='Do not display a header.', default=False)
@@ -49,6 +50,7 @@ class List(core_flags.CoreFlags):
 class Remove(core_flags.CoreFlags):
   """Command line rm flags"""
   def SetActionFlags():
+    """Sets remove flags for parser"""
     self.parser.add_option(
         '--quiet', action='store_true', dest='quiet',
         help='Suppress program output.', default=False)
@@ -60,6 +62,7 @@ class Remove(core_flags.CoreFlags):
 class Make(core_flags.CoreFlags):
   """Command line mk flags"""
   def SetActionFlags():
+    """Sets make flags for parser"""
     self.parser.add_option(
         '--quiet', action='store_true', dest='quiet',
         help='Suppress program output.', default=False)
