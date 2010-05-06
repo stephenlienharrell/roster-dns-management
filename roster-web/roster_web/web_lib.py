@@ -36,6 +36,9 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+from roster_core import core_helpers
+
+
 def MakeHtmlHeader():
   """Makes html page header
   
