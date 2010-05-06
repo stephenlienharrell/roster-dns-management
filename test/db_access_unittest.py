@@ -51,7 +51,7 @@ import threading
 import roster_core
 from roster_core import data_validation
 from roster_core import db_access
-from roster_core import table_enumeration
+from roster_core import helpers_lib
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -372,7 +372,7 @@ class TestdbAccess(unittest.TestCase):
 
   def testTableEnumerationDatabaseconsistency(self):
     self.db_instance.StartTransaction()
-    tables = table_enumeration.GetValidTables()
+    tables = helpers_lib.GetValidTables()
     for table in tables:
        self.db_instance.cursor.execute('describe %s' % table)
        db_elements = self.db_instance.cursor.fetchall()
