@@ -28,12 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Regression test for flags
-
-Make sure you are running this against a database that can be destroyed.
-
-DO NOT EVER RUN THIS TEST AGAINST A PRODUCTION DATABASE.
-"""
+"""Regression test for flags"""
 
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
