@@ -52,7 +52,7 @@ class Remove(core_flags.CoreFlags):
   def SetActionFlags(self):
     """Sets remove flags for parser"""
     self.parser.add_option(
-        '--quiet', action='store_true', dest='quiet',
+        '-q', '--quiet', action='store_true', dest='quiet',
         help='Suppress program output.', default=False)
     self.parser.add_option(
         '--force', action='store_true', dest='force',
@@ -64,5 +64,5 @@ class Make(core_flags.CoreFlags):
   def SetActionFlags(self):
     """Sets make flags for parser"""
     self.parser.add_option(
-        '--quiet', action='store_true', dest='quiet',
+        '-q', '--quiet', action='store_true', dest='quiet',
         help='Suppress program output.', default=False)
