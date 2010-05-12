@@ -49,7 +49,7 @@ class List(core_flags.CoreFlags):
 
 class Remove(core_flags.CoreFlags):
   """Command line rm flags"""
-  def SetActionFlags():
+  def SetActionFlags(self):
     """Sets remove flags for parser"""
     self.parser.add_option(
         '--quiet', action='store_true', dest='quiet',
@@ -61,7 +61,7 @@ class Remove(core_flags.CoreFlags):
 
 class Make(core_flags.CoreFlags):
   """Command line mk flags"""
-  def SetActionFlags():
+  def SetActionFlags(self):
     """Sets make flags for parser"""
     self.parser.add_option(
         '--quiet', action='store_true', dest='quiet',
