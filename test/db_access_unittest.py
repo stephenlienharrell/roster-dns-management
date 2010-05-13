@@ -55,7 +55,6 @@ from roster_core import helpers_lib
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
-SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 
 
@@ -428,7 +427,11 @@ class TestdbAccess(unittest.TestCase):
 
 
   def testCheckMaintenanceFlag(self):
-    self.assertFalse(self.db_instance.CheckMaintenanceFlag())
+    self.db_instance.StartTransaction()
+    try:
+      self.assertFalse(self.db_instance.CheckMaintenanceFlag())
+    finally:
+      self.db_instance.EndTransaction()
     self.db_instance.StartTransaction()
     cursor = self.db_instance.connection.cursor()
     try:
@@ -437,8 +440,11 @@ class TestdbAccess(unittest.TestCase):
     finally:
       cursor.close()
     self.db_instance.EndTransaction()
-
-    self.assertTrue(self.db_instance.CheckMaintenanceFlag())
+    self.db_instance.StartTransaction()
+    try:
+      self.assertTrue(self.db_instance.CheckMaintenanceFlag())
+    finally:
+      self.db_instance.EndTransaction()
 
   def testDumpDatabase(self):
     self.db_instance.StartTransaction()

@@ -39,6 +39,7 @@ import constants
 import core
 import errors
 import helpers_lib
+import user
 
 import datetime
 import math
@@ -368,7 +369,7 @@ class CoreHelpers(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self.core_instance._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
 
     record_arguments_record_assignments_dict = (
         self.db_instance.GetEmptyRowDict(
@@ -403,9 +404,13 @@ class CoreHelpers(object):
             raise errors.CoreError('Incorrect number of records found!')
           try:
             self.core_instance.user_instance.Authorize(
-                'RemoveRecord', target=found_records_dict[0]['record_target'],
+                'RemoveRecord',
+                 record_data=
+                     {'target': records_dict['record_target'],
+                      'zone_name': records_dict['record_zone_name'],
+                      'view_name': records_dict['record_view_dependency']},
                 current_transaction=True)
-          except self.core_instance.user_instance.AuthError:
+          except user.AuthError:
             continue
           row_count += self.db_instance.RemoveRow(
               'records', found_records_dict[0])
@@ -444,7 +449,7 @@ class CoreHelpers(object):
     Outputs:
       int: row count
     """
-    function_name, current_args = self.core_instance._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
 
     log_dict = {'delete': [], 'add': []}
     row_count = 0
@@ -455,8 +460,6 @@ class CoreHelpers(object):
       try:
         # REMOVE RECORDS
         for record in delete_records:
-          self.user_instance.Authorize('RemoveRecord', target=record[
-              'record_target'], current_transaction=True)
           records_dict = self.db_instance.GetEmptyRowDict('records')
           records_dict['record_type'] = record['record_type']
           records_dict['record_target'] = record['record_target']
@@ -467,6 +470,13 @@ class CoreHelpers(object):
             view_name = '%s_dep' % record['view_name']
           changed_view_dep.append((view_name, record['record_zone_name']))
           records_dict['record_view_dependency'] = view_name
+          self.user_instance.Authorize('RemoveRecord',
+              record_data =
+                  {'target': record['record_target'],
+                   'zone_name': record['record_zone_name'],
+                   'view_name': records_dict['record_view_dependency']},
+              current_transaction=True)
+
           if( 'record_ttl' in record ):
             records_dict['record_ttl'] = record['record_ttl']
           args_list = []
@@ -514,12 +524,16 @@ class CoreHelpers(object):
 
         # ADD RECORDS
         for record in add_records:
-          self.user_instance.Authorize('MakeRecord', target=record[
-              'record_target'], current_transaction=True)
           view_name = record['view_name']
           if( not record['view_name'].endswith('_dep') and record[
                 'view_name'] != u'any'):
             view_name = '%s_dep' % record['view_name']
+          self.user_instance.Authorize('MakeRecord', 
+              record_data = {
+                  'target': record['record_target'],
+                  'zone_name': record['record_zone_name'],
+                  'view_name': records_dict['record_view_dependency']},
+              current_transaction=True)
           if( record['record_type'] == u'ptr' ):
             if( record['record_arguments'][
                 'assignment_host'].startswith('@.') ):

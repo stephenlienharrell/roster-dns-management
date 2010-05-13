@@ -35,14 +35,15 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import datetime
+import uuid
+
 import audit_log
 import constants
 import errors
+import helpers_lib
 import user
-import uuid
 
-import datetime
-import inspect
 
 class RecordError(errors.CoreError):
   pass
@@ -72,42 +73,6 @@ class Core(object):
     self.user_instance = user.User(user_name, self.db_instance,
                                    self.log_instance)
 
-  def _getFunctionNameAndArgs(self):
-    """Grabs the current frame and adjacent frames then finds the calling
-    function name and arguments and returns them.
-
-    Outputs:
-      tuple: function name and current args
-        ex: ('MakeUser', {'replay_args': [u'ahoward', 64],
-                          'audit_args': {'access_level': 64,
-                                         'user_name': u'ahoward'}}
-    """
-    current_frame = inspect.currentframe()
-    try:
-      outer_frames = inspect.getouterframes(current_frame)
-      try:
-        function_name = unicode(outer_frames[1][3])
-        calling_frame = outer_frames[1][0]
-        try:
-          arg_values = inspect.getargvalues(calling_frame)
-        finally:
-          del calling_frame
-      finally:
-        del outer_frames
-    finally:
-      del current_frame
-    replay_args = []
-    audit_args = {}
-    for arg in arg_values[0]:
-      if( arg == 'self' ):
-        continue
-      else:
-        audit_args[arg] = arg_values[3][arg]
-        replay_args.append(arg_values[3][arg])
-    current_args = {'audit_args': audit_args, 'replay_args': replay_args}
-    return (function_name, current_args)
-
-
   def MakeUser(self, user_name, access_level):
     """Create a user.
 
@@ -118,7 +83,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     user_dict = {'user_name': user_name,
@@ -180,7 +145,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     search_user_dict = self.db_instance.GetEmptyRowDict('users')
@@ -221,7 +186,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     search_user_dict = self.db_instance.GetEmptyRowDict('users')
@@ -279,7 +244,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     group_dict = self.db_instance.GetEmptyRowDict('groups')
@@ -311,7 +276,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     group_dict = self.db_instance.GetEmptyRowDict('groups')
@@ -345,7 +310,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     search_group_dict = self.db_instance.GetEmptyRowDict('groups')
@@ -433,7 +398,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     assignment_dict = self.db_instance.GetEmptyRowDict('user_group_assignments')
@@ -467,7 +432,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     assignment_dict = self.db_instance.GetEmptyRowDict('user_group_assignments')
@@ -547,7 +512,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     acls_dict = {'acl_name': acl_name}
@@ -582,7 +547,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     acls_dict = {'acl_name': acl_name}
@@ -618,7 +583,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
@@ -677,7 +642,7 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
@@ -706,7 +671,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
@@ -740,7 +705,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     search_dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
@@ -800,7 +765,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     dns_server_set_dict = self.db_instance.GetEmptyRowDict('dns_server_sets')
@@ -832,7 +797,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     dns_server_set_dict = self.db_instance.GetEmptyRowDict('dns_server_sets')
@@ -868,7 +833,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     search_dns_server_set_dict = self.db_instance.GetEmptyRowDict(
@@ -948,7 +913,7 @@ class Core(object):
     Raises:
       CoreError: Raised for internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     assignment_dict = self.db_instance.GetEmptyRowDict(
@@ -982,7 +947,7 @@ class Core(object):
     Raises:
       CoreError: Raised for internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     assignment_dict = self.db_instance.GetEmptyRowDict(
@@ -1077,7 +1042,7 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     assignment_dict = self.db_instance.GetEmptyRowDict(
@@ -1114,7 +1079,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     assignment_dict = self.db_instance.GetEmptyRowDict(
@@ -1181,7 +1146,7 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     if( view_options is None ):
@@ -1232,7 +1197,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     if( view_name == u'any' ):
@@ -1280,7 +1245,7 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     if( search_view_name == u'any' ):
@@ -1389,7 +1354,7 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     view_dependency_assignments_dict = {
@@ -1423,7 +1388,7 @@ class Core(object):
     Raises:
       DnsCoreMgmtError  Raises on authorization or DB issues
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     view_dependency_assignments_dict = {
@@ -1493,7 +1458,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     view_acl_assign_dict = {
@@ -1526,7 +1491,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     view_acl_assign_dict = {
@@ -1634,7 +1599,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     if( zone_options is None ):
@@ -1692,7 +1657,7 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     zone_dict = {'zone_name': zone_name}
@@ -1753,7 +1718,7 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     if( search_view_name is not None and search_view_name != u'any' ):
@@ -1840,7 +1805,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     assignment_dict = {'reverse_range_zone_assignments_zone_name': zone_name,
@@ -1874,7 +1839,7 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     assignment_dict = {'reverse_range_zone_assignments_zone_name': zone_name,
@@ -1954,7 +1919,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
@@ -1989,7 +1954,7 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
@@ -2071,7 +2036,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
@@ -2106,7 +2071,7 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
@@ -2174,7 +2139,7 @@ class Core(object):
                    'mail_server': 'smtp-02.university.edu.'},
                    'last_user': 'sharrell}]
     """
-    self.user_instance.Authorize('ListRecords', target=target)
+    self.user_instance.Authorize('ListRecords')
     if( view_name is not None and view_name != u'any' and not
           view_name.endswith('_dep') ):
       view_name = '%s_dep' % view_name
@@ -2280,14 +2245,16 @@ class Core(object):
                         (example: {u'priority': 10,
                                    u'mail_server': 'mail.sub.university.edu.'})
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
-    self.user_instance.Authorize(function_name, target=target)
-
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
     if( view_name is None or view_name == u'any'):
       view_name = u'any'
     else:
       view_name = '%s_dep' % view_name
+
+    self.user_instance.Authorize(function_name, {'target': target,
+                                                 'zone_name': zone_name,
+                                                 'view_name': view_name})
 
     if( ttl is None ):
       ttl = constants.DEFAULT_TTL
@@ -2356,9 +2323,21 @@ class Core(object):
     Raises:
       CoreError Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
-    self.user_instance.Authorize(function_name, target=search_target)
-    self.user_instance.Authorize(function_name, target=update_target)
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    if( search_view_name is None ):
+      search_view_name = u'any'
+    if( not search_view_name.endswith('_dep') and search_view_name != u'any'):
+      search_view_name = '%s_dep' % search_view_name
+    if( update_view_name is not None and not update_view_name.endswith('_dep')
+        and update_view_name != u'any' ):
+      update_view_name = '%s_dep' % update_view_name
+
+    self.user_instance.Authorize(function_name, {'target': search_target,
+                                                 'zone_name': search_zone_name,
+                                                 'view_name': search_view_name})
+    self.user_instance.Authorize(function_name, {'target': update_target,
+                                                 'zone_name': update_zone_name,
+                                                 'view_name': update_view_name})
 
     search_records_dict = self.db_instance.GetEmptyRowDict('records')
     search_records_dict['record_type'] = search_record_type
@@ -2493,15 +2472,19 @@ class Core(object):
     Raises:
       CoreError Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
-    self.user_instance.Authorize(function_name, target=target)
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+
+    if( not view_name.endswith('_dep') and view_name != u'any'):
+      view_name = '%s_dep' % view_name
+
+    self.user_instance.Authorize(function_name, {'target': target,
+                                                 'zone_name': zone_name,
+                                                 'view_name': view_name})
 
     records_dict = self.db_instance.GetEmptyRowDict('records')
     records_dict['record_type'] = record_type
     records_dict['record_target'] = target
     records_dict['record_zone_name'] = zone_name
-    if( not view_name.endswith('_dep') and view_name != u'any'):
-      view_name = '%s_dep' % view_name
     records_dict['record_view_dependency'] = view_name
     records_dict['record_ttl'] = ttl
 
@@ -2659,7 +2642,7 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     zone_types_dict = {'zone_type': zone_type}
@@ -2689,7 +2672,7 @@ class Core(object):
     Outputs:
       int: number of rows affected
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     search_zone_type_dict = self.db_instance.GetEmptyRowDict('zone_types')
@@ -2762,7 +2745,7 @@ class Core(object):
     Raises:
       CoreError: Raised for any internal problems
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     named_conf_global_options_dict = self.db_instance.GetEmptyRowDict(
@@ -2799,7 +2782,7 @@ class Core(object):
     Raises:
       CoreError  Raised for any internal problems.
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
     
     reserved_word_dict = {'reserved_word': reserved_word}
@@ -2854,7 +2837,7 @@ class Core(object):
     Outputs:
       int: number of rows modified
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     search_reserved_word_dict = self.db_instance.GetEmptyRowDict(
@@ -3132,7 +3115,7 @@ class Core(object):
     Outputs:
       string: credential string created
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     if( credential is None ):
@@ -3178,7 +3161,7 @@ class Core(object):
       credential: string of credential to remove
       user_name: string of user name who has a credential to remove
     """
-    function_name, current_args = self._getFunctionNameAndArgs()
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     success = False
@@ -3249,16 +3232,10 @@ class Core(object):
     Outputs:
       bool: value of flag on or off
     """
-    self.user_instance.Authorize('CheckMaintenanceFlag')
-
-    search_dict = {'lock_name': u'maintenance', 'locked': None}
-
     self.db_instance.StartTransaction()
     try:
-      row = self.db_instance.ListRow('locks', search_dict)
+      return self.db_instance.CheckMaintenanceFlag()
     finally:
       self.db_instance.EndTransaction()
-
-    return bool(row[0]['locked'])
 
 # vi: set ai aw sw=2:

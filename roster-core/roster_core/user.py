@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Classes pertaining to users and authorization for dnsManagement.
+"""Classes pertaining to users and authorization for Roster.
 
 Authorization for specific functions and for specific domain/ip range blocks
 is handled in this module.
@@ -39,12 +39,11 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import constants
-import errors
-
 import IPy
 
-import inspect
+import constants
+import errors
+import helpers_lib
 
 
 class UserError(errors.CoreError):
@@ -55,10 +54,14 @@ class AuthError(errors.CoreError):
   pass
 
 
+class MaintenanceError(errors.CoreError):
+  pass
+
+
 class User(object):
   """Representation of a user, with basic manipulation methods.
-  Note that is it not necessary to authenticate a user to construct a
-  DNSdb_user - this is intended to be a part of the server API.
+  Note that is it not necessary to authenticate a user to construct this
+  class. This class is mainly responsible for authorization.
   """
 
   def __init__(self, user_name, db_instance, log_instance):
@@ -73,6 +76,7 @@ class User(object):
     self.user_name = user_name
     self.db_instance = db_instance
     self.log_instance = log_instance
+    self.zone_origin_cache = {}
 
 
     # pull a pile of authentication info from the database here
@@ -92,13 +96,13 @@ class User(object):
       if( constants.SUPPORTED_METHODS[method]['access_level'] <= ual ):
         self.abilities[method] = constants.SUPPORTED_METHODS[method]
 
-  def Authorize(self, method, target=None, current_transaction=False):
+  def Authorize(self, method, record_data=None, current_transaction=False):
     """Check to see if the user is authorized to run the given operation.
 
     Inputs:
       method:	what the user's trying to do
-      target:	what the user is trying to modify, if applicable (e.g.,
-		          a host name, domain name, IPv4 or IPv6 address, etc.)
+      record_data: dictionary of target, zone_name and view_name for 
+                   record that is being modified
       current_transaction: bool of if this function is run from inside a 
                            transaction in the db_access class
 
@@ -106,18 +110,29 @@ class User(object):
       UserError if no target is provided (and one is required)
       AuthError on authorization failure
     """
-    function_name = u'Authorize'
-    current_args = {'audit_args': {'method': method, 'target': target},
-                    'replay_args': [method, target]}
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     access_level = self.user_perms['user_access_level']
-    if( self.db_instance.CheckMaintenanceFlag(
-            current_transaction=current_transaction)
-        and self.user_perms['user_access_level']
-        != constants.ACCESS_LEVELS['dns_admin'] ):
-      raise AuthError('Roster is currently under maintenance.')
 
-    if( target is not None ):
-      target_string = ' on %s' % target
+    if( not current_transaction ):
+      self.db_instance.StartTransaction()
+    try:
+      maintenance_mode = self.db_instance.CheckMaintenanceFlag()
+      if( record_data and record_data.has_key('zone_name') and
+          not self.zone_origin_cache.has_key(record_data['zone_name']) ):
+        self.zone_origin_cache[
+            record_data['zone_name']] = self.db_instance.GetZoneOrigin(
+                record_data['zone_name'], record_data['view_name'])
+    finally:
+      if( not current_transaction ):
+        self.db_instance.EndTransaction()
+
+    if( maintenance_mode and self.user_perms['user_access_level']
+        != constants.ACCESS_LEVELS['dns_admin'] ):
+      raise MaintenanceError('Roster is currently under maintenance.')
+
+    if( record_data is not None and record_data.has_key('zone_name') ):
+      target_string = ' with %s on %s' % (record_data['target'],
+                                          record_data['zone_name'])
     else:
       target_string = ''
     auth_fail_string = ('User %s is not allowed to use %s%s' %
@@ -129,10 +144,30 @@ class User(object):
       if( method_hash['check'] ):
         # Secondary check - ensure the target is in a range delegated to
         # the user
-        if( target is None ):
-          raise UserError('No target provided for access method %s' % method)
+        if( record_data is None ):
+          raise UserError('No record data provided for access method %s' %
+                          method)
+        if( not record_data.has_key('zone_name') or
+            record_data['zone_name'] is None or 
+            not record_data.has_key('view_name') or
+            record_data['view_name'] is None or
+            not record_data.has_key('target') or 
+            record_data['target'] is None ):
+          raise UserError('Incomplete record data provided for access '
+                          'method %s' % method)
+
+        for zone in self.forward_zones:
+          if( record_data['zone_name'] == zone['zone_name'] ):
+            return
+        # Can't find it in forward zones, maybe it's a reverse, lets try to
+        # construct an ip address
+       
+        
+        ip_address = helpers_lib.UnReverseIP('%s.%s' % (
+          record_data['target'][::-1], self.zone_origin_cache[
+                record_data['zone_name']]))
         try:
-          ip = IPy.IP(target)
+          ip = IPy.IP(ip_address)
 
           # Good, we have an IP.  See if we hit any delegated ranges.
           for reverse_range in self.reverse_ranges:
@@ -145,11 +180,6 @@ class User(object):
           raise AuthError(auth_fail_string)
 
         except ValueError:
-          # oops, that was a hostname
-          for zone in self.forward_zones:
-            if( target.endswith(zone['zone_name']) ):
-              return
-
           # fail to find a matching zone with appropriate perms
           self.log_instance.LogAction(self.user_name, function_name,
                                       current_args, False)

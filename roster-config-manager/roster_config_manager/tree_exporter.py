@@ -51,6 +51,7 @@ from roster_core import config
 from roster_core import constants
 from roster_core import core
 from roster_core import errors
+from roster_core import helpers_lib
 from roster_config_manager import zone_exporter_lib
 
 
@@ -139,6 +140,7 @@ class BindTreeExport(object):
       force: boolean of if the export should continue if no changes are found
              in the database
     """
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -146,8 +148,7 @@ class BindTreeExport(object):
         self.db_instance.LockDb()
         try:
           if( not force ):
-            if( self.db_instance.CheckMaintenanceFlag(
-                current_transaction=True) ):
+            if( self.db_instance.CheckMaintenanceFlag() ):
               raise MaintenanceError('Database currently under maintenance.')
             audit_log_dict = self.db_instance.GetEmptyRowDict('audit_log')
             audit_log_dict['action'] = u'ExportAllBindTrees'
@@ -238,9 +239,8 @@ class BindTreeExport(object):
       success = True
     finally:
       log_id = self.log_instance.LogAction(u'tree_export_user',
-                                           u'ExportAllBindTrees',
-                                           {'audit_args': {},
-                                            'replay_args': []},
+                                           function_name,
+                                           current_args,
                                            success)
 
 

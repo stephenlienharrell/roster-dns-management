@@ -245,27 +245,14 @@ class dbAccess(object):
         else:
           self.now_serving = None
 
-  def CheckMaintenanceFlag(self, current_transaction=False):
+  def CheckMaintenanceFlag(self):
     """Checks the maintenance flag in the database.
 
-    Inputs:
-      current_transaction: bool of if this function is run from inside a 
-                          transaction in the db_access class
-
     Outputs:
-      bool: boolean of maintenance being flagged
+      bool: boolean of maintenance mode
     """
-    if( not current_transaction ):
-      self.StartTransaction()
-    try:
-      self.cursor.execute(
-          'SELECT `locked` FROM `locks` WHERE `lock_name`="maintenance"')
-      row = self.cursor.fetchone()
-    finally:
-      if( not current_transaction ):
-        self.EndTransaction()
-
-    return bool(row['locked'])
+    row = self.ListRow('locks', {'lock_name': u'maintenance', 'locked': None})
+    return bool(row[0]['locked'])
 
   def LockDb(self):
     """This function is to lock the whole database for consistent data
@@ -313,110 +300,6 @@ class dbAccess(object):
     words = [row[0] for row in rows]
 
     self.data_validation_instance = data_validation.DataValidation(words)
-
-  def GetUserAuthorizationInfo(self, user):
-    """Grabs authorization data from the db and returns a dict.
-
-    This function does two selects on the db, one for forward and one for
-    reverse zones. It also parses the data into a dict for ease of use.
-
-    Inputs:
-      user: string of username
-
-    Raises:
-      UnexpectedDataError: Row did not contain
-                           reverse_range_permissions_access_right or
-                           forward_zone_permissions_access_right
-
-    Outputs:
-      dict: dict with all the relevant information
-        example:
-        {'user_access_level': '2',
-         'user_name': 'shuey',
-         'forward_zones': [
-             {'zone_name': 'cs.university.edu', 'access_right': 'rw'},
-             {'zone_name': 'eas.university.edu', 'access_right': 'r'},
-             {'zone_name': 'bio.university.edu', 'access_right': 'rw'}],
-         'groups': ['cs', 'bio'],
-         'reverse_ranges': [
-             {'cidr_block': '192.168.0.0/24',
-              'access_right': 'rw'},
-             {'cidr_block': '192.168.0.0/24',
-              'access_right': 'r'},
-             {'cidr_block': '192.168.1.0/24',
-              'access_right': 'rw'}]}
-    """
-    auth_info_dict = {}
-    db_data = []
-
-    users_dict = self.GetEmptyRowDict('users')
-    users_dict['user_name'] = user
-    user_group_assignments_dict = self.GetEmptyRowDict('user_group_assignments')
-    forward_zone_permissions_dict = self.GetEmptyRowDict(
-        'forward_zone_permissions')
-    reverse_range_permissions_dict = self.GetEmptyRowDict(
-        'reverse_range_permissions')
-
-    auth_info_dict['user_name'] = user
-    auth_info_dict['groups'] = []
-    auth_info_dict['forward_zones'] = []
-    auth_info_dict['reverse_ranges'] = []
-
-    self.StartTransaction()
-    try:
-      db_data.extend(self.ListRow('users', users_dict, 'user_group_assignments',
-                                  user_group_assignments_dict,
-                                  'forward_zone_permissions',
-                                  forward_zone_permissions_dict))
-
-      db_data.extend(self.ListRow('users', users_dict, 'user_group_assignments',
-                                  user_group_assignments_dict,
-                                  'reverse_range_permissions',
-                                  reverse_range_permissions_dict))
-      if( not db_data ):
-        self.cursor.execute('SELECT access_level FROM users '
-                            'WHERE user_name="%s"' % user)
-        db_data.extend(self.cursor.fetchall())
-
-        if( db_data ):
-          auth_info_dict['user_access_level'] = db_data[0]['access_level']
-          return auth_info_dict
-        else:
-          return {}
-    finally:
-      self.EndTransaction()
-
-    auth_info_dict['user_access_level'] = db_data[0]['access_level']
-    for row in db_data:
-      if( row.has_key('forward_zone_permissions_access_right') ):
-        if( not row['user_group_assignments_group_name'] in
-            auth_info_dict['groups'] ):
-          auth_info_dict['groups'].append(
-              row['user_group_assignments_group_name'])
-
-        if( not {'zone_name': row['forward_zone_permissions_zone_name'],
-                 'access_right': row['forward_zone_permissions_access_right']}
-            in (auth_info_dict['forward_zones']) ):
-          auth_info_dict['forward_zones'].append(
-              {'zone_name': row['forward_zone_permissions_zone_name'],
-               'access_right': row['forward_zone_permissions_access_right']})
-      elif( row.has_key('reverse_range_permissions_access_right') ):
-        if( not row['user_group_assignments_group_name'] in
-            auth_info_dict['groups'] ):
-          auth_info_dict['groups'].append(
-              row['user_group_assignments_group_name'])
-
-        if( not {'cidr_block': row['reverse_range_permissions_cidr_block'],
-                 'access_right': row['reverse_range_permissions_access_right']}
-            in auth_info_dict['reverse_ranges'] ):
-          auth_info_dict['reverse_ranges'].append(
-              {'cidr_block': row['reverse_range_permissions_cidr_block'],
-               'access_right': row['reverse_range_permissions_access_right']})
-      else:
-        raise UnexpectedDataError('Row did not contain '
-                                  'reverse_range_permissions_access_right or '
-                                  'forward_zone_permissions_access_right.')
-    return auth_info_dict
 
   def MakeRow(self, table_name, row_dict):
     """Creates a row in the database using the table name and row dict
@@ -686,6 +569,7 @@ class dbAccess(object):
     query = 'SELECT %s FROM %s %s' % (','.join(column_names),
                                       ','.join(table_names),
                                       query_end)
+
     self.cursor.execute(query, search_dict)
     return self.cursor.fetchall()
 
@@ -860,6 +744,143 @@ class dbAccess(object):
         table_data[table_name]['rows'].append(row_dict)
 
     return table_data
+
+  ### These functions are for the user class
+  def GetUserAuthorizationInfo(self, user):
+    """Grabs authorization data from the db and returns a dict.
+
+    This function does two selects on the db, one for forward and one for
+    reverse zones. It also parses the data into a dict for ease of use.
+
+    Inputs:
+      user: string of username
+
+    Raises:
+      UnexpectedDataError: Row did not contain
+                           reverse_range_permissions_access_right or
+                           forward_zone_permissions_access_right
+
+    Outputs:
+      dict: dict with all the relevant information
+        example:
+        {'user_access_level': '2',
+         'user_name': 'shuey',
+         'forward_zones': [
+             {'zone_name': 'cs.university.edu', 'access_right': 'rw'},
+             {'zone_name': 'eas.university.edu', 'access_right': 'r'},
+             {'zone_name': 'bio.university.edu', 'access_right': 'rw'}],
+         'groups': ['cs', 'bio'],
+         'reverse_ranges': [
+             {'cidr_block': '192.168.0.0/24',
+              'access_right': 'rw'},
+             {'cidr_block': '192.168.0.0/24',
+              'access_right': 'r'},
+             {'cidr_block': '192.168.1.0/24',
+              'access_right': 'rw'}]}
+    """
+    auth_info_dict = {}
+    db_data = []
+
+    users_dict = self.GetEmptyRowDict('users')
+    users_dict['user_name'] = user
+    groups_dict = self.GetEmptyRowDict('groups')
+    user_group_assignments_dict = self.GetEmptyRowDict('user_group_assignments')
+    forward_zone_permissions_dict = self.GetEmptyRowDict(
+        'forward_zone_permissions')
+    reverse_range_permissions_dict = self.GetEmptyRowDict(
+        'reverse_range_permissions')
+
+    auth_info_dict['user_name'] = user
+    auth_info_dict['groups'] = []
+    auth_info_dict['forward_zones'] = []
+    auth_info_dict['reverse_ranges'] = []
+
+    self.StartTransaction()
+    try:
+      db_data.extend(self.ListRow('users', users_dict,
+                                  'groups', groups_dict,
+                                  'user_group_assignments',
+                                  user_group_assignments_dict,
+                                  'forward_zone_permissions',
+                                  forward_zone_permissions_dict))
+
+      db_data.extend(self.ListRow('users', users_dict,
+                                  'groups', groups_dict,
+                                  'user_group_assignments',
+                                  user_group_assignments_dict,
+                                  'reverse_range_permissions',
+                                  reverse_range_permissions_dict))
+      if( not db_data ):
+        self.cursor.execute('SELECT access_level FROM users '
+                            'WHERE user_name="%s"' % user)
+        db_data.extend(self.cursor.fetchall())
+
+        if( db_data ):
+          auth_info_dict['user_access_level'] = db_data[0]['access_level']
+          return auth_info_dict
+        else:
+          return {}
+    finally:
+      self.EndTransaction()
+
+
+    auth_info_dict['user_access_level'] = db_data[0]['access_level']
+    for row in db_data:
+      if( row.has_key('forward_zone_permissions_access_right') ):
+        if( not row['user_group_assignments_group_name'] in
+            auth_info_dict['groups'] ):
+          auth_info_dict['groups'].append(
+              row['user_group_assignments_group_name'])
+
+        if( not {'zone_name': row['forward_zone_permissions_zone_name'],
+                 'access_right': row['forward_zone_permissions_access_right']}
+            in (auth_info_dict['forward_zones']) ):
+          auth_info_dict['forward_zones'].append(
+              {'zone_name': row['forward_zone_permissions_zone_name'],
+               'access_right': row['forward_zone_permissions_access_right']})
+      elif( row.has_key('reverse_range_permissions_access_right') ):
+        if( not row['user_group_assignments_group_name'] in
+            auth_info_dict['groups'] ):
+          auth_info_dict['groups'].append(
+              row['user_group_assignments_group_name'])
+
+        if( not {'cidr_block': row['reverse_range_permissions_cidr_block'],
+                 'access_right': row['reverse_range_permissions_access_right']}
+            in auth_info_dict['reverse_ranges'] ):
+          auth_info_dict['reverse_ranges'].append(
+              {'cidr_block': row['reverse_range_permissions_cidr_block'],
+               'access_right': row['reverse_range_permissions_access_right']})
+      else:
+        raise UnexpectedDataError('Row did not contain '
+                                  'reverse_range_permissions_access_right or '
+                                  'forward_zone_permissions_access_right.')
+    return auth_info_dict
+
+  def GetZoneOrigin(self, zone_name, view_name):
+    """Returns zone origin of zone_name that is passed in.
+    If no zone origin found, return None
+    
+    Inputs:
+      zone_name: string of zone_name
+      view_name: string of view_name
+
+    Outputs:
+      string of zone origin or None
+    """
+    zone_view_assignments_dict = self.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_view_assignments_dict['zone_view_assignments_zone_name'] =  zone_name
+    zone_view_assignments_dict[
+        'zone_view_assignments_view_dependency'] = view_name
+    
+    zone_view_assignment_rows = self.ListRow(
+        'zone_view_assignments', zone_view_assignments_dict)
+
+    if( zone_view_assignment_rows ):
+      return zone_view_assignment_rows[0]['zone_origin']
+    else:
+      return None
+
 
 
 # vi: set ai aw sw=2:

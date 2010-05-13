@@ -28,7 +28,12 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Unittest for user.py"""
+"""Unittest for user.py
+
+Make sure you are running this against a database that can be destroyed.
+
+DO NOT EVER RUN THIS TEST AGAINST A PRODUCTION DATABASE.
+"""
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
@@ -36,64 +41,142 @@ __version__ = '#TRUNK#'
 
 
 import unittest
-import fake_db_access
 
+import roster_core
 from roster_core import audit_log
+from roster_core import db_access
 from roster_core import user
+
+
+CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
+DATA_FILE = 'test_data/test_data.sql'
 
 
 class TestUser(unittest.TestCase):
 
-  # Use a FakeDbAccess, so we don't need to beat up a DB during testing
   def setUp(self):
-    self.db_access = fake_db_access.FakeDbAccess(None,None,None,None)
-    self.db_access.maintenance_flag = False
+    self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
+
+    self.db_instance = self.config_instance.GetDb()
+
+    schema = roster_core.embedded_files.SCHEMA_FILE
+    self.db_instance.StartTransaction()
+    self.db_instance.cursor.execute(schema)
+    self.db_instance.EndTransaction()
+
+    data = open(DATA_FILE, 'r').read()
+    self.db_instance.StartTransaction()
+    self.db_instance.cursor.execute(data)
+    self.db_instance.EndTransaction()
     self.log_instance = audit_log.AuditLog(log_to_syslog=True)
+    self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
 
-  def testBadMethod(self):
-    gooduser = user.User('jcollins', self.db_access, self.log_instance)
-    self.assertRaises(user.AuthError, gooduser.Authorize, 'nomethod')
+  def testInit(self):
+    user.User(u'jcollins', self.db_instance, self.log_instance)
+    self.assertRaises(user.UserError, user.User, u'not_valid_user',
+                      self.db_instance, self.log_instance)
 
-  def testBadUser(self):
-    self.assertRaises(user.UserError, user.User, 'nobody', self.db_access,
-                      self.log_instance)
+  def testAuthorize(self):
+    self.core_instance.MakeZone(u'192.168.0.rev', u'master',
+                                u'0.168.192.IN-ADDR.ARPA.')
+    self.core_instance.MakeZone(u'192.168.1.rev', u'master',
+                                u'1.168.192.IN-ADDR.ARPA.')
+    self.core_instance.MakeZone(u'10.10.rev', u'master',
+                                u'10.10.IN-ADDR.ARPA.')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'10.10.rev', u'10.10/16')
+    self.core_instance.MakeReverseRangePermission(u'10.10.5/24', u'cs', u'rw')
+    self.core_instance.MakeUserGroupAssignment(u'jcollins', u'cs')
 
-  def testNoOp(self):
-    gooduser = user.User('jcollins', self.db_access, self.log_instance)
-    gooduser.Authorize('noop')
-  
-  def testMakeRecordGoodZone(self):
-    gooduser = user.User('shuey', self.db_access, self.log_instance)
-    gooduser.Authorize('MakeRecord', 'foo.mrzone.com')
-  
-  def testMakeRecordBadZone(self):
-    gooduser = user.User('shuey', self.db_access, self.log_instance)
-    self.assertRaises(user.AuthError, gooduser.Authorize, 'MakeRecord',
-                      'foo.norights.com')
-  
-  def testMakeRecordGoodV4(self):
-    gooduser = user.User('shuey', self.db_access, self.log_instance)
-    gooduser.Authorize('MakeRecord', '128.211.130.37')
-  
-  def testMakeRecordBadV4(self):
-    gooduser = user.User('shuey', self.db_access, self.log_instance)
-    self.assertRaises(user.AuthError, gooduser.Authorize, 'MakeRecord',
-                      '9.9.9.9')
-  
-  def testMakeRecordGoodV6(self):
-    gooduser = user.User('shuey', self.db_access, self.log_instance)
-    gooduser.Authorize('MakeRecord', '1000:2000::4')
-  
-  def testMakeRecordBadV6(self):
-    gooduser = user.User('shuey', self.db_access, self.log_instance)
-    self.assertRaises(user.AuthError, gooduser.Authorize, 'MakeRecord',
-                      '2000::4')
+    # good forward zone data
+    good_record_data = {'target': u'good',
+                        'zone_name': u'cs.university.edu',
+                        'view_name': u'any'}
+    # bad forward zone data
+    no_forward_record_data = {'target': u'noforward',
+                              'zone_name': u'bio.university.edu',
+                              'view_name': u'any'}
 
-  def testMaintenanceFlag(self):
-    gooduser = user.User('jcollins', self.db_access, self.log_instance)
-    gooduser.Authorize('MakeRecord', 'foo.mrzone.com')
-    self.db_access.maintenance_flag = True
-    self.assertRaises(user.AuthError, gooduser.Authorize, 'foo.mrzone.com')
+    # good reverse zone data
+    good_reverse_record_data = {'target': u'1',
+                                'zone_name': u'192.168.0.rev',
+                                'view_name': u'any'}
+    # bad reverse zone data
+    no_reverse_record_data = {'target': u'1',
+                              'zone_name': u'192.168.1.rev',
+                              'view_name': u'any'}
+
+    # good reverse zone data (subset of ip range in bigger zone)
+    good_10_reverse_record_data = {'target': u'5.10',
+                                   'zone_name': u'10.10.rev',
+                                   'view_name': u'any'}
+
+    # bad reverse zone data (subset of ip range in bigger zone)
+    no_10_reverse_record_data = {'target': u'4.10',
+                                 'zone_name': u'10.10.rev',
+                                 'view_name': u'any'}
+
+    # test success with admin user
+    user_instance = user.User(u'sharrell', self.db_instance, self.log_instance)
+    user_instance.Authorize(u'MakeView')
+
+    # test maintenance mode
+    # maintainenance flag doesn't apply to admins
+    user_instance.Authorize(u'MakeView')
+    # it does apply to users tho
+    user_instance = user.User(u'jcollins', self.db_instance, self.log_instance)
+    user_instance.Authorize(u'MakeRecord', good_record_data)
+                                           
+    self.core_instance.SetMaintenanceFlag(True)
+    self.assertRaises(user.MaintenanceError, user_instance.Authorize,
+                      u'MakeRecord', good_record_data)
+    self.core_instance.SetMaintenanceFlag(False)
+
+    # test missing record_data on certain methods, and make sure it passes 
+    # on the others
+    user_instance.Authorize(u'MakeRecord', good_record_data)
+    self.assertRaises(user.UserError, user_instance.Authorize,
+                      u'MakeRecord')
+
+    # test record_data dict to make sure all the keys and data are there
+    user_instance.Authorize(u'MakeRecord', good_record_data)
+    good_record_data['target'] = None
+    self.assertRaises(user.UserError, user_instance.Authorize,
+                      u'MakeRecord', good_record_data)
+    good_record_data['target'] = u'good'
+    user_instance.Authorize(u'MakeRecord', good_record_data)
+    del good_record_data['zone_name']
+    self.assertRaises(user.UserError, user_instance.Authorize,
+                      u'MakeRecord', good_record_data)
+    good_record_data['zone_name'] = u'cs.university.edu'
+
+    # test no forward zone found
+    user_instance.Authorize(u'MakeRecord', good_record_data)
+    self.assertRaises(user.AuthError, user_instance.Authorize, u'MakeRecord',
+                      no_forward_record_data)
+
+    # test no reverse range found
+    user_instance.Authorize(u'MakeRecord', good_reverse_record_data)
+    self.assertRaises(user.AuthError, user_instance.Authorize, u'MakeRecord',
+                      no_reverse_record_data)
+    user_instance.Authorize(u'MakeRecord', good_10_reverse_record_data)
+    self.assertRaises(user.AuthError, user_instance.Authorize, u'MakeRecord',
+                      no_10_reverse_record_data)
+
+    # test no method found
+    user_instance.Authorize(u'MakeRecord', good_reverse_record_data)
+    self.assertRaises(user.AuthError, user_instance.Authorize, u'FakeRecord',
+                      good_reverse_record_data)
+
+
+  def testGetUserName(self):
+    user_instance = user.User(u'jcollins', self.db_instance, self.log_instance)
+    self.assertEquals(user_instance.GetUserName(), 'jcollins')
+
+  def testGetPermissions(self):
+    user_instance = user.User(u'jcollins', self.db_instance, self.log_instance)
+    self.assertEquals(user_instance.GetPermissions(), 
+                      {'user_access_level': 32, 'user_name': u'jcollins',
+                       'forward_zones': [], 'groups': [], 'reverse_ranges': []})
 
 
 if( __name__ == '__main__' ):

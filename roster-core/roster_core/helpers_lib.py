@@ -35,11 +35,48 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import inspect
 import IPy
 import math
 
 import constants
 import copy
+
+
+def GetFunctionNameAndArgs():
+  """Grabs the current frame and adjacent frames then finds the calling
+  function name and arguments and returns them.
+
+  Outputs:
+    tuple: function name and current args
+      ex: ('MakeUser', {'replay_args': [u'ahoward', 64],
+                        'audit_args': {'access_level': 64,
+                                       'user_name': u'ahoward'}}
+  """
+  current_frame = inspect.currentframe()
+  try:
+    outer_frames = inspect.getouterframes(current_frame)
+    try:
+      function_name = unicode(outer_frames[1][3])
+      calling_frame = outer_frames[1][0]
+      try:
+        arg_values = inspect.getargvalues(calling_frame)
+      finally:
+        del calling_frame
+    finally:
+      del outer_frames
+  finally:
+    del current_frame
+  replay_args = []
+  audit_args = {}
+  for arg in arg_values[0]:
+    if( arg == 'self' ):
+      continue
+    else:
+      audit_args[arg] = arg_values[3][arg]
+      replay_args.append(arg_values[3][arg])
+  current_args = {'audit_args': audit_args, 'replay_args': replay_args}
+  return (function_name, current_args)
 
 
 def GetValidTables():
@@ -111,6 +148,7 @@ def UnReverseIP(ip_address):
     string: forward ip address
   """
   mask = 0
+  ip_address = ip_address.lower()
   cidr_parts = ip_address.split('/')
   if( len(cidr_parts) == 2 ):
     mask = cidr_parts[1].split('.')[0]
