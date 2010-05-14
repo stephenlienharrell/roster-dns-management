@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Unittest for helper_lib.py"""
+"""Unittest for helpers_lib.py"""
 
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
@@ -37,15 +37,47 @@ __version__ = '#TRUNK#'
 
 
 import unittest
+
+from roster_core import errors
 from roster_core import helpers_lib
 
 
-class TestCoreHelpers(unittest.TestCase):
+class TestHelpersLib(unittest.TestCase):
+
+  def testGetFunctionNameAndArgs(self, test_flag='test', other_flag=1):
+    function, args = helpers_lib.GetFunctionNameAndArgs()
+    self.assertEqual(function, 'testGetFunctionNameAndArgs')
+    self.assertEqual(args, 
+        {'replay_args': ['test', 1],
+         'audit_args': {'test_flag': 'test', 'other_flag': 1}})
+
+  def testGetRowDict(self):
+    self.assertEqual(helpers_lib.GetRowDict('acls'), 
+                     {'acl_name': 'UnicodeString'})
+    self.assertEqual(helpers_lib.GetRowDict('notvalid'), {}) 
+
+  def testReverseIP(self):
+    self.assertEqual(helpers_lib.ReverseIP(
+        u'192.168.0/26'), u'0/26.168.192.in-addr.arpa.')
+    self.assertEqual(helpers_lib.ReverseIP(
+        u'192.168.0/31'), u'0/31.168.192.in-addr.arpa.')
+    self.assertEqual(helpers_lib.ReverseIP(
+        u'192.168.0.3'), u'3.0.168.192.in-addr.arpa.')
+    self.assertEqual(helpers_lib.ReverseIP(
+        u'4321:0000:0001:0002:0003:0004:0567:89ab'),
+        u'b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.'
+         'ip6.arpa.')
+    self.assertEqual(helpers_lib.ReverseIP(
+      u'4321:0000:0001:0002:0003:0004:0567::'),
+      u'0.0.0.0.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.'
+       'ip6.arpa.')
+    self.assertRaises(errors.CoreError, helpers_lib.ReverseIP, 'notavalidip')
 
   def testUnReverseIP(self):
     self.assertEqual(helpers_lib.UnReverseIP(
         'b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.'
-        'ip6.arpa.'), '4321:0000:0001:0002:0003:0004:0567:89ab')
+        'ip6.arpa.'),
+        '4321:0000:0001:0002:0003:0004:0567:89ab')
     self.assertEqual(helpers_lib.UnReverseIP(
         '4.1.168.192.in-addr.arpa.'), '192.168.1.4')
     self.assertEqual(helpers_lib.UnReverseIP(
@@ -54,16 +86,25 @@ class TestCoreHelpers(unittest.TestCase):
         '0.168.192.in-addr.arpa.'), '192.168.0/24')
     self.assertEqual(helpers_lib.UnReverseIP(
         '168.192.in-addr.arpa.'), '192.168/16')
+    self.assertEqual(helpers_lib.UnReverseIP('notvalid'), 'notvalid')
 
-  def testReverseIP(self):
-    self.assertEqual(helpers_lib.ReverseIP(
-        u'192.168.0/26'), u'0/26.168.192.in-addr.arpa.')
-    self.assertEqual(helpers_lib.ReverseIP(
-        u'192.168.0/31'), u'0/31.168.192.in-addr.arpa.')
+  def testCIDRExpand(self):
+    self.assertEquals(helpers_lib.CIDRExpand('192.168.0/31'),
+                      [u'192.168.0.0', u'192.168.0.1'])
+    self.assertEquals(helpers_lib.CIDRExpand('192.168.0.1'),
+                      [u'192.168.0.1'])
+    self.assertRaises(errors.CoreError, helpers_lib.CIDRExpand, 'notavalidip')
 
-  def testListAccessRights(self):
-    self.assertEqual(helpers_lib.ListAccessRights(), ['rw', 'r'])
+  def testExpandIPV6(self):
+    self.assertEqual(
+        helpers_lib.ExpandIPV6(u'4321:0000:0001:0002:0003:0004:0567:89ab'),
+        u'4321:0000:0001:0002:0003:0004:0567:89ab')
+    self.assertEqual(
+        helpers_lib.ExpandIPV6(u'4321:0000:0001:0002::0567:89ab'),
+        u'4321:0000:0001:0002:0000:0000:0567:89ab')
+    self.assertRaises(errors.CoreError, helpers_lib.ExpandIPV6, 'notavalidip')
+    self.assertRaises(errors.CoreError, helpers_lib.ExpandIPV6, '192.168.0.1')
 
 
 if( __name__ == '__main__' ):
-      unittest.main()
+  unittest.main()

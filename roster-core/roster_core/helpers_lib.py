@@ -41,6 +41,7 @@ import math
 
 import constants
 import copy
+import errors
 
 
 def GetFunctionNameAndArgs():
@@ -72,9 +73,8 @@ def GetFunctionNameAndArgs():
   for arg in arg_values[0]:
     if( arg == 'self' ):
       continue
-    else:
-      audit_args[arg] = arg_values[3][arg]
-      replay_args.append(arg_values[3][arg])
+    audit_args[arg] = arg_values[3][arg]
+    replay_args.append(arg_values[3][arg])
   current_args = {'audit_args': audit_args, 'replay_args': replay_args}
   return (function_name, current_args)
 
@@ -120,10 +120,16 @@ def ReverseIP(ip_address):
   Inputs:
     ip_address: either an ipv4 or ipv6 string
 
+  Raises:
+    CoreError: not a valid IP address
+
   Outputs:
     string: reverse ip address
   """
-  ip_object = IPy.IP(ip_address)
+  try:
+    ip_object = IPy.IP(ip_address)
+  except ValueError:
+    raise errors.CoreError('%s is not a valid IP address' % ip_address)
   reverse_ip_string = ip_object.reverseName()
   if( ip_object.version() == 4 ):
     ip_parts = reverse_ip_string.split('.')
@@ -181,20 +187,26 @@ def UnReverseIP(ip_address):
 
 
 def CIDRExpand(cidr_block):
-    """Expands a cidr block to a list of ip addreses
+  """Expands a cidr block to a list of ip addreses
 
-    Inputs:
-      cidr_block: string of cidr_block
+  Inputs:
+    cidr_block: string of cidr_block
 
-    Outputs:
-      list: list of ip addresses in strings
-    """
+  Raises:
+    CoreError: not a valid CIDR block
+
+  Outputs:
+    list: list of ip addresses in strings
+  """
+  try:
     cidr_block = IPy.IP(cidr_block)
-    ip_address_list = []
-    for ip_address in cidr_block:
-      ip_address_list.append(unicode(ip_address.strFullsize()))
+  except ValueError:
+    raise errors.CoreError('%s is not a valid cidr block' % cidr_block)
+  ip_address_list = []
+  for ip_address in cidr_block:
+    ip_address_list.append(unicode(ip_address.strFullsize()))
 
-    return ip_address_list
+  return ip_address_list
 
 
 def ExpandIPV6(ip_address):
@@ -203,12 +215,19 @@ def ExpandIPV6(ip_address):
   Inputs:
     ip_address: string of ipv6 address
 
+  Raises:
+    CoreError: not a valid IP address
+
   Outputs:
     string: string of long ipv6 address
   """
-  ipv6_address = IPy.IP(ip_address)
+  try:
+    ipv6_address = IPy.IP(ip_address)
+  except ValueError:
+    raise errors.CoreError('%s is not a valid IP address' % ip_address)
   if( ipv6_address.version() != 6 ):
     raise errors.CoreError('"%s" is not a valid IPV6 address.' % ipv6_address)
+
   return ipv6_address.strFullsize()
 
 
