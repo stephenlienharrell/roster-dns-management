@@ -139,10 +139,10 @@ class Testdnslshost(unittest.TestCase):
     options.server = self.server_name
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
     cli_common_lib_instance.DnsError = self.NewDnsError
-    self.assertEqual(cli_common_lib_instance.PrintColumns(
+    self.assertEqual(cli_common_lib.PrintColumns(
         [['1', '2', '3'], ['long line', 'b', 'c']]),
         '1         2 3\nlong line b c\n')
-    self.assertEqual(cli_common_lib_instance.PrintColumns(
+    self.assertEqual(cli_common_lib.PrintColumns(
         [['1', '2', '3'], ['long line', 'b', 'c']], first_line_header=True),
         '1         2 3\n-------------\nlong line b c\n')
 
@@ -156,12 +156,11 @@ class Testdnslshost(unittest.TestCase):
             {'forward': True, 'host': 'host3.university.edu',
              'zone_origin': 'university.edu.', 'zone': 'forward_zone'}]}}
     options.server = self.server_name
-    cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-    self.assertEqual(cli_common_lib_instance.PrintRecords(records_dictionary),
+    self.assertEqual(cli_common_lib.PrintRecords(records_dictionary),
                      '192.168.1.5 Reverse host3.university.edu reverse_zone '
                      'test_view\n192.168.1.5 Forward host3.university.edu '
                      'forward_zone any\n')
-    self.assertEqual(cli_common_lib_instance.PrintRecords(
+    self.assertEqual(cli_common_lib.PrintRecords(
         records_dictionary, [u'192.168.1.5']),
         u'192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
         '192.168.1.5 Forward host3.university.edu forward_zone any\n')
@@ -176,8 +175,7 @@ class Testdnslshost(unittest.TestCase):
             {'forward': True, 'host': 'host3.university.edu',
              'zone_origin': 'university.edu.', 'zone': 'forward_zone'}]}}
     options.server = self.server_name
-    cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-    self.assertEqual(cli_common_lib_instance.PrintHosts(
+    self.assertEqual(cli_common_lib.PrintHosts(
         records_dictionary, [u'192.168.1.5'], view_name='any'),
         u'192.168.1.5 host3.university.edu host3 # No reverse assignment\n')
 

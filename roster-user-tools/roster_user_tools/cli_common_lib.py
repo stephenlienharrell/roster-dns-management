@@ -30,7 +30,7 @@
 
 """Common library for DNS management command line tools."""
 
-__copyright__ = 'Copyright (C) 2009, Purdue University'
+__copyright_ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
@@ -88,146 +88,7 @@ class CliCommonLib:
         self.options.username, self.options.credfile, self.options.server,
         password=self.options.password)
 
-  def DnsError(self, message, exit_status=0):
-    """Prints standardized client error message to screen.
-
-    Inputs:
-      message: string of message to be displayed on screen
-      exit_status: integer of retrun code, assumed not exit if 0
-    """
-    print "CLIENT ERROR: %s" % message
-    if( exit_status ):
-      sys.exit(exit_status)
-
-  def ServerError(self, message, exit_status=0):
-    """Prints standardized server error message to screen.
-
-    Inputs:
-      message: string of message to be displayed on screen
-      exit_status: integer of retrun code, assumed not exit if 0
-    """
-    print "SERVER ERROR: %s" % message
-    if( exit_status ):
-      sys.exit(exit_status)
-
-  def DnsWarning(self, message):
-    """Prints standardized warning message to screen.
-
-    Inputs:
-      message: string of message to be displayed on screen
-    """
-    print "WARNING: %s" % message
-
-  def PrintColumns(self, print_list, first_line_header=False):
-    """Prints a table with aligned columns.
-
-    Inputs:
-      print_list: list of lists of columns
-      file: string of filename
-    """
-    ## Construct zeros for lengths
-    lengths = []
-    if( print_list ):
-      for column in print_list[0]:
-        lengths.append(0)
-    ## Get sizes of strings
-    total_length = 0
-    for row in print_list:
-      for column_index, column in enumerate(row):
-        if( len(str(column)) > lengths[column_index] ):
-          lengths[column_index] = len(str(column))
-          total_length += len(str(column)) - 1
-    ## Construct string
-    print_string_list = []
-    for row in print_list:
-      string_list = []
-      string_args_list = []
-      for column_index, column in enumerate(print_list[0]):
-        string_list.append('%*s')
-        string_args_list.extend([lengths[column_index] * -1, row[column_index]])
-      print_line = ' '.join(string_list) % tuple(string_args_list)
-      print_string_list.append('%s\n' % print_line.strip())
-      if( first_line_header and (print_list.index(row) == 0) ):
-        hyphen_list = []
-        for character in range(len(print_line.strip())):
-          hyphen_list.append('-')
-        print_string_list.append('%s\n' % ''.join(hyphen_list))
-    return ''.join(print_string_list)
-
-  def PrintRecords(self, records_dictionary, ip_address_list=[]):
-    """Prints records dictionary in a nice usable format.
-
-    Inputs:
-      records_dictionary: dictionary of records
-      ip_address_list: list of ip_addresses to use
-    """
-    if( ip_address_list == [] ):
-      for view in records_dictionary:
-        ip_address_list.extend(records_dictionary[view].keys())
-      ip_address_list = list(set(ip_address_list))
-
-    print_list = []
-    for view in records_dictionary:
-      for ip_address in ip_address_list:
-        if( ip_address in records_dictionary[view] ):
-          for record in records_dictionary[view][ip_address]:
-            direction = 'Reverse'
-            if( record['forward'] ):
-              direction = 'Forward'
-            print_list.append([ip_address, direction, record['host'],
-                                    record['zone'], view])
-        else:
-          print_list.append([ip_address, '--', '--', '--', '--'])
-    return self.PrintColumns(print_list)
-
-  def PrintHosts(self, records_dictionary, ip_address_list, view_name=None):
-    """Prints hosts in an /etc/hosts format
-
-    Inputs:
-      records_dictionary: dictionary of records
-      ip_address_list: list of ip_addresses
-      view_name: string of view_name
-    """
-    print_dict = {}
-    print_list = []
-    for view in records_dictionary:
-      for ip_address in ip_address_list:
-        print_dict[ip_address] = {}
-        if( ip_address in records_dictionary[view] and view == view_name ):
-          print_dict[ip_address].update({'forward': False, 'reverse': False})
-          for record in records_dictionary[view][ip_address]:
-            if( record['forward'] ):
-              print_dict[ip_address].update({'host': record['host'],
-                'forward': True, 'zone_origin': record['zone_origin']})
-            else:
-              print_dict[ip_address].update({'host': record['host'],
-                'reverse': True, 'zone_origin': record['zone_origin']})
-    for ip_address in ip_address_list:
-      if( print_dict[ip_address] == {} ):
-        print_list.append(['#%s' % ip_address, '', '', ''])
-      else:
-        forward_zone_origin = print_dict[ip_address]['zone_origin'].rstrip('.')
-        if( print_dict[ip_address]['forward'] and print_dict[ip_address][
-            'reverse'] ):
-          shorthost = print_dict[ip_address]['host'].rsplit(
-              '.%s' % forward_zone_origin, 1)[0]
-          longhost = print_dict[ip_address]['host']
-          if( longhost.startswith('@.') ):
-            longhost = print_dict[ip_address]['host'].lstrip('@.')
-          print_list.append([ip_address, longhost, shorthost, ''])
-        elif( print_dict[ip_address]['forward'] ):
-          shorthost = print_dict[ip_address]['host'].rsplit(
-              '.%s' % forward_zone_origin, 1)[0]
-          longhost = print_dict[ip_address]['host']
-          if( longhost.startswith('@.') ):
-            longhost = print_dict[ip_address]['host'].lstrip('@.')
-          print_list.append([ip_address, longhost, shorthost,
-                             '# No reverse assignment'])
-        else:
-          print_list.append(['#%s' % ip_address, print_dict[ip_address]['host'],
-                             '', '# No forward assignment'])
-    return self.PrintColumns(print_list)
-
+  ## Needs to be removed eventually, de classify
   def DisallowFlags(self, disallow_list, parser):
     """Dissallows certain command line flags.
 
@@ -236,10 +97,8 @@ class CliCommonLib:
       parser: parser object from optparse
     """
     defaults = parser.defaults
-    flags = {}
     error = False
     for flag in parser.option_list[1:]:
-      flags[flag.dest] = flag
       combo = 'self.options.%s' % flag.dest
       if( flag.dest in disallow_list ):
         if( eval(combo) != defaults[flag.dest] ):
@@ -248,4 +107,156 @@ class CliCommonLib:
     if( error ):
       sys.exit(1)
 
+  ## Function accessors, need to be removed at some point
+  def DnsError(self, message, exit_status=0):
+    return DnsError(message, exit_status)
+  def ServerError(self, message, exit_status=0):
+    return ServerError(message, exit_status)
+  def DnsWarning(self, message):
+    return DnsWarning(message)
+  def PrintColumns(self, print_list, first_line_header=False):
+    return PrintColumns(print_list, first_line_header)
+  def PrintRecords(self, records_dictionary, ip_address_list=[]):
+    return PrintRecords(records_dictionary, ip_address_list)
+  def PrintHosts(self, records_dictionary, ip_address_list, view_name=None):
+    return PrintHosts(records_dictionary, ip_address_list, view_name)
 
+def DnsError(message, exit_status=0):
+  """Prints standardized client error message to screen.
+
+  Inputs:
+    message: string of message to be displayed on screen
+    exit_status: integer of retrun code, assumed not exit if 0
+  """
+  print "CLIENT ERROR: %s" % message
+  if( exit_status ):
+    sys.exit(exit_status)
+
+def ServerError(message, exit_status=0):
+  """Prints standardized server error message to screen.
+
+  Inputs:
+    message: string of message to be displayed on screen
+    exit_status: integer of retrun code, assumed not exit if 0
+  """
+  print "SERVER ERROR: %s" % message
+  if( exit_status ):
+    sys.exit(exit_status)
+
+def DnsWarning(message):
+  """Prints standardized warning message to screen.
+
+  Inputs:
+    message: string of message to be displayed on screen
+  """
+  print "WARNING: %s" % message
+
+def PrintColumns(print_list, first_line_header=False):
+  """Prints a table with aligned columns.
+
+  Inputs:
+    print_list: list of lists of columns
+    file: string of filename
+  """
+  ## Construct zeros for lengths
+  lengths = []
+  if( print_list ):
+    for column in print_list[0]:
+      lengths.append(0)
+  ## Get sizes of strings
+  total_length = 0
+  for row in print_list:
+    for column_index, column in enumerate(row):
+      if( len(str(column)) > lengths[column_index] ):
+        lengths[column_index] = len(str(column))
+        total_length += len(str(column)) - 1
+  ## Construct string
+  print_string_list = []
+  for row in print_list:
+    string_list = []
+    string_args_list = []
+    for column_index, column in enumerate(print_list[0]):
+      string_list.append('%*s')
+      string_args_list.extend([lengths[column_index] * -1, row[column_index]])
+    print_line = ' '.join(string_list) % tuple(string_args_list)
+    print_string_list.append('%s\n' % print_line.strip())
+    if( first_line_header and (print_list.index(row) == 0) ):
+      hyphen_list = []
+      for character in range(len(print_line.strip())):
+        hyphen_list.append('-')
+      print_string_list.append('%s\n' % ''.join(hyphen_list))
+  return ''.join(print_string_list)
+
+def PrintRecords(records_dictionary, ip_address_list=[]):
+  """Prints records dictionary in a nice usable format.
+
+  Inputs:
+    records_dictionary: dictionary of records
+    ip_address_list: list of ip_addresses to use
+  """
+  if( ip_address_list == [] ):
+    for view in records_dictionary:
+      ip_address_list.extend(records_dictionary[view].keys())
+    ip_address_list = list(set(ip_address_list))
+
+  print_list = []
+  for view in records_dictionary:
+    for ip_address in ip_address_list:
+      if( ip_address in records_dictionary[view] ):
+        for record in records_dictionary[view][ip_address]:
+          direction = 'Reverse'
+          if( record['forward'] ):
+            direction = 'Forward'
+          print_list.append([ip_address, direction, record['host'],
+                                  record['zone'], view])
+      else:
+        print_list.append([ip_address, '--', '--', '--', '--'])
+  return PrintColumns(print_list)
+
+def PrintHosts(records_dictionary, ip_address_list, view_name=None):
+  """Prints hosts in an /etc/hosts format
+
+  Inputs:
+    records_dictionary: dictionary of records
+    ip_address_list: list of ip_addresses
+    view_name: string of view_name
+  """
+  print_dict = {}
+  print_list = []
+  for view in records_dictionary:
+    for ip_address in ip_address_list:
+      print_dict[ip_address] = {}
+      if( ip_address in records_dictionary[view] and view == view_name ):
+        print_dict[ip_address].update({'forward': False, 'reverse': False})
+        for record in records_dictionary[view][ip_address]:
+          if( record['forward'] ):
+            print_dict[ip_address].update({'host': record['host'],
+              'forward': True, 'zone_origin': record['zone_origin']})
+          else:
+            print_dict[ip_address].update({'host': record['host'],
+              'reverse': True, 'zone_origin': record['zone_origin']})
+  for ip_address in ip_address_list:
+    if( print_dict[ip_address] == {} ):
+      print_list.append(['#%s' % ip_address, '', '', ''])
+    else:
+      forward_zone_origin = print_dict[ip_address]['zone_origin'].rstrip('.')
+      if( print_dict[ip_address]['forward'] and print_dict[ip_address][
+          'reverse'] ):
+        shorthost = print_dict[ip_address]['host'].rsplit(
+            '.%s' % forward_zone_origin, 1)[0]
+        longhost = print_dict[ip_address]['host']
+        if( longhost.startswith('@.') ):
+          longhost = print_dict[ip_address]['host'].lstrip('@.')
+        print_list.append([ip_address, longhost, shorthost, ''])
+      elif( print_dict[ip_address]['forward'] ):
+        shorthost = print_dict[ip_address]['host'].rsplit(
+            '.%s' % forward_zone_origin, 1)[0]
+        longhost = print_dict[ip_address]['host']
+        if( longhost.startswith('@.') ):
+          longhost = print_dict[ip_address]['host'].lstrip('@.')
+        print_list.append([ip_address, longhost, shorthost,
+                           '# No reverse assignment'])
+      else:
+        print_list.append(['#%s' % ip_address, print_dict[ip_address]['host'],
+                           '', '# No forward assignment'])
+  return PrintColumns(print_list)

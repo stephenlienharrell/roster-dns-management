@@ -134,7 +134,12 @@ class Testdnsmkacl(unittest.TestCase):
     self.assertEqual(command.read(),
         'ADDED ACL: acl: acl1 cidr_block: 192.168.1.0/24 allowed: True\n')
     command.close()
-
+    command = os.popen('python %s -a acl2 --cidr-block 192.168.2.0/24 '
+                       '--deny -u %s -p %s --config-file %s -s %s -c %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        'ADDED ACL: acl: acl2 cidr_block: 192.168.2.0/24 allowed: False\n')
+    command.close()
 
   def testErrors(self):
     command = os.popen('python %s --acl test_acl '
@@ -142,11 +147,16 @@ class Testdnsmkacl(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: To make an ACL a CIDR block or ip address must be '
-        'specified with the --cidr-block flag.\n')
-    self.core_instance.MakeACL(u'test_acl', u'192.168.1.0/24', 1)
-    command = os.popen('python %s --acl test_acl '
+        'CLIENT ERROR: The --cidr-block flag is required.\n')
+    command = os.popen('python %s --cidr-block test '
                        '-u %s -p %s --config-file %s -s %s -c %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -a/--acl flag is required.\n')
+    self.core_instance.MakeACL(u'test_acl', u'192.168.1.0/24', 1)
+    command = os.popen('python %s --acl test_acl --cidr-block 192.168.1.0/24 '
+                       '--allow -u %s -p %s --config-file %s -s %s -c %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(), 'WARNING: ACL already exists.\n')

@@ -151,7 +151,7 @@ class Testdnsrmacl(unittest.TestCase):
                                 {'cidr_block': u'192.168.2.0/24',
                                  'range_allowed': 0}],
                       u'any': [{'cidr_block': None, 'range_allowed': 1}]})
-    command = os.popen('python %s --force -a acl1 --cidr-block 192.168.2.0/24 '
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.2.0/24 '
         '--deny -u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
@@ -160,6 +160,13 @@ class Testdnsrmacl(unittest.TestCase):
                      {u'acl1': [{'cidr_block': u'192.168.1.0/24',
                                  'range_allowed': 1}],
                       u'any': [{'cidr_block': None, 'range_allowed': 1}]})
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
+        '--allow -u %s -p %s --config-file %s -s %s -c %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        'REMOVED ACL: acl: acl1 cidr_block: 192.168.1.0/24 allowed: 1\n')
+    self.assertEqual(self.core_instance.ListACLs(),
+        {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
 
   def testErrors(self):
     command = os.popen('python %s -u %s -p %s --config-file %s '
@@ -167,7 +174,7 @@ class Testdnsrmacl(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        "CLIENT ERROR: An acl must be specified.\n")
+        "CLIENT ERROR: The -a/--acl flag is required.\n")
     command.close()
     command = os.popen('python %s -u %s -p %s --config-file %s --allow --deny '
                        '-a acl1 --force -s %s -c %s' % (
@@ -182,13 +189,6 @@ class Testdnsrmacl(unittest.TestCase):
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(),
         "CLIENT ERROR: Must use --force to delete entire ACL.\n")
-    command.close()
-    command = os.popen('python %s -a acl1 -u %s -p %s --config-file %s --allow '
-                       '--force -s %s -c %s' % (
-                           EXEC, USERNAME, self.password, USER_CONFIG,
-                           self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        "CLIENT ERROR: A CIDR block must be specified with --cidr-block.\n")
     command.close()
 
 if( __name__ == '__main__' ):

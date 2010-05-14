@@ -60,8 +60,8 @@ def main(args):
     args: list of command line args
   """
   usage = ''
-  args_instance = Args(usage)
-  options = args_instance.GetOptionsObject(args)
+  args_instance = Args(args, usage)
+  options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)

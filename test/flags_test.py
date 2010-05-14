@@ -64,7 +64,6 @@ class StdOutStream():
       self.stdout = []
       return ''.join(std_array)
 
-
 class ListAclArgs(action_flags.List, data_flags.Acl):
   pass
 
@@ -91,11 +90,13 @@ class TestCoreHelpers(unittest.TestCase):
     pass
 
   def testListAclArgs(self):
+    args = ['-a', 'test']
     usage = "test usage"
 
-    args_instance = ListAclArgs(usage)
+    args_instance = ListAclArgs(args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
+    args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'username': 'sharrell', 'deny': None, 'config_file': None,
          'credfile': None, 'no_header': False, 'server': None,
@@ -103,51 +104,23 @@ class TestCoreHelpers(unittest.TestCase):
          'password': None, 'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    args_instance.parser.print_help()
-    self.assertEqual(sys.stdout.flush(),
-         "Usage: test usage\n\n"
-         "Options:\n"
-         "  --version             show program's version number and exit\n"
-         "  -h, --help            show this help message and exit\n"
-         "  -a ACL, --acl=ACL     ACL name\n"
-         "  --cidr-block=CIDR_BLOCK\n"
-         "                        Cidr block or single IP address.\n"
-         "  --allow               Search for allowed ACLs.\n"
-         "  --deny                Search for denied ACLs.\n"
-         "  --no-header           Do not display a header.\n"
-         "  -s <server>, --server=<server>\n"
-         "                        XML RPC Server URL.\n"
-         "  -u <username>, --username=<username>\n"
-         "                        Run as different username.\n"
-         "  -p <password>, --password=<password>\n"
-         "                        Password string, NOTE: It is insecure to "
-         "use this flag\n"
-         "                        on the command line.\n"
-         "  -c <cred-file>, --cred-file=<cred-file>\n"
-         "                        Location of credential file.\n"
-         "  --cred-string=<cred-string>\n"
-         "                        String of credential.\n"
-         "  --config-file=<file>  Config file location.\n")
-    sys.stdout = oldstdout
-    args = ['-a', 'test']
-    options = args_instance.GetOptionsObject(args)
-    self.assertEqual(set(dir(options)), set(
+    self.assertEqual(set(dir(args_instance.options)), set(
         ['__cmp__', '__doc__', '__init__', '__module__', '__repr__', '__str__',
          '_update', '_update_careful', '_update_loose', 'acl', 'allow',
          'cidr_block', 'config_file', 'credfile', 'credstring', 'deny',
          'ensure_value', 'no_header', 'password', 'read_file', 'read_module',
          'server', 'username']))
-    self.assertEqual(options.username, USERNAME)
-    self.assertEqual(options.server, None)
+    self.assertEqual(args_instance.options.username, USERNAME)
+    self.assertEqual(args_instance.options.server, None)
 
   def testMakeAclArgs(self):
+    args = ['-a', 'test']
     usage = "test usage"
 
-    args_instance = MakeAclArgs(usage)
+    args_instance = MakeAclArgs(args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
+    args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'username': u'sharrell', 'deny': None, 'config_file': None,
          'credfile': None, 'quiet': False, 'server': None,
@@ -155,51 +128,23 @@ class TestCoreHelpers(unittest.TestCase):
          'password': None, 'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    args_instance.parser.print_help()
-    self.assertEqual(sys.stdout.flush(),
-         "Usage: test usage\n\n"
-         "Options:\n"
-         "  --version             show program's version number and exit\n"
-         "  -h, --help            show this help message and exit\n"
-         "  -a ACL, --acl=ACL     ACL name\n"
-         "  --cidr-block=CIDR_BLOCK\n"
-         "                        Cidr block or single IP address.\n"
-         "  --allow               Search for allowed ACLs.\n"
-         "  --deny                Search for denied ACLs.\n"
-         "  -q, --quiet           Suppress program output.\n"
-         "  -s <server>, --server=<server>\n"
-         "                        XML RPC Server URL.\n"
-         "  -u <username>, --username=<username>\n"
-         "                        Run as different username.\n"
-         "  -p <password>, --password=<password>\n"
-         "                        Password string, NOTE: It is insecure to use "
-         "this flag\n"
-         "                        on the command line.\n"
-         "  -c <cred-file>, --cred-file=<cred-file>\n"
-         "                        Location of credential file.\n"
-         "  --cred-string=<cred-string>\n"
-         "                        String of credential.\n"
-         "  --config-file=<file>  Config file location.\n")
-    sys.stdout = oldstdout
-    args = ['-a', 'test']
-    options = args_instance.GetOptionsObject(args)
-    self.assertEqual(set(dir(options)), set(
+    self.assertEqual(set(dir(args_instance.options)), set(
         ['__cmp__', '__doc__', '__init__', '__module__', '__repr__', '__str__',
          '_update', '_update_careful', '_update_loose', 'acl', 'allow',
          'cidr_block', 'config_file', 'credfile', 'credstring', 'deny',
          'ensure_value', 'password', 'quiet', 'read_file', 'read_module',
          'server', 'username']))
-    self.assertEqual(options.username, USERNAME)
-    self.assertEqual(options.server, None)
+    self.assertEqual(args_instance.options.username, USERNAME)
+    self.assertEqual(args_instance.options.server, None)
 
   def testRemoveAclArgs(self):
+    args = ['-a', 'test']
     usage = "test usage"
 
-    args_instance = RemoveAclArgs(usage)
+    args_instance = RemoveAclArgs(args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
+    args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'username': u'sharrell', 'deny': None, 'config_file': None,
           'credfile': None, 'quiet': False, 'force': False, 'server': None,
@@ -207,52 +152,23 @@ class TestCoreHelpers(unittest.TestCase):
          'password': None, 'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    args_instance.parser.print_help()
-    self.assertEqual(sys.stdout.flush(),
-         "Usage: test usage\n\n"
-         "Options:\n"
-         "  --version             show program's version number and exit\n"
-         "  -h, --help            show this help message and exit\n"
-         "  -a ACL, --acl=ACL     ACL name\n"
-         "  --cidr-block=CIDR_BLOCK\n"
-         "                        Cidr block or single IP address.\n"
-         "  --allow               Search for allowed ACLs.\n"
-         "  --deny                Search for denied ACLs.\n"
-         "  -q, --quiet           Suppress program output.\n"
-         "  --force               Force actions to complete.\n"
-         "  -s <server>, --server=<server>\n"
-         "                        XML RPC Server URL.\n"
-         "  -u <username>, --username=<username>\n"
-         "                        Run as different username.\n"
-         "  -p <password>, --password=<password>\n"
-         "                        Password string, NOTE: It is insecure to use "
-         "this flag\n"
-         "                        on the command line.\n"
-         "  -c <cred-file>, --cred-file=<cred-file>\n"
-         "                        Location of credential file.\n"
-         "  --cred-string=<cred-string>\n"
-         "                        String of credential.\n"
-         "  --config-file=<file>  Config file location.\n")
-    sys.stdout = oldstdout
-    args = ['-a', 'test']
-    options = args_instance.GetOptionsObject(args)
-    self.assertEqual(set(dir(options)), set(
+    self.assertEqual(set(dir(args_instance.options)), set(
         ['__cmp__', '__doc__', '__init__', '__module__', '__repr__', '__str__',
          '_update', '_update_careful', '_update_loose', 'acl', 'allow',
          'cidr_block', 'config_file', 'credfile', 'credstring', 'deny',
          'ensure_value', 'password', 'quiet', 'force', 'read_file',
          'read_module', 'server', 'username']))
-    self.assertEqual(options.username, USERNAME)
-    self.assertEqual(options.server, None)
+    self.assertEqual(args_instance.options.username, USERNAME)
+    self.assertEqual(args_instance.options.server, None)
 
   def testListRecordArgs(self):
+    args = ['--a', 'test']
     usage = "test usage"
 
-    args_instance = ListRecordArgs(usage)
+    args_instance = ListRecordArgs(args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
+    args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'soa': False, 'soa_expiry_seconds': None, 'soa_admin_email': None,
          'aaaa': False, 'credstring': None, 'mx_priority': None, 'ttl': 3600,
@@ -271,97 +187,7 @@ class TestCoreHelpers(unittest.TestCase):
          'soa_name_server': None, 'mx': False})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    args_instance.parser.print_help()
-    self.assertEqual(sys.stdout.flush(),
-         'Usage: test usage\n'
-         '\n'
-         'Options:\n'
-         '  --version             show program\'s version number and exit\n'
-         '  -h, --help            show this help message and exit\n'
-         '  --a                   Set the record type to A record.\n'
-         '  --a-assignment-ip=<assignment-ip>\n'
-         '                        String of the IPv4 address\n'
-         '  --aaaa                Set the record type to AAAA record.\n'
-         '  --aaaa-assignment-ip=<assignment-ip>\n'
-         '                        String of the IPv6 address.\n'
-         '  --hinfo               Set the record type to HINFO record.\n'
-         '  --hinfo-hardware=<hardware>\n'
-         '                        String of the hardware type.\n'
-         '  --hinfo-os=<os>       String of the OS type.\n'
-         '  --txt                 Set the record type to TXT record.\n'
-         '  --txt-quoted-text=<quoted-text>\n'
-         '                        String of quoted text.\n'
-         '  --cname               Set the record type to CNAME record.\n'
-         '  --cname-assignment-host=<hostname>\n'
-         '                        String of the CNAME hostname.\n'
-         '  --soa                 Set the record type to SOA record.\n'
-         '  --soa-name-server=<name-server>\n'
-         '                        String of the hostname of the SOA name '
-         'server.\n'
-         '  --soa-admin-email=<name-server>\n'
-         '                        String of the admin email address.\n'
-         '  --soa-serial-number=<serial-number>\n'
-         '                        String of the serial number.\n'
-         '  --soa-refresh-seconds=<refresh-seconds>\n'
-         '                        Number of seconds to refresh.\n'
-         '  --soa-retry-seconds=<retry-seconds>\n'
-         '                        Number of seconds to retry.\n'
-         '  --soa-expiry-seconds=<expiry-seconds>\n'
-         '                        Number of seconds to expire.\n'
-         '  --soa-minimum-seconds=<minumum-seconds>\n'
-         '                        Minium number of seconds to refresh.\n'
-         '  --srv                 Set the record type to SRV record.\n'
-         '  --srv-priority=<priority>\n'
-         '                        Integerof priority between 0-65535.\n'
-         '  --srv-weight=<weight>\n'
-         '                        Integer of weight between 0-65535.\n'
-         '  --srv-port=<port>     Port number.\n'
-         '  --srv-assignment-host=<hostname>\n'
-         '                        String of the SRV assignment hostname.\n'
-         '  --ns                  Set the record type to NS record.\n'
-         '  --ns-name-server=<hostname>\n'
-         '                        String of the hostname of the NS name '
-         'server.\n'
-         '  --mx                  Set the record type to MX record.\n'
-         '  --mx-priority=<priority>\n'
-         '                        Integer of priority between 0-65535.\n'
-         '  --mx-mail-server=<hostname>\n'
-         '                        String of mail server hostname.\n'
-         '  --ptr                 Set the record type to PTR record.\n'
-         '  --ptr-assignment-host=<hostname>\n'
-         '                        String of PTR hostname.\n'
-         '  -z <zone-name>, --zone-name=<zone-name>\n'
-         '                        String of the <zone-name>. Example:\n'
-         '                        "sub.university.edu"\n'
-         '  -t <target>, --target=<target>\n'
-         '                        String of the target. "A" record example:\n'
-         '                        "machine-01", "PTR" record example: '
-         '192.168.1.1\n'
-         '  --ttl=<ttl>           Integer of time to live <ttl> per record.\n'
-         '  -v <view-name>, --view-name=<view-name>\n'
-         '                        String of the view name <view-name>. '
-         'Example:\n'
-         '                        "internal"\n'
-         '  --no-header           Do not display a header.\n'
-         '  -s <server>, --server=<server>\n'
-         '                        XML RPC Server URL.\n'
-         '  -u <username>, --username=<username>\n'
-         '                        Run as different username.\n'
-         '  -p <password>, --password=<password>\n'
-         '                        Password string, NOTE: It is insecure to use '
-         'this flag\n'
-         '                        on the command line.\n'
-         '  -c <cred-file>, --cred-file=<cred-file>\n'
-         '                        Location of credential file.\n'
-         '  --cred-string=<cred-string>\n'
-         '                        String of credential.\n'
-         '  --config-file=<file>  Config file location.\n')
-    sys.stdout = oldstdout
-    args = ['--a', 'test']
-    options = args_instance.GetOptionsObject(args)
-    self.assertEqual(set(dir(options)), set(
+    self.assertEqual(set(dir(args_instance.options)), set(
         ['soa', '__module__', '_update', '__str__', 'ttl', 'soa_admin_email',
          'aaaa', 'credstring', 'read_file', 'mx_priority', 'soa_expiry_seconds',
          'zone_name', 'srv_priority', 'txt', 'ptr', '_update_careful',
@@ -374,15 +200,17 @@ class TestCoreHelpers(unittest.TestCase):
          'soa_serial_number', 'a', 'soa_refresh_seconds', 'srv_port', 'target',
          'cname_assignment_host', 'txt_quoted_text', 'no_header', 'server',
          'view_name', 'cname', 'srv', '__repr__', 'soa_name_server', 'mx']))
-    self.assertEqual(options.username, USERNAME)
-    self.assertEqual(options.server, None)
+    self.assertEqual(args_instance.options.username, USERNAME)
+    self.assertEqual(args_instance.options.server, None)
 
   def testMakeRecordArgs(self):
+    args = ['--a', 'test']
     usage = "test usage"
 
-    args_instance = MakeRecordArgs(usage)
+    args_instance = MakeRecordArgs(args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
+    args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'soa': False, 'soa_expiry_seconds': None, 'soa_admin_email': None,
          'aaaa': False, 'credstring': None, 'mx_priority': None, 'ttl': 3600,
@@ -400,92 +228,7 @@ class TestCoreHelpers(unittest.TestCase):
          'cname': False, 'srv': False, 'srv_weight': None, 'mx': False})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    args_instance.parser.print_help()
-    self.assertEqual(sys.stdout.flush(),
-        'Usage: test usage\n'
-        '\n'
-        'Options:\n'
-        '  --version             show program\'s version number and exit\n'
-        '  -h, --help            show this help message and exit\n'
-        '  --a                   Set the record type to A record.\n'
-        '  --a-assignment-ip=<assignment-ip>\n'
-        '                        String of the IPv4 address\n'
-        '  --aaaa                Set the record type to AAAA record.\n'
-        '  --aaaa-assignment-ip=<assignment-ip>\n'
-        '                        String of the IPv6 address.\n'
-        '  --hinfo               Set the record type to HINFO record.\n'
-        '  --hinfo-hardware=<hardware>\n'
-        '                        String of the hardware type.\n'
-        '  --hinfo-os=<os>       String of the OS type.\n'
-        '  --txt                 Set the record type to TXT record.\n'
-        '  --txt-quoted-text=<quoted-text>\n'
-        '                        String of quoted text.\n'
-        '  --cname               Set the record type to CNAME record.\n'
-        '  --cname-assignment-host=<hostname>\n'
-        '                        String of the CNAME hostname.\n'
-        '  --soa                 Set the record type to SOA record.\n'
-        '  --soa-name-server=<name-server>\n'
-        '                        String of the hostname of the SOA name server.\n'
-        '  --soa-admin-email=<name-server>\n'
-        '                        String of the admin email address.\n'
-        '  --soa-serial-number=<serial-number>\n'
-        '                        String of the serial number.\n'
-        '  --soa-refresh-seconds=<refresh-seconds>\n'
-        '                        Number of seconds to refresh.\n'
-        '  --soa-retry-seconds=<retry-seconds>\n'
-        '                        Number of seconds to retry.\n'
-        '  --soa-expiry-seconds=<expiry-seconds>\n'
-        '                        Number of seconds to expire.\n'
-        '  --soa-minimum-seconds=<minumum-seconds>\n'
-        '                        Minium number of seconds to refresh.\n'
-        '  --srv                 Set the record type to SRV record.\n'
-        '  --srv-priority=<priority>\n'
-        '                        Integerof priority between 0-65535.\n'
-        '  --srv-weight=<weight>\n'
-        '                        Integer of weight between 0-65535.\n'
-        '  --srv-port=<port>     Port number.\n'
-        '  --srv-assignment-host=<hostname>\n'
-        '                        String of the SRV assignment hostname.\n'
-        '  --ns                  Set the record type to NS record.\n'
-        '  --ns-name-server=<hostname>\n'
-        '                        String of the hostname of the NS name server.\n'
-        '  --mx                  Set the record type to MX record.\n'
-        '  --mx-priority=<priority>\n'
-        '                        Integer of priority between 0-65535.\n'
-        '  --mx-mail-server=<hostname>\n'
-        '                        String of mail server hostname.\n'
-        '  --ptr                 Set the record type to PTR record.\n'
-        '  --ptr-assignment-host=<hostname>\n'
-        '                        String of PTR hostname.\n'
-        '  -z <zone-name>, --zone-name=<zone-name>\n'
-        '                        String of the <zone-name>. Example:\n'
-        '                        "sub.university.edu"\n'
-        '  -t <target>, --target=<target>\n'
-        '                        String of the target. "A" record example:\n'
-        '                        "machine-01", "PTR" record example: 192.168.1.1\n'
-        '  --ttl=<ttl>           Integer of time to live <ttl> per record.\n'
-        '  -v <view-name>, --view-name=<view-name>\n'
-        '                        String of the view name <view-name>. Example:\n'
-        '                        "internal"\n'
-        '  -q, --quiet           Suppress program output.\n'
-        '  -s <server>, --server=<server>\n'
-        '                        XML RPC Server URL.\n'
-        '  -u <username>, --username=<username>\n'
-        '                        Run as different username.\n'
-        '  -p <password>, --password=<password>\n'
-        '                        Password string, NOTE: It is insecure to use this flag\n'
-        '                        on the command line.\n'
-        '  -c <cred-file>, --cred-file=<cred-file>\n'
-        '                        Location of credential file.\n'
-        '  --cred-string=<cred-string>\n'
-        '                        String of credential.\n'
-        '  --config-file=<file>  Config file location.\n')
-    sys.stdout = oldstdout
-    args = ['--a', 'test']
-    options = args_instance.GetOptionsObject(args)
-    self.assertEqual(set(dir(options)), set(
+    self.assertEqual(set(dir(args_instance.options)), set(
         ['soa', '__module__', '_update', '__str__', 'ttl', 'soa_admin_email',
          'aaaa', 'credstring', 'read_file', 'mx_priority', 'soa_expiry_seconds',
          'zone_name', 'srv_priority', 'txt', 'ptr', '_update_careful',
@@ -499,15 +242,17 @@ class TestCoreHelpers(unittest.TestCase):
          'cname_assignment_host', 'txt_quoted_text', 'quiet',
          'soa_refresh_seconds', 'server', 'view_name', 'cname', 'srv',
          '__repr__', 'soa_name_server', 'mx']))
-    self.assertEqual(options.username, USERNAME)
-    self.assertEqual(options.server, None)
+    self.assertEqual(args_instance.options.username, USERNAME)
+    self.assertEqual(args_instance.options.server, None)
 
   def testRemoveRecordArgs(self):
+    args = ['--a', 'test']
     usage = "test usage"
 
-    args_instance = RemoveRecordArgs(usage)
+    args_instance = RemoveRecordArgs(args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
+    args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'soa': False, 'force': False, 'soa_expiry_seconds': None,
          'soa_admin_email': None, 'aaaa': False, 'credstring': None,
@@ -526,98 +271,7 @@ class TestCoreHelpers(unittest.TestCase):
          'cname': False, 'srv': False, 'srv_weight': None, 'mx': False})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    args_instance.parser.print_help()
-    self.assertEqual(sys.stdout.flush(),
-        'Usage: test usage\n'
-        '\n'
-        'Options:\n'
-        '  --version             show program\'s version number and exit\n'
-        '  -h, --help            show this help message and exit\n'
-        '  --a                   Set the record type to A record.\n'
-        '  --a-assignment-ip=<assignment-ip>\n'
-        '                        String of the IPv4 address\n'
-        '  --aaaa                Set the record type to AAAA record.\n'
-        '  --aaaa-assignment-ip=<assignment-ip>\n'
-        '                        String of the IPv6 address.\n'
-        '  --hinfo               Set the record type to HINFO record.\n'
-        '  --hinfo-hardware=<hardware>\n'
-        '                        String of the hardware type.\n'
-        '  --hinfo-os=<os>       String of the OS type.\n'
-        '  --txt                 Set the record type to TXT record.\n'
-        '  --txt-quoted-text=<quoted-text>\n'
-        '                        String of quoted text.\n'
-        '  --cname               Set the record type to CNAME record.\n'
-        '  --cname-assignment-host=<hostname>\n'
-        '                        String of the CNAME hostname.\n'
-        '  --soa                 Set the record type to SOA record.\n'
-        '  --soa-name-server=<name-server>\n'
-        '                        String of the hostname of the SOA name '
-        'server.\n'
-        '  --soa-admin-email=<name-server>\n'
-        '                        String of the admin email address.\n'
-        '  --soa-serial-number=<serial-number>\n'
-        '                        String of the serial number.\n'
-        '  --soa-refresh-seconds=<refresh-seconds>\n'
-        '                        Number of seconds to refresh.\n'
-        '  --soa-retry-seconds=<retry-seconds>\n'
-        '                        Number of seconds to retry.\n'
-        '  --soa-expiry-seconds=<expiry-seconds>\n'
-        '                        Number of seconds to expire.\n'
-        '  --soa-minimum-seconds=<minumum-seconds>\n'
-        '                        Minium number of seconds to refresh.\n'
-        '  --srv                 Set the record type to SRV record.\n'
-        '  --srv-priority=<priority>\n'
-        '                        Integerof priority between 0-65535.\n'
-        '  --srv-weight=<weight>\n'
-        '                        Integer of weight between 0-65535.\n'
-        '  --srv-port=<port>     Port number.\n'
-        '  --srv-assignment-host=<hostname>\n'
-        '                        String of the SRV assignment hostname.\n'
-        '  --ns                  Set the record type to NS record.\n'
-        '  --ns-name-server=<hostname>\n'
-        '                        String of the hostname of the NS name '
-        'server.\n'
-        '  --mx                  Set the record type to MX record.\n'
-        '  --mx-priority=<priority>\n'
-        '                        Integer of priority between 0-65535.\n'
-        '  --mx-mail-server=<hostname>\n'
-        '                        String of mail server hostname.\n'
-        '  --ptr                 Set the record type to PTR record.\n'
-        '  --ptr-assignment-host=<hostname>\n'
-        '                        String of PTR hostname.\n'
-        '  -z <zone-name>, --zone-name=<zone-name>\n'
-        '                        String of the <zone-name>. Example:\n'
-        '                        "sub.university.edu"\n'
-        '  -t <target>, --target=<target>\n'
-        '                        String of the target. "A" record example:\n'
-        '                        "machine-01", "PTR" record example: '
-        '192.168.1.1\n'
-        '  --ttl=<ttl>           Integer of time to live <ttl> per record.\n'
-        '  -v <view-name>, --view-name=<view-name>\n'
-        '                        String of the view name <view-name>. '
-        'Example:\n'
-        '                        "internal"\n'
-        '  -q, --quiet           Suppress program output.\n'
-        '  --force               Force actions to complete.\n'
-        '  -s <server>, --server=<server>\n'
-        '                        XML RPC Server URL.\n'
-        '  -u <username>, --username=<username>\n'
-        '                        Run as different username.\n'
-        '  -p <password>, --password=<password>\n'
-        '                        Password string, NOTE: It is insecure to use '
-        'this flag\n'
-        '                        on the command line.\n'
-        '  -c <cred-file>, --cred-file=<cred-file>\n'
-        '                        Location of credential file.\n'
-        '  --cred-string=<cred-string>\n'
-        '                        String of credential.\n'
-        '  --config-file=<file>  Config file location.\n')
-    sys.stdout = oldstdout
-    args = ['--a', 'test']
-    options = args_instance.GetOptionsObject(args)
-    self.assertEqual(set(dir(options)), set(
+    self.assertEqual(set(dir(args_instance.options)), set(
         ['soa', '__module__', '_update', 'force', '__str__', 'ttl',
          'soa_admin_email', 'aaaa', 'credstring', 'read_file', 'mx_priority',
          'soa_expiry_seconds', 'zone_name', 'srv_priority', 'txt', 'ptr',
@@ -631,8 +285,94 @@ class TestCoreHelpers(unittest.TestCase):
          'cname_assignment_host', 'txt_quoted_text', 'quiet',
          'soa_refresh_seconds', 'server', 'view_name', 'cname', 'srv',
          '__repr__', 'soa_name_server', 'mx']))
-    self.assertEqual(options.username, USERNAME)
-    self.assertEqual(options.server, None)
+    self.assertEqual(args_instance.options.username, USERNAME)
+    self.assertEqual(args_instance.options.server, None)
+
+  def testGetEmptyFunctionsDict(self):
+    args = ['--a', 'test']
+    usage = "test usage"
+
+    args_instance = RemoveRecordArgs(args, usage)
+
+    functions_dict = args_instance.GetEmptyFunctionsDict(['list', 'remove'])
+
+    self.assertEqual(functions_dict,
+        {'list': {'independent_args': [], 'args': {}, 'dependent_args': [],
+                  'forbidden_args': {}},
+         'remove': {'independent_args': [], 'args': {}, 'dependent_args': [],
+                  'forbidden_args': {}}})
+
+  def testCheckDataFlags(self):
+    usage = "test usage"
+    args = ['-a', 'test']
+    args_instance = MakeAclArgs(args, usage)
+
+    functions = args_instance.GetEmptyFunctionsDict(['make'])
+    functions['make']['args'] = {'acl': True, 'cidr_block': True}
+    functions['make']['independent_args'] = [{'allow': True, 'deny': True}]
+
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
+                      functions)
+    self.assertEqual(sys.stdout.flush(),
+        'CLIENT ERROR: The --cidr-block flag is required.\n')
+    sys.stdout = oldstdout
+
+    args = ['-a', 'test', '--cidr-block', '192.168.1/24']
+    args_instance = MakeAclArgs(args, usage)
+
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
+                      functions)
+    self.assertEqual(sys.stdout.flush(),
+        'CLIENT ERROR: Either --allow or --deny must be used.\n')
+    sys.stdout = oldstdout
+
+    args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow', '--deny']
+    args_instance = MakeAclArgs(args, usage)
+
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
+                      functions)
+    self.assertEqual(sys.stdout.flush(),
+        'CLIENT ERROR: --allow and --deny cannot be used simultaneously.\n')
+    sys.stdout = oldstdout
+
+    args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow']
+    args_instance = MakeAclArgs(args, usage)
+
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    args_instance.CheckDataFlags('make', functions)
+    self.assertEqual(sys.stdout.flush(), '')
+    sys.stdout = oldstdout
+
+    functions = args_instance.GetEmptyFunctionsDict(['make'])
+    functions['make']['args'] = {'acl': True, 'cidr_block': True}
+    functions['make']['dependent_args'] = [{'allow': True, 'deny': True}]
+
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
+                      functions)
+    self.assertEqual(sys.stdout.flush(),
+        'CLIENT ERROR: --allow and --deny must be used together.\n')
+    sys.stdout = oldstdout
+
+    functions['make']['args'] = {'cidr_block': True}
+    functions['make']['forbidden_args'] = {'acl': True}
+
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
+                      functions)
+    self.assertEqual(sys.stdout.flush(),
+        'CLIENT ERROR: The -a/--acl flag cannot be used with the make '
+        'command.\n')
+    sys.stdout = oldstdout
 
 if( __name__ == '__main__' ):
       unittest.main()

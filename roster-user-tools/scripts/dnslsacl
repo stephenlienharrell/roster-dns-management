@@ -64,10 +64,12 @@ def main(args):
            '\n'
            'You may use any or none of the arguments above to search ACLs' %
            (sys.argv[0]))
-
-  args_instance = Args(usage)
-
-  options = args_instance.GetOptionsObject(args)
+  args_instance = Args(args, usage)
+  functions = args_instance.GetEmptyFunctionsDict(['list'])
+  functions['list']['args'] = {'acl': False, 'cidr_block': False}
+  functions['list']['independent_args'] = [{'allow': False, 'deny': False}]
+  args_instance.CheckDataFlags('list', functions)
+  options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
@@ -75,9 +77,6 @@ def main(args):
     print 'ERROR: %s' % e
     sys.exit(1)
 
-  if( options.allow and options.deny ):
-    cli_common_lib_instance.DnsError(
-        '--allow and --deny cannot be used simultaneously.', 1)
   allowed = None
   if( options.allow ):
     allowed = 1
