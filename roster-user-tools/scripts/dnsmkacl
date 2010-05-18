@@ -64,12 +64,7 @@ def main(args):
            '\n'
            'All arguments above are required except for either '
            'allow or deny.\n' % sys.argv[0])
-  args_instance = Args(args, usage)
-  functions = args_instance.GetEmptyFunctionsDict(['make'])
-  functions['make']['args'] = {'acl': True, 'cidr_block': True}
-  functions['make']['independent_args'] = [{'allow': True,
-                                            'deny': True}]
-  args_instance.CheckDataFlags('make', functions)
+  args_instance = Args('make', ['make'], args, usage)
   options = args_instance.options
 
   try:

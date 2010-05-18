@@ -43,9 +43,11 @@ class List(core_flags.CoreFlags):
   def SetActionFlags(self):
     """Sets list flags for parser"""
     self.action = 'List'
+
     self.parser.add_option(
         '--no-header', action='store_true', dest='no_header',
         help='Do not display a header.', default=False)
+    self.AddFlagRule('no_header', required=False)
 
 
 class Remove(core_flags.CoreFlags):
@@ -53,9 +55,11 @@ class Remove(core_flags.CoreFlags):
   def SetActionFlags(self):
     """Sets remove flags for parser"""
     self.action = 'Remove'
+
     self.parser.add_option(
         '-q', '--quiet', action='store_true', dest='quiet',
         help='Suppress program output.', default=False)
+    self.AddFlagRule('quiet', required=False)
     self.parser.add_option(
         '--force', action='store_true', dest='force',
         help='Force actions to complete.', default=False)
@@ -66,6 +70,8 @@ class Make(core_flags.CoreFlags):
   def SetActionFlags(self):
     """Sets make flags for parser"""
     self.action = 'Make'
+
     self.parser.add_option(
         '-q', '--quiet', action='store_true', dest='quiet',
         help='Suppress program output.', default=False)
+    self.AddFlagRule('quiet', required=False)

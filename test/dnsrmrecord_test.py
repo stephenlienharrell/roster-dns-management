@@ -122,7 +122,7 @@ class Testdnsrmrecord(unittest.TestCase):
 
   def testARemove(self):
     command = os.popen('python %s '
-                       '--a --a-assignment-ip="10.10.10.0" -t '
+                       'a --assignment-ip="10.10.10.0" -t '
                        'machine1 -v test_view -z test_zone -u %s -p %s '
                        '--config-file %s -s %s' % (
                            EXEC, USERNAME, self.password,
@@ -131,7 +131,7 @@ class Testdnsrmrecord(unittest.TestCase):
     self.assertTrue(self.retCode(command.close()))
     self.core_instance.MakeView(u'test_view')
     command = os.popen('python %s '
-                       '--a --a-assignment-ip="10.10.10.0" -t '
+                       'a --assignment-ip="10.10.10.0" -t '
                        'machine1 -v test_view -z test_zone -u %s -p %s '
                        '--config-file %s -s %s' % (
                            EXEC, USERNAME, self.password,
@@ -163,7 +163,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        'zone_name': u'test_zone',
                        u'assignment_ip': u'10.10.10.0'}])
     command = os.popen('python %s '
-                       '--a --a-assignment-ip="10.10.10.0" -t '
+                       'a --assignment-ip="10.10.10.0" -t '
                        'machine1 -v test_view -z test_zone -u %s -p %s '
                        '--config-file %s '
                        '-s %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
@@ -176,8 +176,8 @@ class Testdnsrmrecord(unittest.TestCase):
     self.assertEqual(self.core_instance.ListRecords(record_type=u'a'), [])
 
   def testAAAARemove(self):
-    command = os.popen('python %s --aaaa '
-                       '--aaaa-assignment-ip=" fe80::200:f8ff:fe21:67cf" '
+    command = os.popen('python %s aaaa '
+                       '--assignment-ip=" fe80::200:f8ff:fe21:67cf" '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -185,8 +185,8 @@ class Testdnsrmrecord(unittest.TestCase):
     self.assertEqual(command.read(), 'CLIENT ERROR: View does not exist!\n')
     self.assertTrue(self.retCode(command.close()))
     self.core_instance.MakeView(u'test_view')
-    command = os.popen('python %s --aaaa '
-                       '--aaaa-assignment-ip=" fe80::200:f8ff:fe21:67cf" '
+    command = os.popen('python %s aaaa '
+                       '--assignment-ip=" fe80::200:f8ff:fe21:67cf" '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -220,7 +220,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        u'assignment_ip':
                            u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'}])
     command = os.popen('python %s '
-                       '--aaaa --aaaa-assignment-ip="fe80::200:f8ff:fe21:67cf" '
+                       'aaaa --assignment-ip="fe80::200:f8ff:fe21:67cf" '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -249,7 +249,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
                        u'os': u'ipear'}])
     command = os.popen('python %s '
-                       '--hinfo --hinfo-hardware Pear --hinfo-os ipear '
+                       'hinfo --hardware Pear --os ipear '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -283,7 +283,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
                        u'quoted_text': u'et tu brute'}])
     command = os.popen('python %s '
-                       '--txt --txt-quoted-text "et tu brute" '
+                       'txt --quoted-text "et tu brute" '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -312,7 +312,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
                        u'assignment_host': u'university.edu.'}])
     command = os.popen('python %s '
-                       '--cname --cname-assignment-host="university.edu." '
+                       'cname --assignment-host="university.edu." '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -344,11 +344,11 @@ class Testdnsrmrecord(unittest.TestCase):
                        u'admin_email': u'university.edu.',
                        u'expiry_seconds': 30}])
     command = os.popen('python %s '
-                       '--soa --soa-name-server="ns.university.edu." '
-                       '--soa-admin-email="university.edu." '
-                       '--soa-serial-number=123456790 --soa-refresh-seconds=30 '
-                       '--soa-retry-seconds=30 --soa-minimum-seconds=30 '
-                       '--soa-expiry-seconds=30 --ttl 3600 '
+                       'soa --name-server="ns.university.edu." '
+                       '--admin-email="university.edu." '
+                       '--serial-number=123456790 --refresh-seconds=30 '
+                       '--retry-seconds=30 --minimum-seconds=30 '
+                       '--expiry-seconds=30 --ttl 3600 '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -378,9 +378,9 @@ class Testdnsrmrecord(unittest.TestCase):
                        'view_name': u'test_view', 'last_user': u'sharrell',
                        'zone_name': u'test_zone',
                        u'assignment_host': u'university.edu.', u'port': 80}])
-    command = os.popen('python %s --srv '
-                       '--srv-priority 5 --srv-weight 6 --srv-port 80 '
-                       '--srv-assignment-host="university.edu." '
+    command = os.popen('python %s srv '
+                       '--priority 5 --weight 6 --port 80 '
+                       '--assignment-host="university.edu." '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -410,7 +410,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        'view_name': u'test_view', 'last_user': u'sharrell',
                        'zone_name': u'test_zone'}])
     command = os.popen('python %s '
-                       '--ns --ns-name-server="university.edu." '
+                       'ns --name-server="university.edu." '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -439,8 +439,8 @@ class Testdnsrmrecord(unittest.TestCase):
                        'record_type': u'mx', 'view_name': u'test_view',
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
                        u'mail_server': u'university.edu.'}])
-    command = os.popen('python %s --mx '
-                       '--mx-mail-server="university.edu." --mx-priority 5 '
+    command = os.popen('python %s mx '
+                       '--mail-server="university.edu." --priority 5 '
                        '-q -t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -470,7 +470,7 @@ class Testdnsrmrecord(unittest.TestCase):
                        'last_user': u'sharrell', 'zone_name': u'test_zone',
                        u'assignment_host': u'm.university.edu.'}])
     command = os.popen('python %s '
-                       '--ptr --ptr-assignment-host="m.university.edu." '
+                       'ptr --assignment-host="m.university.edu." '
                        '-q -t 192.168.1.1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -482,51 +482,51 @@ class Testdnsrmrecord(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
-    command = os.popen('python %s -u '
+    command = os.popen('python %s a -t t -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: Must specify a zone-name '
-                                     'with "-z".\n')
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -z/--zone-name flag is required.\n')
     command.close()
-    command = os.popen('python %s -z test_zone -u '
+    command = os.popen('python %s a -z test_zone --assignment-ip test -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: Must specify a target '
-                                     'with "-t".\n')
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -t/--target flag is required.\n')
     command.close()
-    command = os.popen('python %s -z z -t t --soa --soa-serial-number number '
-                       '--soa-refresh-seconds 3 --soa-retry-seconds 3 '
-                       '--soa-expiry-seconds 3 --soa-minimum-seconds 3 '
+    command = os.popen3('python %s soa -z z -t t --serial-number number '
+                       '--refresh-seconds 3 --retry-seconds 3 '
+                       '--expiry-seconds 3 --minimum-seconds 3 '
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))[2]
+    self.assertEqual(command.read().split('\n')[-2],
+        "dnsrmrecord: error: option --serial-number: invalid integer value: "
+        "'number'")
+    command.close()
+    command = os.popen('python %s soa -z z -t t --serial-number 3 '
                        '-u %s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: --soa-serial-number must be '
-        'an integer, \'number\' is not an integer.\n')
+        'CLIENT ERROR: The --refresh-seconds flag is required.\n')
     command.close()
-    command = os.popen('python %s -z z -t t --soa --soa-serial-number 3 '
+    command = os.popen3('python %s mx -z z -t t --priority number '
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))[2]
+    self.assertEqual(command.read().split('\n')[-2],
+        "dnsrmrecord: error: option --priority: invalid integer value: "
+        "'number'")
+    command.close()
+    command = os.popen('python %s mx -z z -t t '
                        '-u %s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: --soa-minimun-seconds must be specified.\n')
-    command.close()
-    command = os.popen('python %s -z z -t t --mx --mx-priority number '
-                       '-u %s -p %s --config-file %s -s %s' % (
-                           EXEC, USERNAME, self.password, USER_CONFIG,
-                           self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: --mx-priority must be '
-                                     'an integer. \'number\' is '
-                                     'not an integer.\n')
-    command.close()
-    command = os.popen('python %s -z z -t t --mx '
-                       '-u %s -p %s --config-file %s -s %s' % (
-                           EXEC, USERNAME, self.password, USER_CONFIG,
-                           self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: --mx-priority must be '
-                                     'specified.\n')
+        'CLIENT ERROR: The --priority flag is required.\n')
     command.close()
 
 

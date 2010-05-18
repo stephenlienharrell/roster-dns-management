@@ -64,11 +64,7 @@ def main(args):
            '\n'
            'You may use any or none of the arguments above to search ACLs' %
            (sys.argv[0]))
-  args_instance = Args(args, usage)
-  functions = args_instance.GetEmptyFunctionsDict(['list'])
-  functions['list']['args'] = {'acl': False, 'cidr_block': False}
-  functions['list']['independent_args'] = [{'allow': False, 'deny': False}]
-  args_instance.CheckDataFlags('list', functions)
+  args_instance = Args('list', ['list'], args, usage)
   options = args_instance.options
 
   try:

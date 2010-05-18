@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Make record tool for dnsmanagement"""
+"""Remove record tool for dnsmanagement"""
 
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
@@ -59,8 +59,54 @@ def main(args):
   Inputs:
     args: list of command line args
   """
-  usage = ''
-  args_instance = Args(args, usage)
+  command = ''
+  if( not args[0].startswith('-') ):
+    command = args.pop(0)
+  usage = ('\n'
+           '\n'
+           'To remove an "a" record (ipv4 forward):\n'
+           '\t%s a --assignment-ip <ipv4-address> -z <zone-name> '
+           '-t <hostname>\n'
+           '\n'
+           'To remove a "aaaa" record (ipv6 forward):\n'
+           '\t%s aaaa --assignment-ip <ipv6-address> -z <zone-name> '
+           '-t <hostname>\n'
+           '\n'
+           'To remove a "ptr" record (reverse):\n'
+           '\t%s ptr --assignment-host <full-hostname> -z <zone-name> '
+           '-t <ipv4/6-address>\n'
+           '\n'
+           'To remove a "cname" record (alias):\n'
+           '\t%s cname --assignment_host <alias_hostname> -z <zone-name> '
+           '-t <hostname>\n'
+           '\n'
+           'To remove an "hinfo" record (hardware info):\n'
+           '\t%s hinfo --hinfo-hardware <hardware-info> '
+           '--hinfo-os <operating-system> -z <zone-name> -t <hostname>\n'
+           '\n'
+           'To remove a "txt" record (text):\n'
+           '\t%s txt --quoted-text <text> -z <zone-name> -t <hostname>\n'
+           '\n'
+           'To remove an "soa" record (start of authority):\n'
+           '\t%s soa --admin-email <admin-email> --name-server <name-server> '
+           '--serial-number <serial-number> --refresh-seconds <refresh-seconds> '
+           '--retry_seconds <retry-seconds> --expiry-seconds <expiry-seconds> '
+           '--minimum-seconds <minimum-seconds> -z <zone-name> -t <hostname>\n'
+           '\n'
+           'To remove an "srv" record (service):\n'
+           '\t%s srv --priority <priority> --weight <weight> --port <port> '
+           '--assignment-host <full-hostname> -z <zone-name> -t <hostname>\n'
+           '\n'
+           'To remove an "ns" record (nameserver):\n'
+           '\t%s ns --name-server <full-hostname> -z <zone-name> -t <hostname>\n'
+           '\n'
+           'To remove an "mx" record (mail):\n'
+           '\t%s mx --mail-server <full-hostname> --priority <priority> '
+           '-z <zone-name> -t <hostname>\n') % tuple(
+               [sys.argv[0] for x in range(10)])
+  args_instance = Args(command,
+      ['a', 'ptr', 'aaaa', 'cname', 'hinfo', 'txt', 'soa', 'srv', 'ns', 'mx'],
+      args, usage)
   options = args_instance.options
 
   try:
@@ -70,82 +116,57 @@ def main(args):
     sys.exit(1)
   cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
 
-  if( options.zone_name is None ):
-    cli_common_lib_instance.DnsError('Must specify a zone-name with "-z".', 1)
-  if( options.target is None ):
-    cli_common_lib_instance.DnsError('Must specify a target with "-t".', 1)
-
-  if( options.a ):
-    record_args_dict = {'assignment_ip': options.a_assignment_ip}
+  if( command == 'a' ):
+    record_args_dict = {'assignment_ip': options.assignment_ip}
     cli_record_lib_instance.RemoveRecord('a', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.aaaa ):
-    record_args_dict = {'assignment_ip': options.aaaa_assignment_ip}
+  elif( command == 'aaaa' ):
+    record_args_dict = {'assignment_ip': options.assignment_ip}
     cli_record_lib_instance.RemoveRecord('aaaa', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.hinfo ):
-    record_args_dict = {'hardware': options.hinfo_hardware,
-                        'os': options.hinfo_os}
+  elif( command == 'hinfo' ):
+    record_args_dict = {'hardware': options.hardware,
+                        'os': options.os}
     cli_record_lib_instance.RemoveRecord('hinfo', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.txt ):
-    record_args_dict = {'quoted_text': options.txt_quoted_text}
+  elif( command == 'txt' ):
+    record_args_dict = {'quoted_text': options.quoted_text}
     cli_record_lib_instance.RemoveRecord('txt', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.cname ):
-    record_args_dict = {'assignment_host': options.cname_assignment_host}
+  elif( command == 'cname' ):
+    record_args_dict = {'assignment_host': options.assignment_host}
     cli_record_lib_instance.RemoveRecord('cname', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.soa ):
-    integer_arguments = {'--soa-serial-number': options.soa_serial_number,
-                         '--soa-refresh-seconds': options.soa_refresh_seconds,
-                         '--soa-retry-seconds': options.soa_retry_seconds,
-                         '--soa-expiry-seconds': options.soa_expiry_seconds,
-                         '--soa-minimun-seconds': options.soa_minimum_seconds}
-    for argument in integer_arguments:
-      if( integer_arguments[argument] is None ):
-        cli_common_lib_instance.DnsError('%s must be specified.' % argument, 1)
-      elif( not integer_arguments[argument].isdigit() ):
-        cli_common_lib_instance.DnsError(
-            '%s must be an integer, %s is not an integer.' %
-            (argument, repr(integer_arguments[argument])), 1)
-    record_args_dict = {'name_server': options.soa_name_server,
-                        'admin_email': options.soa_admin_email,
-                        'serial_number': int(options.soa_serial_number),
-                        'refresh_seconds': int(options.soa_refresh_seconds),
-                        'retry_seconds': int(options.soa_retry_seconds),
-                        'expiry_seconds': int(options.soa_expiry_seconds),
-                        'minimum_seconds': int(options.soa_minimum_seconds)}
+  elif( command == 'soa' ):
+    record_args_dict = {'name_server': options.name_server,
+                        'admin_email': options.admin_email,
+                        'serial_number': options.serial_number,
+                        'refresh_seconds': options.refresh_seconds,
+                        'retry_seconds': options.retry_seconds,
+                        'expiry_seconds': options.expiry_seconds,
+                        'minimum_seconds': options.minimum_seconds}
     cli_record_lib_instance.RemoveRecord('soa', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.srv ):
-    record_args_dict = {'priority': int(options.srv_priority),
-                        'weight': int(options.srv_weight),
-                        'port': int(options.srv_port),
-                        'assignment_host': options.srv_assignment_host}
+  elif( command == 'srv' ):
+    record_args_dict = {'priority': options.priority,
+                        'weight': options.weight,
+                        'port': options.port,
+                        'assignment_host': options.assignment_host}
     cli_record_lib_instance.RemoveRecord('srv', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.ns ):
-    record_args_dict = {'name_server': options.ns_name_server}
+  elif( command == 'ns' ):
+    record_args_dict = {'name_server': options.name_server}
     cli_record_lib_instance.RemoveRecord('ns', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.mx ):
-    if( options.mx_priority is None ):
-      cli_common_lib_instance.DnsError('--mx-priority must be specified.', 1)
-    if( not options.mx_priority.isdigit() ):
-      cli_common_lib_instance.DnsError('--mx-priority must be an integer. %s is not'
-                              ' an integer.' % repr(options.mx_priority), 1)
-
-    record_args_dict = {'priority': int(options.mx_priority),
-                        'mail_server': options.mx_mail_server}
+  elif( command == 'mx' ):
+    record_args_dict = {'priority': options.priority,
+                        'mail_server': options.mail_server}
     cli_record_lib_instance.RemoveRecord('mx', options, record_args_dict,
                                 quiet=options.quiet)
-  elif( options.ptr ):
-    record_args_dict = {'assignment_host': options.ptr_assignment_host}
+  elif( command == 'ptr' ):
+    record_args_dict = {'assignment_host': options.assignment_host}
     cli_record_lib_instance.RemoveRecord('ptr', options, record_args_dict,
                                 quiet=options.quiet, fix_ptr_origin=False)
-  else:
-    cli_common_lib_instance.DnsError('Must specify a record type.', 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])

@@ -41,141 +41,136 @@ class Acl(core_flags.CoreFlags):
   """Command line acl flags"""
   def SetDataFlags(self):
     """Sets flags for parser"""
+    self.data = 'Acl'
+    not_list = self.action != 'List'
+
     self.parser.add_option('-a', '--acl', action='store', dest='acl',
                            help='ACL name', default=None)
+    self.AddFlagRule('acl', required=not_list)
     self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
                            help='Cidr block or single IP address.',
                            default=None)
+    self.AddFlagRule('cidr_block', required=self.action=='Make')
+    if( self.action == 'Remove' ):
+      self.AddFlagRule(('force', 'cidr_block'), flag_type='independent_args',
+                       required=False)
+
     self.parser.add_option('--allow', action='store_true', dest='allow',
                            help='Search for allowed ACLs.', default=None)
     self.parser.add_option('--deny', action='store_true', dest='deny',
                            help='Search for denied ACLs.', default=None)
+    self.AddFlagRule(('allow', 'deny'), required=self.action=='Make',
+                     flag_type='independent_args')
 
 
 class Record(core_flags.CoreFlags):
   """Command line record flags"""
   def SetDataFlags(self):
-    self.parser.add_option('--a', action='store_true', dest='a', default=False,
-                           help='Set the record type to A record.')
-    self.parser.add_option('--a-assignment-ip', action='store',
-                           dest='a_assignment_ip', help='String of the IPv4 address',
-                           metavar='<assignment-ip>')
+    """Sets flags for parser"""
+    self.data = 'Record'
+    not_list = self.action != 'List'
 
-    self.parser.add_option('--aaaa', action='store_true', dest='aaaa',
-                           default=False,
-                           help='Set the record type to AAAA record.')
-    self.parser.add_option('--aaaa-assignment-ip', action='store',
-                           dest='aaaa_assignment_ip',
-                           help='String of the IPv6 address.',
-                           metavar='<assignment-ip>')
+    self.parser.add_option(
+        '--assignment-ip', action='store', dest='assignment_ip',
+        help='(A, AAAA) String of the IP address', metavar='<assignment-ip>')
+    self.AddFlagRule('assignment_ip', command='a', required=not_list)
+    self.AddFlagRule('assignment_ip', command='aaaa', required=not_list)
 
-    self.parser.add_option('--hinfo', action='store_true', dest='hinfo',
-                           default=False,
-                           help='Set the record type to HINFO record.')
-    self.parser.add_option('--hinfo-hardware', action='store',
-                           dest='hinfo_hardware', metavar='<hardware>',
-                           help='String of the hardware type.')
-    self.parser.add_option('--hinfo-os', action='store', dest='hinfo_os',
-                           help='String of the OS type.', metavar='<os>')
+    self.parser.add_option('--hardware', action='store',
+                           dest='hardware', metavar='<hardware>',
+                           help='(HINFO) String of the hardware type.')
+    self.AddFlagRule('hardware', command='hinfo', required=not_list)
+    self.parser.add_option('--os', action='store', dest='os',
+                           help='(HINFO) String of the OS type.',
+                           metavar='<os>')
+    self.AddFlagRule('os', command='hinfo', required=not_list)
 
-    self.parser.add_option('--txt', action='store_true', dest='txt',
-                           default=False,
-                           help='Set the record type to TXT record.')
-    self.parser.add_option('--txt-quoted-text', action='store',
-                           dest='txt_quoted_text', metavar='<quoted-text>',
-                           help='String of quoted text.')
+    self.parser.add_option('--quoted-text', action='store',
+                           dest='quoted_text', metavar='<quoted-text>',
+                           help='(TXT) String of quoted text.')
+    self.AddFlagRule('quoted_text', command='txt', required=not_list)
 
-    self.parser.add_option('--cname', action='store_true', dest='cname',
-                           default=False,
-                           help='Set the record type to CNAME record.')
-    self.parser.add_option('--cname-assignment-host', action='store',
-                           dest='cname_assignment_host', metavar='<hostname>',
-                           help='String of the CNAME hostname.')
+    self.parser.add_option('--assignment-host', action='store',
+                           dest='assignment_host', metavar='<hostname>',
+                           help='(CNAME, PTR, SRV) String of the hostname.')
+    self.AddFlagRule('assignment_host', command='cname', required=not_list)
+    self.AddFlagRule('assignment_host', command='ptr', required=not_list)
+    self.AddFlagRule('assignment_host', command='srv', required=not_list)
 
-    self.parser.add_option('--soa', action='store_true', dest='soa',
-                           default=False,
-                           help='Set the record type to SOA record.')
-    self.parser.add_option('--soa-name-server', action='store',
-                           dest='soa_name_server',
-                           help='String of the hostname of the SOA name server.',
+    self.parser.add_option('--name-server', action='store',
+                           dest='name_server',
+                           help='(SOA,NS) String of the hostname of the name '
+                                'server.',
                            metavar='<name-server>')
-    self.parser.add_option('--soa-admin-email', action='store',
-                           dest='soa_admin_email',
-                           help='String of the admin email address.',
-                           metavar='<name-server>')
-    self.parser.add_option('--soa-serial-number', action='store',
-                           dest='soa_serial_number',
-                           help='String of the serial number.',
+    self.AddFlagRule('name_server', command='soa', required=not_list)
+    self.AddFlagRule('name_server', command='ns', required=not_list)
+    self.parser.add_option('--admin-email', action='store',
+                           dest='admin_email',
+                           help='(SOA) String of the admin email address.',
+                           metavar='<admin-email>')
+    self.AddFlagRule('admin_email', command='soa', required=not_list)
+    self.parser.add_option('--serial-number', action='store',
+                           dest='serial_number', type='int',
+                           help='(SOA) String of the serial number.',
                            metavar='<serial-number>')
-    self.parser.add_option('--soa-refresh-seconds', action='store',
-                           dest='soa_refresh_seconds',
-                           help='Number of seconds to refresh.',
+    self.AddFlagRule('serial_number', command='soa', required=not_list)
+    self.parser.add_option('--refresh-seconds', action='store',
+                           dest='refresh_seconds', type='int',
+                           help='(SOA) Number of seconds to refresh.',
                            metavar='<refresh-seconds>')
-    self.parser.add_option('--soa-retry-seconds', action='store',
-                           dest='soa_retry_seconds',
-                           help='Number of seconds to retry.',
+    self.AddFlagRule('refresh_seconds', command='soa', required=not_list)
+    self.parser.add_option('--retry-seconds', action='store',
+                           dest='retry_seconds', type='int',
+                           help='(SOA) Number of seconds to retry.',
                            metavar='<retry-seconds>')
-    self.parser.add_option('--soa-expiry-seconds', action='store',
-                           dest='soa_expiry_seconds',
-                           help='Number of seconds to expire.',
+    self.AddFlagRule('retry_seconds', command='soa', required=not_list)
+    self.parser.add_option('--expiry-seconds', action='store',
+                           dest='expiry_seconds', type='int',
+                           help='(SOA) Number of seconds to expire.',
                            metavar='<expiry-seconds>')
-    self.parser.add_option('--soa-minimum-seconds', action='store',
-                           dest='soa_minimum_seconds',
-                           help='Minium number of seconds to refresh.',
+    self.AddFlagRule('expiry_seconds', command='soa', required=not_list)
+    self.parser.add_option('--minimum-seconds', action='store',
+                           dest='minimum_seconds', type='int',
+                           help='(SOA) Minium number of seconds to refresh.',
                            metavar='<minumum-seconds>')
+    self.AddFlagRule('minimum_seconds', command='soa', required=not_list)
 
-    self.parser.add_option('--srv', action='store_true', dest='srv',
-                           default=False,
-                           help='Set the record type to SRV record.')
-    self.parser.add_option('--srv-priority', action='store', dest='srv_priority',
-                           help='Integerof priority between 0-65535.',
-                           metavar='<priority>')
-    self.parser.add_option('--srv-weight', action='store', dest='srv_weight',
-                           help='Integer of weight between 0-65535.',
-                           metavar='<weight>')
-    self.parser.add_option('--srv-port', action='store', dest='srv_port',
-                           help='Port number.', metavar='<port>')
-    self.parser.add_option('--srv-assignment-host', action='store',
-                           dest='srv_assignment_host',
-                           help='String of the SRV assignment hostname.',
+    self.parser.add_option('--priority', action='store', dest='priority',
+                           help='(SRV, MX) Integerof priority between 0-65535.',
+                           type='int', metavar='<priority>')
+    self.AddFlagRule('priority', command='srv', required=not_list)
+    self.AddFlagRule('priority', command='mx', required=not_list)
+    self.parser.add_option('--weight', action='store', dest='weight',
+                           help='(SRV) Integer of weight between 0-65535.',
+                           type='int', metavar='<weight>')
+    self.AddFlagRule('weight', command='srv', required=not_list)
+    self.parser.add_option('--port', action='store', dest='port',
+                           help='(SRV) Port number.', metavar='<port>',
+                           type='int')
+    self.AddFlagRule('port', command='srv', required=not_list)
+
+    self.parser.add_option('--mail-server', action='store',
+                           dest='mail_server',
+                           help='(MX) String of mail server hostname.',
                            metavar='<hostname>')
-
-    self.parser.add_option('--ns', action='store_true', dest='ns', default=False,
-                           help='Set the record type to NS record.')
-    self.parser.add_option('--ns-name-server', action='store',
-                           dest='ns_name_server',
-                           help='String of the hostname of the NS name server.',
-                           metavar='<hostname>')
-
-    self.parser.add_option('--mx', action='store_true', dest='mx', default=False,
-                          help='Set the record type to MX record.')
-    self.parser.add_option('--mx-priority', action='store', dest='mx_priority',
-                           help='Integer of priority between 0-65535.',
-                           metavar='<priority>')
-    self.parser.add_option('--mx-mail-server', action='store',
-                           dest='mx_mail_server',
-                           help='String of mail server hostname.',
-                           metavar='<hostname>')
-
-    self.parser.add_option('--ptr', action='store_true', dest='ptr',
-                           default=False,
-                           help='Set the record type to PTR record.')
-    self.parser.add_option('--ptr-assignment-host', action='store',
-                           dest='ptr_assignment_host',
-                           help='String of PTR hostname.', metavar='<hostname>')
+    self.AddFlagRule('mail_server', command='mx', required=not_list)
 
     self.parser.add_option('-z', '--zone-name', action='store', dest='zone_name',
                            help=('String of the <zone-name>. Example: '
                                  '"sub.university.edu"'), metavar='<zone-name>',
                            default=None)
+    self.SetAllFlagRule('zone_name', required=not_list)
     self.parser.add_option('-t', '--target', action='store', dest='target',
                            help='String of the target. "A" record example: '
                                 '"machine-01", "PTR" record example: 192.168.1.1',
                            metavar='<target>', default=None)
+    self.SetAllFlagRule('target', required=not_list)
     self.parser.add_option('--ttl', action='store', dest='ttl',
                            help='Integer of time to live <ttl> per record.',
                            metavar='<ttl>', default=3600)
+    self.SetAllFlagRule('ttl', required=False)
     self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
                            help=('String of the view name <view-name>. Example: '
                                  '"internal"'), metavar='<view-name>',
                            default='any')
+    self.SetAllFlagRule('view_name', required=False)

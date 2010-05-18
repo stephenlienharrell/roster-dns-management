@@ -35,22 +35,25 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+from copy import deepcopy
 import getpass
 from optparse import OptionParser
 from roster_user_tools import cli_common_lib
 
-class ArgumentError(Exception):
+class FlagsError(Exception):
   pass
 
 class CoreFlags:
   """Command line common library"""
-  def __init__(self, args, usage):
+  def __init__(self, command, commands, args, usage):
     """Initializes parser, sets flags for all classes"""
     self.parser = OptionParser(version='%%prog (Roster %s)' % __version__,
                                usage=usage)
     self.args = args
-    self.SetDataFlags()
+    self.command = command
+    self.SetCommands(commands)
     self.SetActionFlags()
+    self.SetDataFlags()
     self.SetCoreFlags()
     if( hasattr(self, 'SetToolFlags') ):
       self.SetToolFlags()
@@ -61,32 +64,39 @@ class CoreFlags:
       self.avail_flags[flag.dest] = flag
 
     self.options = self.parser.parse_args(self.args)[0]
+    self.CheckDataFlags()
 
   def SetCoreFlags(self):
     """Sets core flags for parser"""
     self.parser.add_option(
         '-s', '--server', action='store', dest='server',
         help='XML RPC Server URL.', metavar='<server>', default=None)
+    self.AddFlagRule('server', required=False)
     self.parser.add_option(
         '-u', '--username', action='store', dest='username',
         help='Run as different username.', metavar='<username>',
         default=unicode(getpass.getuser()))
+    self.AddFlagRule('username', required=False)
     self.parser.add_option(
         '-p', '--password', action='store', dest='password',
         help='Password string, NOTE: It is insecure to use this '
              'flag on the command line.', metavar='<password>', default=None)
+    self.AddFlagRule('password', required=False)
     self.parser.add_option(
         '-c', '--cred-file', action='store', dest='credfile',
         help='Location of credential file.', metavar='<cred-file>',
         default=None)
+    self.AddFlagRule('credfile', required=False)
     self.parser.add_option(
         '--cred-string', action='store', dest='credstring',
         help='String of credential.', metavar='<cred-string>', default=None)
+    self.AddFlagRule('credstring', required=False)
     self.parser.add_option(
         '--config-file', action='store', dest='config_file',
         help='Config file location.', metavar='<file>', default=None)
+    self.AddFlagRule('config_file', required=False)
 
-  def CheckDataFlags(self, function, functions):
+  def CheckDataFlags(self):
     """Returns the action the tool should perform
 
     Inputs:
@@ -96,12 +106,12 @@ class CoreFlags:
     Outputs:
       string: string from uses keys of correct action
     """
-    if( function.startswith('-') ):
+    if( not self.command ):
       cli_common_lib.DnsError('A command must be specified.', 1)
       ## Possilby print help
-    if( function not in functions ):
+    elif( self.command and self.command not in self.functions_dict ):
       cli_common_lib.DnsError(
-          'This tool does not have a %s command.' % function, 1)
+          'This tool does not have a %s command.' % self.command, 1)
       ## Possilby print help
 
     ## Find used flags {'flag_name': 'flag_value'}
@@ -111,23 +121,31 @@ class CoreFlags:
       if( option_var != self.parser.defaults[flag.dest] ):
         used_flags[flag.dest] = option_var
 
-    ## Check if all required arguments are used
-    for flag in functions[function]['args']:
-      if( flag not in used_flags and functions[function]['args'][flag] ):
+    ## Find irrelevant flags
+    for used_flag in used_flags:
+      found = False
+      for type in self.functions_dict[self.command]:
+        if( type in ['dependent_args', 'independent_args'] ):
+          for group in self.functions_dict[self.command][type]:
+            if( used_flag in group ):
+              found = True
+        if( used_flag in self.functions_dict[self.command][type] ):
+          found = True
+      if( not found ):
         cli_common_lib.DnsError(
-            'The %s flag is required.' % self.avail_flags[flag], 1)
-        ## Possilby print help
+            'The %s flag cannot be used with the %s command.' % (
+                self.avail_flags[used_flag], self.command), 1)
 
-    ## Check forbidden arguments
-    for flag in functions[function]['forbidden_args']:
-      if( flag in used_flags ):
+    ## Check if all required arguments are used
+    for flag in self.functions_dict[self.command]['args']:
+      if( flag not in used_flags and self.functions_dict[self.command]['args'][
+            flag] ):
         cli_common_lib.DnsError(
-            'The %s flag cannot be used with the %s command.' % ( 
-                self.avail_flags[flag], function), 1)
+            'The %s flag is required.' % (self.avail_flags[flag]), 1)
         ## Possilby print help
 
     ## Check independent arguments
-    for flags in functions[function]['independent_args']:
+    for flags in self.functions_dict[self.command]['independent_args']:
       if( len(flags) == 0 ):
         continue
       flags_real = [] # Real flags strings like -a/--acl
@@ -145,7 +163,7 @@ class CoreFlags:
             ' or '.join(sorted(flags_real))), 1)
 
     ## Check dependent arguments
-    for flags in functions[function]['dependent_args']:
+    for flags in self.functions_dict[self.command]['dependent_args']:
       if( len(flags) == 0 ):
         continue
       flags_real = [] # Real flags strings like -a/--acl
@@ -156,14 +174,13 @@ class CoreFlags:
           cli_common_lib.DnsError('%s must be used together.' % (
             ' and '.join(sorted(flags_real))), 1)
 
-  def GetEmptyFunctionsDict(self, functions):
-    """Returns an empty functions dictionary
+  def SetCommands(self, functions):
+    """Sets self.functions_dict according to functions list
 
     Inputs:
       functions: list of strings of functions
 
-    Outputs:
-      dict: functions dictionary
+      Sets the self.functions_dict
       ex:
         {'list': {'args': {}, 'forbidden_args':{}, 'independent_args': [],
                   'dependent_args': []},
@@ -192,10 +209,54 @@ class CoreFlags:
       specified. Dependent args are arguments that depend on each other,
       the function will error out if both are not supplied simultaneously.
     """
-    final_functions_dict = {}
-    functions_dict = {'args': {}, 'forbidden_args': {}, 'independent_args': [],
-                      'dependent_args': []}
+    self.functions_dict = {} # Reset if not empty
+    functions_dict = {'args': {}, 'forbidden_args': {},
+                           'independent_args': [], 'dependent_args': []}
     for function in functions:
-      final_functions_dict[function] = functions_dict
+      self.functions_dict[function] = deepcopy(functions_dict)
 
-    return final_functions_dict
+  def SetDefaultFlags(self):
+    """Sets all availible default flags to not required
+       
+       for use with one command functions such as list functions
+    """
+    for flag in self.parser.defaults:
+      self.AddFlagRule(flag, required=False)
+
+  def AddFlagRule(self, flag_name, command=None, required=True,
+                  flag_type='args'):
+    """Adds a key to functions dict
+
+    Inputs:
+      flag_name: string of flag name
+      command: string of command (defaults to self.command)
+      required: boolean of required flag (defaults to true)
+      flag_type: type of flag (defaults to 'args')
+    """
+    if( not command ):
+      command = self.command
+
+    if( flag_type in ['independent_args', 'dependent_args']
+        and type(flag_name) == tuple ):
+      new_dict = {}
+      for flag_n in flag_name:
+        new_dict[flag_n] = required
+      self.functions_dict[command][flag_type].append(new_dict)
+
+    elif( type(flag_name) == str ):
+      self.functions_dict[command][flag_type][flag_name] = required
+
+    else:
+      raise FlagsError('flag_name type and flag_type mismatch.')
+
+  def SetAllFlagRule(self, flag_name, required=True, flag_type='args'):
+    """Adds a key to all args portions of functions dicts
+
+    Inputs:
+      flag_name: string of optparse flag name
+      required: boolean of required flag (defaults to True)
+      flag_type: type of flag (defaults to 'args')
+    """
+    for command in self.functions_dict:
+      self.AddFlagRule(flag_name, command=command, required=required,
+                       flag_type=flag_type)

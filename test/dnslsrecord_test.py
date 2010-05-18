@@ -144,7 +144,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'assignment_host':
                                        u'machine1.university.edu.'},
                                   view_name=u'test_view')
-    command = os.popen('python %s machine1 -v test_view -z test_zone -u %s '
+    command = os.popen('python %s all -v test_view -z test_zone -u %s '
                        '-p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
@@ -183,8 +183,8 @@ class TestDnslsRecord(unittest.TestCase):
     self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
                                   {u'assignment_ip': u'10.10.10.1'},
                                   view_name=u'test_view')
-    command = os.popen('python %s machine1 -v test_view -z test_zone -u %s '
-                       '--a --a-assignment-ip 10.10.10.0 '
+    command = os.popen('python %s a -v test_view -z test_zone -u %s '
+                       '--assignment-ip 10.10.10.0 '
                        '-p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
@@ -209,7 +209,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'assignment_ip': u'10.10.10.1'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
-                       '--a --a-assignment-ip="10.10.10.0" -t '
+                       'a --assignment-ip="10.10.10.0" -t '
                        'machine1 -v test_view -z test_zone -u %s -p %s '
                        '--config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -221,7 +221,7 @@ class TestDnslsRecord(unittest.TestCase):
         '-------------\n'
         'machine1 3600 a           test_view sharrell  test_zone 10.10.10.0\n\n')
     command.close()
-    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s '
+    command = os.popen('python %s a -z test_zone -v test_view -u %s -p %s '
                        '--config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
@@ -241,7 +241,7 @@ class TestDnslsRecord(unittest.TestCase):
     self.core_instance.MakeRecord(u'a', u'machine2', u'test_zone',
                                   {u'assignment_ip': u'10.10.10.1'},
                                   view_name=u'test_view')
-    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s '
+    command = os.popen('python %s a -z test_zone -v test_view -u %s -p %s '
                        '--config-file %s -s '
                        '%s --no-header' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -251,43 +251,13 @@ class TestDnslsRecord(unittest.TestCase):
         'machine2 3600 a test_view sharrell test_zone 10.10.10.1\n\n')
     command.close()
 
-  def testCnameAList(self):
-    self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
-                                  {u'assignment_ip': u'10.10.10.0'},
-                                  view_name=u'test_view')
-    self.core_instance.MakeRecord(u'a', u'machine2', u'test_zone',
-                                  {u'assignment_ip': u'10.10.10.1'},
-                                  view_name=u'test_view')
-    self.core_instance.MakeRecord(u'cname', u'machine3', u'test_zone',
-                                  {u'assignment_host':
-                                        u'machine1.university.edu.'},
-                                  view_name=u'test_view')
-    command = os.popen('python %s --a -z test_zone -v test_view -u %s -p %s '
-                       '--config-file %s -s %s --cname' % (
-                           EXEC, USERNAME, self.password, USER_CONFIG,
-                           self.server_name))
-    self.assertEqual(command.read(),
-        'target   ttl  record_type view_name last_user zone_name '
-        'assignment_ip\n'
-        '--------------------------------------------------------'
-        '-------------\n'
-        'machine1 3600 a           test_view sharrell  test_zone 10.10.10.0\n'
-        'machine2 3600 a           test_view sharrell  test_zone 10.10.10.1\n\n'
-        'target   ttl  record_type view_name last_user zone_name '
-        'assignment_host\n'
-        '--------------------------------------------------------'
-        '---------------\n'
-        'machine3 3600 cname       test_view sharrell  test_zone '
-        'machine1.university.edu.\n\n')
-    command.close()
-
   def testAAAAList(self):
     self.core_instance.MakeRecord(
         u'aaaa', u'machine1', u'test_zone',
         {u'assignment_ip': u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'},
         view_name=u'test_view')
     command = os.popen('python %s '
-                       '--aaaa --aaaa-assignment-ip="fe80::200:f8ff:fe21:67cf" '
+                       'aaaa --assignment-ip="fe80::200:f8ff:fe21:67cf" '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -306,7 +276,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'hardware': u'Pear', u'os': u'ipear'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
-                       '--hinfo --hinfo-hardware Pear --hinfo-os ipear '
+                       'hinfo --hardware Pear --os ipear '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -323,7 +293,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'quoted_text': u'et tu brute'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
-                       '--txt --txt-quoted-text "et tu brute" '
+                       'txt --quoted-text "et tu brute" '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -340,7 +310,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'assignment_host': u'university.edu.'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
-                       '--cname --cname-assignment-host="university.edu." '
+                       'cname --assignment-host="university.edu." '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -356,10 +326,10 @@ class TestDnslsRecord(unittest.TestCase):
 
   def testSOAList(self):
     command = os.popen('python %s '
-                       '--soa --soa-name-server="ns.university.edu." '
-                       '--soa-serial-number=123456790 --soa-refresh-seconds=30 '
-                       '--soa-retry-seconds=30 --soa-minimum-seconds=30 '
-                       '--soa-expiry-seconds=30 --ttl=3600 '
+                       'soa --name-server="ns.university.edu." '
+                       '--serial-number=123456790 --refresh-seconds=30 '
+                       '--retry-seconds=30 --minimum-seconds=30 '
+                       '--expiry-seconds=30 --ttl=3600 '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -381,9 +351,9 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'priority': 5, u'weight': 6, u'port': 80,
                                    u'assignment_host': u'university.edu.'},
                                   view_name=u'test_view')
-    command = os.popen('python %s --srv '
-                       '--srv-priority 5 --srv-weight 6 --srv-port 80 '
-                       '--srv-assignment-host="university.edu." '
+    command = os.popen('python %s srv '
+                       '--priority 5 --weight 6 --port 80 '
+                       '--assignment-host="university.edu." '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -402,7 +372,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'name_server': u'university.edu.'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
-                       '--ns --ns-name-server="university.edu." '
+                       'ns --name-server="university.edu." '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -421,8 +391,8 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'mail_server': u'university.edu.',
                                    u'priority': 5},
                                   view_name=u'test_view')
-    command = os.popen('python %s --mx '
-                       '--mx-mail-server="university.edu." --mx-priority 5 '
+    command = os.popen('python %s mx '
+                       '--mail-server="university.edu." --priority 5 '
                        '-t machine1 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -453,7 +423,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'assignment_host': u'university.edu.'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
-                       '--ptr --ptr-assignment-host="university.edu." '
+                       'ptr --assignment-host="university.edu." '
                        '-t 192.168.1.4 -v test_view -z reverse_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,

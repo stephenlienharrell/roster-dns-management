@@ -64,15 +64,7 @@ def main(args):
            '\n'
            'All arguments are required except for either '
            '--allow or --deny.\n' % sys.argv[0])
-  args_instance = Args(args, usage)
-  functions = args_instance.GetEmptyFunctionsDict(['remove'])
-  functions['remove']['args'] = {'acl': True, 'cidr_block': False,
-                                 'force': False}
-  functions['remove']['independent_args'] = [{'allow': False,
-                                              'deny': False},
-                                             {'cidr_block': False,
-                                              'force': False}]
-  args_instance.CheckDataFlags('remove', functions)
+  args_instance = Args('remove', ['remove'], args, usage)
   parser = args_instance.parser
   options = args_instance.options
 

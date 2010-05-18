@@ -93,7 +93,7 @@ class TestCoreHelpers(unittest.TestCase):
     args = ['-a', 'test']
     usage = "test usage"
 
-    args_instance = ListAclArgs(args, usage)
+    args_instance = ListAclArgs('list', ['list'], args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
@@ -114,10 +114,10 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(args_instance.options.server, None)
 
   def testMakeAclArgs(self):
-    args = ['-a', 'test']
+    args = ['-a', 'test', '--cidr-block', 'test', '--allow']
     usage = "test usage"
 
-    args_instance = MakeAclArgs(args, usage)
+    args_instance = MakeAclArgs('make', ['make'], args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
@@ -141,7 +141,7 @@ class TestCoreHelpers(unittest.TestCase):
     args = ['-a', 'test']
     usage = "test usage"
 
-    args_instance = RemoveAclArgs(args, usage)
+    args_instance = RemoveAclArgs('remove', ['remove'], args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
@@ -162,217 +162,277 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(args_instance.options.server, None)
 
   def testListRecordArgs(self):
-    args = ['--a', 'test']
+    args = ['--assignment-ip', 'test', '-t', 'test', '-z', 'test']
     usage = "test usage"
 
-    args_instance = ListRecordArgs(args, usage)
+    args_instance = ListRecordArgs('a',
+        ['a', 'ptr', 'aaaa', 'cname', 'hinfo', 'txt', 'soa', 'srv', 'ns', 'mx',
+         'all'],
+        args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
-        {'soa': False, 'soa_expiry_seconds': None, 'soa_admin_email': None,
-         'aaaa': False, 'credstring': None, 'mx_priority': None, 'ttl': 3600,
-         'zone_name': None, 'srv_priority': None, 'txt': False, 'ptr': False,
-         'hinfo_hardware': None, 'a_assignment_ip': None,
-         'aaaa_assignment_ip': None, 'hinfo_os': None,
-         'ptr_assignment_host': None, 'soa_retry_seconds': None,
-         'hinfo': False, 'srv_port': None, 'ns_name_server': None,
-         'username': u'sharrell', 'credfile': None,
-         'soa_minimum_seconds': None, 'config_file': None, 'no_header': False,
-         'srv_assignment_host': None, 'password': None, 'mx_mail_server': None,
-         'soa_serial_number': None, 'a': False, 'ns': False, 'target': None,
-         'cname_assignment_host': None, 'txt_quoted_text': None,
-         'soa_refresh_seconds': None, 'server': None, 'view_name': 'any',
-         'cname': False, 'srv': False, 'srv_weight': None,
-         'soa_name_server': None, 'mx': False})
+        {'refresh_seconds': None, 'weight': None, 'minimum_seconds': None,
+         'hardware': None, 'credstring': None, 'ttl': 3600, 'zone_name': None,
+         'port': None, 'expiry_seconds': None, 'priority': None,
+         'retry_seconds': None, 'serial_number': None, 'assignment_host': None,
+         'username': u'sharrell', 'credfile': None, 'config_file': None,
+         'name_server': None, 'quoted_text': None, 'password': None,
+         'target': None, 'os': None, 'no_header': False, 'server': None,
+         'view_name': 'any', 'mail_server': None, 'admin_email': None,
+         'assignment_ip': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
-        ['soa', '__module__', '_update', '__str__', 'ttl', 'soa_admin_email',
-         'aaaa', 'credstring', 'read_file', 'mx_priority', 'soa_expiry_seconds',
-         'zone_name', 'srv_priority', 'txt', 'ptr', '_update_careful',
-         'hinfo_hardware', '_update_loose', 'ensure_value',
-         'aaaa_assignment_ip', '__cmp__', 'hinfo_os', 'ptr_assignment_host',
-         '__init__', 'soa_retry_seconds', 'read_module', 'hinfo', 'ns',
-         '__doc__', 'ns_name_server', 'username', 'credfile',
-         'soa_minimum_seconds', 'config_file', 'a_assignment_ip', 'srv_weight',
-         'srv_assignment_host', 'password', 'mx_mail_server',
-         'soa_serial_number', 'a', 'soa_refresh_seconds', 'srv_port', 'target',
-         'cname_assignment_host', 'txt_quoted_text', 'no_header', 'server',
-         'view_name', 'cname', 'srv', '__repr__', 'soa_name_server', 'mx']))
+        ['__module__', '_update', 'refresh_seconds', 'weight', '__str__',
+         'minimum_seconds', 'hardware', 'credstring', 'read_file', 'ttl',
+         'zone_name', 'port', '_update_careful', '_update_loose',
+         'ensure_value', 'expiry_seconds', '__cmp__', 'priority',
+         'retry_seconds', '__init__', 'read_module', 'serial_number',
+         'assignment_host', '__doc__', 'username', 'credfile', 'config_file',
+         'name_server', 'quoted_text', 'password', 'target', 'os', 'no_header',
+         'server', 'view_name', '__repr__', 'mail_server', 'admin_email',
+         'assignment_ip']))
     self.assertEqual(args_instance.options.username, USERNAME)
     self.assertEqual(args_instance.options.server, None)
 
   def testMakeRecordArgs(self):
-    args = ['--a', 'test']
+    args = ['--assignment-ip', 'test', '-t', 'test', '-z', 'test']
     usage = "test usage"
 
-    args_instance = MakeRecordArgs(args, usage)
+    args_instance = MakeRecordArgs('a',
+        ['a', 'ptr', 'aaaa', 'cname', 'hinfo', 'txt', 'soa', 'srv', 'ns', 'mx'],
+        args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
-        {'soa': False, 'soa_expiry_seconds': None, 'soa_admin_email': None,
-         'aaaa': False, 'credstring': None, 'mx_priority': None, 'ttl': 3600,
-         'zone_name': None, 'srv_priority': None, 'txt': False, 'ptr': False,
-         'hinfo_hardware': None, 'a_assignment_ip': None,
-         'aaaa_assignment_ip': None, 'hinfo_os': None,
-         'ptr_assignment_host': None, 'soa_retry_seconds': None,
-         'hinfo': False, 'srv_port': None, 'ns_name_server': None,
-         'username': u'sharrell', 'credfile': None, 'soa_minimum_seconds': None,
-         'config_file': None, 'soa_name_server': None,
-         'srv_assignment_host': None, 'password': None, 'mx_mail_server': None,
-         'soa_serial_number': None, 'a': False, 'ns': False, 'target': None,
-         'cname_assignment_host': None, 'txt_quoted_text': None, 'quiet': False,
-         'soa_refresh_seconds': None, 'server': None, 'view_name': 'any',
-         'cname': False, 'srv': False, 'srv_weight': None, 'mx': False})
+        {'refresh_seconds': None, 'weight': None, 'minimum_seconds': None,
+         'hardware': None, 'credstring': None, 'ttl': 3600, 'zone_name': None,
+         'port': None, 'expiry_seconds': None, 'priority': None,
+         'retry_seconds': None, 'serial_number': None, 'assignment_host': None,
+         'username': u'sharrell', 'credfile': None, 'config_file': None,
+         'name_server': None, 'quoted_text': None, 'password': None,
+         'target': None, 'os': None, 'quiet': False, 'server': None,
+         'view_name': 'any', 'mail_server': None, 'admin_email': None,
+         'assignment_ip': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
-        ['soa', '__module__', '_update', '__str__', 'ttl', 'soa_admin_email',
-         'aaaa', 'credstring', 'read_file', 'mx_priority', 'soa_expiry_seconds',
-         'zone_name', 'srv_priority', 'txt', 'ptr', '_update_careful',
-         'hinfo_hardware', '_update_loose', 'ensure_value',
-         'aaaa_assignment_ip', '__cmp__', 'hinfo_os', 'ptr_assignment_host',
-         '__init__', 'soa_retry_seconds', 'read_module', 'hinfo', 'ns',
-         '__doc__', 'ns_name_server', 'username', 'credfile',
-         'soa_minimum_seconds', 'config_file', 'a_assignment_ip', 'srv_weight',
-         'srv_assignment_host', 'password', 'mx_mail_server',
-         'soa_serial_number', 'a', 'srv_port', 'target',
-         'cname_assignment_host', 'txt_quoted_text', 'quiet',
-         'soa_refresh_seconds', 'server', 'view_name', 'cname', 'srv',
-         '__repr__', 'soa_name_server', 'mx']))
+        ['__module__', '_update', 'refresh_seconds', 'weight', '__str__',
+         'minimum_seconds', 'hardware', 'credstring', 'read_file', 'ttl',
+         'zone_name', 'port', '_update_careful', '_update_loose',
+         'ensure_value', 'expiry_seconds', '__cmp__', 'priority',
+         'retry_seconds', '__init__', 'read_module', 'serial_number',
+         'assignment_host', '__doc__', 'username', 'credfile', 'config_file',
+         'name_server', 'quoted_text', 'password', 'target', 'assignment_ip',
+         'quiet', 'server', 'view_name', '__repr__', 'mail_server',
+         'admin_email', 'os']))
     self.assertEqual(args_instance.options.username, USERNAME)
     self.assertEqual(args_instance.options.server, None)
 
   def testRemoveRecordArgs(self):
-    args = ['--a', 'test']
+    args = ['--assignment-ip', 'test', '-t', 'test', '-z', 'test']
     usage = "test usage"
 
-    args_instance = RemoveRecordArgs(args, usage)
+    args_instance = RemoveRecordArgs('a',
+        ['a', 'ptr', 'aaaa', 'cname', 'hinfo', 'txt', 'soa', 'srv', 'ns', 'mx'],
+        args, usage)
     
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
-        {'soa': False, 'force': False, 'soa_expiry_seconds': None,
-         'soa_admin_email': None, 'aaaa': False, 'credstring': None,
-         'mx_priority': None, 'ttl': 3600, 'zone_name': None,
-         'srv_priority': None, 'txt': False, 'ptr': False,
-         'hinfo_hardware': None, 'a_assignment_ip': None,
-         'aaaa_assignment_ip': None, 'hinfo_os': None,
-         'ptr_assignment_host': None, 'soa_retry_seconds': None, 'hinfo': False,
-         'srv_port': None, 'ns_name_server': None, 'username': u'sharrell',
-         'credfile': None, 'soa_minimum_seconds': None, 'config_file': None,
-         'soa_name_server': None, 'srv_assignment_host': None, 'password': None,
-         'mx_mail_server': None, 'soa_serial_number': None, 'a': False,
-         'ns': False, 'target': None, 'cname_assignment_host': None,
-         'txt_quoted_text': None, 'quiet': False,
-         'soa_refresh_seconds': None, 'server': None, 'view_name': 'any',
-         'cname': False, 'srv': False, 'srv_weight': None, 'mx': False})
+        {'force': False, 'weight': None, 'minimum_seconds': None,
+         'hardware': None, 'credstring': None, 'refresh_seconds': None,
+         'ttl': 3600, 'zone_name': None, 'port': None, 'expiry_seconds': None,
+         'priority': None, 'retry_seconds': None, 'serial_number': None,
+         'assignment_host': None, 'username': u'sharrell', 'credfile': None,
+         'config_file': None, 'name_server': None, 'quoted_text': None,
+         'password': None, 'target': None, 'os': None, 'quiet': False,
+         'server': None, 'view_name': 'any', 'mail_server': None,
+         'admin_email': None, 'assignment_ip': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
-        ['soa', '__module__', '_update', 'force', '__str__', 'ttl',
-         'soa_admin_email', 'aaaa', 'credstring', 'read_file', 'mx_priority',
-         'soa_expiry_seconds', 'zone_name', 'srv_priority', 'txt', 'ptr',
-         '_update_careful', 'hinfo_hardware', '_update_loose', 'ensure_value',
-         'aaaa_assignment_ip', '__cmp__', 'hinfo_os', 'ptr_assignment_host',
-         '__init__', 'soa_retry_seconds', 'read_module', 'hinfo', 'ns',
-         '__doc__', 'ns_name_server', 'username', 'credfile',
-         'soa_minimum_seconds', 'config_file', 'a_assignment_ip', 'srv_weight',
-         'srv_assignment_host', 'password', 'mx_mail_server',
-         'soa_serial_number', 'a', 'srv_port', 'target',
-         'cname_assignment_host', 'txt_quoted_text', 'quiet',
-         'soa_refresh_seconds', 'server', 'view_name', 'cname', 'srv',
-         '__repr__', 'soa_name_server', 'mx']))
+        ['__module__', '_update', 'force', 'weight', '__str__',
+         'minimum_seconds', 'hardware', 'credstring', 'read_file', 'ttl',
+         'refresh_seconds', 'port', '_update_careful', '_update_loose',
+         'ensure_value', 'expiry_seconds', '__cmp__', 'priority',
+         'retry_seconds', '__init__', 'read_module', 'serial_number',
+         'assignment_host', '__doc__', 'username', 'credfile', 'config_file',
+         'name_server', 'quoted_text', 'password', 'zone_name', 'target', 'os',
+         'quiet', 'server', 'view_name', '__repr__', 'mail_server',
+         'admin_email', 'assignment_ip']))
     self.assertEqual(args_instance.options.username, USERNAME)
     self.assertEqual(args_instance.options.server, None)
 
-  def testGetEmptyFunctionsDict(self):
-    args = ['--a', 'test']
+  def testSetCommands(self):
+    args = ['--assignment-ip', 'test', '-t', 'test', '-z', 'test']
     usage = "test usage"
 
-    args_instance = RemoveRecordArgs(args, usage)
+    args_instance = RemoveRecordArgs('a',
+        ['a', 'ptr', 'aaaa', 'cname', 'hinfo', 'txt', 'soa', 'srv', 'ns', 'mx'],
+        args, usage)
 
-    functions_dict = args_instance.GetEmptyFunctionsDict(['list', 'remove'])
 
-    self.assertEqual(functions_dict,
-        {'list': {'independent_args': [], 'args': {}, 'dependent_args': [],
-                  'forbidden_args': {}},
-         'remove': {'independent_args': [], 'args': {}, 'dependent_args': [],
-                  'forbidden_args': {}}})
+    self.assertEqual(args_instance.functions_dict,
+        {'a': {'independent_args': [],
+               'args': {'username': False, 'credfile': False,
+                        'config_file': False, 'target': True, 'quiet': False,
+                        'server': False, 'credstring': False,
+                        'view_name': False, 'ttl': False, 'zone_name': True,
+                        'password': False, 'assignment_ip': True},
+               'dependent_args': [], 'forbidden_args': {}},
+         'soa': {'independent_args': [],
+                 'args': {'refresh_seconds': True, 'expiry_seconds': True,
+                          'name_server': True, 'ttl': False,
+                          'minimum_seconds': True, 'retry_seconds': True,
+                          'view_name': False, 'zone_name': True,
+                          'serial_number': True, 'admin_email': True,
+                          'target': True},
+                 'dependent_args': [], 'forbidden_args': {}},
+         'ns': {'independent_args': [],
+                'args': {'zone_name': True, 'view_name': False, 'target': True,
+                         'name_server': True, 'ttl': False},
+                'dependent_args': [], 'forbidden_args': {}},
+         'mx': {'independent_args': [],
+                'args': {'target': True, 'priority': True, 'view_name': False,
+                         'ttl': False, 'zone_name': True, 'mail_server': True},
+                'dependent_args': [], 'forbidden_args': {}},
+         'aaaa': {'independent_args': [],
+                  'args': {'zone_name': True, 'view_name': False,
+                           'assignment_ip': True, 'target': True, 'ttl': False},
+                  'dependent_args': [], 'forbidden_args': {}},
+         'cname': {'independent_args': [],
+                   'args': {'zone_name': True, 'view_name': False,
+                            'assignment_host': True, 'target': True,
+                            'ttl': False},
+                   'dependent_args': [], 'forbidden_args': {}},
+         'srv': {'independent_args': [],
+                 'args': {'target': True, 'weight': True, 'priority': True,
+                          'view_name': False, 'ttl': False, 'zone_name': True,
+                          'assignment_host': True, 'port': True},
+                 'dependent_args': [], 'forbidden_args': {}},
+         'hinfo': {'independent_args': [],
+                   'args': {'target': True, 'hardware': True,
+                            'view_name': False, 'ttl': False, 'zone_name': True,
+                            'os': True},
+                   'dependent_args': [], 'forbidden_args': {}},
+         'txt': {'independent_args': [],
+                 'args': {'quoted_text': True, 'view_name': False, 'ttl': False,
+                          'target': True, 'zone_name': True},
+                 'dependent_args': [], 'forbidden_args': {}},
+         'ptr': {'independent_args': [],
+                 'args': {'zone_name': True, 'view_name': False,
+                          'assignment_host': True, 'target': True,
+                          'ttl': False},
+                 'dependent_args': [], 'forbidden_args': {}}})
 
   def testCheckDataFlags(self):
     usage = "test usage"
-    args = ['-a', 'test']
-    args_instance = MakeAclArgs(args, usage)
+    args = ['-a', 'test', '--cidr-block', 'test', '--allow']
+    args_instance = MakeAclArgs('make', ['make'], args, usage)
 
-    functions = args_instance.GetEmptyFunctionsDict(['make'])
-    functions['make']['args'] = {'acl': True, 'cidr_block': True}
-    functions['make']['independent_args'] = [{'allow': True, 'deny': True}]
+    args_instance.functions_dict['make']['args'] = {
+        'acl': True, 'cidr_block': True}
+    args_instance.functions_dict['make']['independent_args'] = [
+        {'allow': True, 'deny': True}]
+    args_instance.args = ['-a', 'test', '--allow']
+    args_instance.options = args_instance.parser.parse_args(
+        args_instance.args)[0]
 
     oldstdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
-                      functions)
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags)
     self.assertEqual(sys.stdout.flush(),
         'CLIENT ERROR: The --cidr-block flag is required.\n')
     sys.stdout = oldstdout
 
-    args = ['-a', 'test', '--cidr-block', '192.168.1/24']
-    args_instance = MakeAclArgs(args, usage)
+    args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow']
+    args_instance = MakeAclArgs('make', ['make'], args, usage)
+    args_instance.functions_dict['make']['args'] = {'acl': True, 'cidr_block': True}
+    args_instance.functions_dict['make']['independent_args'] = [{'allow': True, 'deny': True}]
+    args_instance.args = ['-a', 'test', '--cidr-block', '192.168.1/24']
+    args_instance.options = args_instance.parser.parse_args(
+        args_instance.args)[0]
 
     oldstdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
-                      functions)
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags)
     self.assertEqual(sys.stdout.flush(),
         'CLIENT ERROR: Either --allow or --deny must be used.\n')
     sys.stdout = oldstdout
 
-    args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow', '--deny']
-    args_instance = MakeAclArgs(args, usage)
+    args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow']
+    args_instance = MakeAclArgs('make', ['make'], args, usage)
+    args_instance.functions_dict['make']['args'] = {'acl': True, 'cidr_block': True}
+    args_instance.functions_dict['make']['independent_args'] = [{'allow': True, 'deny': True}]
+    args_instance.args = ['-a', 'test', '--cidr-block', '192.168.1/24',\
+                          '--allow', '--deny']
+    args_instance.options = args_instance.parser.parse_args(
+        args_instance.args)[0]
 
     oldstdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
-                      functions)
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags)
     self.assertEqual(sys.stdout.flush(),
         'CLIENT ERROR: --allow and --deny cannot be used simultaneously.\n')
     sys.stdout = oldstdout
 
     args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow']
-    args_instance = MakeAclArgs(args, usage)
+    args_instance = MakeAclArgs('make', ['make'], args, usage)
+    args_instance.functions_dict['make']['args'] = {'acl': True, 'cidr_block': True}
+    args_instance.functions_dict['make']['independent_args'] = [{'allow': True, 'deny': True}]
 
     oldstdout = sys.stdout
     sys.stdout = StdOutStream()
-    args_instance.CheckDataFlags('make', functions)
+    args_instance.CheckDataFlags()
     self.assertEqual(sys.stdout.flush(), '')
     sys.stdout = oldstdout
 
-    functions = args_instance.GetEmptyFunctionsDict(['make'])
-    functions['make']['args'] = {'acl': True, 'cidr_block': True}
-    functions['make']['dependent_args'] = [{'allow': True, 'deny': True}]
+    args_instance.functions_dict['make']['args'] = {'acl': True, 'cidr_block': True}
+    args_instance.functions_dict['make']['dependent_args'] = [{'allow': True, 'deny': True}]
 
     oldstdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
-                      functions)
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags)
     self.assertEqual(sys.stdout.flush(),
         'CLIENT ERROR: --allow and --deny must be used together.\n')
     sys.stdout = oldstdout
 
-    functions['make']['args'] = {'cidr_block': True}
-    functions['make']['forbidden_args'] = {'acl': True}
+    args_instance.functions_dict['make']['args'] = {'cidr_block': True}
+    args_instance.functions_dict['make']['dependent_args'] = []
+    args_instance.functions_dict['make']['independent_args'] = [{'allow': True, 'deny': True}]
 
     oldstdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.assertRaises(SystemExit, args_instance.CheckDataFlags, 'make',
-                      functions)
+    self.assertRaises(SystemExit, args_instance.CheckDataFlags)
     self.assertEqual(sys.stdout.flush(),
         'CLIENT ERROR: The -a/--acl flag cannot be used with the make '
         'command.\n')
-    sys.stdout = oldstdout
+    oldstdout = sys.stdout
+
+  def testSetAll(self):
+    usage = "test usage"
+    args = ['-a', 'test', '--cidr-block', 'test', '--allow']
+    args_instance = MakeAclArgs('make', ['make', 'list', 'remove'], args, usage)
+
+
+    args_instance.SetAllFlagRule('zone_name')
+
+    self.assertEqual(args_instance.functions_dict,
+        {'make': {'independent_args': [{'deny': True, 'allow': True}],
+                  'args': {'username': False, 'credfile': False,
+                           'config_file': False, 'quiet': False,
+                           'server': False, 'credstring': False,
+                           'zone_name': True, 'cidr_block': True,
+                           'password': False, 'acl': True},
+                  'dependent_args': [], 'forbidden_args': {}},
+         'list': {'independent_args': [], 'args': {'zone_name': True},
+                  'dependent_args': [], 'forbidden_args': {}},
+         'remove': {'independent_args': [], 'args': {'zone_name': True},
+                    'dependent_args': [], 'forbidden_args': {}}})
 
 if( __name__ == '__main__' ):
       unittest.main()
