@@ -52,49 +52,52 @@ class CoreFlags:
     self.args = args
     self.command = command
     self.SetCommands(commands)
-    self.SetActionFlags()
-    self.SetDataFlags()
     self.SetCoreFlags()
-    if( hasattr(self, 'SetToolFlags') ):
-      self.SetToolFlags()
+    if( self.command ):
+      self.SetActionFlags()
+      self.SetDataFlags()
+      if( hasattr(self, 'SetToolFlags') ):
+        self.SetToolFlags()
 
-    ## Organize flags into dict {'flag_name': '-f/--flag-name'}
-    self.avail_flags = {}
-    for flag in self.parser.option_list[2:]:
-      self.avail_flags[flag.dest] = flag
+      ## Organize flags into dict {'flag_name': '-f/--flag-name'}
+      self.avail_flags = {}
+      for flag in self.parser.option_list[2:]:
+        self.avail_flags[flag.dest] = flag
 
-    self.options = self.parser.parse_args(self.args)[0]
-    self.CheckDataFlags()
+      self.options = self.parser.parse_args(self.args)[0]
+      self.CheckDataFlags()
+    else:
+      self.options = self.parser.parse_args(self.args)[0]
 
   def SetCoreFlags(self):
     """Sets core flags for parser"""
     self.parser.add_option(
         '-s', '--server', action='store', dest='server',
         help='XML RPC Server URL.', metavar='<server>', default=None)
-    self.AddFlagRule('server', required=False)
+    self.SetAllFlagRule('server', required=False)
     self.parser.add_option(
         '-u', '--username', action='store', dest='username',
         help='Run as different username.', metavar='<username>',
         default=unicode(getpass.getuser()))
-    self.AddFlagRule('username', required=False)
+    self.SetAllFlagRule('username', required=False)
     self.parser.add_option(
         '-p', '--password', action='store', dest='password',
         help='Password string, NOTE: It is insecure to use this '
              'flag on the command line.', metavar='<password>', default=None)
-    self.AddFlagRule('password', required=False)
+    self.SetAllFlagRule('password', required=False)
     self.parser.add_option(
         '-c', '--cred-file', action='store', dest='credfile',
         help='Location of credential file.', metavar='<cred-file>',
         default=None)
-    self.AddFlagRule('credfile', required=False)
+    self.SetAllFlagRule('credfile', required=False)
     self.parser.add_option(
         '--cred-string', action='store', dest='credstring',
         help='String of credential.', metavar='<cred-string>', default=None)
-    self.AddFlagRule('credstring', required=False)
+    self.SetAllFlagRule('credstring', required=False)
     self.parser.add_option(
         '--config-file', action='store', dest='config_file',
         help='Config file location.', metavar='<file>', default=None)
-    self.AddFlagRule('config_file', required=False)
+    self.SetAllFlagRule('config_file', required=False)
 
   def CheckDataFlags(self):
     """Returns the action the tool should perform

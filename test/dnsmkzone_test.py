@@ -130,7 +130,7 @@ class TestDnsMkZone(unittest.TestCase):
 
   def testMakeZoneWithView(self):
     self.core_instance.MakeView(u'test_view')
-    output = os.popen('python %s -v test_view -z test_zone --origin '
+    output = os.popen('python %s forward -v test_view -z test_zone --origin '
                       'dept.univiersity.edu. --type master --dont-make-any '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -146,7 +146,7 @@ class TestDnsMkZone(unittest.TestCase):
             {u'test_view':
                 {'zone_type': u'master', 'zone_options': u'',
                  'zone_origin': u'dept.univiersity.edu.'}}})
-    output = os.popen('python %s -z test_zone2 -v test_view --origin '
+    output = os.popen('python %s forward -z test_zone2 -v test_view --origin '
                       'dept.univiersity.edu. --type master --dont-make-any '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -168,8 +168,8 @@ class TestDnsMkZone(unittest.TestCase):
 
   def testMakeReverseZoneOrigin(self):
     self.core_instance.MakeView(u'test_view')
-    output = os.popen('python %s -v test_view -z reverse_zone '
-                      '--origin 168.192.in-addr.arpa. --reverse '
+    output = os.popen('python %s reverse -v test_view -z reverse_zone '
+                      '--origin 168.192.in-addr.arpa. '
                       '--type master --dont-make-any '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -184,8 +184,8 @@ class TestDnsMkZone(unittest.TestCase):
 
   def testMakeReverseZoneCidr(self):
     self.core_instance.MakeView(u'test_view')
-    output = os.popen('python %s -v test_view -z reverse_zone '
-                      '--cidr-block 192.168/16 --reverse '
+    output = os.popen('python %s reverse -v test_view -z reverse_zone '
+                      '--cidr-block 192.168/16 '
                       '--type master --dont-make-any '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -200,8 +200,8 @@ class TestDnsMkZone(unittest.TestCase):
 
   def testmakeReverseZoneWeird(self):
     self.core_instance.MakeView(u'test_view')
-    output = os.popen('python %s -v test_view -z reverse_zone '
-                      '--cidr-block 192.168/27 --reverse '
+    output = os.popen('python %s reverse -v test_view -z reverse_zone '
+                      '--cidr-block 192.168/27 '
                       '--type master --dont-make-any '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -215,7 +215,7 @@ class TestDnsMkZone(unittest.TestCase):
     output.close()
 
   def testErrors(self):
-    output = os.popen('python %s -v test_view -z test_zone --origin '
+    output = os.popen('python %s forward -v test_view -z test_zone --origin '
                       'dept.univiersity.edu. --type master '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -224,52 +224,49 @@ class TestDnsMkZone(unittest.TestCase):
                      'CLIENT ERROR: The view specified does not exist.\n')
     output.close()
     self.core_instance.MakeView(u'test_view')
-    output = os.popen('python %s -v test_view -z test_zone --type master '
-                      '--cidr-block=192.168/16 '
+    output = os.popen('python %s forward -v test_view -z test_zone --type master '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: An origin must be specified with forward '
-                     'zones.\n')
+                     'CLIENT ERROR: The --origin flag is required.\n')
     output.close()
-    output = os.popen('python %s -v test_view -z test_zone --origin '
+    output = os.popen('python %s forward -v test_view -z test_zone --origin '
                       'dept.univiersity.edu. -s %s -u %s -p %s '
                       '--config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: A zone type must be specified with '
-                     '-t/--type\n')
+                     'CLIENT ERROR: The -t/--type flag is required.\n')
     output.close()
-    output = os.popen('python %s -v test_view -z reverse_zone --origin '
+    output = os.popen('python %s reverse -v test_view -z reverse_zone --origin '
                       '168.192.in-addr.arpa. --cidr-block 192.168/16 '
-                      '--type master --reverse '
+                      '--type master '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: Origin and cidr block cannot be given '
-                     'simultaneously for reverse zones.\n')
+                     'CLIENT ERROR: --cidr-block and --origin cannot be used '
+                     'simultaneously.\n')
     output.close()
-    output = os.popen('python %s -v test_view -z reverse_zone '
-                      '--type master --reverse '
+    output = os.popen('python %s reverse -v test_view -z reverse_zone '
+                      '--type master '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: Either an origin or cidr block must be '
-                     'specified when making reverse zones.\n')
+                     'CLIENT ERROR: Either --cidr-block or --origin must be '
+                     'used.\n')
     output.close()
-    output = os.popen('python %s '
+    output = os.popen('python %s forward --origin test '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: A zone name must be specified.\n')
+                     'CLIENT ERROR: The -z/--zone flag is required.\n')
     output.close()
-    output = os.popen('python %s -z test_rev -t master --origin foo.com '
-                      '--reverse -s %s -u %s -p %s --config-file %s' % (
+    output = os.popen('python %s reverse -z test_rev -t master --origin foo.com '
+                      '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),

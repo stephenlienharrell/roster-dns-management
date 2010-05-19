@@ -643,7 +643,7 @@ class TestDnsMkRecord(unittest.TestCase):
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: The --refresh-seconds flag is required.\n')
+        'CLIENT ERROR: The --admin-email flag is required.\n')
     command.close()
     command = os.popen3('python %s mx -z z -t t --priority number '
                         '-u %s -p %s --config-file %s -s %s' % (

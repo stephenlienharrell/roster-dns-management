@@ -52,6 +52,7 @@ class Acl(core_flags.CoreFlags):
                            default=None)
     self.AddFlagRule('cidr_block', required=self.action=='Make')
     if( self.action == 'Remove' ):
+      # Not required since tool handles the error
       self.AddFlagRule(('force', 'cidr_block'), flag_type='independent_args',
                        required=False)
 
@@ -174,3 +175,55 @@ class Record(core_flags.CoreFlags):
                                  '"internal"'), metavar='<view-name>',
                            default='any')
     self.SetAllFlagRule('view_name', required=False)
+
+
+class Zone(core_flags.CoreFlags):
+  """Command line zone flags"""
+  def SetDataFlags(self):
+    """Sets flags for parser"""
+    make = self.action == 'Make'
+    # All flags
+    self.parser.add_option('-v', '--view', action='store', dest='view',
+                           help='Modify a view.', default=None)
+    self.AddFlagRule('view', command='forward', required=False)
+    self.AddFlagRule('view', command='reverse', required=False)
+    self.parser.add_option('-z', '--zone', action='store', dest='zone',
+                           help='Modify a zone.', default=None)
+    self.AddFlagRule('zone', command='forward', required=self.action!='List')
+    self.AddFlagRule('zone', command='reverse', required=self.action!='List')
+
+    # Just Remove
+    if( self.action == 'Remove' ):
+      # Not required since tool handles the error
+      self.AddFlagRule(('force', 'view'), flag_type='independent_args',
+                       required=False)
+
+    # List and Make
+    if( self.action != 'Remove' ):
+      self.parser.add_option('-o', '--options', action='store', dest='options',
+                             help='Extra zone/view options.',
+                             metavar='<view-options>', default=None)
+      self.AddFlagRule('options', command='forward', required=False)
+      self.AddFlagRule('options', command='reverse', required=False)
+      self.parser.add_option('--origin', action='store', dest='origin',
+                              help='Zone origin.', metavar='<origin>',
+                              default=None)
+      self.AddFlagRule('origin', required=make, command='forward')
+      self.parser.add_option('-t', '--type', action='store', dest='type',
+                             help='Zone type.', metavar='<type>', default=None)
+      self.AddFlagRule('type', required=make, command='forward')
+      self.AddFlagRule('type', required=make, command='reverse')
+      self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
+                             help='Cidr block for reverse zones.',
+                             metavar='<cidr-block>', default=None)
+      self.AddFlagRule(('cidr_block', 'origin'), required=self.action!='List',
+                       command='reverse', flag_type='independent_args')
+
+    # Just Make
+    if( self.action == 'Make' ):
+      self.parser.add_option('--dont-make-any', action='store_false',
+                             dest='dont_make_any',
+                             help='Make a zone in a view other than any, must '
+                                  'specify view name with --view-name',
+                             default=True)
+      self.SetAllFlagRule('dont_make_any', required=False)

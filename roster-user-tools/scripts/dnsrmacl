@@ -84,7 +84,7 @@ def main(args):
       if( not options.quiet ):
         print 'REMOVED ACL: acl: %s' % options.acl
     else:
-      cli_common_lib.DnsError('Must use --force to delete entire ACL.')
+      cli_common_lib.DnsError('Must use --force to delete entire ACL.', 1)
 
   else:
     allowed = None
