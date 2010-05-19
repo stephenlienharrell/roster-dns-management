@@ -144,7 +144,8 @@ def main(args):
                  options.zone, options.type, options.origin, options.options,
                  options.view))
   else:
-    cli_common_lib.DnsError('Could not display invalid command error.', 1)
+    cli_common_lib.DnsError(
+        'Command %s exists, but codepath doesn\'t.' % command, 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])

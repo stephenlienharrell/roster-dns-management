@@ -169,6 +169,9 @@ def main(args):
     record_args_dict = {'assignment_host': options.assignment_host}
     cli_record_lib_instance.MakeRecord('ptr', options, record_args_dict,
                               quiet=options.quiet, fix_ptr_origin=False)
+  else:
+    cli_common_lib.DnsError(
+        'Command %s exists, but codepath doesn\'t.' % command, 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])
