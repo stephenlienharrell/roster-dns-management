@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Regression test for dnslsviews
+"""Regression test for dnslsview
 
 Make sure you are running this against a database that can be destroyed.
 
@@ -87,7 +87,7 @@ class DaemonThread(threading.Thread):
                                                 CERTFILE)
     self.daemon_instance.Serve(port=self.port)
 
-class TestDnslsviews(unittest.TestCase):
+class Testdnsmkview(unittest.TestCase):
 
   def setUp(self):
 
@@ -127,57 +127,80 @@ class TestDnslsviews(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
-  def testListDnsServerSetViews(self):
+  def testMakeView(self):
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
+    command = os.popen('python %s view -v test_view -a acl1 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'view_name view_options\n'
+        '----------------------\n'
+        'test_view\n\n')
+    command.close()
+
+  def testMakeViewAclAssignment(self):
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
+    command = os.popen('python %s acl -v test_view -a acl1 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'view_name acl_name\n'
+        '------------------\n'
+        'test_view acl1\n\n')
+    command.close()
+
+  def testMakeViewAssignment(self):
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeView(u'test_view2')
+    command = os.popen('python %s view_subset -v test_view -V test_view2 '
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'view view_subset\n'
+                     '----------------\n\n')
+    command.close()
+    self.core_instance.MakeViewAssignment(u'test_view', u'test_view2')
+    command = os.popen('python %s view_subset -v test_view -V test_view2 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     "view      view_subset\n"
+                     "---------------------\n"
+                     "test_view test_view2\n\n")
+    command.close()
+
+  def testMakeDnsServerSetAssignment(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
-    self.core_instance.MakeView(u'test_view2')
-    self.core_instance.MakeDnsServerSet(u'set2')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set2')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view2', u'set2')
-    command = os.popen('python %s -u %s -p %s --config-file %s -s %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
+    command = os.popen('python %s dns_server_set -v test_view -e set1 '
+                       '-c %s -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
     self.assertEqual(command.read(),
-        'view       view_dependencies view_options dns_server_sets\n'
-        '---------------------------------------------------------\n'
-        'test_view2 any,test_view2                 set2\n'
-        'test_view  any,test_view                  set1,set2\n\n')
-    command.close()
-    command = os.popen(
-        'python %s -u %s -p %s --config-file %s -s %s -v test_view' % (
-            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
-    self.assertEqual(command.read(),
-        'view      view_dependencies view_options dns_server_sets\n'
-        '--------------------------------------------------------\n'
-        'test_view any,test_view                  set1,set2\n\n')
-    command.close()
-    command = os.popen(
-        'python %s -u %s -p %s --config-file %s -s %s -V test_view' % (
-            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
-    self.assertEqual(command.read(),
-        'view      view_dependencies view_options dns_server_sets\n'
-        '--------------------------------------------------------\n'
-        'test_view test_view                      set1,set2\n\n')
-    command.close()
-    command = os.popen(
-        'python %s -u %s -p %s --config-file %s -s %s -e set2' % (
-            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
-    self.assertEqual(command.read(),
-        'view       view_dependencies view_options dns_server_sets\n'
-        '---------------------------------------------------------\n'
-        'test_view2 any,test_view2                 set2\n'
-        'test_view  any,test_view                  set2\n\n')
-    command.close()
-    command = os.popen(
-        'python %s -u %s -p %s --config-file %s -s %s -e set2 -V any' % (
-            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
-    self.assertEqual(command.read(),
-        'view       view_dependencies view_options dns_server_sets\n'
-        '---------------------------------------------------------\n'
-        'test_view2 any                            set2\n'
-        'test_view  any                            set2\n\n')
+                     'view_name acl_name\n'
+                     '------------------\n'
+                     'set1      test_view\n\n')
     command.close()
 
+  def testErrors(self):
+    command = os.popen('python %s dns_server_set -v test_view -V other_view '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -V/--view-dep flag cannot be used with the '
+        'dns_server_set command.\n')
+    command.close()
 
 if( __name__ == '__main__' ):
       unittest.main()

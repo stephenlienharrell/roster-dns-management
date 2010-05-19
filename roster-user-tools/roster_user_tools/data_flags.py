@@ -40,7 +40,7 @@ import core_flags
 class Acl(core_flags.CoreFlags):
   """Command line acl flags"""
   def SetDataFlags(self):
-    """Sets flags for parser"""
+    """Sets flags for self.parser"""
     self.data = 'Acl'
     not_list = self.action != 'List'
 
@@ -67,7 +67,7 @@ class Acl(core_flags.CoreFlags):
 class Record(core_flags.CoreFlags):
   """Command line record flags"""
   def SetDataFlags(self):
-    """Sets flags for parser"""
+    """Sets flags for self.parser"""
     self.data = 'Record'
     not_list = self.action != 'List'
 
@@ -180,7 +180,7 @@ class Record(core_flags.CoreFlags):
 class Zone(core_flags.CoreFlags):
   """Command line zone flags"""
   def SetDataFlags(self):
-    """Sets flags for parser"""
+    """Sets flags for self.parser"""
     make = self.action == 'Make'
     # All flags
     self.parser.add_option('-v', '--view', action='store', dest='view',
@@ -217,6 +217,7 @@ class Zone(core_flags.CoreFlags):
                              help='Cidr block for reverse zones.',
                              metavar='<cidr-block>', default=None)
       self.AddFlagRule(('cidr_block', 'origin'), required=self.action!='List',
+      # Not required since tool handles the error
                        command='reverse', flag_type='independent_args')
 
     # Just Make
@@ -227,3 +228,29 @@ class Zone(core_flags.CoreFlags):
                                   'specify view name with --view-name',
                              default=True)
       self.SetAllFlagRule('dont_make_any', required=False)
+
+
+class View(core_flags.CoreFlags):
+  """Command line view flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    not_list = self.action != 'List'
+    self.parser.add_option('-v', '--view', action='store', dest='view',
+                      help='Specifies a view.', default=None)
+    self.SetAllFlagRule('view', required=not_list)
+    self.parser.add_option('-V', '--view-dep', action='store', dest='view_subset',
+                      help='Specifies a view dependency.', default=None)
+    self.AddFlagRule('view_subset', required=not_list, command='view_subset')
+    self.parser.add_option('-o', '--options', action='store', dest='options',
+                      help='View options.', metavar='<options>', default=None)
+    self.AddFlagRule('options', required=False, command='view')
+    self.parser.add_option('-e', '--dns-server-set', action='store',
+                      dest='dns_server_set',
+                      help='Specifies a certain DNS server set.', default=None)
+    self.AddFlagRule('dns_server_set', required=not_list,
+                     command='dns_server_set')
+    self.parser.add_option('-a', '--acl', action='store', dest='acl',
+                      help='Modify an access control list. (name)', default=None)
+    self.AddFlagRule('acl', required=not_list, command='view')
+    self.AddFlagRule('acl', required=not_list, command='acl')
+

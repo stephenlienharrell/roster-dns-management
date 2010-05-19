@@ -53,21 +53,18 @@ class CoreFlags:
     self.command = command
     self.SetCommands(commands)
     self.SetCoreFlags()
-    if( self.command ):
-      self.SetActionFlags()
-      self.SetDataFlags()
-      if( hasattr(self, 'SetToolFlags') ):
-        self.SetToolFlags()
+    self.SetActionFlags()
+    self.SetDataFlags()
+    if( hasattr(self, 'SetToolFlags') ):
+      self.SetToolFlags()
 
-      ## Organize flags into dict {'flag_name': '-f/--flag-name'}
-      self.avail_flags = {}
-      for flag in self.parser.option_list[2:]:
-        self.avail_flags[flag.dest] = flag
+    ## Organize flags into dict {'flag_name': '-f/--flag-name'}
+    self.avail_flags = {}
+    for flag in self.parser.option_list[2:]:
+      self.avail_flags[flag.dest] = flag
 
-      self.options = self.parser.parse_args(self.args)[0]
-      self.CheckDataFlags()
-    else:
-      self.options = self.parser.parse_args(self.args)[0]
+    self.options = self.parser.parse_args(self.args)[0]
+    self.CheckDataFlags()
 
   def SetCoreFlags(self):
     """Sets core flags for parser"""
@@ -236,7 +233,9 @@ class CoreFlags:
       required: boolean of required flag (defaults to true)
       flag_type: type of flag (defaults to 'args')
     """
-    if( not command ):
+    if( command is None and self.command is None):
+      return
+    if( command is None):
       command = self.command
 
     if( flag_type in ['independent_args', 'dependent_args']

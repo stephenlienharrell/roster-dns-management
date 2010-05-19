@@ -48,10 +48,9 @@ import time
 import getpass
 
 import unittest
-
 import roster_core
-from roster_user_tools import roster_client_lib
 import roster_server
+from roster_user_tools import roster_client_lib
 
 USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -63,7 +62,7 @@ PASSWORD = u'test'
 KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
-EXEC = '../roster-user-tools/scripts/dnsrmview'
+EXEC='../roster-user-tools/scripts/dnsrmview'
 
 class options(object):
   password = u'test'
@@ -88,7 +87,7 @@ class DaemonThread(threading.Thread):
                                                 CERTFILE)
     self.daemon_instance.Serve(port=self.port)
 
-class Testdnsrmview(unittest.TestCase):
+class Testdnsmkview(unittest.TestCase):
 
   def setUp(self):
 
@@ -128,72 +127,120 @@ class Testdnsrmview(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
-  def testRemoveZoneView(self):
+  def testMakeView(self):
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
     self.core_instance.MakeView(u'test_view')
-    output = os.popen('python %s -v test_view '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'REMOVED VIEW: test_view\n')
-    output.close()
-    self.assertEqual(self.core_instance.ListViews(), {})
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
+    command = os.popen('python %s view -v test_view -a acl1 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'REMOVED VIEW view_name: view_name: test_view options None\n'
+        'REMOVED VIEW ACL ASSIGNMENT: view_name: test_view acl_name: acl1\n')
+    command.close()
 
-  def testRemoveDnsServerSetViewAssignments(self):
+  def testMakeViewAclAssignment(self):
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
+    command = os.popen('python %s acl -v test_view -a acl1 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'REMOVED VIEW TO ACL ASSIGNMENT: view_name: test_view acl_name: acl1\n')
+    command.close()
+
+  def testMakeViewAssignment(self):
+    command = os.popen('python %s view_subset -v test_view -V test_view2 '
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'CLIENT ERROR: View "test_view" does not exist.\n')
+    command.close()
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeView(u'test_view2')
+    self.core_instance.MakeViewAssignment(u'test_view', u'test_view2')
+    command = os.popen('python %s view_subset -v test_view -V test_view2 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'REMOVED VIEW ASSIGNMENT: view_name: test_view '
+                     'view_subset: test_view2\n')
+    command.close()
+
+  def testMakeDnsServerSetAssignment(self):
+    self.core_instance.MakeACL(u'outside', u'192.168.1.0/24', 1)
+    self.core_instance.MakeDnsServerSet(u'set2')
+    command = os.popen('python %s dns_server_set -v test_view -e set2 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'CLIENT ERROR: View "test_view" does not exist.\n')
+    command.close()
+    self.core_instance.MakeView(u'test_view')
+    command = os.popen('python %s dns_server_set -v test_view -e set1 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'CLIENT ERROR: Dns Server Set "set1" does not exist.\n')
+    command.close()
     self.core_instance.MakeDnsServerSet(u'set1')
-    self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
-    self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
-        {u'set1': [u'test_view']})
-    self.assertEqual(self.core_instance.ListDnsServerSetAssignments(),
-        {u'set1': [u'dns1']})
-    self.assertEqual(self.core_instance.ListDnsServerSets(), [u'set1'])
-    self.assertEqual(self.core_instance.ListDnsServers(), [u'dns1'])
-    output = os.popen('python %s -v test_view -e set1 '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-                     'REMOVED DNS SERVER SET VIEW ASSIGNMENT: '
-                     'view_name test_view dns_server_set: set1\n')
-    output.close()
-    self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(), {})
-    self.assertEqual(self.core_instance.ListDnsServerSetAssignments(),
-        {u'set1': [u'dns1']})
-
-  def testRemoveAcl(self):
-    self.core_instance.MakeACL(u'acl', u'192.168.0.0/24', 1)
-    self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl')
-    self.assertEqual(self.core_instance.ListViewToACLAssignments(),
-                     [{'view_name': u'test_view', 'acl_name': u'acl'}])
-    output = os.popen('python %s --acl acl -v test_view '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-                     'REMOVED VIEW TO ACL ASSIGNMENT: view_name: test_view '
-                     'acl_name: acl\n')
-    output.close()
-    self.assertEqual(self.core_instance.ListViewToACLAssignments(), [])
+    command = os.popen('python %s dns_server_set -v test_view -e set1 '
+                       '-c %s -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'REMOVED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
+                     'test_view dns_server_set: set1\n')
+    command.close()
 
   def testErrors(self):
-    output = os.popen('python %s -e test '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: To remove a dns server set '
-                                    'view assignment a view must be '
-                                    'specified with the -v flag.\n')
-    output.close()
-    output = os.popen('python %s --acl acl '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: To remove a view ACL '
-                                    'assignment a view must be supplied.\n')
-    output.close()
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeView(u'test_view2')
+    command = os.popen('python %s dns_server_set -v test_view -e set1 '
+                       '-V test_view2 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -V/--view-dep flag cannot be used with the '
+        'dns_server_set command.\n')
+    command.close()
+    command = os.popen('python %s view_subset -V test_view2 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -v/--view flag is required.\n')
+    command.close()
+    command = os.popen('python %s dns_server_set -e set1 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -v/--view flag is required.\n')
+    command.close()
+    command = os.popen('python %s view -v test_view '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 
+        'CLIENT ERROR: The -a/--acl flag is required.\n')
+    command = os.popen('python %s view -v test_view --acl test_acl '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 'CLIENT ERROR: ACL "test_acl" does not '
+                                     'exist.\n')
+
 
 if( __name__ == '__main__' ):
       unittest.main()

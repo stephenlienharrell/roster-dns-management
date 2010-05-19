@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""list views and dns server set view assignments for roster"""
+"""List views and dns server set view assignments for roster"""
 
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
@@ -44,6 +44,12 @@ from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
+from roster_user_tools.action_flags import List
+from roster_user_tools.data_flags import View
+
+
+class Args(List, View):
+  pass
 
 
 def main(args):
@@ -52,80 +58,105 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
-
-  parser.add_option('-v', '--view', action='store', dest='view',
-                    help='List a certain view', default=None)
-  parser.add_option('-V', '--view-dependency', action='store', dest='view_dep',
-                    help='List a certain view dependency', default=None)
-  parser.add_option('-e', '--dns-server-set', action='store',
-                    dest='dns_server_set',
-                    help='List a certain DNS server set.', default=None)
-  parser.add_option('-s', '--server', action='store', dest='server',
-                    help='XML RPC Server URL.', metavar='<server>',
-                    default=None)
-  parser.add_option('--config-file', action='store', dest='config_file',
-                    help='Config file location.', metavar='<file>',
-                    default=None)
-  parser.add_option('-u', '--username', action='store', dest='username',
-                    help='Run as a different username.', metavar='<username>',
-                    default=unicode(getpass.getuser()))
-  parser.add_option('-p', '--password', action='store', dest='password',
-                    help='Password string, NOTE: It is insecure to use this '
-                         'flag on the command line.', metavar='<password>',
-                    default=None)
-  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
-                    help='Location of credential file.', metavar='<cred-file>',
-                    default=None)
-  parser.add_option('--cred-string', action='store', dest='credstring',
-                    help='String of credential.', metavar='<cred-string>',
-                    default=None)
-  parser.add_option('--no-header', action='store_true', dest='no_header',
-                    help='Do not display a header.', default=False)
-
-  (globals()["options"], args) = parser.parse_args(args)
+  command = ''
+  if( not args[0].startswith('-') ):
+    command = args.pop(0)
+  usage = ('\n'
+           '\n'
+           'To list views:\n'
+           '\t%s view [-v <view-name>] [-o <options>]\n'
+           '\n'
+           'To list dns server set view assignments:\n'
+           '\t%s dns_server_set [-v <view-name>] [-e <dns-server-set>]\n'
+           '\n'
+           'To list acl view assignments:\n'
+           '\t%s acl [-v <view-name>] [-a <acl-name>]\n'
+           '\n'
+           'To list view assignments:\n'
+           '\t%s view_subset [-v <view-superset-name>]\n'
+           '\t[-V <view-subset-name>]\n' % tuple(
+               [sys.argv[0] for x in range(4)]))
+  args_instance = Args(command,
+      ['view', 'dns_server_set', 'acl', 'view_subset'], args, usage)
+  options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
   except cli_common_lib.ArgumentError, e:
-    print 'ERROR: %s' % e
-    sys.exit(1)
+    cli_common_lib.DnsError(str(e), 1)
 
-  views = roster_client_lib.RunFunction(
-      u'ListViews', options.username,
-      credfile=options.credfile, credstring=options.credstring,
-      server_name=options.server,
-      kwargs={'view_name': options.view})['core_return']
-
-  view_dependencies = roster_client_lib.RunFunction(
-      u'ListViewAssignments', options.username,
-      credfile=options.credfile, credstring=options.credstring,
-      server_name=options.server,
-      kwargs={'view_superset': options.view,
-              'view_subset': options.view_dep})['core_return']
-
-  dns_set_view_assignments = roster_client_lib.RunFunction(
-      u'ListDnsServerSetViewAssignments', options.username,
-      credfile=options.credfile, credstring=options.credstring,
-      server_name=options.server,
-      kwargs={'view_name': options.view,
-              'dns_server_set_name': options.dns_server_set,
-              'key_by_view': True})['core_return']
   print_list = []
-  if( not options.no_header ):
-    print_list = [['view', 'view_dependencies', 'view_options',
-                   'dns_server_sets']]
-  for view in views:
-    dns_server_sets = ''
-    if( view in dns_set_view_assignments ):
-      dns_server_sets = ','.join(dns_set_view_assignments[view])
-    if( view not in view_dependencies and view != 'any' ):
-      continue
-    print_list.append([view, ','.join(view_dependencies[view]), views[view],
-                       dns_server_sets])
-  print cli_common_lib_instance.PrintColumns(print_list,
-                                    first_line_header=(not options.no_header))
 
+  if( command == 'view' ):
+    views = roster_client_lib.RunFunction(
+        u'ListViews', options.username, credfile=options.credfile,
+        credstring=options.credstring, server_name=options.server,
+        kwargs={u'view_name': options.view})['core_return']
+
+    if( not options.no_header ):
+      print_list = [['view_name', 'view_options']]
+
+    for view in views:
+      print_list.append([view, views[view]])
+
+    print cli_common_lib.PrintColumns(print_list,
+        first_line_header=not options.no_header)
+
+
+  elif( command == 'dns_server_set' ):
+    dns_server_set_view_assignments = roster_client_lib.RunFunction(
+        u'ListDnsServerSetViewAssignments', options.username,
+        credfile=options.credfile, credstring=options.credstring,
+        server_name=options.server)['core_return']
+
+    if( not options.no_header ):
+      print_list = [['view_name', 'acl_name']]
+
+    for assignment in dns_server_set_view_assignments:
+      print_list.append(
+          [assignment, ', '.join(dns_server_set_view_assignments[assignment])])
+
+    print cli_common_lib.PrintColumns(print_list,
+        first_line_header=not options.no_header)
+
+
+  elif( command == 'acl' ):
+    view_acl_assignments = roster_client_lib.RunFunction(
+        u'ListViewToACLAssignments', options.username,
+        credfile=options.credfile, credstring=options.credstring,
+        server_name=options.server,
+        kwargs={'view_name': options.view, u'acl_name': options.acl})[
+            'core_return']
+
+    if( not options.no_header ):
+      print_list = [['view_name', 'acl_name']]
+
+    for assignment in view_acl_assignments:
+      print_list.append([assignment['view_name'], assignment['acl_name']])
+
+    print cli_common_lib.PrintColumns(print_list,
+        first_line_header=not options.no_header)
+
+  elif( command == 'view_subset' ):
+    view_assignments = roster_client_lib.RunFunction(
+        u'ListViewAssignments', options.username,
+        credfile=options.credfile, credstring=options.credstring,
+        server_name=options.server,
+        kwargs={'view_superset': options.view,
+                'view_subset': options.view_subset})['core_return']
+
+    if( not options.no_header ):
+      print_list = [['view', 'view_subset']]
+
+    for view in view_assignments:
+      print_list.append([view, ', '.join(view_assignments[view])])
+
+    print cli_common_lib.PrintColumns(print_list,
+        first_line_header=not options.no_header)
+
+  else:
+    cli_common_lib.DnsError(
+        'Command %s exists, but codepath doesn\'t.' % command, 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])
