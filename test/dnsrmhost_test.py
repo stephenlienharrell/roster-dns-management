@@ -393,7 +393,7 @@ class Testdnsrmhost(unittest.TestCase):
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: An ip address or range must be specified.\n')
+        'CLIENT ERROR: The -i/--ip-address flag is required.\n')
     output.close()
     output = os.popen('python %s '
                       '-z test_zone -v test_view -s %s -u %s '
@@ -401,7 +401,7 @@ class Testdnsrmhost(unittest.TestCase):
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: A target must be specified.\n')
+        'CLIENT ERROR: The -t/--target flag is required.\n')
     output.close()
 
 

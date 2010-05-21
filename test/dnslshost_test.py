@@ -224,16 +224,16 @@ class Testdnslshost(unittest.TestCase):
   def testListSingleIP(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
-    output = os.popen('python %s -r 192.168.1.5 -t '
-                      'host3 -s %s -u %s -p %s --config-file %s' % (
+    output = os.popen('python %s --cidr-block 192.168.1.5 '
+                      '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
         '192.168.1.5 Forward host3.university.edu forward_zone any\n\n')
     output.close()
-    output = os.popen('python %s -r 192.168.1.4 -t '
-                      'host2. -s %s -u %s -p %s --config-file %s' % (
+    output = os.popen('python %s --cidr-block 192.168.1.4 '
+                      '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
@@ -243,7 +243,7 @@ class Testdnslshost(unittest.TestCase):
   def testListCIDR(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.4/30')
-    output = os.popen('python %s -r 192.168.1.4/30 '
+    output = os.popen('python %s --cidr-block 192.168.1.4/30 '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))

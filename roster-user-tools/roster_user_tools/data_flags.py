@@ -238,19 +238,56 @@ class View(core_flags.CoreFlags):
     self.parser.add_option('-v', '--view', action='store', dest='view',
                       help='Specifies a view.', default=None)
     self.SetAllFlagRule('view', required=not_list)
-    self.parser.add_option('-V', '--view-dep', action='store', dest='view_subset',
-                      help='Specifies a view dependency.', default=None)
+    self.parser.add_option('-V', '--view-dep', action='store',
+                           dest='view_subset', default=None,
+                           help='Specifies a view dependency.')
     self.AddFlagRule('view_subset', required=not_list, command='view_subset')
     self.parser.add_option('-o', '--options', action='store', dest='options',
-                      help='View options.', metavar='<options>', default=None)
+                           help='View options.', metavar='<options>',
+                           default=None)
     self.AddFlagRule('options', required=False, command='view')
     self.parser.add_option('-e', '--dns-server-set', action='store',
-                      dest='dns_server_set',
-                      help='Specifies a certain DNS server set.', default=None)
+                           dest='dns_server_set', default=None,
+                           help='Specifies a certain DNS server set.')
     self.AddFlagRule('dns_server_set', required=not_list,
                      command='dns_server_set')
     self.parser.add_option('-a', '--acl', action='store', dest='acl',
-                      help='Modify an access control list. (name)', default=None)
+                           help='Modify an access control list. (name)',
+                           default=None)
     self.AddFlagRule('acl', required=not_list, command='view')
     self.AddFlagRule('acl', required=not_list, command='acl')
 
+
+class Host(core_flags.CoreFlags):
+  """Command line view flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    not_list = self.action != 'List'
+    if( not_list ):
+      self.parser.add_option('-i', '--ip-address', action='store',
+                             dest='ip_address', default=None,
+                             help='Full IP address of machine.',
+                             metavar='<ip-address>',
+                             default=None)
+      self.AddFlagRule('ip_address', required=not_list)
+      self.parser.add_option('-t', '--target', action='store', dest='target',
+                             help='Target machine host name.', metavar='<target>',
+                             default=None)
+      self.AddFlagRule('target', required=not_list)
+      self.parser.add_option('--ttl', action='store', dest='ttl',
+                             help='Time to live.', metavar='<ttl>', default=3600)
+      self.AddFlagRule('ttl', required=False)
+    else:
+      self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
+                             help='Range of ip addresses (CIDR block)',
+                             metavar='<cidr-block>', default=None)
+      self.AddFlagRule('cidr_block')
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name', help='String of the zone name.',
+                           metavar='<zone-name>', default=None)
+    self.AddFlagRule('zone_name', required=not_list)
+    self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
+                           help=('String of the view name <view-name>. '
+                                 'Example: "internal"'),
+                           metavar='<view-name>', default=None)
+    self.AddFlagRule('view_name', required=False, command='host')

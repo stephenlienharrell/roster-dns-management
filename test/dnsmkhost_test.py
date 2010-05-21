@@ -297,7 +297,7 @@ class TestDnsMkHost(unittest.TestCase):
           u'assignment_ip': u'3ffe:0800:0000:0000:0000:0000:0000:0567'}])
 
   def testErrors(self):
-    output = os.popen('python %s -i 192168414b -z'
+    output = os.popen('python %s -t t -i 192168414b -z'
                       'forward_zone -v test_view -s %s -u %s -p %s '
                       '--config-file %s' % (
                            EXEC, self.server_name, USERNAME, PASSWORD,
@@ -321,12 +321,12 @@ class TestDnsMkHost(unittest.TestCase):
     self.assertEqual(output.read(),
                      'CLIENT ERROR: No reverse zone found for "192.168.1.6"\n')
     output.close()
-    output = os.popen('python %s -s %s -u %s '
+    output = os.popen('python %s -t t -z test_zone -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: An ip address must be specified.\n')
+                     'CLIENT ERROR: The -i/--ip-address flag is required.\n')
     output.close()
     output = os.popen('python %s -s %s -u %s -i 192.168.0.1 -z reverse_zone '
                       '-v test_view -t machine1 '

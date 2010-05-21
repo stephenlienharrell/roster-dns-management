@@ -205,7 +205,7 @@ class CoreHelpers(object):
     self.core_instance.RemoveRecord(u'ptr', target, zone_name,
                                     record_args_dict, view_name, ttl)
 
-  def ListRecordsByCIDRBlock(self, cidr_block, view_name=None):
+  def ListRecordsByCIDRBlock(self, cidr_block, view_name=None, zone_name=None):
     """Lists records in user given cidr block.
 
     Inputs:
@@ -284,15 +284,17 @@ class CoreHelpers(object):
       self.db_instance.EndTransaction()
     records_dict = {}
     for record in ptr_record_list:
-      zone_name = record['record_zone_name']
+      record_zone_name = record['record_zone_name']
       db_view_name = record['record_view_dependency'].rsplit('_dep', 1)[0]
       if( db_view_name != view_name and view_name != 'any'):
         continue
-      if( db_view_name not in zones[zone_name]  ):
+      if( zone_name and record_zone_name != zone_name ):
+        continue
+      if( db_view_name not in zones[record_zone_name]  ):
         raise errors.CoreError('No zone view combination found for '
                                '"%s" zone and "%s" view.' % (
-                                   zone_name, db_view_name))
-      zone_origin = zones[zone_name][db_view_name]['zone_origin']
+                                   record_zone_name, db_view_name))
+      zone_origin = zones[record_zone_name][db_view_name]['zone_origin']
       reverse_ip_address = '%s.%s' % (record['record_target'], zone_origin)
       ip_address = self.UnReverseIP(reverse_ip_address)
       if( IPy.IP(ip_address) in user_cidr ):
@@ -305,11 +307,13 @@ class CoreHelpers(object):
             u'zone': record['record_zone_name'], 'zone_origin': zone_origin})
     for record in fwd_record_list:
       ip_address = record['argument_value']
-      zone_name = record['record_zone_name']
+      record_zone_name = record['record_zone_name']
       db_view_name = record['record_view_dependency'].rsplit('_dep', 1)[0]
       if( db_view_name != view_name and view_name != 'any'):
         continue
-      zone_origin = zones[zone_name][db_view_name]['zone_origin']
+      if( zone_name and record_zone_name != zone_name ):
+        continue
+      zone_origin = zones[record_zone_name][db_view_name]['zone_origin']
       if( IPy.IP(ip_address) in user_cidr ):
         if( not view_name in records_dict ):
           records_dict[view_name] = {}
