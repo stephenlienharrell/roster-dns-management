@@ -110,8 +110,8 @@ def main(args):
         args=[options.view_name])
 
     if( not options.quiet ):
-      print 'REMOVED VIEW view_name: view_name: %s options %s' % (options.view_name,
-                                                      options.options)
+      print 'REMOVED VIEW view_name: view_name: %s options %s' % (
+          options.view_name, options.options)
     roster_client_lib.RunFunction(
         u'RemoveViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
@@ -171,7 +171,7 @@ def main(args):
     view_assignment_exists = True
     if( options.view_name not in view_assignments ):
       view_assignment_exists = False
-    elif( options.view_subset not in view_assignments[options.view] ):
+    elif( options.view_subset not in view_assignments[options.view_name] ):
         view_assignment_exists = False
 
     if( not view_assignment_exists ):

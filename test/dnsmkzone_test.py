@@ -263,7 +263,7 @@ class TestDnsMkZone(unittest.TestCase):
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: The -z/--zone flag is required.\n')
+                     'CLIENT ERROR: The -z/--zone-name flag is required.\n')
     output.close()
     output = os.popen('python %s reverse -z test_rev -t master --origin foo.com '
                       '-s %s -u %s -p %s --config-file %s' % (

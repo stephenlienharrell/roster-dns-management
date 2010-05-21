@@ -215,14 +215,14 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: The -v/--view flag is required.\n')
+        'CLIENT ERROR: The -v/--view-name flag is required.\n')
     command.close()
     command = os.popen('python %s dns_server_set -e set1 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: The -v/--view flag is required.\n')
+        'CLIENT ERROR: The -v/--view-name flag is required.\n')
     command.close()
     command = os.popen('python %s view -v test_view '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
