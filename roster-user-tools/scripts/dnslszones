@@ -58,7 +58,7 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  command = ''
+  command = None
   if( not args[0].startswith('-') ):
     command = args.pop(0)
   usage = ('\n'
@@ -89,15 +89,15 @@ def main(args):
       u'ListZones', options.username,
       credfile=options.credfile, credstring=options.credstring,
       server_name=options.server, kwargs={
-          u'zone_name': options.zone, u'zone_type': options.type,
-          u'zone_origin': options.origin, u'view_name': options.view})[
+          u'zone_name': options.zone_name, u'zone_type': options.type,
+          u'zone_origin': options.origin, u'view_name': options.view_name})[
               'core_return']
 
   reverse_range_zone_assignments = roster_client_lib.RunFunction(
       u'ListReverseRangeZoneAssignments', options.username,
       credfile=options.credfile, credstring=options.credstring,
       server_name=options.server, kwargs={
-          u'zone_name': options.zone,
+          u'zone_name': options.zone_name,
           u'cidr_block': options.cidr_block})['core_return']
 
   if( not options.no_header ):

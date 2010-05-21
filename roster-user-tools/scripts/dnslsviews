@@ -58,7 +58,7 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  command = ''
+  command = None
   if( not args[0].startswith('-') ):
     command = args.pop(0)
   usage = ('\n'
@@ -91,7 +91,7 @@ def main(args):
     views = roster_client_lib.RunFunction(
         u'ListViews', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
-        kwargs={u'view_name': options.view})['core_return']
+        kwargs={u'view_name': options.view_name})['core_return']
 
     if( not options.no_header ):
       print_list = [['view_name', 'view_options']]
@@ -125,7 +125,7 @@ def main(args):
         u'ListViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        kwargs={'view_name': options.view, u'acl_name': options.acl})[
+        kwargs={'view_name': options.view_name, u'acl_name': options.acl})[
             'core_return']
 
     if( not options.no_header ):
@@ -142,7 +142,7 @@ def main(args):
         u'ListViewAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        kwargs={'view_superset': options.view,
+        kwargs={'view_superset': options.view_name,
                 'view_subset': options.view_subset})['core_return']
 
     if( not options.no_header ):

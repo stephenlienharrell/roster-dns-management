@@ -57,6 +57,9 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
+  command = 'remove'
+  if( not args[0].startswith('-') ):
+    command = args.pop(0)
   usage = ('\n'
            '\n'
            'To remove acls:\n'
@@ -64,7 +67,7 @@ def main(args):
            '\n'
            'All arguments are required except for either '
            '--allow or --deny.\n' % sys.argv[0])
-  args_instance = Args('remove', ['remove'], args, usage)
+  args_instance = Args(command, ['remove'], args, usage)
   parser = args_instance.parser
   options = args_instance.options
 

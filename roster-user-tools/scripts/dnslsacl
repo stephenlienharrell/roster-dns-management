@@ -57,6 +57,9 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
+  command = 'acl'
+  if( not args[0].startswith('-') ):
+    command = args.pop(0)
   usage = ('\n'
            '\n'
            'To list acls:\n'
@@ -64,7 +67,7 @@ def main(args):
            '\n'
            'You may use any or none of the arguments above to search ACLs' %
            (sys.argv[0]))
-  args_instance = Args('list', ['list'], args, usage)
+  args_instance = Args(command, ['acl'], args, usage)
   options = args_instance.options
 
   try:

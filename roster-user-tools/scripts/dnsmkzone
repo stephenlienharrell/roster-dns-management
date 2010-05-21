@@ -58,7 +58,7 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  command = ''
+  command = None
   if( not args[0].startswith('-') ):
     command = args.pop(0)
   usage = ('\n'
@@ -83,10 +83,10 @@ def main(args):
   views = roster_client_lib.RunFunction(u'ListViews', options.username,
                                         credfile=options.credfile,
                                         credstring=options.credstring,
-                                        kwargs={u'view_name': options.view},
+                                        kwargs={u'view_name': options.view_name},
                                         server_name=options.server)[
                                             'core_return']
-  if( options.view not in views and options.view ):
+  if( options.view_name not in views and options.view_name ):
     cli_common_lib.DnsError('The view specified does not exist.', 1)
 
   if( command == 'reverse' ):
@@ -94,7 +94,7 @@ def main(args):
         u'ListReverseRangeZoneAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        kwargs={'zone_name': options.zone, 'cidr_block': options.cidr_block})[
+        kwargs={'zone_name': options.zone_name, 'cidr_block': options.cidr_block})[
             'core_return']
     if( options.cidr_block ):
       options.origin = roster_client_lib.RunFunction(
@@ -110,39 +110,39 @@ def main(args):
     zones = roster_client_lib.RunFunction(
         u'MakeZone', options.username, credfile=options.credfile,
         credstring=options.credstring,
-        args=[options.zone, options.type, options.origin],
-        kwargs={u'view_name': options.view, u'zone_options': options.options,
+        args=[options.zone_name, options.type, options.origin],
+        kwargs={u'view_name': options.view_name, u'zone_options': options.options,
                 u'make_any': options.dont_make_any},
         server_name=options.server)['core_return']
     if( not options.quiet ):
       print ('ADDED REVERSE ZONE: zone_name: %s zone_type: %s '
              'zone_origin: %s zone_options: %s view_name: %s' % (
-                 options.zone, options.type, options.origin, options.options,
-                 options.view))
+                 options.zone_name, options.type, options.origin, options.options,
+                 options.view_name))
     if( len(reverse_range_zone_assignments) == 0 ):
       roster_client_lib.RunFunction(
           u'MakeReverseRangeZoneAssignment', options.username,
           credfile=options.credfile, credstring=options.credstring,
           server_name=options.server,
-          args=[options.zone, options.cidr_block])
+          args=[options.zone_name, options.cidr_block])
     if( not options.quiet ):
       print ('ADDED REVERSE RANGE ZONE ASSIGNMENT: zone_name: %s '
              'cidr_block: %s ' % (
-                 options.zone, options.cidr_block))
+                 options.zone_name, options.cidr_block))
 
   elif( command == 'forward' ):
     zones = roster_client_lib.RunFunction(
         u'MakeZone', options.username, credfile=options.credfile,
         credstring=options.credstring,
-        args=[options.zone, options.type, options.origin],
-        kwargs={u'view_name': options.view, u'zone_options': options.options,
+        args=[options.zone_name, options.type, options.origin],
+        kwargs={u'view_name': options.view_name, u'zone_options': options.options,
                 u'make_any': options.dont_make_any},
         server_name=options.server)['core_return']
     if( not options.quiet ):
       print ('ADDED FORWARD ZONE: zone_name: %s zone_type: %s '
              'zone_origin: %s zone_options: %s view_name: %s' % (
-                 options.zone, options.type, options.origin, options.options,
-                 options.view))
+                 options.zone_name, options.type, options.origin, options.options,
+                 options.view_name))
   else:
     cli_common_lib.DnsError(
         'Command %s exists, but codepath doesn\'t.' % command, 1)

@@ -59,7 +59,7 @@ def main(args):
   Inputs:
     args: list of command line args
   """
-  command = ''
+  command = None
   if( not args[0].startswith('-') ):
     command = args.pop(0)
   usage = ('\n'

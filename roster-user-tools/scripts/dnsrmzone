@@ -57,12 +57,15 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
+  command = 'forward'
+  if( not args[0].startswith('-') ):
+    command = args.pop(0)
   usage = ('\n'
            '\n'
            'To remove zones:\n'
-           '%s\t -z <zone-name> -v <view-name>|--force\n'
-               tuple([sys.argv[0] for x in range(1)]))
-  args_instance = Args('forward', ['forward', 'reverse'], args, usage)
+           '%s\t -z <zone-name> -v <view-name>|--force\n' % tuple(
+               [sys.argv[0] for x in range(1)]))
+  args_instance = Args(command, ['forward', 'reverse'], args, usage)
   options = args_instance.options
 
   try:
@@ -70,22 +73,22 @@ def main(args):
   except cli_common_lib.ArgumentError, e:
     cli_common_lib.DnsError(str(e), 1)
 
-  if( options.zone and not options.view and not options.force ):
+  if( options.zone_name and not options.view_name and not options.force ):
     cli_common_lib.DnsError('Must use --force to delete entire Zone.', 1)
 
   core_return = roster_client_lib.RunFunction(
       u'RemoveZone', options.username, credfile=options.credfile,
       credstring=options.credstring, server_name=options.server,
-      args=[options.zone], kwargs={'view_name': options.view})['core_return']
+      args=[options.zone_name], kwargs={'view_name': options.view_name})['core_return']
 
   if( not options.quiet and core_return ):
-    view = options.view
-    if( not options.view ):
+    view = options.view_name
+    if( not options.view_name ):
       view = u'any'
     print 'REMOVED ZONE: zone_name: %s view_name: %s' % (
-        options.zone, view)
+        options.zone_name, view)
   elif( not core_return ):
-    cli_common_lib.DnsError('Zone "%s" does not exist.' % options.zone, 1)
+    cli_common_lib.DnsError('Zone "%s" does not exist.' % options.zone_name, 1)
   else:
     cli_common_lib.DnsError('Error in program logic.', 1)
 

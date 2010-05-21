@@ -191,19 +191,23 @@ class Zone(core_flags.CoreFlags):
     """Sets flags for self.parser"""
     make = self.action == 'Make'
     # All flags
-    self.parser.add_option('-v', '--view', action='store', dest='view',
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name',
                            help='String of view name.', default=None)
-    self.AddFlagRule('view', command='forward', required=False)
-    self.AddFlagRule('view', command='reverse', required=False)
-    self.parser.add_option('-z', '--zone', action='store', dest='zone',
-                           help='String of zone name.', default=None)
-    self.AddFlagRule('zone', command='forward', required=self.action!='List')
-    self.AddFlagRule('zone', command='reverse', required=self.action!='List')
+    self.AddFlagRule('view_name', command='forward', required=False)
+    self.AddFlagRule('view_name', command='reverse', required=False)
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name', help='String of zone name.',
+                           default=None)
+    self.AddFlagRule('zone_name', command='forward',
+                     required=self.action!='List')
+    self.AddFlagRule('zone_name', command='reverse',
+                     required=self.action!='List')
 
     # Just Remove
     if( self.action == 'Remove' ):
       # Not required since tool handles the error
-      self.AddFlagRule(('force', 'view'), flag_type='independent_args',
+      self.AddFlagRule(('force', 'view_name'), flag_type='independent_args',
                        required=False)
 
     # List and Make
@@ -238,8 +242,7 @@ class Zone(core_flags.CoreFlags):
                              help='Make a zone in a view other than any, must '
                                   'specify view name.',
                              default=True)
-      self.SetAllFlagRule(('view_name', 'dont_make_any'), required=False,
-                          flag_type='dependent_args')
+      self.SetAllFlagRule('dont_make_any', required=False)
 
 
 class View(core_flags.CoreFlags):
@@ -247,9 +250,10 @@ class View(core_flags.CoreFlags):
   def SetDataFlags(self):
     """Sets flags for self.parser"""
     not_list = self.action != 'List'
-    self.parser.add_option('-v', '--view', action='store', dest='view',
-                      help='String of view.', default=None)
-    self.SetAllFlagRule('view', required=not_list)
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name', help='String of view.',
+                           default=None)
+    self.SetAllFlagRule('view_name', required=not_list)
     self.parser.add_option('-V', '--view-dep', action='store',
                            dest='view_subset', default=None,
                            help='String of view dependency.')

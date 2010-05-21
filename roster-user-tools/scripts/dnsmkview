@@ -58,7 +58,7 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  command = ''
+  command = None
   if( not args[0].startswith('-') ):
     command = args.pop(0)
   usage = ('\n'
@@ -89,7 +89,7 @@ def main(args):
   views = roster_client_lib.RunFunction(
       u'ListViews', options.username, credfile=options.credfile,
       credstring=options.credstring, server_name=options.server,
-      kwargs={u'view_name': options.view})['core_return']
+      kwargs={u'view_name': options.view_name})['core_return']
 
   if( command == 'view' ):
     acls = roster_client_lib.RunFunction(
@@ -100,29 +100,29 @@ def main(args):
       cli_common_lib_instance.DnsError(
           'ACL "%s" does not exist.' % options.acl, 1)
 
-    if( options.view in views ):
+    if( options.view_name in views ):
       cli_common_lib_instance.DnsError(
-          'View "%s" already exists.' % options.views, 1)
+          'View "%s" already exists.' % options.view_names, 1)
 
     roster_client_lib.RunFunction(
         u'MakeView', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
-        args=[options.view, options.options])
+        args=[options.view_name, options.options])
 
     if( not options.quiet ):
-      print 'ADDED VIEW: view_name: %s options %s' % (options.view,
+      print 'ADDED VIEW: view_name: %s options %s' % (options.view_name,
                                                       options.options)
     roster_client_lib.RunFunction(
         u'MakeViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.view, options.acl])
+        server_name=options.server, args=[options.view_name, options.acl])
     if( not options.quiet ):
       print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s' % (
-          options.view, options.acl)
+          options.view_name, options.acl)
 
   elif( command == 'dns_server_set' ):
-    if( options.view not in views ):
-      cli_common_lib.DnsError('View "%s" does not exist.' % options.view, 1)
+    if( options.view_name not in views ):
+      cli_common_lib.DnsError('View "%s" does not exist.' % options.view_name, 1)
     dns_server_sets = roster_client_lib.RunFunction(
         u'ListDnsServerSets', options.username,
         credfile=options.credfile, credstring=options.credstring,
@@ -134,19 +134,19 @@ def main(args):
         u'MakeDnsServerSetViewAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        args=[options.view, options.dns_server_set])
+        args=[options.view_name, options.dns_server_set])
     if( not options.quiet ):
       print ('ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: %s '
-             'dns_server_set: %s' % (options.view, options.dns_server_set))
+             'dns_server_set: %s' % (options.view_name, options.dns_server_set))
 
   elif( command == 'acl' ):
-    if( options.view not in views ):
-      cli_common_lib.DnsError('View "%s" does not exist.' % options.view, 1)
+    if( options.view_name not in views ):
+      cli_common_lib.DnsError('View "%s" does not exist.' % options.view_name, 1)
     view_acl_assignments = roster_client_lib.RunFunction(
         u'ListViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        kwargs={'view_name': options.view, u'acl_name': options.acl})[
+        kwargs={'view_name': options.view_name, u'acl_name': options.acl})[
             'core_return']
     if( view_acl_assignments ):
       cli_common_lib.DnsError('View ACL Assignment already exists.', 1)
@@ -154,24 +154,24 @@ def main(args):
     roster_client_lib.RunFunction(
         u'MakeViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.view, options.acl])
+        server_name=options.server, args=[options.view_name, options.acl])
     if( not options.quiet ):
       print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s' % (
-          options.view, options.acl)
+          options.view_name, options.acl)
 
   elif( command == 'view_subset' ):
-    if( options.view not in views ):
-      cli_common_lib.DnsError('View "%s" does not exist.' % options.view, 1)
+    if( options.view_name not in views ):
+      cli_common_lib.DnsError('View "%s" does not exist.' % options.view_name, 1)
     view_assignments = roster_client_lib.RunFunction(
         u'ListViewAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        kwargs={'view_superset': options.view,
+        kwargs={'view_superset': options.view_name,
                 'view_subset': options.view_subset})['core_return']
     view_assignment_exists = True
-    if( options.view not in view_assignments ):
+    if( options.view_name not in view_assignments ):
       view_assignment_exists = False
-    elif( options.view_subset not in view_assignments[options.view] ):
+    elif( options.view_subset not in view_assignments[options.view_name] ):
         view_assignment_exists = False
 
     if( view_assignment_exists ):
@@ -181,10 +181,10 @@ def main(args):
           u'MakeViewAssignment', options.username,
           credfile=options.credfile, credstring=options.credstring,
           server_name=options.server,
-          args=[options.view, options.view_subset])
+          args=[options.view_name, options.view_subset])
       if( not options.quiet ):
         print 'ADDED VIEW ASSIGNMENT: view_name: %s view_subset: %s' % (
-            options.view, options.view_subset)
+            options.view_name, options.view_subset)
   else:
     cli_common_lib.DnsError(
         'Command %s exists, but codepath doesn\'t.' % command, 1)
