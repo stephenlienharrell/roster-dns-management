@@ -127,7 +127,7 @@ class TestDnslsdnsservers(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
-  def testListDnsServers(self):
+  def testListDnsServerSetAssignments(self):
     self.core_instance.MakeDnsServer(u'dns1')
     self.core_instance.MakeDnsServer(u'dns2')
     self.core_instance.MakeDnsServerSet(u'set1')
@@ -135,7 +135,7 @@ class TestDnslsdnsservers(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns2', u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns2', u'set2')
-    command = os.popen('python %s -u %s '
+    command = os.popen('python %s assignment -u %s '
                        '-p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
@@ -144,7 +144,7 @@ class TestDnslsdnsservers(unittest.TestCase):
                                      'set1 dns1,dns2\n'
                                      'set2 dns2\n\n')
     command.close()
-    command = os.popen('python %s -u %s -d dns1 '
+    command = os.popen('python %s assignment -u %s -d dns1 '
                        '-p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
@@ -152,13 +152,57 @@ class TestDnslsdnsservers(unittest.TestCase):
                                      '----------------\n'
                                      'set1 dns1\n\n')
     command.close()
-    command = os.popen('python %s -u %s -e set2 '
+    command = os.popen('python %s assignment -u %s -e set2 '
                        '-p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(), 'set  dns_servers\n'
                                      '----------------\n'
                                      'set2 dns2\n\n')
+    command.close()
+
+  def testListDnsServers(self):
+    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns2')
+    command = os.popen('python %s dns_server -u %s '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 'dns_server\n'
+                                     '----------\n'
+                                     'dns1\n'
+                                     'dns2\n\n')
+    command.close()
+
+  def testListDnsServerSets(self):
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSet(u'set2')
+    command = os.popen('python %s dns_server_set -u %s '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 'dns_server_set\n'
+                                     '--------------\n'
+                                     'set1\n'
+                                     'set2\n\n')
+    command.close()
+
+  def testErrors(self):
+    command = os.popen('python %s dns_server_set -d dns1 -u %s '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -d/--dns-server flag cannot be used with the '
+        'dns_server_set command.\n')
+    command.close()
+    command = os.popen('python %s dns_server -e set1 -u %s '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: The -e/--dns-server-set flag cannot be used with the '
+        'dns_server command.\n')
     command.close()
 
 if( __name__ == '__main__' ):

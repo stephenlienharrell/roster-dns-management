@@ -44,6 +44,12 @@ from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
+from roster_user_tools.action_flags import Remove
+from roster_user_tools.data_flags import DnsServer
+
+
+class Args(Remove, DnsServer):
+  pass
 
 
 def main(args):
@@ -52,37 +58,23 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
-
-  parser.add_option('-d', '--dns-server', action='store', dest='dns_server',
-                    help='Modify a DNS server.', default=None)
-  parser.add_option('-e', '--dns-server-set', action='store',
-                    dest='dns_server_set', help='Modify a DNS server set.',
-                    default=None)
-  parser.add_option('-s', '--server', action='store', dest='server',
-                    help='XML RPC Server URL.', metavar='<server>',
-                    default=None)
-  parser.add_option('--config-file', action='store', dest='config_file',
-                    help='Config file location.', metavar='<file>',
-                    default=None)
-  parser.add_option('-u', '--username', action='store', dest='username',
-                    help='Run as a different username.', metavar='<username>',
-                    default=unicode(getpass.getuser()))
-  parser.add_option('-p', '--password', action='store', dest='password',
-                    help='Password string, NOTE: It is insecure to use this '
-                         'flag on the command line.', metavar='<password>',
-                    default=None)
-  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
-                    help='Location of credential file.', metavar='<cred-file>',
-                    default=None)
-  parser.add_option('--cred-string', action='store', dest='credstring',
-                    help='String of credential.', metavar='<cred-string>',
-                    default=None)
-  parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
-                    help='Suppress program output.', default=False)
-
-
-  (globals()["options"], args) = parser.parse_args(args)
+  command = None
+  if( not args[0].startswith('-') ):
+    command = args.pop(0)
+  usage = ('\n'
+           '\n'
+           'To remove a dns server:\n'
+           '\t%s dns_server -d <dns-server>\n'
+           '\n'
+           'To remove a dns server set:\n'
+           '\t%s dns_server_set -e <dns-server-set>\n'
+           '\n'
+           'To remove a dns server set assignment:\n'
+           '\t%s assignment -d <dns-server> -e <dns-server-set>\n' % tuple(
+               [sys.argv[0] for x in range(3)]))
+  args_instance = Args(command, ['dns_server', 'dns_server_set', 'assignment'],
+                       args, usage)
+  options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
@@ -90,7 +82,7 @@ def main(args):
     print 'ERROR: %s' % e
     sys.exit(1)
 
-  if( options.dns_server_set and options.dns_server ):
+  if( command == 'assignment' ):
     core_return = roster_client_lib.RunFunction(
         u'RemoveDnsServerSetAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
@@ -105,7 +97,7 @@ def main(args):
           'DNS server set assignment "%s/%s" does not exist.' % (
               options.dns_server_set, options.dns_server), 1)
 
-  elif( options.dns_server_set ):
+  elif( command == 'dns_server_set' ):
     core_return = roster_client_lib.RunFunction(
         u'RemoveDnsServerSet', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
@@ -117,7 +109,7 @@ def main(args):
       cli_common_lib_instance.DnsError(
           'DNS server set "%s" does not exist.' % options.dns_server_set, 1)
 
-  elif( options.dns_server ):
+  elif( command == 'dns_server' ):
     core_return = roster_client_lib.RunFunction(
         u'RemoveDnsServer', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
@@ -129,8 +121,8 @@ def main(args):
       cli_common_lib_instance.DnsError(
           'DNS server "%s" does not exist.' % options.dns_server, 1)
   else:
-    parser.print_help()
-    cli_common_lib_instance.DnsError('Must specify a flag.', 1)
+    cli_common_lib.DnsError(
+        'Command %s exists, but codepath doesn\'t.' % command, 1)
 
 if __name__ == "__main__":
   main(sys.argv[1:])

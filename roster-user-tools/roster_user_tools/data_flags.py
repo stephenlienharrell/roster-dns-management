@@ -35,6 +35,9 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+DEFAULT_TTL = 3600
+
+
 import core_flags
 
 class Acl(core_flags.CoreFlags):
@@ -45,10 +48,11 @@ class Acl(core_flags.CoreFlags):
     not_list = self.action != 'List'
 
     self.parser.add_option('-a', '--acl', action='store', dest='acl',
-                           help='ACL name', default=None)
+                           help='String of access control list name.',
+                           default=None)
     self.AddFlagRule('acl', required=not_list)
     self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
-                           help='Cidr block or single IP address.',
+                           help='String of CIDR block or single IP address.',
                            default=None)
     self.AddFlagRule('cidr_block', required=self.action=='Make')
     if( self.action == 'Remove' ):
@@ -57,9 +61,9 @@ class Acl(core_flags.CoreFlags):
                        required=False)
 
     self.parser.add_option('--allow', action='store_true', dest='allow',
-                           help='Search for allowed ACLs.', default=None)
+                           help='Allow CIDR block in ACL.', default=None)
     self.parser.add_option('--deny', action='store_true', dest='deny',
-                           help='Search for denied ACLs.', default=None)
+                           help='Deny CIDR block in ACL.', default=None)
     self.AddFlagRule(('allow', 'deny'), required=self.action=='Make',
                      flag_type='independent_args')
 
@@ -112,32 +116,35 @@ class Record(core_flags.CoreFlags):
     self.AddFlagRule('admin_email', command='soa', required=not_list)
     self.parser.add_option('--serial-number', action='store',
                            dest='serial_number', type='int',
-                           help='(SOA) String of the serial number.',
+                           help='(SOA) Integer of the serial number.',
                            metavar='<serial-number>')
     self.AddFlagRule('serial_number', command='soa', required=not_list)
     self.parser.add_option('--refresh-seconds', action='store',
                            dest='refresh_seconds', type='int',
-                           help='(SOA) Number of seconds to refresh.',
+                           help='(SOA) Integer of number of seconds to '
+                                'refresh.',
                            metavar='<refresh-seconds>')
     self.AddFlagRule('refresh_seconds', command='soa', required=not_list)
     self.parser.add_option('--retry-seconds', action='store',
                            dest='retry_seconds', type='int',
-                           help='(SOA) Number of seconds to retry.',
+                           help='(SOA) Integer of number of seconds to retry.',
                            metavar='<retry-seconds>')
     self.AddFlagRule('retry_seconds', command='soa', required=not_list)
     self.parser.add_option('--expiry-seconds', action='store',
                            dest='expiry_seconds', type='int',
-                           help='(SOA) Number of seconds to expire.',
+                           help='(SOA) Integer of number of seconds to expire.',
                            metavar='<expiry-seconds>')
     self.AddFlagRule('expiry_seconds', command='soa', required=not_list)
     self.parser.add_option('--minimum-seconds', action='store',
                            dest='minimum_seconds', type='int',
-                           help='(SOA) Minium number of seconds to refresh.',
+                           help='(SOA) Integer of minium number of seconds '
+                                'to refresh.',
                            metavar='<minumum-seconds>')
     self.AddFlagRule('minimum_seconds', command='soa', required=not_list)
 
     self.parser.add_option('--priority', action='store', dest='priority',
-                           help='(SRV, MX) Integerof priority between 0-65535.',
+                           help='(SRV, MX) Integer of priority between '
+                                '0-65535.',
                            type='int', metavar='<priority>')
     self.AddFlagRule('priority', command='srv', required=not_list)
     self.AddFlagRule('priority', command='mx', required=not_list)
@@ -146,8 +153,8 @@ class Record(core_flags.CoreFlags):
                            type='int', metavar='<weight>')
     self.AddFlagRule('weight', command='srv', required=not_list)
     self.parser.add_option('--port', action='store', dest='port',
-                           help='(SRV) Port number.', metavar='<port>',
-                           type='int')
+                           help='(SRV) Integer of port number.',
+                           metavar='<port>', type='int')
     self.AddFlagRule('port', command='srv', required=not_list)
 
     self.parser.add_option('--mail-server', action='store',
@@ -163,16 +170,17 @@ class Record(core_flags.CoreFlags):
     self.SetAllFlagRule('zone_name', required=not_list)
     self.parser.add_option('-t', '--target', action='store', dest='target',
                            help='String of the target. "A" record example: '
-                                '"machine-01", "PTR" record example: 192.168.1.1',
+                                '"machine-01", "PTR" record example: '
+                                '192.168.1.1',
                            metavar='<target>', default=None)
     self.SetAllFlagRule('target', required=not_list)
     self.parser.add_option('--ttl', action='store', dest='ttl',
-                           help='Integer of time to live <ttl> per record.',
-                           metavar='<ttl>', default=3600)
+                           help='Time for host to be cached before being '
+                                'refreshed.',
+                           metavar='<ttl>', default=DEFAULT_TTL)
     self.SetAllFlagRule('ttl', required=False)
     self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
-                           help=('String of the view name <view-name>. Example: '
-                                 '"internal"'), metavar='<view-name>',
+                           help='String of view name.', metavar='<view-name>',
                            default='any')
     self.SetAllFlagRule('view_name', required=False)
 
@@ -184,11 +192,11 @@ class Zone(core_flags.CoreFlags):
     make = self.action == 'Make'
     # All flags
     self.parser.add_option('-v', '--view', action='store', dest='view',
-                           help='Modify a view.', default=None)
+                           help='String of view name.', default=None)
     self.AddFlagRule('view', command='forward', required=False)
     self.AddFlagRule('view', command='reverse', required=False)
     self.parser.add_option('-z', '--zone', action='store', dest='zone',
-                           help='Modify a zone.', default=None)
+                           help='String of zone name.', default=None)
     self.AddFlagRule('zone', command='forward', required=self.action!='List')
     self.AddFlagRule('zone', command='reverse', required=self.action!='List')
 
@@ -201,23 +209,26 @@ class Zone(core_flags.CoreFlags):
     # List and Make
     if( self.action != 'Remove' ):
       self.parser.add_option('-o', '--options', action='store', dest='options',
-                             help='Extra zone/view options.',
+                             help='String of extra zone/view options, '
+                                  'standard bind view clause syntax.',
                              metavar='<view-options>', default=None)
       self.AddFlagRule('options', command='forward', required=False)
       self.AddFlagRule('options', command='reverse', required=False)
       self.parser.add_option('--origin', action='store', dest='origin',
-                              help='Zone origin.', metavar='<origin>',
+                              help='String of zone origin.', metavar='<origin>',
                               default=None)
       self.AddFlagRule('origin', required=make, command='forward')
       self.parser.add_option('-t', '--type', action='store', dest='type',
-                             help='Zone type.', metavar='<type>', default=None)
+                             help='String of zone type. '
+                             '(master, slave, forward)', metavar='<type>',
+                             default=None)
       self.AddFlagRule('type', required=make, command='forward')
       self.AddFlagRule('type', required=make, command='reverse')
       self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
-                             help='Cidr block for reverse zones.',
+                             help='String of CIDR block for reverse zones.',
                              metavar='<cidr-block>', default=None)
-      self.AddFlagRule(('cidr_block', 'origin'), required=self.action!='List',
       # Not required since tool handles the error
+      self.AddFlagRule(('cidr_block', 'origin'), required=self.action!='List',
                        command='reverse', flag_type='independent_args')
 
     # Just Make
@@ -225,9 +236,10 @@ class Zone(core_flags.CoreFlags):
       self.parser.add_option('--dont-make-any', action='store_false',
                              dest='dont_make_any',
                              help='Make a zone in a view other than any, must '
-                                  'specify view name with --view-name',
+                                  'specify view name.',
                              default=True)
-      self.SetAllFlagRule('dont_make_any', required=False)
+      self.SetAllFlagRule(('view_name', 'dont_make_any'), required=False,
+                          flag_type='dependent_args')
 
 
 class View(core_flags.CoreFlags):
@@ -236,11 +248,11 @@ class View(core_flags.CoreFlags):
     """Sets flags for self.parser"""
     not_list = self.action != 'List'
     self.parser.add_option('-v', '--view', action='store', dest='view',
-                      help='Specifies a view.', default=None)
+                      help='String of view.', default=None)
     self.SetAllFlagRule('view', required=not_list)
     self.parser.add_option('-V', '--view-dep', action='store',
                            dest='view_subset', default=None,
-                           help='Specifies a view dependency.')
+                           help='String of view dependency.')
     self.AddFlagRule('view_subset', required=not_list, command='view_subset')
     self.parser.add_option('-o', '--options', action='store', dest='options',
                            help='View options.', metavar='<options>',
@@ -248,11 +260,11 @@ class View(core_flags.CoreFlags):
     self.AddFlagRule('options', required=False, command='view')
     self.parser.add_option('-e', '--dns-server-set', action='store',
                            dest='dns_server_set', default=None,
-                           help='Specifies a certain DNS server set.')
+                           help='String of dns server set name.')
     self.AddFlagRule('dns_server_set', required=not_list,
                      command='dns_server_set')
     self.parser.add_option('-a', '--acl', action='store', dest='acl',
-                           help='Modify an access control list. (name)',
+                           help='String of access control list name.',
                            default=None)
     self.AddFlagRule('acl', required=not_list, command='view')
     self.AddFlagRule('acl', required=not_list, command='acl')
@@ -271,11 +283,12 @@ class Host(core_flags.CoreFlags):
                              default=None)
       self.AddFlagRule('ip_address', required=not_list)
       self.parser.add_option('-t', '--target', action='store', dest='target',
-                             help='Target machine host name.', metavar='<target>',
-                             default=None)
+                             help='String of machine host name.',
+                             metavar='<target>', default=None)
       self.AddFlagRule('target', required=not_list)
       self.parser.add_option('--ttl', action='store', dest='ttl',
-                             help='Time to live.', metavar='<ttl>', default=3600)
+                             help='Time for host to live before being '
+                             'refreshed.', metavar='<ttl>', default=DEFAULT_TTL)
       self.AddFlagRule('ttl', required=False)
     else:
       self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
@@ -286,8 +299,27 @@ class Host(core_flags.CoreFlags):
                            dest='zone_name', help='String of the zone name.',
                            metavar='<zone-name>', default=None)
     self.AddFlagRule('zone_name', required=not_list)
-    self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name',
                            help=('String of the view name <view-name>. '
                                  'Example: "internal"'),
                            metavar='<view-name>', default=None)
     self.AddFlagRule('view_name', required=False, command='host')
+
+
+class DnsServer(core_flags.CoreFlags):
+  """Command line dns_server flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    not_list = self.action != 'List'
+    self.parser.add_option('-d', '--dns-server', action='store',
+                           dest='dns_server', help='DNS server.',
+                           default=None)
+    self.AddFlagRule('dns_server', required=not_list, command='dns_server')
+    self.AddFlagRule('dns_server', required=not_list, command='assignment')
+    self.parser.add_option('-e', '--dns-server-set', action='store',
+                           dest='dns_server_set',
+                           help='DNS server set.', default=None)
+    self.AddFlagRule('dns_server_set', required=not_list,
+                     command='dns_server_set')
+    self.AddFlagRule('dns_server_set', required=not_list, command='assignment')

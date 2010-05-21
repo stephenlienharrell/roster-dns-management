@@ -137,8 +137,7 @@ class Testdnsrmdnsserver(unittest.TestCase):
         {u'set1': [u'dns1']})
     self.assertEqual(self.core_instance.ListDnsServerSets(), [u'set1'])
     self.assertEqual(self.core_instance.ListDnsServers(), [u'dns1'])
-    output = os.popen('python %s -e set1 '
-                      '-d dns1 '
+    output = os.popen('python %s assignment -e set1 -d dns1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -148,7 +147,7 @@ class Testdnsrmdnsserver(unittest.TestCase):
     output.close()
     self.assertEqual(self.core_instance.ListDnsServerSetAssignments(), {})
     self.assertEqual(self.core_instance.ListDnsServerSets(), [u'set1'])
-    output = os.popen('python %s -e set1 '
+    output = os.popen('python %s dns_server_set -e set1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -156,7 +155,7 @@ class Testdnsrmdnsserver(unittest.TestCase):
     output.close()
     self.assertEqual(self.core_instance.ListDnsServerSets(), [])
     self.assertEqual(self.core_instance.ListDnsServers(), [u'dns1'])
-    output = os.popen('python %s -d dns1 '
+    output = os.popen('python %s dns_server -d dns1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -165,21 +164,21 @@ class Testdnsrmdnsserver(unittest.TestCase):
     self.assertEqual(self.core_instance.ListDnsServers(), [])
 
   def testErrors(self):
-    output = os.popen('python %s -d dns1 '
+    output = os.popen('python %s dns_server -d dns1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: DNS server "dns1" does not exist.\n')
     output.close()
-    output = os.popen('python %s -e set1 '
+    output = os.popen('python %s dns_server_set -e set1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: DNS server set "set1" does not exist.\n')
     output.close()
-    output = os.popen('python %s -d dns1 -e set1 '
+    output = os.popen('python %s assignment -d dns1 -e set1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
