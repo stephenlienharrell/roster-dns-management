@@ -1145,8 +1145,8 @@ class TestDnsMkHost(unittest.TestCase):
     db_instance.EndTransaction()
 
   def tearDown(self):
-    if( os.path.exists(ROOT_DIR) ):
-      shutil.rmtree(ROOT_DIR)
+    if( os.path.exists(self.bind_config_dir) ):
+      shutil.rmtree(self.bind_config_dir)
     if( os.path.exists('dns_tree-1.tar.bz2') ):
       os.remove('dns_tree-1.tar.bz2')
 
