@@ -707,6 +707,15 @@ class dbAccess(object):
         table_list.append(table_dict[table])
     return table_list
 
+  def GetCurrentTime(self):
+    """Returns datetime object of current time in database.
+
+    Outputs:
+      datetime: current time in the database
+    """
+    self.cursor.execute('SELECT NOW()')
+    return self.cursor.fetchone()['NOW()']
+
   def DumpDatabase(self):
     """This will dump the entire database to memory.
 

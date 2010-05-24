@@ -446,6 +446,12 @@ class TestdbAccess(unittest.TestCase):
     finally:
       self.db_instance.EndTransaction()
 
+  def testGetCurrentTime(self):
+    self.db_instance.StartTransaction()
+    time = self.db_instance.GetCurrentTime()
+    self.db_instance.EndTransaction()
+    self.assertTrue(isinstance(time, datetime.datetime))
+
   def testDumpDatabase(self):
     self.db_instance.StartTransaction()
     dump = self.db_instance.DumpDatabase()
