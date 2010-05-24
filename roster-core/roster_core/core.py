@@ -2020,7 +2020,7 @@ class Core(object):
 
       reverse_range_perms_dict[
           row['reverse_range_permissions_group_name']].append(
-              {'zone_name': row['reverse_range_permissions_cidr_block'],
+              {'cidr_block': row['reverse_range_permissions_cidr_block'],
                'access_right': row['reverse_range_permissions_access_right']})
 
     return reverse_range_perms_dict

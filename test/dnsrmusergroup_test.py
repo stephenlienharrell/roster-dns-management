@@ -28,9 +28,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Regression test for dnsrmusergroup
+"""Regression test for dnsmkusergroup
 
-Make sure you are running this against a database that can be destroyed.
+Remove sure you are running this against a database that can be destroyed.
 
 DO NOT EVER RUN THIS TEST AGAINST A PRODUCTION DATABASE.
 """
@@ -46,13 +46,12 @@ import socket
 import threading
 import time
 import getpass
-
 import unittest
-sys.path.append('../')
 
 import roster_core
-from roster_user_tools import roster_client_lib
 import roster_server
+from roster_user_tools import roster_client_lib
+
 
 USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -66,6 +65,7 @@ CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
 EXEC = '../roster-user-tools/scripts/dnsrmusergroup'
 
+
 class options(object):
   password = u'test'
   username = u'sharrell'
@@ -76,6 +76,7 @@ class options(object):
   ip_address = None
   target = u'machine1'
   ttl = 64
+
 
 class DaemonThread(threading.Thread):
   def __init__(self, config_instance, port):
@@ -130,33 +131,74 @@ class Testdnsrmusergroup(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testRemoveUserGroupUserGroupAssignments(self):
+    self.core_instance.MakeUser(u'new_user', 128)
+    self.core_instance.MakeUserGroupAssignment(u'new_user', u'cs')
+    output = os.popen('python %s assignment -n new_user -g cs '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'REMOVED USER_GROUP_ASSIGNMENT: username: new_user group: cs\n')
+    output.close()
     self.assertEqual(self.core_instance.ListUsers(),
-                     {u'shuey': 64, 'tree_export_user': 0, u'jcollins': 32,
-                      u'sharrell': 128})
+                     {u'shuey': 64, u'new_user': 128, u'jcollins': 32,
+                      u'tree_export_user': 0, u'sharrell': 128})
+    self.assertEqual(self.core_instance.ListGroups(), [u'bio', u'cs', u'eas'])
+    self.assertEqual(self.core_instance.ListUserGroupAssignments(),
+                     {u'shuey': [u'bio', u'cs'],
+                      u'sharrell': [u'cs']})
+
+  def testRemoveGroup(self):
+    self.core_instance.MakeGroup(u'testgroup')
+    output = os.popen('python %s group -g testgroup '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'REMOVED GROUP: group: testgroup\n')
+    output.close()
+    self.assertEqual(self.core_instance.ListGroups(), [u'bio', u'cs', u'eas'])
+
+  def testRemoveUser(self):
+    self.core_instance.MakeUser(u'test_user', 128)
+    output = os.popen('python %s user -n test_user -a 128 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'REMOVED USER: username: test_user access_level: 128\n')
+    output.close()
+  def testRemoveuserGroupAssignment(self):
+    self.core_instance.MakeUser(u'new_user', 128)
+    self.core_instance.MakeUserGroupAssignment(u'new_user', u'cs')
+    output = os.popen('python %s assignment -n new_user -g cs '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'REMOVED USER_GROUP_ASSIGNMENT: username: new_user group: cs\n')
+    output.close()
     self.assertEqual(self.core_instance.ListUserGroupAssignments(),
                      {u'shuey': [u'bio', u'cs'], u'sharrell': [u'cs']})
-    output = os.popen('python %s -n shuey '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'REMOVED USER: shuey\n')
-    output.close()
-    self.assertEqual(self.core_instance.ListUsers(),
-                     {u'jcollins': 32, u'sharrell': 128,
-                      u'tree_export_user': 0})
-    self.assertEqual(self.core_instance.ListUserGroupAssignments(),
-                     {u'sharrell': [u'cs']})
-    output = os.popen('python %s -g cs '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'REMOVED GROUP: cs\n')
-    output.close()
-    self.assertEqual(self.core_instance.ListUsers(),
-                     {u'jcollins': 32, u'sharrell': 128, 'tree_export_user': 0})
-    self.assertEqual(self.core_instance.ListUserGroupAssignments(), {})
 
-  def testRemovePermissions(self):
+  def testRemoveForwardPermission(self):
+    self.core_instance.MakeGroup(u'testgroup')
+    self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
+    self.core_instance.MakeForwardZonePermission(u'test_zone', u'testgroup',
+                                                 u'rw')
+    output = os.popen('python %s forward -z test_zone -g testgroup '
+                      '--access-right rw '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name,
+                          USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'REMOVED FORWARD_ZONE_PERMISSION: zone_name: test_zone group: '
+        'testgroup access_right: rw\n')
+    output.close()
     self.assertEqual(self.core_instance.ListForwardZonePermissions(),
                      {u'bio': [{'zone_name': u'bio.university.edu',
                                 'access_right': u'rw'}],
@@ -164,187 +206,86 @@ class Testdnsrmusergroup(unittest.TestCase):
                                  'access_right': u'rw'},
                                 {'zone_name': u'eas.university.edu',
                                  'access_right': u'r'}]})
-    output = os.popen('python %s -g '
-                      '--forward-zone-permission -z bio.university.edu -g bio '
-                      '--access-right rw '
+
+  def testRemoveReverseRangeAssignment(self):
+    self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
+    self.core_instance.MakeGroup(u'testgroup')
+    output = os.popen('python %s reverse -g testgroup -z test_zone '
+                      '-b 192.168.1.4/30 --access-right rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'REMOVED GROUP: bio\n')
+    self.assertEqual(
+        output.read(),
+        'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.1.4/30 '
+        'group: testgroup access_right: rw\n')
     output.close()
-    self.assertEqual(self.core_instance.ListForwardZonePermissions(),
-                     {u'cs': [{'zone_name': u'cs.university.edu',
-                                 'access_right': u'rw'},
-                                {'zone_name': u'eas.university.edu',
-                                 'access_right': u'r'}]})
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
-                     {u'cs': [{'zone_name': u'192.168.0.0/24',
-                                 'access_right': u'rw'}]})
-    output = os.popen('python %s '
-                      '--reverse-range-permission --cidr-block 192.168.0.0/24 '
-                      '-g cs --access-right rw '
+                     {u'cs': [{'cidr_block': u'192.168.0.0/24',
+                               'access_right': u'rw'}],
+                      u'bio': [{'cidr_block': u'192.168.0.0/24',
+                                'access_right': u'r'},
+                               {'cidr_block': u'192.168.1.0/24',
+                                'access_right': u'rw'}]})
+
+  def testRemoveZoneAssignments(self):
+    self.core_instance.MakeGroup(u'test_group')
+    self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
+    output = os.popen('python %s reverse -z test_zone -b '
+                      '192.168.1.0/24 -g test_group --access-right rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-                     'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: '
-                     '192.168.0.0/24 group: cs access_right: rw\n')
+    self.assertEqual(
+        output.read(),
+        'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.1.0/24 '
+        'group: test_group access_right: rw\n')
     output.close()
-    self.assertEqual(self.core_instance.ListReverseRangePermissions(), {})
+    self.assertEqual(self.core_instance.ListReverseRangePermissions(),
+                     {u'bio':
+                          [{'cidr_block': u'192.168.0.0/24',
+                            'access_right': u'r'},
+                           {'cidr_block': u'192.168.1.0/24',
+                            'access_right': u'rw'}],
+                      u'cs':
+                          [{'cidr_block': u'192.168.0.0/24',
+                            'access_right': u'rw'}]})
 
   def testErrors(self):
-    output = os.popen('python %s -n shuey '
-                      '-g test_group_error '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: The -g/--group flag cannot '
-                                    'be used.\n')
-    output.close()
-    output = os.popen('python %s -f forward '
-                      '-r test_reverse_error '
+    output = os.popen('python %s user -n jcollins -g cs '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: The -r/--reverse-range-permission '
-        'flag cannot be used.\n')
+        'CLIENT ERROR: The -g/--group flag cannot be used with the user '
+        'command.\n')
     output.close()
-    output = os.popen('python %s -f forward '
-                      '-n test_user_name_error '
+    output = os.popen('python %s user -n wronguser '
+                      '-a 128 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: The -f/--forward-zone-permission flag cannot be used.\n')
+        'CLIENT ERROR: Username does not exist.\n')
     output.close()
-    output = os.popen('python %s -f forward '
+    output = os.popen('python %s assignment -n newuser '
+                      '-g fakegroup '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(), 'CLIENT ERROR: Group does not exist.\n')
+    output.close()
+    self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
+    self.core_instance.MakeGroup(u'testgroup')
+    output = os.popen('python %s forward '
+                      '-g testgroup -z test_zone --access-right x '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: An access right must be specified '
-        'with the --access-right flag.\n')
+        'CLIENT ERROR: An access right of either rw|r '
+        'is required if specifying a zone.\n')
     output.close()
-    output = os.popen('python %s -f forward '
-                      '--access-right access_right '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: A group must be specified '
-                                    'with the -g flag.\n')
-    output.close()
-    output = os.popen('python %s -f forward '
-                      '--access-right access_right -g test_group '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: An access right of either rw|r is required.\n')
-    output.close()
-    output = os.popen('python %s -f forward '
-                      '--access-right rw -g test_group '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: A zone must be specified with the -z flag.\n')
-    output.close()
-    output = os.popen('python %s -r reverse '
-                      '-n test_user_name_error '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: The -r/--reverse-range-permission '
-        'flag cannot be used.\n')
-    output.close()
-    output = os.popen('python %s -r reverse '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: A CIDR block must be specified '
-        'with the --cidr-block flag.\n')
-    output.close()
-    output = os.popen('python %s -r reverse '
-                      '--cidr-block 192.168.0.0/24 '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: A group must be specified '
-                                    'with the -g flag.\n')
-    output.close()
-    output = os.popen('python %s -r reverse '
-                      '--cidr-block 192.168.0.0/24 '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: A group must be specified '
-                                    'with the -g flag.\n')
-    output.close()
-    output = os.popen('python %s -r reverse '
-                      '--cidr-block 192.168.0.0/24 -g test_group '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: An access right must be specified '
-        'with the --access-right flag.\n')
-    output.close()
-    output = os.popen('python %s -r reverse '
-                      '--cidr-block 192.168.0.0/24 -g test_group '
-                      '--access-right fake_access_right '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: An access right of either rw|r is required.\n')
-    output.close()
-    output = os.popen('python %s '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-                     'Usage: dnsrmusergroup [options]\n'
-                     '\nOptions:\n'
-                     '  --version             show program\'s version number '
-                     'and exit\n'
-                     '  -h, --help            show this help message and exit\n'
-                     '  -n <new-user>, --user-name=<new-user>\n'
-                     '                        String of the user to remove.\n'
-                     '  -g <group>, --group=<group>\n'
-                     '                        String of the group name to'
-                     ' remove.\n'
-                     '  -f, --forward-zone-permission\n'
-                     '                        Make a forward zone permission.\n'
-                     '  -r, --reverse-range-permission\n'
-                     '                        Make a reverse range '
-                     'permission.\n'
-                     '  -z <zone>, --zone=<zone>\n'
-                     '                        String of the zone name '
-                     '(optional)\n'
-                     '  --access-right=r|rw   String of the access right'
-                     ' (r/rw)\n'
-                     '  -b <cidr-block>, --cidr-block=<cidr-block>\n'
-                     '                        String of CIDR block.\n'
-                     '  -s <server>, --server=<server>\n'
-                     '                        XML RPC Server address.\n'
-                     '  --config-file=<file>  Config file location.\n'
-                     '  -u <username>, --username=<username>\n'
-                     '                        Run as a different username.\n'
-                     '  -p <password>, --password=<password>\n'
-                     '                        Password string, NOTE: It is'
-                     ' insecure to use this flag\n'
-                     '                        on the command line.\n'
-                     '  -c <cred-file>, --cred-file=<cred-file>\n'
-                     '                        Location of credential file.\n'
-                     '  --cred-string=<cred-string>\n'
-                     '                        String of credential.\n'
-                     '  -q, --quiet           Suppress program output.\n'
-                     'CLIENT ERROR: Need to specify an option.\n')
-    output.close()
-
 
 if( __name__ == '__main__' ):
       unittest.main()

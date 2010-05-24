@@ -327,3 +327,44 @@ class DnsServer(core_flags.CoreFlags):
     self.AddFlagRule('dns_server_set', required=not_list,
                      command='dns_server_set')
     self.AddFlagRule('dns_server_set', required=not_list, command='assignment')
+
+
+class User(core_flags.CoreFlags):
+  """Command line dns_server flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    not_list = self.action != 'List'
+    self.parser.add_option('-n', '--new-user', action='store', dest='new_user',
+                           help='String of the new user to create.',
+                           metavar='<new-user>', default=None)
+    self.AddFlagRule('new_user', required=not_list, command='user')
+    self.AddFlagRule('new_user', required=not_list, command='assignment')
+    self.parser.add_option('-a', '--access-level', action='store',
+                           dest='access_level',
+                           help='Access level of new user.',
+                           metavar='<access-level>', default=None, type='int')
+    self.AddFlagRule('access_level', required=self.action=='Make',
+                     command='user')
+    self.parser.add_option('-g', '--group', action='store', dest='group',
+                           help='String of the group name to create or assign.',
+                           metavar='<group>', default=None)
+    self.AddFlagRule('group', required=not_list, command='group')
+    self.AddFlagRule('group', required=not_list, command='assignment')
+    self.AddFlagRule('group', required=not_list, command='forward')
+    self.AddFlagRule('group', required=not_list, command='reverse')
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name',
+                           help='String of the zone name (optional)',
+                           metavar='<zone>', default=None)
+    self.AddFlagRule('zone_name', required=not_list, command='forward')
+    self.AddFlagRule('zone_name', required=not_list, command='reverse')
+    self.parser.add_option('--access-right', action='store',
+                           dest='access_right',
+                           help='String of the access right (r/rw)',
+                           metavar='r|rw', default=None)
+    self.AddFlagRule('access_right', required=not_list, command='forward')
+    self.AddFlagRule('access_right', required=not_list, command='reverse')
+    self.parser.add_option('-b', '--cidr-block', action='store',
+                           dest='cidr_block', help='String of CIDR block.',
+                           metavar='<cidr-block>', default=None)
+    self.AddFlagRule('cidr_block', required=not_list, command='reverse')

@@ -131,44 +131,168 @@ class Testdnslsusergroup(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testListUserGroupUserGroupAssignments(self):
-    output = os.popen('python %s -s %s -u %s -p %s --config-file %s' % (
+    output = os.popen('python %s assignment -s %s -u %s -p %s '
+                      '--config-file %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 
-                     'Username         Groups Access Level\n'
-                     '------------------------------------\n'
-                     'shuey            bio,cs 64\n'
-                     'jcollins                32\n'
-                     'tree_export_user        0\n'
-                     'sharrell         cs     128\n\n')
+                     'username groups\n'
+                     '---------------\n'
+                     'shuey    bio,cs\n'
+                     'sharrell cs\n\n')
     output.close()
-    output = os.popen('python %s -U sharrell -s %s -u %s -p %s '
+    output = os.popen('python %s assignment -n sharrell -s %s -u %s -p %s '
                       '--config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'Username Groups Access Level\n'
-                                    '----------------------------\n'
-                                    'sharrell cs     128\n\n')
+    self.assertEqual(output.read(), 'username groups\n'
+                                    '---------------\n'
+                                    'sharrell cs\n\n')
     output.close()
-    output = os.popen('python %s -g cs -s %s -u %s -p %s --config-file %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'Username Groups Access Level\n'
-                                    '----------------------------\n'
-                                    'shuey    cs     64\n'
-                                    'sharrell cs     128\n\n')
-    output.close()
-    output = os.popen('python %s -a 128 -s %s -u %s -p %s --config-file %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'Username Groups Access Level\n'
-                                    '----------------------------\n'
-                                    'sharrell cs     128\n\n')
-    output.close()
-    output = os.popen('python %s -g cs -a 128 -s %s -u %s -p %s '
+    output = os.popen('python %s assignment -g cs -s %s -u %s -p %s '
                       '--config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'Username Groups Access Level\n'
-                                    '----------------------------\n'
-                                    'sharrell cs     128\n\n')
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'username groups\n'
+                                    '---------------\n'
+                                    'shuey    cs\n'
+                                    'sharrell cs\n\n')
+    output.close()
+
+  def testListGroup(self):
+    output = os.popen('python %s group -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'group\n'
+                                    '-----\n'
+                                    'bio\n'
+                                    'cs\n'
+                                    'eas\n\n')
+    output.close()
+    output = os.popen('python %s group -g eas -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'group\n'
+                                    '-----\n'
+                                    'eas\n\n')
+    output.close()
+
+  def testListUser(self):
+    output = os.popen('python %s user -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'username         access_level\n'
+                                    '-----------------------------\n'
+                                    'shuey            64\n'
+                                    'jcollins         32\n'
+                                    'tree_export_user 0\n'
+                                    'sharrell         128\n\n')
+    output.close()
+    output = os.popen('python %s user -n tree_export_user -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'username         access_level\n'
+                                    '-----------------------------\n'
+                                    'tree_export_user 0\n\n')
+    output.close()
+    output = os.popen('python %s user -a 128 -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'username access_level\n'
+                                    '---------------------\n'
+                                    'sharrell 128\n\n')
+    output.close()
+
+  def testListReverseRangePermissions(self):
+    self.core_instance.MakeGroup(u'group1')
+    self.core_instance.MakeReverseRangePermission(u'10/8', u'group1', u'r')
+    output = os.popen('python %s reverse -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'group  cidr_block     access_right\n'
+                     '----------------------------------\n'
+                     'cs     192.168.0.0/24 rw\n'
+                     'bio    192.168.0.0/24 r\n'
+                     'bio    192.168.1.0/24 rw\n'
+                     'group1 10/8           r\n\n')
+    output.close()
+    output = os.popen('python %s reverse -g bio -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'group cidr_block     access_right\n'
+                     '---------------------------------\n'
+                     'bio   192.168.0.0/24 r\n'
+                     'bio   192.168.1.0/24 rw\n\n')
+    output.close()
+    output = os.popen('python %s reverse --cidr-block 192.168.0.0/24 -s %s '
+                      '-u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'group cidr_block     access_right\n'
+                     '---------------------------------\n'
+                     'cs    192.168.0.0/24 rw\n'
+                     'bio   192.168.0.0/24 r\n\n')
+    output.close()
+    output = os.popen('python %s reverse --access-right r -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'group  cidr_block     access_right\n'
+                     '----------------------------------\n'
+                     'bio    192.168.0.0/24 r\n'
+                     'group1 10/8           r\n\n')
+    output.close()
+
+  def testForwardZonePermission(self):
+    output = os.popen('python %s forward -s %s '
+                      '-u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'group zone_name          access_right\n'
+                                    '-------------------------------------\n'
+                                    'cs    cs.university.edu  rw\n'
+                                    'cs    eas.university.edu r\n'
+                                    'bio   bio.university.edu rw\n\n')
+    output.close()
+    output = os.popen('python %s forward -g bio -s %s '
+                      '-u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'group zone_name          access_right\n'
+                                    '-------------------------------------\n'
+                                    'bio   bio.university.edu rw\n\n')
+    output.close()
+    output = os.popen('python %s forward -z bio.university.edu -s %s '
+                      '-u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'group zone_name          access_right\n'
+                                    '-------------------------------------\n'
+                                    'bio   bio.university.edu rw\n\n')
+    output.close()
+    output = os.popen('python %s forward --access-right rw -s %s '
+                      '-u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME, PASSWORD,
+                          USER_CONFIG))
+    self.assertEqual(output.read(), 'group zone_name          access_right\n'
+                                    '-------------------------------------\n'
+                                    'cs    cs.university.edu  rw\n'
+                                    'bio   bio.university.edu rw\n\n')
     output.close()
 
 if( __name__ == '__main__' ):

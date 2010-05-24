@@ -434,29 +434,31 @@ class TestCore(unittest.TestCase):
   def testReverseRangePermissionsListMakeRemove(self):
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio': [
-                       {'zone_name': u'192.168.0.0/24', 'access_right': u'r'},
-                       {'zone_name': u'192.168.1.0/24', 'access_right': u'rw'}],
+                       {'cidr_block': u'192.168.0.0/24', 'access_right': u'r'},
+                       {'cidr_block': u'192.168.1.0/24',
+                        'access_right': u'rw'}],
                      u'cs': [
-                       {'zone_name': u'192.168.0.0/24',
+                       {'cidr_block': u'192.168.0.0/24',
                         'access_right': u'rw'}]})
     self.core_instance.MakeReverseRangePermission(u'10/8', u'bio',
                                                   u'r')
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio': [
-                       {'zone_name': u'192.168.0.0/24', 'access_right': u'r'},
-                       {'zone_name': u'192.168.1.0/24', 'access_right': u'rw'},
-                       {'zone_name': u'10/8', 'access_right': u'r'}],
+                       {'cidr_block': u'192.168.0.0/24', 'access_right': u'r'},
+                       {'cidr_block': u'192.168.1.0/24', 'access_right': u'rw'},
+                       {'cidr_block': u'10/8', 'access_right': u'r'}],
                      u'cs': [
-                       {'zone_name': u'192.168.0.0/24',
+                       {'cidr_block': u'192.168.0.0/24',
                         'access_right': u'rw'}]})
     self.assertTrue(self.core_instance.RemoveReverseRangePermission(
         u'10/8', u'bio', u'r'))
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio': [
-                       {'zone_name': u'192.168.0.0/24', 'access_right': u'r'},
-                       {'zone_name': u'192.168.1.0/24', 'access_right': u'rw'}],
+                       {'cidr_block': u'192.168.0.0/24', 'access_right': u'r'},
+                       {'cidr_block': u'192.168.1.0/24',
+                        'access_right': u'rw'}],
                      u'cs': [
-                       {'zone_name': u'192.168.0.0/24',
+                       {'cidr_block': u'192.168.0.0/24',
                         'access_right': u'rw'}]})
 
   def testRecordMakeRemoveListUpdate(self):
