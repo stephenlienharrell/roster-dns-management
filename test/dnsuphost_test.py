@@ -43,6 +43,7 @@ __version__ = '#TRUNK#'
 import os
 import sys
 import socket
+import subprocess
 import threading
 import time
 import getpass
@@ -208,7 +209,7 @@ class TestDnsMkHost(unittest.TestCase):
                                                       u'192.168.1.0/24')
     self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6_zone_rev',
                                                       u'2001::/124')
-    output = os.popen('python %s -r 192.168.1.4/30 -f %s '
+    output = os.popen('python %s dump -r 192.168.1.4/30 -f %s '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -236,7 +237,7 @@ class TestDnsMkHost(unittest.TestCase):
         '#192.168.1.6\n'
         '#192.168.1.7\n')
     handle.close()
-    output = os.popen('python %s -r 2001::/124 -f %s -z ipv6_zone '
+    output = os.popen('python %s dump -r 2001::/124 -f %s -z ipv6_zone '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE_IPV6, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -300,7 +301,7 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeRecord(
         u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
           u'ipv6host.university.edu.'}, view_name=u'test_view')
-    output = os.popen('python %s -r 2001::/124 -f %s -z ipv6_zone '
+    output = os.popen('python %s dump -r 2001::/124 -f %s -z ipv6_zone '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -427,8 +428,8 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
     # Run updater
-    output = os.popen('python %s -f %s -z forward_zone -v test_view -s '
-                      '%s -u %s -p %s --config-file %s --update --commit' % (
+    output = os.popen('python %s update -f %s -z forward_zone -v test_view -s '
+                      '%s -u %s -p %s --config-file %s --commit' % (
                           EXEC, TEST_FILE, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
@@ -477,7 +478,7 @@ class TestDnsMkHost(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'reverse_zone',
           u'assignment_host': u'university.edu.'}])
-    output = os.popen('python %s -r 192.168.1.4/30 -f %s '
+    output = os.popen('python %s dump -r 192.168.1.4/30 -f %s '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -527,8 +528,8 @@ class TestDnsMkHost(unittest.TestCase):
     handle = open(INVALID_HOSTS, 'w')
     handle.writelines(file_contents)
     handle.close()
-    output = os.popen('python %s -f %s -v test_view -s %s -u %s --commit -p '
-                      '%s --config-file %s --update -r 192.168.1.4/30' % (
+    output = os.popen('python %s update -f %s -v test_view -s %s -u %s '
+                      '--commit -p %s --config-file %s -r 192.168.1.4/30' % (
                           EXEC, INVALID_HOSTS,
                           self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
@@ -553,8 +554,8 @@ class TestDnsMkHost(unittest.TestCase):
     handle = open(INVALID_HOSTS, 'w')
     handle.writelines(file_contents)
     handle.close()
-    output = os.popen('python %s -f %s -v test_view -s %s -u %s -p '
-                      '%s --config-file %s --update -r 192.168.1.4/30 '
+    output = os.popen('python %s update -f %s -v test_view -s %s -u %s -p '
+                      '%s --config-file %s -r 192.168.1.4/30 '
                       '--commit' % (
                           EXEC, INVALID_HOSTS, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -563,5 +564,68 @@ class TestDnsMkHost(unittest.TestCase):
                      '"test_data/invalid_hosts"\n')
     output.close()
 
+  def testEdit(self):
+    os.environ['EDITOR'] = 'python fake_editor.py'
+    self.core_instance.MakeRecord(
+        u'soa', u'soa2', u'ipv6_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa2', u'ipv6_zone_rev',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'ipv6host', u'ipv6_zone', {u'assignment_ip':
+          u'2001:0000:0000:0000:0000:0000:0000:0001'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'host_ipv6', u'ipv6_zone', {u'assignment_ip':
+          u'2001:0000:0000:0000:0000:0000:0000:0002'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
+          u'ipv6host.university.edu.'}, view_name=u'test_view')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
+                                                      u'192.168.1.0/24')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6_zone_rev',
+                                                      u'2001::/124')
+    output = os.popen(('python %s edit -r 192.168.1.4/30 -f %s --commit '
+                       '--keep-output '
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
+                           EXEC, TEST_FILE, self.server_name, USERNAME,
+                           PASSWORD, USER_CONFIG)))
+    self.assertEqual(output.read(), 'Host: host3.university.edu with ip '
+                                    'address 192.168.1.5 will be REMOVED\n'
+                                    'Host: new_host.university.edu with ip '
+                                    'address 192.168.1.5 will be ADDED\n')
+    output.close()
+    handle = open(TEST_FILE, 'r')
+    self.assertEqual(
+        handle.read(),
+        '#:range:192.168.1.4/30\n'
+        '#:view_dependency:test_view_dep\n'
+        '# Do not delete any lines in this file!\n'
+        '# To remove a host, comment it out, to add a host,\n'
+        '# uncomment the desired ip address and specify a\n'
+        '# hostname. To change a hostname, edit the hostname\n'
+        '# next to the desired ip address.\n'
+        '#\n'
+        '# The "@" symbol in the host column signifies inheritance\n'
+        '# of the origin of the zone, this is just shorthand.\n'
+        '# For example, @.university.edu. would be the same as\n'
+        '# university.edu.\n'
+        '#\n'
+        '# Columns are arranged as so:\n'
+        '# Ip_Address Fully_Qualified_Domain Hostname\n'
+        '#192.168.1.4 host2.university.edu       # No forward assignment\n'
+        '192.168.1.5  new_host.university.edu new_host # No reverse assignment\n'
+        '#192.168.1.6\n'
+        '#192.168.1.7\n')
+
 if( __name__ == '__main__' ):
-      unittest.main()
+  unittest.main()
+

@@ -46,7 +46,12 @@ from optparse import OptionParser
 from roster_user_tools import cli_record_lib
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
+from roster_user_tools.action_flags import Update
+from roster_user_tools.data_flags import Hosts
 
+
+class Args(Update, Hosts):
+  pass
 
 
 def MakeHostsFile(options, cli_common_lib_instance):
@@ -58,22 +63,15 @@ def MakeHostsFile(options, cli_common_lib_instance):
   Outputs:
     string: string of hosts file
   """
-  records_dict = roster_client_lib.RunFunction('ListRecordsByCIDRBlock',
-                                               options.username,
-                                               credfile=options.credfile,
-                                               server_name=options.server,
-                                               args=[options.range],
-                                               kwargs={'view_name':
-                                                 options.view_name})[
-                                                     'core_return']
+  records_dict = roster_client_lib.RunFunction(
+      'ListRecordsByCIDRBlock', options.username, credfile=options.credfile,
+      server_name=options.server, args=[options.range],
+      kwargs={'view_name': options.view_name})['core_return']
   if( records_dict == {} ):
     cli_common_lib_instance.DnsError('No records found.', 1)
-  ip_address_list = roster_client_lib.RunFunction('CIDRExpand',
-                                                  options.username,
-                                                  credfile=options.credfile,
-                                                  server_name=options.server,
-                                                  args=[options.range])[
-                                                      'core_return']
+  ip_address_list = roster_client_lib.RunFunction(
+      'CIDRExpand', options.username, credfile=options.credfile,
+      server_name=options.server, args=[options.range])['core_return']
   view_dependency = options.view_name
   if( options.view_name != 'any' and options.view_name != None ):
     view_dependency = '%s_dep' % options.view_name
@@ -224,52 +222,22 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
-
-  parser.add_option('--commit', action='store_true', dest='commit',
-                    help='Commits changes of hosts file without confirmation.',
-                    default=False)
-  parser.add_option('--no-commit', action='store_true', dest='no_commit',
-                    help='Suppresses changes of hosts file.', default=False)
-  parser.add_option('-r', '--range', action='store', dest='range',
-                    help='CIDR block range of IP addresses. Assumes -l, will'
-                    'only print a list of ip addresses. Example:'
-                    '10.10.0.0/24', metavar='<range>', default=None)
-  parser.add_option('-f', '--file', action='store', dest='file',
-                    help='File name of hosts file to write to database.',
-                    metavar='<file-name>', default='hosts_out')
-  parser.add_option('--update', action='store_true', dest='update',
-                    help='Update changes to file to database.',
-                    default=False)
-  parser.add_option('-s', '--server', action='store', dest='server',
-                    help='XML RPC Server address.', metavar='<server>',
-                    default=None)
-  parser.add_option('--config-file', action='store', dest='config_file',
-                    help='Config file location.', metavar='<file>',
-                    default=None)
-  parser.add_option('--ttl', action='store', dest='ttl',
-                    help='Time to live.', metavar='<ttl>', default=3600)
-  parser.add_option('-z', '--zone', action='store', dest='zone_name',
-                    help='String of the zone name.', metavar='<zone-name>',
-                    default=None)
-  parser.add_option('-v', '--view-name', action='store', dest='view_name',
-                    help=('String of the view name <view-name>. Example: '
-                    '"internal"'), metavar='<view-name>', default='any')
-  parser.add_option('-u', '--username', action='store', dest='username',
-                    help='Run as a different username.', metavar='<username>',
-                    default=unicode(getpass.getuser()))
-  parser.add_option('-p', '--password', action='store', dest='password',
-                    help='Password string, NOTE: It is insecure to use this '
-                    'flag on the command line.', metavar='<password>',
-                    default=None)
-  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
-                    help='Location of credential file.', metavar='<cred-file>',
-                    default=None)
-  parser.add_option('-e', '--edit', action='store_true', dest='edit',
-                    help='Edits file after creation, uses EDITOR from env.',
-                    default=False)
-
-  (globals()["options"], args) = parser.parse_args(args)
+  command = None
+  if( not args[0].startswith('-') ):
+    command = args.pop(0)
+  usage = ('\n'
+           '\n'
+           'To dump a text hosts file of a cidr-block:\n'
+           '\t%s dump -r <cidr-block> [-f <file-name>] [-v <view-name>]\n'
+           '\t[-z <zone-name>]\n'
+           '\n'
+           'To update a cidr block at once:\n'
+           '\t%s update -r <cidr-block> [-f <file-name>] [-v <view-name]\n'
+           '\t[-z <zone-name>] [--commit|--no-commit]\n' % tuple(
+             [sys.argv[0] for x in range(2)]))
+  args_instance = Args(command,
+      ['update', 'dump', 'edit'], args, usage)
+  options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
@@ -277,31 +245,34 @@ def main(args):
     print 'ERROR: %s' % e
     sys.exit(1)
   cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
-  if( not options.update):
-    if( not options.range ):
-      cli_common_lib_instance.DnsError('A range must be given if not updating.', 1)
-    if( options.edit and 'EDITOR' not in os.environ ):
-        cli_common.DnsError('EDITOR environment variable not set.')
+  write_to_db = False
+  remove_file = False
+
+  if( command in ['dump', 'edit'] ):
     file_contents = MakeHostsFile(options, cli_common_lib_instance)
     handle = open(options.file, 'w')
     try:
       handle.writelines(file_contents)
     finally:
       handle.close()
-    if( options.edit ):
-      temp_file = '.hosts_out'
-      file_number = 0
-      while( os.path.exists(temp_file) ):
-        temp_file = '%s%s' % (temp_file, i)
-        file_number += 1
-      options.file = temp_file
-      return_code = os.system('%s %s' % (os.environ['EDITOR'], options.file))
-      if( return_code == 0 ):
-        options.update = True
-      else:
-        cli_common_lib_instance.DnsError('Error editing file.', 1)
 
-  if( options.update ):
+  if( command == 'edit' ):
+    remove_file = True
+    if( 'EDITOR' not in os.environ ):
+        cli_common_lib.DnsError('EDITOR environment variable not set.', 1)
+    edit_process = os.popen('%s %s' % (os.environ['EDITOR'], options.file))
+    stuff = edit_process.read()
+    closenum = edit_process.close()
+    if( closenum is None ):
+      return_code = 0
+    else:
+      return_code = os.WEXITSTATUS(closenum)
+    if( return_code == 0 ):
+      write_to_db = True
+    else:
+      cli_common_lib_instance.DnsError('Error editing file.', 1)
+
+  if( write_to_db or command == 'update' ):
     new_hosts_file_handle = open(options.file, 'r')
     try:
       new_hosts_file_contents = new_hosts_file_handle.read()
@@ -335,9 +306,6 @@ def main(args):
       except KeyError:
         cli_common_lib_instance.DnsError('IP Address %s is not in CIDR block %s.' % (
             ip_address, options.range), 1)
-    if( options.commit and options.no_commit ):
-      cli_common_lib_instance.DnsError('--commit and --no-commit cannot be used '
-                              'together.', 1)
     delete_list = []
     add_list = []
     for host in update_hosts_dict:
@@ -436,10 +404,15 @@ def main(args):
         server_name=options.server,
         kwargs={'delete_records': delete_list,
                 'add_records': add_list})['core_return']
-    if( options.edit ):
+    if( remove_file and not options.keep_output ):
       os.remove(options.file)
-  if( not options.update and not options.range ):
-    cli_common_lib_instance.DnsError('Range/update must be specified.', 1)
+
+  elif( command in ['dump', 'edit'] ):
+    pass
+
+  else:
+    cli_common_lib.DnsError(
+        'Command %s exists, but codepath does not.', 1)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -330,7 +330,7 @@ class DnsServer(core_flags.CoreFlags):
 
 
 class User(core_flags.CoreFlags):
-  """Command line dns_server flags"""
+  """Command line user flags"""
   def SetDataFlags(self):
     """Sets flags for self.parser"""
     not_list = self.action != 'List'
@@ -368,3 +368,43 @@ class User(core_flags.CoreFlags):
                            dest='cidr_block', help='String of CIDR block.',
                            metavar='<cidr-block>', default=None)
     self.AddFlagRule('cidr_block', required=not_list, command='reverse')
+
+class Hosts(core_flags.CoreFlags):
+  """Command line uphost flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('--commit', action='store_true', dest='commit',
+                           help='Commits changes of hosts file without '
+                                'confirmation.', default=False)
+    self.parser.add_option('--no-commit', action='store_true', dest='no_commit',
+                           help='Suppresses changes of hosts file.',
+                           default=False)
+    self.AddFlagRule(('no_commit', 'commit'), required=False, command='update',
+                     flag_type='independent_args')
+    self.AddFlagRule(('no_commit', 'commit'), required=False, command='edit',
+                     flag_type='independent_args')
+    self.parser.add_option('-r', '--range', action='store', dest='range',
+                           help='CIDR block range of IP addresses. Assumes -l, '
+                                'will only print a list of ip addresses. '
+                                'Example: 10.10.0.0/24', metavar='<range>',
+                           default=None)
+    self.AddFlagRule('range', required=True, command='dump')
+    self.AddFlagRule('range', required=True, command='edit')
+    self.AddFlagRule('range', required=False, command='update')
+    self.parser.add_option('--ttl', action='store', dest='ttl',
+                           help='Time to live.', metavar='<ttl>', default=3600)
+    self.AddFlagRule('ttl', required=False, command='update')
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name', help='String of the zone name.',
+                           metavar='<zone-name>', default=None)
+    self.SetAllFlagRule('zone_name', required=False)
+    self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
+                           help=('String of the view name <view-name>. Example: '
+                                 '"internal"'), metavar='<view-name>',
+                           default='any')
+    self.SetAllFlagRule('view_name', required=False)
+    self.parser.add_option('--keep-output', action='store_true',
+                           dest='keep_output', help='Keep output file.',
+                           default=False)
+    self.AddFlagRule('keep_output', required=False, command='update')
+    self.AddFlagRule('keep_output', required=False, command='edit')

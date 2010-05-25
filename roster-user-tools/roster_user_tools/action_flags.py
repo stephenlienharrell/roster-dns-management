@@ -75,3 +75,13 @@ class Make(core_flags.CoreFlags):
         '-q', '--quiet', action='store_true', dest='quiet',
         help='Suppress program output.', default=False)
     self.AddFlagRule('quiet', required=False)
+
+class Update(core_flags.CoreFlags):
+  """Command line up flags"""
+  def SetActionFlags(self):
+    """Sets update flags for parser"""
+    self.action = 'Update'
+    self.parser.add_option('-f', '--file', action='store', dest='file',
+                           help='File name of hosts file to write to database.',
+                           metavar='<file-name>', default='hosts_out')
+    self.SetAllFlagRule('file', required=False)
