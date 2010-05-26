@@ -440,3 +440,22 @@ class NamedGlobals(core_flags.CoreFlags):
     self.AddFlagRule('file', required=False, command='dump')
     self.AddFlagRule('file', required=False, command='update')
     self.AddFlagRule('file', required=False, command='edit')
+
+
+class Credential(core_flags.CoreFlags):
+  """Command line named credential flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('-U', '--user-credential', action='store', dest='user_credential',
+                      help='Username to apply credential to.',
+                      metavar='<user-credential>', default=None)
+    self.AddFlagRule('user_credential', command='make_infinite')
+    self.AddFlagRule('user_credential', command='remove')
+    self.AddFlagRule('user_credential', required=False, command='list')
+    self.parser.add_option('--no-header', action='store_true', dest='no_header',
+                      help='Do not display a header.', default=False)
+    self.AddFlagRule('no_header', required=False, command='list')
+
+  def SetActionFlags(self):
+    """Method to set action variable since credential has no action class"""
+    self.action = 'Credential'

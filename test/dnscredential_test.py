@@ -135,7 +135,7 @@ class Testdnscredential(unittest.TestCase):
     credentials = self.core_instance.ListCredentials()
     self.assertEqual(len(credentials), 1)
     self.assertEqual(credentials['sharrell']['infinite_cred'], 0)
-    output = os.popen('python %s -U new_user '
+    output = os.popen('python %s make_infinite -U new_user '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -146,7 +146,7 @@ class Testdnscredential(unittest.TestCase):
 
   def testListCredentials(self):
     credential = self.core_instance.ListCredentials()['sharrell']['credential']
-    output = os.popen('python %s -l '
+    output = os.popen('python %s list '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -164,7 +164,7 @@ class Testdnscredential(unittest.TestCase):
     credentials = self.core_instance.ListCredentials()
     self.assertEqual(len(credentials), 2)
     credential = self.core_instance.ListCredentials()['new_user']['credential']
-    output = os.popen('python %s -r -U new_user '
+    output = os.popen('python %s remove -U new_user '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -174,22 +174,12 @@ class Testdnscredential(unittest.TestCase):
     self.assertEqual(len(credentials), 1)
 
   def testErrors(self):
-    output = os.popen('python %s -r -l -U new_user '
+    output = os.popen('python %s remove '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'CLIENT ERROR: -l/--list and -r/--remove cannot be '
-                     'specified simultaneously.\n')
-    output.close()
-    output = os.popen('python %s -r '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-                     'CLIENT ERROR: A user must be specified with the '
-                     '-U/--user-credential flag.\n')
-
+        'CLIENT ERROR: The -U/--user-credential flag is required.\n')
 
 if( __name__ == '__main__' ):
       unittest.main()
