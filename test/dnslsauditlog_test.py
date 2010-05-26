@@ -258,7 +258,7 @@ class Testdnslsauditlog(unittest.TestCase):
     command.close()
 
   def testErrors(self):
-    command = os.popen('python %s --success no '
+    command = os.popen('python %s --success 2 '
                        '-u %s -p %s --config-file %s -s %s '
                        '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
                                   self.server_name, CREDFILE))
@@ -283,7 +283,8 @@ class Testdnslsauditlog(unittest.TestCase):
                        '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
                                   self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: Both --begin-time and --end-time must be specified.\n')
+        'CLIENT ERROR: -b/--begin-time and -e/--end-time must be used '
+        'together.\n')
 
 if( __name__ == '__main__' ):
       unittest.main()

@@ -163,6 +163,8 @@ class CoreFlags:
             ' or '.join(sorted(flags_real))), 1)
 
     ## Check dependent arguments
+    used = 0
+    unused = 0
     for flags in self.functions_dict[self.command]['dependent_args']:
       if( len(flags) == 0 ):
         continue
@@ -170,9 +172,13 @@ class CoreFlags:
       for flag in flags:
         flags_real.append(str(self.avail_flags[flag]))
       for flag in flags:
-        if( flag not in used_flags ):
-          cli_common_lib.DnsError('%s must be used together.' % (
-            ' and '.join(sorted(flags_real))), 1)
+        if( flag in used_flags ):
+          used += 1
+        else:
+          unused += 1
+      if( used != 0 and unused != 0 ):
+        cli_common_lib.DnsError('%s must be used together.' % (
+          ' and '.join(sorted(flags_real))), 1)
 
   def SetCommands(self, functions):
     """Sets self.functions_dict according to functions list

@@ -443,7 +443,7 @@ class NamedGlobals(core_flags.CoreFlags):
 
 
 class Credential(core_flags.CoreFlags):
-  """Command line named credential flags"""
+  """Command line credential flags"""
   def SetDataFlags(self):
     """Sets flags for self.parser"""
     self.parser.add_option('-U', '--user-credential', action='store', dest='user_credential',
@@ -459,3 +459,39 @@ class Credential(core_flags.CoreFlags):
   def SetActionFlags(self):
     """Method to set action variable since credential has no action class"""
     self.action = 'Credential'
+
+
+class AuditLog(core_flags.CoreFlags):
+  """Command line audit log flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('-U', '--roster-user', action='store',
+                           dest='roster_user', help='Roster username.',
+                           metavar='<roster-user>', default=None)
+    self.AddFlagRule('roster_user', required=False)
+    self.parser.add_option('-a', '--action', action='store', dest='action',
+                           help='Specify action run on Roster.',
+                           metavar='<action>', default=None)
+    self.AddFlagRule('action', required=False)
+    self.parser.add_option('--success', action='store', dest='success',
+                           help='Integer 1 or 0 of action success.',
+                           metavar='<success>', default=None, type='int')
+    self.AddFlagRule('success', required=False)
+    self.parser.add_option('-b', '--begin-time', action='store',
+                           dest='begin_time',
+                           help='Beginning time stamp in format '
+                                'YYYY-MM-DDThh:mm:ss.', metavar='<begin-time>',
+                           default=None)
+    self.parser.add_option('-e', '--end-time', action='store', dest='end_time',
+                           help='Ending time stamp in format '
+                                'YYYY-MM-DDThh:mm:ss.', metavar='<end-time>',
+                           default=None)
+    self.AddFlagRule(('begin_time', 'end_time'), required=False,
+                     flag_type='dependent_args')
+    self.parser.add_option('--no-header', action='store_true', dest='no_header',
+                           help='Do not display a header.', default=False)
+    self.AddFlagRule('no_header', required=False)
+
+  def SetActionFlags(self):
+    """Method to set action variable since credential has no action class"""
+    self.action = 'AuditLog'
