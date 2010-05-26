@@ -58,7 +58,7 @@ def main(args):
     command = args.pop(0)
   usage = ('\n'
            '\n'
-           'To bootstrap Roster:\n'
+           'To generate a config file for Roster user tools:\n'
            '\t%s --server <server-url> --cred-file <cred-file>\n'
            '\t--config-file <config-file>\n' % tuple(
              [sys.argv[0] for x in range(1)]))
