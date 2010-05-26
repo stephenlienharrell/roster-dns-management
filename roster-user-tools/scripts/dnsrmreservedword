@@ -44,6 +44,12 @@ from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
+from roster_user_tools.action_flags import Remove
+from roster_user_tools.data_flags import ReservedWord
+
+
+class Args(Remove, ReservedWord):
+  pass
 
 
 def main(args):
@@ -52,34 +58,17 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser(version='%%prog (Roster %s)' % __version__)
-
-  parser.add_option('-w', '--word', action='store', dest='word',
-                    help='The reserved word.', metavar='<word>',
-                    default=None)
-  parser.add_option('-s', '--server', action='store', dest='server',
-                    help='XML RPC Server address.', metavar='<server>',
-                    default=None)
-  parser.add_option('--config-file', action='store', dest='config_file',
-                    help='Config file location.', metavar='<file>',
-                    default=None)
-  parser.add_option('-u', '--username', action='store', dest='username',
-                    help='Run as a different username.', metavar='<username>',
-                    default=unicode(getpass.getuser()))
-  parser.add_option('-p', '--password', action='store', dest='password',
-                    help='Password string, NOTE: It is insecure to use this '
-                    'flag on the command line.', metavar='<password>',
-                    default=None)
-  parser.add_option('-c', '--cred-file', action='store', dest='credfile',
-                    help='Location of credential file.', metavar='<cred-file>',
-                    default=None)
-  parser.add_option('--cred-string', action='store', dest='credstring',
-                    help='String of credential.', metavar='<cred-string>',
-                    default=None)
-  parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
-                    help='Suppress program output.', default=False)
-
-  (globals()["options"], args) = parser.parse_args(args)
+  command = 'remove'
+  if( not args[0].startswith('-') ):
+    command = args.pop(0)
+  usage = ('\n'
+           '\n'
+           'To remove a reserved word:\n'
+           '\t%s -w <reserved-word>\n' % tuple(
+             [sys.argv[0] for x in range(1)]))
+  args_instance = Args(command, ['remove'], args, usage)
+  options = args_instance.options
+  parser = args_instance.parser
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)

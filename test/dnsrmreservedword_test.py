@@ -143,7 +143,7 @@ class Testdnsrmreservedword(unittest.TestCase):
     output.close()
     self.assertEqual(self.core_instance.ListReservedWords(), [u'damn',
                                                               u'reserved2'])
-    output = os.popen('python %s reserved2 '
+    output = os.popen('python %s -w reserved2 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))

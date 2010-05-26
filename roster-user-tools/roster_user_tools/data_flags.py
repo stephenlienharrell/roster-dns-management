@@ -495,3 +495,12 @@ class AuditLog(core_flags.CoreFlags):
   def SetActionFlags(self):
     """Method to set action variable since credential has no action class"""
     self.action = 'AuditLog'
+
+class ReservedWord(core_flags.CoreFlags):
+  """Command line reserved word flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('-w', '--word', action='store', dest='word',
+                           help='The reserved word.', metavar='<word>',
+                           default=None)
+    self.SetAllFlagRule('word', required=self.action!='List')
