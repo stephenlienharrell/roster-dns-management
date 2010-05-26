@@ -81,7 +81,12 @@ class Update(core_flags.CoreFlags):
   def SetActionFlags(self):
     """Sets update flags for parser"""
     self.action = 'Update'
+    # Rules in data_flags.py
     self.parser.add_option('-f', '--file', action='store', dest='file',
                            help='File name of hosts file to write to database.',
                            metavar='<file-name>', default='hosts_out')
-    self.SetAllFlagRule('file', required=False)
+    self.parser.add_option('--keep-output', action='store_true',
+                           dest='keep_output', help='Keep output file.',
+                           default=False)
+    self.AddFlagRule('keep_output', required=False, command='update')
+    self.AddFlagRule('keep_output', required=False, command='edit')

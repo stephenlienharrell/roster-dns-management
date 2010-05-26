@@ -565,7 +565,7 @@ class TestDnsMkHost(unittest.TestCase):
     output.close()
 
   def testEdit(self):
-    os.environ['EDITOR'] = 'python fake_editor.py'
+    os.environ['EDITOR'] = 'python fake_editor.py host3 new_host'
     self.core_instance.MakeRecord(
         u'soa', u'soa2', u'ipv6_zone',
         {u'name_server': u'ns1.university.edu.',

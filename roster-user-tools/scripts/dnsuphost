@@ -258,19 +258,9 @@ def main(args):
 
   if( command == 'edit' ):
     remove_file = True
-    if( 'EDITOR' not in os.environ ):
-        cli_common_lib.DnsError('EDITOR environment variable not set.', 1)
-    edit_process = os.popen('%s %s' % (os.environ['EDITOR'], options.file))
-    stuff = edit_process.read()
-    closenum = edit_process.close()
-    if( closenum is None ):
-      return_code = 0
-    else:
-      return_code = os.WEXITSTATUS(closenum)
+    return_code = cli_common_lib.EditFile(options.file)
     if( return_code == 0 ):
       write_to_db = True
-    else:
-      cli_common_lib_instance.DnsError('Error editing file.', 1)
 
   if( write_to_db or command == 'update' ):
     new_hosts_file_handle = open(options.file, 'r')

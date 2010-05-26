@@ -260,3 +260,27 @@ def PrintHosts(records_dictionary, ip_address_list, view_name=None):
         print_list.append(['#%s' % ip_address, print_dict[ip_address]['host'],
                            '', '# No forward assignment'])
   return PrintColumns(print_list)
+
+def EditFile(fname):
+  """Opens a file in a text editor in the EDITOR env variable for editing
+
+  Inputs:
+    fname: string of filename
+  Outputs:
+    int: return code from editor
+  """
+  if( 'EDITOR' not in os.environ ):
+      DnsError('EDITOR environment variable not set.', 1)
+  edit_process = os.popen('%s %s' % (os.environ['EDITOR'], fname))
+  output = edit_process.read()
+  closenum = edit_process.close()
+
+  if( closenum is None ):
+    return_code = 0
+  else:
+    return_code = os.WEXITSTATUS(closenum)
+
+  if( return_code != 0 ):
+    DnsError('Error editing file.', 1)
+
+  return return_code

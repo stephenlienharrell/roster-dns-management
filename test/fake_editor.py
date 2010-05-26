@@ -40,13 +40,13 @@ __version__ = '#TRUNK#'
 
 import sys
 
-f = open(sys.argv[1], 'r')
+f = open(sys.argv[3], 'r')
 fcontents = f.read()
 f.close()
 
-fcontents = fcontents.replace('host3', 'new_host')
+fcontents = fcontents.replace(sys.argv[1], sys.argv[2])
 
-f = open(sys.argv[1], 'w')
+f = open(sys.argv[3], 'w')
 f.writelines(fcontents)
 f.close()
 

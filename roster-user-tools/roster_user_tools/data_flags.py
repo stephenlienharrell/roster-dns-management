@@ -403,8 +403,40 @@ class Hosts(core_flags.CoreFlags):
                                  '"internal"'), metavar='<view-name>',
                            default='any')
     self.SetAllFlagRule('view_name', required=False)
-    self.parser.add_option('--keep-output', action='store_true',
-                           dest='keep_output', help='Keep output file.',
-                           default=False)
-    self.AddFlagRule('keep_output', required=False, command='update')
-    self.AddFlagRule('keep_output', required=False, command='edit')
+
+    self.SetAllFlagRule('file', required=False) # In action_flags.py
+
+
+class NamedGlobals(core_flags.CoreFlags):
+  """Command line named global flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('-d', '--dns-server-set', action='store',
+                           dest='dns_server_set',
+                           help='String of the dns server set name.',
+                           metavar='<dns-server-set>', default=None)
+    self.AddFlagRule('dns_server_set', required=False, command='dump')
+    self.AddFlagRule('dns_server_set', required=True, command='update')
+    self.AddFlagRule('dns_server_set', required=True, command='list')
+    self.AddFlagRule('dns_server_set', required=True, command='revert')
+    self.AddFlagRule('dns_server_set', required=True, command='edit')
+    self.parser.add_option('-i', '--option-id', action='store', dest='option_id',
+                           help='Integer of option id.', metavar='<option-id>',
+                           default=None)
+    self.AddFlagRule('option_id', required=False, command='list')
+    self.AddFlagRule('option_id', required=False, command='dump')
+    self.AddFlagRule('option_id', required=True, command='revert')
+    self.parser.add_option('-t', '--timestamp', action='store', dest='timestamp',
+                           help='String of timestamp in YYYY/MM/DD/HH/MM/SS '
+                                'format.', metavar='<timestamp>', default=None)
+    self.AddFlagRule('timestamp', required=False, command='list')
+    self.AddFlagRule('timestamp', required=False, command='dump')
+    self.AddFlagRule('timestamp', required=False, command='edit')
+    self.parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
+                           help='Suppress program output.', default=False)
+    self.SetAllFlagRule('quiet', required=False)
+
+    # In action_flags.py
+    self.AddFlagRule('file', required=False, command='dump')
+    self.AddFlagRule('file', required=False, command='update')
+    self.AddFlagRule('file', required=False, command='edit')

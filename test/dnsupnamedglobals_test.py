@@ -149,7 +149,7 @@ class TestDnsMkHost(unittest.TestCase):
   def testUpNamedGlobalsReadWriteRevert(self):
     # Upload file to database
     self.core_instance.MakeDnsServerSet(u'set1')
-    output = os.popen('python %s -f %s -d set1 --update '
+    output = os.popen('python %s update -f %s -d set1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -158,14 +158,14 @@ class TestDnsMkHost(unittest.TestCase):
     output.close()
     timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%d %H:%M:%S')
     # Print the file list of set1 from the database
-    output = os.popen('python %s -l -d set1 -t "%s" '
+    output = os.popen('python %s list -d set1 -t "%s" '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), '1 %s set1\n\n' % timestamp_string)
     output.close()
     # Write uploaded file from the database by set name and timestamp
-    output = os.popen('python %s -e -d set1 -t "%s" -f %s '
+    output = os.popen('python %s dump -d set1 -t "%s" -f %s '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, TEST_FILE, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
@@ -182,7 +182,7 @@ class TestDnsMkHost(unittest.TestCase):
                                     '    file "example.com.zone";\n'
                                     '    allow-update { none; };\n};\n\n')
     # Write uploaded file from the database by id
-    output = os.popen('python %s -e -i 1 -f %s '
+    output = os.popen('python %s dump -i 1 -f %s '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
@@ -202,7 +202,7 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options2')
     # Revert last version to original file
-    output = os.popen('python %s -r set1 -i 1 -s %s -u %s -p %s '
+    output = os.popen('python %s revert -d set1 -i 1 -s %s -u %s -p %s '
                       '--config-file %s' % (
                            EXEC, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
@@ -211,7 +211,7 @@ class TestDnsMkHost(unittest.TestCase):
         'REVERTED NAMED_CONF_GLOBAL_OPTION: dns_server_set: set1 rev: 1\n')
     output.close()
     # Download original file string and write to new file
-    output = os.popen('python %s -e -i 4 -f %s '
+    output = os.popen('python %s dump -i 4 -f %s '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
@@ -228,7 +228,7 @@ class TestDnsMkHost(unittest.TestCase):
                                     '    file "example.com.zone";\n'
                                     '    allow-update { none; };\n};\n\n')
     # Print configuration revisions list
-    output = os.popen('python %s -l -d set1 -t "%s" '
+    output = os.popen('python %s list -d set1 -t "%s" '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
@@ -252,7 +252,7 @@ class TestDnsMkHost(unittest.TestCase):
       raise
     self.core_instance.db_instance.EndTransaction()
     time.sleep(2)
-    output = os.popen('python %s -n -f %s -d set1 '
+    output = os.popen('python %s dump -f %s -d set1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
@@ -270,91 +270,79 @@ class TestDnsMkHost(unittest.TestCase):
         '    file "example.com.zone";\n'
         '    allow-update { none; };\n};\n\n')
 
-
+  def testEdit(self):
+    os.environ['EDITOR'] = 'python fake_editor.py example.com new_zone'
+    # Upload file to database
+    self.core_instance.MakeDnsServerSet(u'set1')
+    output = os.popen('python %s update -f %s -d set1 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                           EXEC, TEST_FILE, self.server_name, USERNAME,
+                           PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'ADDED NAMED_CONF_GLOBAL_OPTION: %s\n' % TEST_FILE)
+    output.close()
+    timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    # Print the file list of set1 from the database
+    output = os.popen('python %s list -d set1 -t "%s" '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                           EXEC, timestamp_string, self.server_name,
+                           USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(), '1 %s set1\n\n' % timestamp_string)
+    output.close()
+    # Write uploaded file from the database by set name and timestamp
+    output = os.popen('python %s edit -d set1 -t "%s" -f %s --keep-output '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                           EXEC, timestamp_string, TEST_FILE, self.server_name,
+                           USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ADDED NAMED_CONF_GLOBAL_OPTION: %s\n' % TEST_FILE)
+    output.close()
+    # Verify file contents
+    handle = open(TEST_FILE, 'r')
+    try:
+      file_contents = handle.read()
+    finally:
+      handle.close()
+    self.assertEqual(file_contents, 'zone "new_zone" IN {\n'
+                                    '    type master;\n'
+                                    '    file "new_zone.zone";\n'
+                                    '    allow-update { none; };\n};\n\n')
 
   def testErrors(self):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options2')
-    output = os.popen('python %s -t 299 -s %s -u %s -p %s --config-file %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
+    output = os.popen('python %s dump -d d -t 299 -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: Timestamp incorrectly formatted.\n')
     output.close()
-    output = os.popen(
-        'python %s -f test --update -l -i 1 -t "2009-02-02 01:10:10" -r '
-        '1 -e -s %s -u %s -p %s --config-file %s' % (
-            EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: The -l/--list flag cannot be used.\n'
-        'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
-        'CLIENT ERROR: The -i/--option-id flag cannot be used.\n'
-        'CLIENT ERROR: The -r/--revert flag cannot be used.\n'
-        'CLIENT ERROR: The -t/--timestamp flag cannot be used.\n')
-    output.close()
-    output = os.popen(
-        'python %s -l -i 1 -t "2009-02-02 01:10:10" -r set1 -f file -e '
-        '-s %s -u %s -p %s --config-file %s' % (
-            EXEC, self.server_name, USERNAME,
-            PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: The -f/--file flag cannot be used.\n'
-        'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
-        'CLIENT ERROR: The -r/--revert flag cannot be used.\n')
-    output.close()
-    output = os.popen('python %s -e -r 1 -s %s -u %s -p %s --config-file %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: The -r/--revert flag cannot be used.\n')
-    output.close()
-    output = os.popen('python %s -e -s %s -u %s -p %s --config-file %s' % (
+    output = os.popen('python %s dump -s %s -u %s -p %s --config-file %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: Either an option id or dns server set and '
         'timestamp are needed.\n')
     output.close()
-    output = os.popen('python %s -e -d set1 -s %s -u %s -p %s --config-file %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: Multiple configurations found. This could '
-        'be due to an internal error or arguments may be '
-        'too general.\n')
-    output.close()
-    output = os.popen('python %s -e -d set2 -s %s -u %s -p %s --config-file %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
+    output = os.popen('python %s dump -d set2 -s %s -u %s -p %s '
+                      '--config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'CLIENT ERROR: No configurations found.\n')
     output.close()
-    output = os.popen('python %s -r set1 -f file -s %s -u %s -p %s '
+    output = os.popen('python %s revert set1 -f file -s %s -u %s -p %s '
                       '--config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: The -f/--file flag cannot be used.\n')
+        'CLIENT ERROR: The -f/--file flag cannot be used with the revert '
+        'command.\n')
     output.close()
-    output = os.popen('python %s -r set1 -s %s -u %s -p %s --config-file %s' % (
+    output = os.popen('python %s revert -d set1 -s %s -u %s -p %s --config-file %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: To revert a configuration, the desired '
-        'replacement must be specified with -i\n')
-    output.close()
-    output = os.popen(
-        'python %s -f test -n --update -l -i 1 -t "2009-02-02 01:10:10" -r '
-        '1 -e -s %s -u %s -p %s --config-file %s' % (
-            EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: The -l/--list flag cannot be used.\n'
-        'CLIENT ERROR: The -e/--edit flag cannot be used.\n'
-        'CLIENT ERROR: The -i/--option-id flag cannot be used.\n'
-        'CLIENT ERROR: The -r/--revert flag cannot be used.\n'
-        'CLIENT ERROR: The -t/--timestamp flag cannot be used.\n'
-        'CLIENT ERROR: The --update flag cannot be used.\n')
-    output.close()
-    output = os.popen(
-        'python %s -n '
-        '-s %s -u %s -p %s --config-file %s' % (
-            EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'CLIENT ERROR: Must specify a dns server '
-                                    'set with -d.\n')
+        'CLIENT ERROR: The -i/--option-id flag is required.\n')
     output.close()
 
 if( __name__ == '__main__' ):
