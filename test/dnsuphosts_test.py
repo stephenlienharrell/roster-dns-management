@@ -57,7 +57,6 @@ import roster_server
 
 USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
-SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TEST_FILE = 'test_data/test_hosts'
 TEST_FILE_IPV6 = 'test_data/test_hosts_ipv6'
@@ -68,7 +67,7 @@ PASSWORD = u'test'
 KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
-EXEC='../roster-user-tools/scripts/dnsuphost'
+EXEC='../roster-user-tools/scripts/dnsuphosts'
 
 class options(object):
   password = u'test'
