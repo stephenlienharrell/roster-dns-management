@@ -116,8 +116,17 @@ def main(args):
   parser.add_option('--ssl-key', action='store', dest='ssl_key',
                     help='SSL Key file for XML-RPC.',
                     default=None)
+  parser.add_option('--backup-dir', action='store', dest='backup_dir',
+                    help='Directory where backups will be put.',
+                    default='/opt/roster/backups')
+  parser.add_option('--root-config-dir', action='store', dest='root_config_dir',
+                    help='Directory where bind config files will be dumped.',
+                    default='/opt/roster/tmp')
 
   (globals()["options"], args) = parser.parse_args(args)
+
+  if( not os.path.exists('/opt/roster') ):
+    os.makedir('/opt/roster')
 
   if( os.getuid() != 0 ):
     print '%s: Need to be root.' % sys.argv[0]
@@ -176,6 +185,10 @@ def main(args):
   config_parser.set('database', 'passwd', password)
   config_parser.set('database', 'big_lock_timeout', options.big_lock_timeout)
   config_parser.set('database', 'big_lock_wait', options.big_lock_wait)
+
+  config_parser.add_section('exporter')
+  config_parser.set('exporter', 'backup_dir', options.backup_dir)
+  config_parser.set('exporter', 'root_config_dir', options.root_config_dir)
 
   config_parser.add_section('server')
   config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
