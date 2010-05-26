@@ -45,10 +45,11 @@ class FlagsError(Exception):
 
 class CoreFlags:
   """Command line common library"""
-  def __init__(self, command, commands, args, usage):
+  def __init__(self, command, commands, args, usage, bootstrapper=False):
     """Initializes parser, sets flags for all classes"""
     self.parser = OptionParser(version='%%prog (Roster %s)' % __version__,
                                usage=usage)
+    self.bootstrapper = bootstrapper
     self.args = args
     self.command = command
     self.SetCommands(commands)
@@ -68,29 +69,31 @@ class CoreFlags:
 
   def SetCoreFlags(self):
     """Sets core flags for parser"""
+    if( not self.bootstrapper ):
+      self.parser.add_option(
+          '-u', '--username', action='store', dest='username',
+          help='Run as different username.', metavar='<username>',
+          default=unicode(getpass.getuser()))
+      self.SetAllFlagRule('username', required=False)
+      self.parser.add_option(
+          '-p', '--password', action='store', dest='password',
+          help='Password string, NOTE: It is insecure to use this '
+               'flag on the command line.', metavar='<password>', default=None)
+      self.SetAllFlagRule('password', required=False)
+      self.parser.add_option(
+          '--cred-string', action='store', dest='credstring',
+          help='String of credential.', metavar='<cred-string>', default=None)
+      self.SetAllFlagRule('credstring', required=False)
+
     self.parser.add_option(
         '-s', '--server', action='store', dest='server',
         help='XML RPC Server URL.', metavar='<server>', default=None)
     self.SetAllFlagRule('server', required=False)
     self.parser.add_option(
-        '-u', '--username', action='store', dest='username',
-        help='Run as different username.', metavar='<username>',
-        default=unicode(getpass.getuser()))
-    self.SetAllFlagRule('username', required=False)
-    self.parser.add_option(
-        '-p', '--password', action='store', dest='password',
-        help='Password string, NOTE: It is insecure to use this '
-             'flag on the command line.', metavar='<password>', default=None)
-    self.SetAllFlagRule('password', required=False)
-    self.parser.add_option(
         '-c', '--cred-file', action='store', dest='credfile',
         help='Location of credential file.', metavar='<cred-file>',
         default=None)
     self.SetAllFlagRule('credfile', required=False)
-    self.parser.add_option(
-        '--cred-string', action='store', dest='credstring',
-        help='String of credential.', metavar='<cred-string>', default=None)
-    self.SetAllFlagRule('credstring', required=False)
     self.parser.add_option(
         '--config-file', action='store', dest='config_file',
         help='Config file location.', metavar='<file>', default=None)

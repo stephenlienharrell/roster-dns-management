@@ -524,3 +524,15 @@ class SetMaintenance(core_flags.CoreFlags):
     class
     """
     self.action = 'SetMaintenance'
+
+
+class Bootstrap(core_flags.CoreFlags):
+  """Command line bootstrap flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    pass
+  def SetActionFlags(self):
+    """Method to set action variable since set maintenance has no action 
+    class
+    """
+    self.action = 'Bootstrap'

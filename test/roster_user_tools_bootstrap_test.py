@@ -28,8 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Carries out post user tools installation tasks for Roster"""
-
+"""Regression test for roster_user_tools_bootstrap"""
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
@@ -38,46 +37,28 @@ __version__ = '#TRUNK#'
 
 import os
 import sys
-from optparse import OptionParser
-import ConfigParser
-
-from roster_user_tools.data_flags import Bootstrap
+import unittest
 
 
-class Args(Bootstrap):
-  pass
+USER_CONFIG = 'test_data/roster_user_tools_test.conf'
+EXEC = '../roster-user-tools/scripts/roster_user_tools_bootstrap'
 
-def main(args):
-  """Collects command line arguments.
 
-  Inputs:
-    args: list of arguments from the command line
-  """
-  command = 'bootstrap'
-  if( not args[0].startswith('-') ):
-    command = args.pop(0)
-  usage = ('\n'
-           '\n'
-           'To bootstrap Roster:\n'
-           '\t%s --server <server-url> --cred-file <cred-file>\n'
-           '\t--config-file <config-file>\n' % tuple(
-             [sys.argv[0] for x in range(1)]))
-  args_instance = Args(command, ['bootstrap'], args, usage, bootstrapper=True)
-  options = args_instance.options
+class TestBootstrapper(unittest.TestCase):
+  def testBootstrapper(self):
+    output = os.popen('python %s -s https://localhost:8000 -c ~/.dnscred '
+                      '--config-file %s' % (
+                          EXEC, USER_CONFIG))
+    output.close()
 
-  if( options.server is None ):
-    print 'Server MUST be specified with --server to write the config file.'
-    sys.exit(1)
+    config_file = open(USER_CONFIG, 'r')
+    self.assertEqual(config_file.read(),
+        '[user_tools]\n'
+        'cred_file = %s/.dnscred\n'
+        'server = https://localhost:8000\n\n' % os.path.expanduser('~'))
+    config_file.close()
 
-  config_file_object = ConfigParser.SafeConfigParser()
+    os.remove(USER_CONFIG)
 
-  section = 'user_tools'
-  config_file_object.add_section(section)
-
-  config_file_object.set(section, 'cred_file', options.credfile)
-  config_file_object.set(section, 'server', options.server)
-
-  config_file_object.write(open(options.config_file, 'wb'))
-
-if __name__ == "__main__":
-  main(sys.argv[1:])
+if( __name__ == '__main__' ):
+      unittest.main()
