@@ -1,4 +1,6 @@
 Current Release
+- Updated all tools to use new flags class
+- Added new flags class
 - Added dnslsauditlog tool
 - Added help text to dnsmkusergroup
 - Added dnsssetmaintenance tool

@@ -1,4 +1,5 @@
 Current Release
+- Added exporter section to bootstrapper
 - Added date range listing to ListRows in db_access
 - Added ListAuditLog function to core
 - Fixed roster_database_bootstrap password prompt
