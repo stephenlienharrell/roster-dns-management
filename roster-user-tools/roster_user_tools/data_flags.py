@@ -504,3 +504,23 @@ class ReservedWord(core_flags.CoreFlags):
                            help='The reserved word.', metavar='<word>',
                            default=None)
     self.SetAllFlagRule('word', required=self.action!='List')
+
+
+class SetMaintenance(core_flags.CoreFlags):
+  """Command line set maintenenace flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('--on', action='store_true', dest='on',
+                           help='Turn Roster maintenance mode on.',
+                           default=False)
+    self.parser.add_option('--off', action='store_true', dest='off',
+                           help='Turn Roster maintenance mode off.',
+                           default=False)
+    self.AddFlagRule(('on', 'off'), required=True, command='set',
+                     flag_type='independent_args')
+
+  def SetActionFlags(self):
+    """Method to set action variable since set maintenance has no action 
+    class
+    """
+    self.action = 'SetMaintenance'

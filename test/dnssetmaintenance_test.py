@@ -127,18 +127,18 @@ class Testdnssetmaintenance(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
-  def testMakeAcl(self):
-    command = os.popen('python %s '
+  def testSetMaintenance(self):
+    command = os.popen('python %s list '
                        '-u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
         'Maintenance mode is OFF\n')
     command.close()
-    command = os.popen('python %s --on '
+    command = os.popen('python %s set --on '
                        '-u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     command.close()
-    command = os.popen('python %s '
+    command = os.popen('python %s list '
                        '-u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
@@ -147,20 +147,12 @@ class Testdnssetmaintenance(unittest.TestCase):
 
 
   def testErrors(self):
-    command = os.popen('python %s --on --off '
+    command = os.popen('python %s set --on --off '
                        '-u %s -p %s --config-file %s -s %s -c %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: --on and --off cannot be used simultaneously.\n')
-    command = os.popen('python %s --on --list '
-                       '-u %s -p %s --config-file %s -s %s -c %s' % (
-                           EXEC, USERNAME, self.password, USER_CONFIG,
-                           self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        'CLIENT ERROR: -l/--list cannot be used with any other arguments.\n')
-    command.close()
-
+        'CLIENT ERROR: --off and --on cannot be used simultaneously.\n')
 
 if( __name__ == '__main__' ):
       unittest.main()
