@@ -134,7 +134,7 @@ def main(args):
   (globals()["options"], args) = parser.parse_args(args)
 
   if( not os.path.exists('/opt/roster') ):
-    os.makedir('/opt/roster')
+    os.makedirs('/opt/roster')
 
   if( os.getuid() != 0 ):
     print '%s: Need to be root.' % sys.argv[0]
