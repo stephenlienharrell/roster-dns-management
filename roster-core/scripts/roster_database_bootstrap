@@ -53,7 +53,15 @@ def main(args):
   Inputs:
     args: arguments from the command line
   """
-  parser = OptionParser()
+  usage = ('\n'
+           '\n'
+           'To bootstrap the database:\n'
+           '\t%s -c <config-file> -u <new-mysql-user> -U <new-roster-user>\n'
+           '\t-d <database-name> -n <database-hostname>\n'
+           '\n'
+           'There are many other optional flags that can be configured.')
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Location of the new config file.',
