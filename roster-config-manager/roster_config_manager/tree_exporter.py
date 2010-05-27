@@ -168,6 +168,7 @@ class BindTreeExport(object):
                                            'database since last export, '
                                            'no export needed.')
           data, raw_dump = self.GetRawData()
+          current_time = self.db_instance.GetCurrentTime()
         finally:
           self.db_instance.UnlockDb()
       finally:
@@ -244,9 +245,8 @@ class BindTreeExport(object):
                                            success)
 
 
-    datetime_now = datetime.datetime.now()
     self.tar_file_name = '%s/dns_tree_%s-%s.tar.bz2' % (
-        self.backup_dir, datetime_now.strftime("%d_%m_%yT%H_%M"), log_id)
+        self.backup_dir, current_time.strftime("%d_%m_%yT%H_%M"), log_id)
     shutil.move(temp_tar_file_name, self.tar_file_name)
 
     audit_log_replay_dump_file = bz2.BZ2File(
@@ -439,7 +439,25 @@ class BindTreeExport(object):
     """Gets raw data from database
 
     Outputs:
-      dict: dictionary keyed by table name
+      tuple of two dictionaries:
+        dictionary of raw data keyed by data name with values of dicts 
+            containing values of that type's attributes
+        dictionary of the raw dump keyed by data name with values of
+            dicts containing the db dump keyed by row, column, and schema
+      example:
+        ({'view_acl_assignments': ({
+          'view_acl_assignments_view_name': u'external',
+          'view_acl_assignments_acl_name': u'public'})},
+        { u'zones':
+          {'rows':[{}],
+           'columns': [u'zones_id', u'zone_name'],
+           'schema':(
+               u'CREATE TABLE `zones` (\n  `zones_id` mediumint(8) ',
+               'unsigned NOT NULL auto_increment,\n  `zone_name` varchar(255) ',
+               'NOT NULL,\n  PRIMARY KEY  (`zones_id`),\n  UNIQUE KEY ;
+               '`zone_name` (`zone_name`),\n  KEY `zone_name_1` '
+               '(`zone_name`)\n) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT ',
+               'CHARSET=utf8')}}),
     """
     data = {}
     named_conf_global_options_dict = self.db_instance.GetEmptyRowDict(
@@ -526,6 +544,8 @@ class BindTreeExport(object):
       zone_name =  record['record_zone_name']
       view_dep = record['record_view_dependency']
       record_id = record['record_arguments_records_assignments_record_id']
+      arg_name = record[
+          'record_arguments_records_assignments_argument_name']
 
       if( not sorted_records.has_key((zone_name, view_dep)) ):
         sorted_records[(zone_name, view_dep)] = {}
@@ -550,12 +570,13 @@ class BindTreeExport(object):
         sorted_records[(zone_name, view_dep)][record_id]['last_user'] = (
             record['record_last_user'])
 
-      if( record['argument_value'].isdigit() ):
-        record['argument_value'] = int(record['argument_value'])
-
-      sorted_records[(zone_name, view_dep)][record_id][record[
-          'record_arguments_records_assignments_argument_name']] = record[
+      sorted_records[(zone_name, view_dep)][record_id][arg_name] = record[
               'argument_value']
+
+      if( sorted_records[(zone_name, view_dep)][record_id][
+          arg_name].isdigit() ):
+        sorted_records[(zone_name, view_dep)][record_id][arg_name] = int(
+            sorted_records[(zone_name, view_dep)][record_id][arg_name])
 
     return sorted_records
 
@@ -664,3 +685,4 @@ class BindTreeExport(object):
                           'zone_view_assignments_zone_type']
 
     return cooked_data
+

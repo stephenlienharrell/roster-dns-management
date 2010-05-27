@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -1201,7 +1201,7 @@ class TestTreeExporter(unittest.TestCase):
                                'record_type': u'a', 'view_name': u'external',
                                'last_user': u'sharrell',
                                'zone_name': u'university.edu',
-                               u'assignment_ip': u'1.2.3.5'}, 
+                               u'assignment_ip': u'1.2.3.5'},
                            7: {'target': u'computer3', 'ttl': 3600,
                                'record_type': u'a', 'view_name': u'external',
                                'last_user': u'sharrell',
@@ -1379,9 +1379,680 @@ class TestTreeExporter(unittest.TestCase):
         '\t\ttype master;\n'
         '\t\tfile "/etc/named/external/4.3.2.1.in-addr.db";\n'
         '\t\t#Allow update\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n};')
-    ##Test Files
+        '\t\tallow-update { none; };\n\t};'
+        '\n};')
+    for fname in ['audit_log_replay_dump-1.bz2', 'full_database_dump-1.bz2',
+                  self.tree_exporter_instance.tar_file_name]:
+      if( os.path.exists(fname) ):
+        os.remove(fname)
+
+    self.assertRaises(tree_exporter.ChangesNotFoundError,
+                      self.tree_exporter_instance.ExportAllBindTrees)
+
+  def testTreeExporterCookRawDump(self):
+    self.db_instance.StartTransaction()
+    raw_dump = self.db_instance.DumpDatabase()
+    self.db_instance.EndTransaction()
+    dump_lines = ''.join(self.tree_exporter_instance.CookRawDump(raw_dump)[1])
+
+    self.core_instance.SetMaintenanceFlag(1)
+    self.core_instance.MakeZoneType(u'zonetype5')
+
+    self.db_instance.StartTransaction()
+    self.db_instance.cursor.execute(dump_lines)
+    self.db_instance.EndTransaction()
+
+    self.db_instance.StartTransaction()
+    raw_dump_2 = self.db_instance.DumpDatabase()
+    self.db_instance.EndTransaction()
+
+    self.assertEquals(raw_dump, raw_dump_2)
+
+    self.db_instance.StartTransaction()
+    raw_dump = self.db_instance.DumpDatabase()
+    self.db_instance.EndTransaction()
+    dump_lines = ''.join(self.tree_exporter_instance.CookRawDump(raw_dump)[0])
+
+    self.core_instance.MakeZoneType(u'zonetype5')
+
+    self.db_instance.StartTransaction()
+    self.db_instance.cursor.execute(dump_lines)
+    self.db_instance.EndTransaction()
+
+    self.db_instance.StartTransaction()
+    raw_dump_2 = self.db_instance.DumpDatabase()
+    self.db_instance.EndTransaction()
+    # audit log is constantly changing
+    del raw_dump['audit_log']
+    del raw_dump_2['audit_log']
+
+    self.assertEquals(raw_dump, raw_dump_2)
+
+    self.db_instance.StartTransaction()
+    raw_dump = self.db_instance.DumpDatabase()
+    self.db_instance.EndTransaction()
+    dump_lines = ''.join(self.tree_exporter_instance.CookRawDump(raw_dump)[0])
+
+    self.core_instance.SetMaintenanceFlag(1)
+
+    self.db_instance.StartTransaction()
+    self.db_instance.cursor.execute(dump_lines)
+    self.db_instance.EndTransaction()
+
+    self.db_instance.StartTransaction()
+    raw_dump_2 = self.db_instance.DumpDatabase()
+    self.db_instance.EndTransaction()
+    del raw_dump['audit_log']
+    del raw_dump_2['audit_log']
+
+    self.assertNotEquals(raw_dump, raw_dump_2)
+
+  def testTreeExporterGetRawData(self):
+    self.tree_exporter_instance.db_instance.StartTransaction()
+    raw_data = self.tree_exporter_instance.GetRawData()
+    self.tree_exporter_instance.db_instance.EndTransaction()
+
+    ## Testing the RawData raw_data[0]
+    self.assertEqual(raw_data[0]['dns_server_sets'],
+        ({'dns_server_set_name':u'external_dns'},
+         {'dns_server_set_name':u'internal_dns'},
+         {'dns_server_set_name':u'private_dns'}))
+
+    self.assertEqual(raw_data[0]['view_acl_assignments'],
+        ({'view_acl_assignments_view_name':u'external',
+          'view_acl_assignments_acl_name':u'public'},
+         {'view_acl_assignments_view_name':u'internal',
+          'view_acl_assignments_acl_name':u'public'},
+         {'view_acl_assignments_view_name':u'internal',
+          'view_acl_assignments_acl_name':u'secret'},
+         {'view_acl_assignments_view_name':u'private',
+          'view_acl_assignments_acl_name':u'secret'}))
+
+    self.assertEqual(raw_data[0]['view_dependency_assignments'],
+        ({'view_dependency_assignments_view_dependency':u'any',
+          'view_dependency_assignments_view_name':u'external'},
+         {'view_dependency_assignments_view_dependency':u'external_dep',
+          'view_dependency_assignments_view_name':u'external'},
+         {'view_dependency_assignments_view_dependency':u'any',
+          'view_dependency_assignments_view_name':u'internal'},
+         {'view_dependency_assignments_view_dependency':u'internal_dep',
+          'view_dependency_assignments_view_name':u'internal'},
+         {'view_dependency_assignments_view_dependency':u'any',
+          'view_dependency_assignments_view_name':u'private'},
+         {'view_dependency_assignments_view_dependency':u'private_dep',
+          'view_dependency_assignments_view_name':u'private'}))
+
+    self.assertEqual(raw_data[0]['zone_view_assignments'],
+        ({'zone_origin':u'university.edu.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'university.edu',
+          'zone_view_assignments_view_dependency':u'any',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'university.edu.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'university.edu',
+           'zone_view_assignments_view_dependency':u'internal_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'university.edu.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'university.edu',
+          'zone_view_assignments_view_dependency':u'external_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'university.edu.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'university.edu',
+          'zone_view_assignments_view_dependency':u'private_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'university.edu.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'int.university.edu',
+          'zone_view_assignments_view_dependency':u'internal_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'university.edu.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'int.university.edu',
+          'zone_view_assignments_view_dependency':u'private_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'university.edu.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'priv.university.edu',
+          'zone_view_assignments_view_dependency':u'private_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'168.192.in-addr.arpa.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'168.192.in-addr',
+          'zone_view_assignments_view_dependency':u'internal_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'168.192.in-addr.arpa.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'168.192.in-addr',
+          'zone_view_assignments_view_dependency':u'external_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'168.192.in-addr.arpa.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'168.192.in-addr',
+          'zone_view_assignments_view_dependency':u'private_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'4.3.2.1.in-addr.arpa.',
+          'zone_view_assignments_zone_type':u'master',
+          'zone_view_assignments_zone_name':u'4.3.2.1.in-addr',
+          'zone_view_assignments_view_dependency':u'external_dep',
+          'zone_options':u'#Allow update\nallow-update { none; };\n'},
+         {'zone_origin':u'university.edu.',
+          'zone_view_assignments_zone_type':u'slave',
+          'zone_view_assignments_zone_name':u'bio.university.edu',
+          'zone_view_assignments_view_dependency':u'external_dep',
+          'zone_options':u'#Allow update\nallow-transfer { any; };\n'}))
+
+    ## Testing the RawDump raw_data[1]
+    self.assertEqual(raw_data[1]['zones']['rows'],
+        [{'zone_name': "'168.192.in-addr'", 'zones_id': '7'},
+         {'zone_name': "'4.3.2.1.in-addr'", 'zones_id': '8'},
+         {'zone_name': "'bio.university.edu'", 'zones_id': '2'},
+         {'zone_name': "'cs.university.edu'", 'zones_id': '1'},
+         {'zone_name': "'eas.university.edu'", 'zones_id': '3'},
+         {'zone_name': "'int.university.edu'", 'zones_id': '5'},
+         {'zone_name': "'priv.university.edu'", 'zones_id': '6'},
+         {'zone_name': "'university.edu'", 'zones_id': '4'}])
+
+    self.assertEqual(raw_data[1]['reserved_words']['columns'],
+        [u'reserved_word_id', u'reserved_word'])
+
+    self.assertEqual(raw_data[1]['reserved_words']['rows'],
+        [{'reserved_word': "'damn'", 'reserved_word_id': '1'}])
+
+    self.assertEqual(raw_data[1]['zone_types']['rows'],
+        [{'zone_type': "'forward'", 'zone_type_id': '3'},
+         {'zone_type': "'master'", 'zone_type_id': '1'},
+         {'zone_type': "'slave'", 'zone_type_id': '2'}])
+
+    self.assertEqual(raw_data[1]['users']['rows'],
+        [{'access_level': '0',
+          'user_name': "'tree_export_user'",
+          'users_id': '1'},
+         {'access_level': '32',
+          'user_name': "'jcollins'",
+          'users_id': '2'},
+         {'access_level': '128',
+          'user_name': "'sharrell'",
+          'users_id': '3'},
+         {'access_level': '64',
+          'user_name': "'shuey'",
+          'users_id': '4'}])
+
+    self.assertEqual(raw_data[1]['view_dependency_assignments']['rows'],
+        [{'view_dependency_assignments_id': '2',
+          'view_dependency_assignments_view_dependency': "'any'",
+          'view_dependency_assignments_view_name': "'external'"},
+         {'view_dependency_assignments_id': '5',
+          'view_dependency_assignments_view_dependency': "'external_dep'",
+          'view_dependency_assignments_view_name': "'external'"},
+         {'view_dependency_assignments_id': '1',
+          'view_dependency_assignments_view_dependency': "'any'",
+          'view_dependency_assignments_view_name': "'internal'"},
+         {'view_dependency_assignments_id': '4',
+          'view_dependency_assignments_view_dependency': "'internal_dep'",
+          'view_dependency_assignments_view_name': "'internal'"},
+         {'view_dependency_assignments_id': '3',
+          'view_dependency_assignments_view_dependency': "'any'",
+          'view_dependency_assignments_view_name': "'private'"},
+         {'view_dependency_assignments_id': '6',
+          'view_dependency_assignments_view_dependency': "'private_dep'",
+          'view_dependency_assignments_view_name': "'private'"}])
+
+  def testTreeExporterCookData(self):
+    self.tree_exporter_instance.db_instance.StartTransaction()
+    raw_data = self.tree_exporter_instance.GetRawData()
+    self.tree_exporter_instance.db_instance.EndTransaction()
+    cooked_data = self.tree_exporter_instance.CookData(raw_data[0])
+
+    self.assertEqual(cooked_data['external_dns'], {
+        'dns_servers': [u'ns1.university.edu', u'dns2.university.edu',u'dns3.university.edu'],
+            'views':{
+                u'external':{
+                    'zones':{
+                        u'university.edu':{
+                            'zone_type': u'master',
+                            'records':[{
+                                'target': u'@',
+                                'ttl': 3600,
+                                u'priority': 1,
+                                'record_type': u'mx',
+                                'view_name': u'any',
+                                'last_user': u'sharrell',
+                                'zone_name': u'university.edu',
+                                u'mail_server': u'mail2.university.edu.'},
+                            {'target': u'@',
+                             'ttl': 3600,
+                             u'priority': 1,
+                             'record_type': u'mx',
+                             'view_name': u'any',
+                             'last_user': u'sharrell',
+                             'zone_name': u'university.edu',
+                             u'mail_server': u'mail1.university.edu.'},
+                            {'target': u'@',
+                             u'name_server': u'ns2.university.edu',
+                             'ttl': 3600,
+                             'record_type': u'ns',
+                             'view_name': u'any',
+                             'last_user': u'sharrell',
+                             'zone_name': u'university.edu'},
+                            {'target': u'@',
+                             u'name_server': u'ns1.university.edu',
+                             'ttl': 3600,
+                             'record_type': u'ns',
+                             'view_name': u'any',
+                             'last_user': u'sharrell',
+                             'zone_name': u'university.edu'},
+                            {'serial_number': 20091227,
+                             u'refresh_seconds': 5,
+                             'target': u'university.edu.',
+                             u'name_server': u'ns1.university.edu.',
+                             u'retry_seconds': 5,
+                             'ttl': 3600,
+                             u'minimum_seconds': 5,
+                             'record_type': u'soa',
+                             'view_name': u'external',
+                             'last_user': u'sharrell',
+                             'zone_name': u'university.edu',
+                             u'admin_email': u'admin@university.edu.',
+                             u'expiry_seconds': 5},
+                            {'target':u'computer1',
+                             'ttl':3600,
+                             'record_type':u'a',
+                             'view_name':u'external',
+                             'last_user':u'sharrell',
+                             'zone_name':u'university.edu',
+                             u'assignment_ip':u'1.2.3.5'},
+                            {'target':u'computer3',
+                             'ttl':3600,
+                             'record_type':u'a',
+                             'view_name':u'external',
+                             'last_user':u'sharrell',
+                             'zone_name':u'university.edu',
+                             u'assignment_ip':u'1.2.3.6'}],
+                            'zone_origin': u'university.edu.',
+                            'zone_options': u'#Allow update\nallow-update { none; };\n'},
+                            u'4.3.2.1.in-addr':{
+                                'zone_type':u'master',
+                                'records':[{
+                                    u'serial_number':20091224,
+                                    u'refresh_seconds':5,
+                                    'target':u'4.3.2.1.in-addr.arpa.',
+                                    u'name_server':u'ns1.university.edu.',
+                                    u'retry_seconds':5,
+                                    'ttl':3600,
+                                    'minimum_seconds':5,
+                                    'record_type':u'soa',
+                                    'view_name':u'external',
+                                    'last_user':u'sharrell',
+                                    'zone_name':u'4.3.2.1.in-addr',
+                                    u'admin_email':u'admin@university.edu.',
+                                    u'expiry_seconds':5},
+                                {'target':u'1',
+                                 'ttl':3600,
+                                 'record_type':u'ptr',
+                                 'view_name':u'external',
+                                 'last_user':u'sharrell',
+                                 'zone_name':u'4.3.2.1.in-addr',
+                                 u'assignment_host':u'computer1'}],
+                                'zone_origin':u'4.3.2.1.in-addr.arpa.',
+                                'zone_options':u'#Allow update\nallow-update { none; };\n'}},
+                'acls': [u'public']}}})
+
+    self.assertEqual(cooked_data['private_dns'], {
+        'dns_servers': [u'ns1.int.university.edu', u'dns4.university.edu'],
+        'views':{
+            u'private':{
+                'zones':{
+                    u'university.edu':{
+                        'zone_type': u'master',
+                        'records':[{
+                            'target': u'@',
+                            'ttl': 3600,
+                            u'priority': 1,
+                            'record_type': u'mx',
+                            'view_name': u'any',
+                            'last_user': u'sharrell',
+                            'zone_name': u'university.edu',
+                            u'mail_server': u'mail2.university.edu.'},
+                        {'target': u'@',
+                         'ttl': 3600,
+                         u'priority': 1,
+                         'record_type': u'mx',
+                         'view_name': u'any',
+                         'last_user': u'sharrell',
+                         'zone_name': u'university.edu',
+                         u'mail_server': u'mail1.university.edu.'},
+                        {'target': u'@',
+                         u'name_server': u'ns2.university.edu',
+                         'ttl': 3600,
+                         'record_type': u'ns',
+                         'view_name': u'any',
+                         'last_user': u'sharrell',
+                         'zone_name': u'university.edu'},
+                        {'target': u'@',
+                         u'name_server': u'ns1.university.edu',
+                         'ttl': 3600,
+                         'record_type': u'ns',
+                         'view_name': u'any',
+                         'last_user': u'sharrell',
+                         'zone_name': u'university.edu'},
+                        {'serial_number': 20091225,
+                         u'refresh_seconds': 5,
+                         'target': u'university.edu.',
+                         u'name_server': u'ns1.university.edu.',
+                         u'retry_seconds': 5,
+                         'ttl': 3600,
+                         u'minimum_seconds': 5,
+                         'record_type': u'soa',
+                         'view_name': u'private',
+                         'last_user': u'sharrell',
+                         'zone_name': u'university.edu',
+                          u'admin_email': u'admin@university.edu.',
+                          u'expiry_seconds': 5}],
+                        'zone_origin': u'university.edu.',
+                        'zone_options': u'#Allow update\nallow-update { none; };\n'}},
+            'acls': [u'secret']}}})
+
+    self.assertEqual(cooked_data['internal_dns'], {
+        'dns_servers': [u'ns1.int.university.edu', u'dns1.university.edu'],
+        'views':{
+            u'external':{
+                'acls':[u'public'],
+                'zones':{
+                    u'4.3.2.1.in-addr':{
+                        'records':[{
+                            u'admin_email': u'admin@university.edu.',
+                            u'expiry_seconds': 5,
+                            'last_user': u'sharrell',
+                            u'minimum_seconds': 5,
+                            u'name_server': u'ns1.university.edu.',
+                            'record_type': u'soa',
+                            u'refresh_seconds': 5,
+                            u'retry_seconds': 5,
+                            u'serial_number': 20091224,
+                            'target': u'4.3.2.1.in-addr.arpa.',
+                            'ttl': 3600,
+                            'view_name': u'external',
+                            'zone_name': u'4.3.2.1.in-addr'},
+                        {u'assignment_host': u'computer1',
+                         'last_user': u'sharrell',
+                         'record_type': u'ptr',
+                         'target': u'1',
+                         'ttl': 3600,
+                         'view_name': u'external',
+                         'zone_name': u'4.3.2.1.in-addr'}],
+                        'zone_options': u'#Allow update\nallow-update { none; };\n',
+                        'zone_origin': u'4.3.2.1.in-addr.arpa.',
+                        'zone_type': u'master'},
+                    u'university.edu':{
+                        'records':[{
+                            'last_user': u'sharrell',
+                            u'mail_server': u'mail2.university.edu.',
+                            u'priority': 1,
+                            'record_type': u'mx',
+                            'target': u'@',
+                            'ttl': 3600,
+                            'view_name': u'any',
+                            'zone_name': u'university.edu'},
+                        { 'last_user': u'sharrell',
+                            u'mail_server': u'mail1.university.edu.',
+                            u'priority': 1,
+                            'record_type': u'mx',
+                            'target': u'@',
+                            'ttl': 3600,
+                            'view_name': u'any',
+                            'zone_name': u'university.edu'},
+                        { 'last_user': u'sharrell',
+                            u'name_server': u'ns2.university.edu',
+                            'record_type': u'ns',
+                            'target': u'@',
+                            'ttl': 3600,
+                            'view_name': u'any',
+                            'zone_name': u'university.edu'},
+                        { 'last_user': u'sharrell',
+                            u'name_server': u'ns1.university.edu',
+                            'record_type': u'ns',
+                            'target': u'@',
+                            'ttl': 3600,
+                            'view_name': u'any',
+                            'zone_name': u'university.edu'},
+                        { u'admin_email': u'admin@university.edu.',
+                            u'expiry_seconds': 5,
+                            'last_user': u'sharrell',
+                            u'minimum_seconds': 5,
+                            u'name_server': u'ns1.university.edu.',
+                            'record_type': u'soa',
+                            u'refresh_seconds': 5,
+                            u'retry_seconds': 5,
+                            u'serial_number': 20091227,
+                            'target': u'university.edu.',
+                            'ttl': 3600,
+                            'view_name': u'external',
+                            'zone_name': u'university.edu'},
+                        { u'assignment_ip': u'1.2.3.5',
+                            'last_user': u'sharrell',
+                            'record_type': u'a',
+                            'target': u'computer1',
+                            'ttl': 3600,
+                            'view_name': u'external',
+                            'zone_name': u'university.edu'},
+                        { u'assignment_ip': u'1.2.3.6',
+                            'last_user': u'sharrell',
+                            'record_type': u'a',
+                            'target': u'computer3',
+                            'ttl': 3600,
+                            'view_name': u'external',
+                            'zone_name': u'university.edu'}],
+                    'zone_options': u'#Allow update\nallow-update { none; };\n',
+                    'zone_origin': u'university.edu.',
+                    'zone_type': u'master'}}},
+            u'internal': { 'acls': [u'public', u'secret'],
+            'zones':{
+                u'168.192.in-addr':{
+                    'records':[{
+                        u'assignment_host': u'computer4',
+                        'last_user': u'sharrell',
+                        'record_type': u'ptr',
+                        'target': u'4',
+                        'ttl': 3600,
+                        'view_name': u'internal',
+                        'zone_name': u'168.192.in-addr'},
+                        {u'admin_email': u'admin@university.edu.',
+                         u'expiry_seconds': 5,
+                         'last_user': u'sharrell',
+                         u'minimum_seconds': 5,
+                         u'name_server': u'ns1.university.edu.',
+                         'record_type': u'soa',
+                         u'refresh_seconds': 5,
+                         u'retry_seconds': 5,
+                         u'serial_number': 20091223,
+                         'target': u'168.192.in-addr.arpa.',
+                         'ttl': 3600,
+                         'view_name': u'internal',
+                         'zone_name': u'168.192.in-addr'}],
+                    'zone_options': u'#Allow update\nallow-update { none; };\n',
+                    'zone_origin': u'168.192.in-addr.arpa.',
+                    'zone_type': u'master'},
+                u'university.edu':{
+                    'records':[{
+                        'last_user': u'sharrell',
+                        u'mail_server': u'mail2.university.edu.',
+                        u'priority': 1,
+                        'record_type': u'mx',
+                        'target': u'@',
+                        'ttl': 3600,
+                        'view_name': u'any',
+                        'zone_name': u'university.edu'},
+                        {'last_user': u'sharrell',
+                         u'mail_server': u'mail1.university.edu.',
+                         u'priority': 1,
+                         'record_type': u'mx',
+                         'target': u'@',
+                         'ttl': 3600,
+                         'view_name': u'any',
+                         'zone_name': u'university.edu'},
+                        {'last_user': u'sharrell',
+                         u'name_server': u'ns2.university.edu',
+                         'record_type': u'ns',
+                         'target': u'@',
+                         'ttl': 3600,
+                         'view_name': u'any',
+                         'zone_name': u'university.edu'},
+                        {'last_user': u'sharrell',
+                         u'name_server': u'ns1.university.edu',
+                         'record_type': u'ns',
+                         'target': u'@',
+                         'ttl': 3600,
+                         'view_name': u'any',
+                         'zone_name': u'university.edu'},
+                        {u'assignment_ip': u'192.168.1.4',
+                         'last_user': u'sharrell',
+                         'record_type': u'a',
+                         'target': u'computer4',
+                         'ttl': 3600,
+                         'view_name': u'internal',
+                         'zone_name': u'university.edu'},
+                        {u'admin_email': u'admin@university.edu.',
+                         u'expiry_seconds': 5,
+                         'last_user': u'sharrell',
+                         u'minimum_seconds': 5,
+                         u'name_server': u'ns1.university.edu.',
+                         'record_type': u'soa',
+                         u'refresh_seconds': 5,
+                         u'retry_seconds': 5,
+                         u'serial_number': 20091225,
+                         'target': u'university.edu.',
+                         'ttl': 3600,
+                         'view_name': u'internal',
+                         'zone_name': u'university.edu'},
+                        {u'assignment_ip': u'192.168.1.1',
+                         'last_user': u'sharrell',
+                         'record_type': u'a',
+                         'target': u'computer1',
+                         'ttl': 3600,
+                         'view_name': u'internal',
+                         'zone_name': u'university.edu'},
+                        {u'assignment_ip': u'192.168.1.2',
+                         'last_user': u'sharrell',
+                         'record_type': u'a',
+                         'target': u'computer2',
+                         'ttl': 3600,
+                         'view_name': u'internal',
+                         'zone_name': u'university.edu'}],
+                    'zone_options': u'#Allow update\nallow-update { none; };\n',
+                    'zone_origin': u'university.edu.',
+                    'zone_type': u'master'}}}}})
+
+  def testTreeExporterListACLNamesByView(self):
+    acl_names_private = self.tree_exporter_instance.ListACLNamesByView(
+        self.data[0], u'private')
+    self.assertEqual(
+        acl_names_private, [u'secret'])
+    acl_names_internal = self.tree_exporter_instance.ListACLNamesByView(
+        self.data[0], u'internal')
+    self.assertEqual(
+        acl_names_internal, [u'public', u'secret'])
+    acl_names_external = self.tree_exporter_instance.ListACLNamesByView(
+        self.data[0], u'external')
+    self.assertEqual(
+        acl_names_external, [u'public'])
+
+  def testTreeExporterListLatestNamedConfGlobalOptions(self):
+    global_options_internal = (
+        self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
+            self.data[0], u'internal_dns'))
+    self.assertEqual(
+        global_options_internal, (
+            u'options {\n'
+            '\tdirectory "/var/domain";\n'
+            '\trecursion no;\n'
+            '\tmax-cache-size 512M;\n'
+            '};\n'
+            '\nlogging {\n'
+            '\tchannel "security" {\n'
+            '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+            '\t\tprint-time yes;\n'
+            '\t};\n'
+            '\tchannel "query_logging" {\n'
+            '\t\tsyslog local5;\n'
+            '\t\tseverity info;\n'
+            '\t};\n'
+            '\tcategory "client" { "null"; };\n'
+            '\tcategory "update-security" { "security"; };\n'
+            '\tcategory "queries" { "query_logging"; };\n'
+            '};\n\n'
+            'controls {\n'
+            '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
+            '};\n\n'
+            'include "/etc/rndc.key";\n'))
+    global_options_external = (
+        self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
+            self.data[0], u'external_dns'))
+    self.assertEqual(
+        global_options_external, (
+            u'options {\n'
+            '\tdirectory "/var/domain";\n'
+            '\trecursion no;\n'
+            '\tmax-cache-size 512M;\n'
+            '};\n\n'
+            'logging {\n'
+            '\tchannel "security" {\n'
+            '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+            '\t\tprint-time yes;\n'
+            '\t};\n'
+            '\tchannel "query_logging" {\n'
+            '\t\tsyslog local5;\n'
+            '\t\tseverity info;\n'
+            '\t};\n'
+            '\tcategory "client" { "null"; };\n'
+            '\tcategory "update-security" { "security"; };\n'
+            '\tcategory "queries" { "query_logging"; };\n'
+            '};\n\n'
+            'controls {\n'
+            '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
+            '};\n\n'
+            'include "/etc/rndc.key";\n'))
+    global_options_private = (
+        self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
+            self.data[0], u'private_dns'))
+    self.assertEqual(
+        global_options_private, (
+            u'options {\n'
+            '\tdirectory "/var/domain";\n'
+            '\trecursion no;\n'
+            '\tmax-cache-size 512M;\n'
+            '};\n\n'
+            'logging {\n'
+            '\tchannel "security" {\n'
+            '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+            '\t\tprint-time yes;\n'
+            '\t};\n'
+            '\tchannel "query_logging" {\n'
+            '\t\tsyslog local5;\n'
+            '\t\tseverity info;\n'
+            '\t};\n'
+            '\tcategory "client" { "null"; };\n'
+            '\tcategory "update-security" { "security"; };\n'
+            '\tcategory "queries" { "query_logging"; };\n'
+            '};\n\n'
+            'controls {\n'
+            '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
+            '};\n\n'
+            'include "/etc/rndc.key";\n'))
+
+  def testTreeExporterExpportAllBindTrees(self):
+    self.core_instance.SetMaintenanceFlag(1)
+    self.assertRaises(tree_exporter.MaintenanceError,
+        self.tree_exporter_instance.ExportAllBindTrees)
+    self.core_instance.SetMaintenanceFlag(0)
+    self.tree_exporter_instance.ExportAllBindTrees()
+      
+    tar_file = tarfile.open(self.tree_exporter_instance.tar_file_name)
+    tar_file.extractall()
+    tar_file.close()
+
     handle = open(
         '%s/external_dns_servers/named/external_dns_config' %
         self.bind_config_dir, 'r')
@@ -1398,8 +2069,7 @@ class TestTreeExporter(unittest.TestCase):
                      '\tdirectory "/var/domain";\n'
                      '\trecursion no;\n'
                      '\tmax-cache-size 512M;\n'
-                     '};\n'
-                     '\n'
+                     '};\n\n'
                      'logging {\n'
                      '\tchannel "security" {\n'
                      '\t\tfile "/var/log/named-security.log" versions 10 size '
@@ -1413,26 +2083,21 @@ class TestTreeExporter(unittest.TestCase):
                      '\tcategory "client" { "null"; };\n'
                      '\tcategory "update-security" { "security"; };\n'
                      '\tcategory "queries" { "query_logging"; };\n'
-                     '};\n'
-                     '\n'
+                     '};\n\n'
                      'controls {\n'
                      '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
-                     '};\n'
-                     '\n'
-                     'include "/etc/rndc.key";\n'
-                     '\n'
+                     '};\n\n'
+                     'include "/etc/rndc.key";\n\n'
                      'options {\n'
                      '  directory "/etc/named";\n'
                      '};\n'
                      'acl secret {\n'
                      '\t!10.10/32;\n'
-                     '};\n'
-                     '\n'
+                     '};\n\n'
                      'acl public {\n'
                      '\t10.10/32;\n'
                      '\t192.168.1.4/30;\n'
-                     '};\n'
-                     '\n'
+                     '};\n\n'
                      'view "external" {\n'
                      '\tmatch-clients { public; };\n'
                      '\tzone "university.edu" {\n'
@@ -1481,16 +2146,16 @@ class TestTreeExporter(unittest.TestCase):
                                     'dns1.university.edu\n'
                                     'dns_server_set_name = internal_dns\n\n')
     handle.close()
-    handle = open('%s/internal_dns_servers/named.conf' % self.bind_config_dir,
-                  'r')
+    handle = open(
+        '%s/internal_dns_servers/named.conf' % self.bind_config_dir,
+        'r')
     self.assertEqual(
         handle.read(), '#This named.conf file is autogenerated. DO NOT EDIT\n'
         'options {\n'
         '\tdirectory "/var/domain";\n'
         '\trecursion no;\n'
         '\tmax-cache-size 512M;\n'
-        '};\n'
-        '\n'
+        '};\n\n'
         'logging {\n'
         '\tchannel "security" {\n'
         '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
@@ -1503,26 +2168,21 @@ class TestTreeExporter(unittest.TestCase):
         '\tcategory "client" { "null"; };\n'
         '\tcategory "update-security" { "security"; };\n'
         '\tcategory "queries" { "query_logging"; };\n'
-        '};\n'
-        '\n'
+        '};\n\n'
         'controls {\n'
         '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
-        '};\n'
-        '\n'
-        'include "/etc/rndc.key";\n'
-        '\n'
+        '};\n\n'
+        'include "/etc/rndc.key";\n\n'
         'options {\n'
         '  directory "/etc/named";\n'
         '};\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
-        '};\n'
-        '\n'
+        '};\n\n'
         'acl public {\n'
         '\t10.10/32;\n'
         '\t192.168.1.4/30;\n'
-        '};\n'
-        '\n'
+        '};\n\n'
         'view "internal" {\n'
         '\tmatch-clients { public; secret; };\n'
         '\tzone "university.edu" {\n'
@@ -1621,8 +2281,7 @@ class TestTreeExporter(unittest.TestCase):
         '\tdirectory "/var/domain";\n'
         '\trecursion no;\n'
         '\tmax-cache-size 512M;\n'
-        '};\n'
-        '\n'
+        '};\n\n'
         'logging {\n'
         '\tchannel "security" {\n'
         '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
@@ -1635,26 +2294,21 @@ class TestTreeExporter(unittest.TestCase):
         '\tcategory "client" { "null"; };\n'
         '\tcategory "update-security" { "security"; };\n'
         '\tcategory "queries" { "query_logging"; };\n'
-        '};\n'
-        '\n'
+        '};\n\n'
         'controls {\n'
         '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
-        '};\n'
-        '\n'
-        'include "/etc/rndc.key";\n'
-        '\n'
+        '};\n\n'
+        'include "/etc/rndc.key";\n\n'
         'options {\n'
         '  directory "/etc/named";\n'
         '};\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
-        '};\n'
-        '\n'
+        '};\n\n'
         'acl public {\n'
         '\t10.10/32;\n'
         '\t192.168.1.4/30;\n'
-        '};\n'
-        '\n'
+        '};\n\n'
         'view "private" {\n'
         '\tmatch-clients { secret; };\n'
         '\tzone "university.edu" {\n'
@@ -1678,72 +2332,48 @@ class TestTreeExporter(unittest.TestCase):
         '@ 3600 in mx 1 mail2.university.edu.\n'
         '@ 3600 in mx 1 mail1.university.edu.\n')
     handle.close()
-    for fname in ['audit_log_replay_dump-1.bz2', 'full_database_dump-1.bz2',
-                  self.tree_exporter_instance.tar_file_name]:
-      if( os.path.exists(fname) ):
-        os.remove(fname)
 
-    self.assertRaises(tree_exporter.ChangesNotFoundError,
-                      self.tree_exporter_instance.ExportAllBindTrees)
+  def testTreeExporterAddToTarFile(self):
+    tar_string = (  ## The string was arbitrarily chosen.
+        u'options {\n'
+        '\tdirectory "/var/domain";\n'
+        '\trecursion no;\n'
+        '\tmax-cache-size 512M;\n'
+        '};\n\n'
+        'logging {\n'
+        '\tchannel "security" {\n'
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tprint-time yes;\n'
+        '\t};\n'
+        '\tchannel "query_logging" {\n'
+        '\t\tsyslog local5;\n'
+        '\t\tseverity info;\n'
+        '\t};\n'
+        '\tcategory "client" { "null"; };\n'
+        '\tcategory "update-security" { "security"; };\n'
+        '\tcategory "queries" { "query_logging"; };\n'
+        '};\n\n'
+        'controls {\n'
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
+        '};\n\n'
+        'include "/etc/rndc.key";\n')
 
-  def testCookRawDump(self):
-    self.db_instance.StartTransaction()
-    raw_dump = self.db_instance.DumpDatabase()
-    self.db_instance.EndTransaction()
-    dump_lines = ''.join(self.tree_exporter_instance.CookRawDump(raw_dump)[1])
+    if not (os.path.exists(self.bind_config_dir)):
+        os.mkdir(self.bind_config_dir)
+    temp_tar_filename = '%s/temp_file.tar.bz2' % self.bind_config_dir
+    tar_file = tarfile.open(temp_tar_filename, 'w:bz2')
+    self.tree_exporter_instance.AddToTarFile(tar_file, 'tar_string', tar_string)
+    tar_file.close()
 
-    self.core_instance.SetMaintenanceFlag(1)
-    self.core_instance.MakeZoneType(u'zonetype5')
+    tar_file = tarfile.open(temp_tar_filename, 'r:bz2')
+    tar_file.extractall(self.bind_config_dir)
+    tar_file.close()
 
-    self.db_instance.StartTransaction()
-    self.db_instance.cursor.execute(dump_lines)
-    self.db_instance.EndTransaction()
+    handle = open('%s/tar_string' % self.bind_config_dir , 'r')
+    extracted_tar_string = handle.read()
+    handle.close()
 
-    self.db_instance.StartTransaction()
-    raw_dump_2 = self.db_instance.DumpDatabase()
-    self.db_instance.EndTransaction()
-
-    self.assertEquals(raw_dump, raw_dump_2)
-
-    self.db_instance.StartTransaction()
-    raw_dump = self.db_instance.DumpDatabase()
-    self.db_instance.EndTransaction()
-    dump_lines = ''.join(self.tree_exporter_instance.CookRawDump(raw_dump)[0])
-
-    self.core_instance.MakeZoneType(u'zonetype5')
-
-    self.db_instance.StartTransaction()
-    self.db_instance.cursor.execute(dump_lines)
-    self.db_instance.EndTransaction()
-
-    self.db_instance.StartTransaction()
-    raw_dump_2 = self.db_instance.DumpDatabase()
-    self.db_instance.EndTransaction()
-    # audit log is constantly changing
-    del raw_dump['audit_log']
-    del raw_dump_2['audit_log']
-
-    self.assertEquals(raw_dump, raw_dump_2)
-
-    self.db_instance.StartTransaction()
-    raw_dump = self.db_instance.DumpDatabase()
-    self.db_instance.EndTransaction()
-    dump_lines = ''.join(self.tree_exporter_instance.CookRawDump(raw_dump)[0])
-
-    self.core_instance.SetMaintenanceFlag(1)
-
-    self.db_instance.StartTransaction()
-    self.db_instance.cursor.execute(dump_lines)
-    self.db_instance.EndTransaction()
-
-    self.db_instance.StartTransaction()
-    raw_dump_2 = self.db_instance.DumpDatabase()
-    self.db_instance.EndTransaction()
-    del raw_dump['audit_log']
-    del raw_dump_2['audit_log']
-
-    self.assertNotEquals(raw_dump, raw_dump_2)
-
+    self.assertEqual(extracted_tar_string, tar_string)
 
 if( __name__ == '__main__' ):
   unittest.main()
