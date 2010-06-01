@@ -50,7 +50,14 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser()
+  usage = ('\n'
+           '\n'
+           'To sync bind trees:\n'
+           '\t%s -i <audit-id> [-c <config-file>] [-d <dest-directory>]\n'
+           '\t[-u <rsync-user>] [-p <rsync-port>]\n' % tuple(
+             [sys.argv[0] for x in range(1)))
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',

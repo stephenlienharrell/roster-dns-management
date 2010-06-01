@@ -58,7 +58,7 @@ def main(args):
            '\t[-z <checkzone-binary>] [-c <checkconf-binary>] [-v]\n' % tuple(
                [sys.argv[0] for x in range(1)]))
 
-  parser = OptionParser()
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-d', '--directory', action='store', dest='directory',
                     help='Directory to scan.', metavar='<directory>',
