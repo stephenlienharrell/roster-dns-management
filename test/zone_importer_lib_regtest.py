@@ -129,7 +129,7 @@ class TestZoneImport(unittest.TestCase):
                                                      u'external')
     importer_instance.MakeRecordsFromZone()
     self.assertEquals(self.core_instance.ListRecords(record_type=u'soa'),
-                      [{u'serial_number': 806, u'refresh_seconds': 10800,
+                      [{u'serial_number': 810, u'refresh_seconds': 10800,
                         'target': u'@',
                         u'name_server': u'ns.university.edu.',
                         u'retry_seconds': 3600, 'ttl': 3600,
@@ -140,12 +140,12 @@ class TestZoneImport(unittest.TestCase):
                         u'expiry_seconds': 3600000}])
     self.assertEquals(self.core_instance.ListRecords(record_type=u'ns'),
                       [{'target': u'@',
-                        u'name_server': u'ns.university.edu.', 'ttl': 3600,
+                        u'name_server': u'ns.sub.university.edu.', 'ttl': 3600,
                         'record_type': u'ns', 'view_name': u'any',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu'},
                        {'target': u'@',
-                        u'name_server': u'ns2.university.edu.', 'ttl': 3600,
+                        u'name_server': u'ns2.sub.university.edu.', 'ttl': 3600,
                         'record_type': u'ns', 'view_name': u'any',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu'}])
@@ -154,12 +154,12 @@ class TestZoneImport(unittest.TestCase):
                         u'priority': 10, 'record_type': u'mx',
                         'view_name': u'any', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu',
-                        u'mail_server': u'mail1.university.edu.'},
+                        u'mail_server': u'mail1.sub.university.edu.'},
                        {'target': u'@', 'ttl': 3600,
                         u'priority': 20, 'record_type': u'mx',
                         'view_name': u'any', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu',
-                        u'mail_server': u'mail2.university.edu.'}])
+                        u'mail_server': u'mail2.sub.university.edu.'}])
     self.assertEquals(self.core_instance.ListRecords(record_type=u'txt'),
                       [{'target': u'@', 'ttl': 3600,
                         'record_type': u'txt', 'view_name': u'any',
@@ -190,7 +190,7 @@ class TestZoneImport(unittest.TestCase):
                         'zone_name': u'sub.university.edu',
                         u'assignment_host': u'sub.university.edu.'}])
     self.assertEquals(self.core_instance.ListRecords(record_type=u'hinfo'), 
-                      [{'target': u'desktop-1', 'ttl': 3600,
+                      [{'target': u'ns2', 'ttl': 3600,
                         u'hardware': u'PC', 'record_type': u'hinfo',
                         'view_name': u'any', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu', u'os': u'NT'}])

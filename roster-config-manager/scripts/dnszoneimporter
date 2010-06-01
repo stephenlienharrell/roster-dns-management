@@ -58,11 +58,11 @@ def main(args):
                     help='Zone file to load in. Mutually exclusive from '
                          '-d/--directory.', metavar='<file>',
                     default=None)
-  parser.add_option('-v', '--records_view', action='store', dest='records_view',
+  parser.add_option('-v', '--records-view', action='store', dest='records_view',
                     help='View to put records in. (This should be the any view '
                          'most of the time)', metavar='<view>',
                     default=u'any')
-  parser.add_option('-z', '--zone_view', action='store', dest='zone_view',
+  parser.add_option('-z', '--zone-view', action='store', dest='zone_view',
                     help='View to display records (Cannot be the any view).',
                     metavar='<view>', default=None)
   parser.add_option('-u', '--username', action='store', dest='user_name',

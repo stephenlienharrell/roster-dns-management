@@ -81,7 +81,8 @@ class Config(object):
                    'credentials': {'authentication_method': 'str',
                                    'exp_time': 'int'},
                    'exporter': {'backup_dir': 'str',
-                                'root_config_dir': 'str'}}
+                                'root_config_dir': 'str',
+                                'named_dir': 'str'}}
 
     for section in file_schema:
       self.config_file[section] = {}

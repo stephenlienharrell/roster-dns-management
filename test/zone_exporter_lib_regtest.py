@@ -92,7 +92,7 @@ class TestZoneExport(unittest.TestCase):
     records = self.core_instance.ListRecords(zone_name=u'sub.university.edu')
     zone_records = zone_exporter_lib.FormatRecordsForZone(
         records, '@', u'sub.university.edu', u'external')
-    self.assertEquals(zone_records['bulk'], 
+    self.assertEquals(zone_records['bulk'],
                       [{'target': u'@', 'ttl': 3600,
                         'record_type': u'a', 'view_name': u'any',
                         'last_user': u'sharrell',
@@ -111,11 +111,6 @@ class TestZoneExport(unittest.TestCase):
                         'zone_name': u'sub.university.edu',
                         u'assignment_ip':
                             u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'},
-                       {'target': u'desktop-1',
-                        'ttl': 3600,
-                        u'hardware': u'PC', 'record_type': u'hinfo',
-                        'view_name': u'any', 'last_user': u'sharrell',
-                        'zone_name': u'sub.university.edu', u'os': u'NT'},
                        {'target': u'desktop-2',
                         'ttl': 3600,
                         'record_type': u'a', 'view_name': u'any',
@@ -123,17 +118,48 @@ class TestZoneExport(unittest.TestCase):
                         'zone_name': u'sub.university.edu',
                         u'assignment_ip': u'192.168.2.102'},
                        {'target': u'localhost',
-                        'ttl': 3600, 'record_type': u'a',
-                        'view_name': u'any', 'last_user': u'sharrell',
+                        'ttl': 3600,
+                        'record_type': u'a', 'view_name': u'any',
+                        'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu',
                         u'assignment_ip': u'127.0.0.1'},
-                       {'target': u'www', 'ttl': 3600,
+                       {'target': u'mail1',
+                        'ttl': 3600,
+                        'record_type': u'a', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip': u'192.168.1.101'},
+                       {'target': u'mail2',
+                        'ttl': 3600,
+                        'record_type': u'a', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip': u'192.168.1.102'},
+                       {'target': u'ns',
+                        'ttl': 3600,
+                        'record_type': u'a', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip': u'192.168.1.103'},
+                       {'target': u'ns2',
+                        'ttl': 3600,
+                        'record_type': u'a', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_ip': u'192.168.1.104'},
+                       {'target': u'ns2',
+                        'ttl': 3600,
+                        u'hardware': u'PC', 'record_type': u'hinfo',
+                        'view_name': u'any', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu', u'os': u'NT'},
+                       {'target': u'www',
+                        'ttl': 3600,
                         'record_type': u'cname', 'view_name': u'any',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu',
                         u'assignment_host': u'sub.university.edu.'}])
     self.assertEquals(zone_records['soa'],
-                      [{u'serial_number': 807, u'refresh_seconds': 10800,
+                      [{u'serial_number': 811, u'refresh_seconds': 10800,
                         'target': u'@',
                         u'name_server': u'ns.university.edu.',
                         u'retry_seconds': 3600, 'ttl': 3600,
@@ -144,12 +170,12 @@ class TestZoneExport(unittest.TestCase):
                         u'expiry_seconds': 3600000}])
     self.assertEquals(zone_records['ns'], 
                       [{'target': u'@',
-                        u'name_server': u'ns.university.edu.', 'ttl': 3600,
+                        u'name_server': u'ns.sub.university.edu.', 'ttl': 3600,
                         'record_type': u'ns', 'view_name': u'any',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu'},
                        {'target': u'@',
-                        u'name_server': u'ns2.university.edu.', 'ttl': 3600,
+                        u'name_server': u'ns2.sub.university.edu.', 'ttl': 3600,
                         'record_type': u'ns', 'view_name': u'any',
                         'last_user': u'sharrell',
                         'zone_name':u'sub.university.edu'}])
@@ -165,12 +191,12 @@ class TestZoneExport(unittest.TestCase):
                         u'priority': 10, 'record_type': u'mx',
                         'view_name': u'any', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu',
-                        u'mail_server': u'mail1.university.edu.'},
+                        u'mail_server': u'mail1.sub.university.edu.'},
                        {'target': u'@', 'ttl': 3600,
                         u'priority': 20, 'record_type': u'mx',
                         'view_name': u'any', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu',
-                        u'mail_server': u'mail2.university.edu.'}])
+                        u'mail_server': u'mail2.sub.university.edu.'}])
 
 
   def testMakeZoneString(self):
@@ -182,18 +208,22 @@ class TestZoneExport(unittest.TestCase):
         '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN sub.university.edu.\n'
         '@ 3600 in soa ns.university.edu. '
-            'hostmaster.ns.university.edu. 806 10800 3600 3600000 86400\n'
-        '@ 3600 in ns ns.university.edu.\n'
-        '@ 3600 in ns ns2.university.edu.\n'
-        '@ 3600 in mx 10 mail1.university.edu.\n'
-        '@ 3600 in mx 20 mail2.university.edu.\n'
+            'hostmaster.ns.university.edu. 810 10800 3600 3600000 86400\n'
+        '@ 3600 in ns ns.sub.university.edu.\n'
+        '@ 3600 in ns ns2.sub.university.edu.\n'
+        '@ 3600 in mx 10 mail1.sub.university.edu.\n'
+        '@ 3600 in mx 20 mail2.sub.university.edu.\n'
         '@ 3600 in txt "Contact 1:  Stephen Harrell '
             '(sharrell@university.edu)"\n'
         '@ 3600 in a 192.168.0.1\n'
         'desktop-1 3600 in a 192.168.1.100\n'
         'desktop-1 3600 in aaaa 3ffe:0800:0000:0000:02a8:79ff:fe32:1982\n'
-        'desktop-1 3600 in hinfo PC NT\n'
         'localhost 3600 in a 127.0.0.1\n'
+        'mail1 3600 in a 192.168.1.101\n'
+        'mail2 3600 in a 192.168.1.102\n'
+        'ns 3600 in a 192.168.1.103\n'
+        'ns2 3600 in a 192.168.1.104\n'
+        'ns2 3600 in hinfo PC NT\n'
         'www 3600 in cname sub.university.edu.\n')
 
     self.core_instance.MakeRecord(u'a', u'desktop-1',

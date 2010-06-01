@@ -82,6 +82,7 @@ class BindTreeExport(object):
     self.cooked_data = {}
     self.root_config_dir = config_instance.config_file['exporter'][
         'root_config_dir']
+    self.named_dir = config_instance.config_file['exporter']['named_dir']
     self.backup_dir = config_instance.config_file['exporter']['backup_dir']
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
@@ -247,6 +248,8 @@ class BindTreeExport(object):
 
     self.tar_file_name = '%s/dns_tree_%s-%s.tar.bz2' % (
         self.backup_dir, current_time.strftime("%d_%m_%yT%H_%M"), log_id)
+    if( not os.path.exists(self.backup_dir) ):
+      os.makedirs(self.backup_dir)
     shutil.move(temp_tar_file_name, self.tar_file_name)
 
     audit_log_replay_dump_file = bz2.BZ2File(
@@ -368,7 +371,8 @@ class BindTreeExport(object):
       raise Error('Named conf global options missing for server set "%s"' % (
           dns_server_set))
     named_conf_lines.append(named_conf_header)
-    named_conf_lines.extend(['options {', '  directory "/etc/named";', '};'])
+    named_conf_lines.extend(['options {', '  directory "%s";' % self.named_dir,
+                             '};'])
     for acl_range in data['acl_ranges']:
       if( not acl_range['acl_ranges_acl_name'] in acl_dict ):
         acl_dict[acl_range['acl_ranges_acl_name']] = {}

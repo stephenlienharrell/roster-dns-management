@@ -130,6 +130,9 @@ def main(args):
   parser.add_option('--root-config-dir', action='store', dest='root_config_dir',
                     help='Directory where bind config files will be dumped.',
                     default='/opt/roster/tmp')
+  parser.add_option('--named-dir', action='store', dest='named_dir',
+                    help='Directory where named files will live.',
+                    default='/etc/named')
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -199,6 +202,7 @@ def main(args):
   config_parser.add_section('exporter')
   config_parser.set('exporter', 'backup_dir', options.backup_dir)
   config_parser.set('exporter', 'root_config_dir', options.root_config_dir)
+  config_parser.set('exporter', 'named_dir', options.named_dir)
 
   config_parser.add_section('server')
   config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)

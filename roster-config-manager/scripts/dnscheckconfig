@@ -38,6 +38,10 @@ __version__ = '#TRUNK#'
 
 import sys
 import os
+import tarfile
+import uuid
+import shutil
+import ConfigParser
 
 from optparse import OptionParser
 
@@ -47,6 +51,13 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
+  usage = ('\n'
+           '\n'
+           'To check config files in an audit id:\n'
+           '\t%s -i <audit-id> [--config-file <config-file>]\n'
+           '\t[-z <checkzone-binary>] [-c <checkconf-binary>] [-v]\n' % tuple(
+               [sys.argv[0] for x in range(1)]))
+
   parser = OptionParser()
 
   parser.add_option('-d', '--directory', action='store', dest='directory',
@@ -62,21 +73,56 @@ def main(args):
                     default='/usr/sbin/named-checkconf')
   parser.add_option('-v', '--verbose', dest='verbose', action='store_true',
                     help='Make command verbose.', default=False)
+  parser.add_option('--config-file', action='store', dest='config_file',
+                    help='Config File Location', metavar='<config-file>',
+                    default='/etc/roster/roster_server.conf')
+  parser.add_option('-i', '--id', dest='id',
+                    help='Tarfile with id output from Roster.',
+                    metavar='<id>', default=None)
 
   (globals()['options'], args) = parser.parse_args(args)
 
 
-  if( len(parser.largs) == 1 and not options.directory ):
-    options.directory = parser.largs[0]
+  server_config_file = ConfigParser.SafeConfigParser()
+  server_config_file.read(options.config_file)
+
+  backup_directory = options.directory
   if( not options.directory ):
-    print 'ERROR: Need to specify a directory.'
+    backup_directory = server_config_file.get('exporter',
+                                              'backup_dir').rstrip('/')
+
+  temp_root_directory = server_config_file.get('exporter',
+                                               'root_config_dir').rstrip('/')
+
+
+  if( options.id ):
+    file_list = os.listdir(backup_directory)
+    for fname in file_list:
+      if( fname.split('-')[1].split('.')[0] == options.id ):
+        tar = tarfile.open('%s/%s' % (backup_directory, fname))
+        tar.extractall()
+        tar.close()
+        root_directory = '%s_%s_%s' % (temp_root_directory, options.id,
+                                       str(uuid.uuid4()))
+        shutil.move(temp_root_directory, root_directory)
+        break
+    else:
+      print 'ERROR: ID %s not found.' % options.id
+      sys.exit(1)
+  else:
+    print 'ERROR: An audit log id must be specified with -i/--id'
+    sys.exit(1)
+
+
   if( not os.path.exists(options.named_checkzone) ):
     print 'ERROR: Could not find "named-checkzone" binary.'
+    sys.exit(1)
   if( not os.path.exists(options.named_checkconf) ):
     print 'ERROR: Could not find "named-checkconf" binary.'
+    sys.exit(1)
 
   named_files = os.popen(
-      'ls %s/*/named.conf' % options.directory).read().split()
+      'ls %s/*/named.conf' % root_directory).read().split()
   for current_file in named_files:
     handle = os.popen('%s %s' % (options.named_checkconf, current_file))
     checknamed_text = handle.read()
@@ -89,7 +135,7 @@ def main(args):
       sys.exit(1)
 
 
-  zone_files = os.popen('ls %s/*/*/*.db' % options.directory).read().split()
+  zone_files = os.popen('ls %s/*/*/*/*.db' % root_directory).read().split()
   for current_file in zone_files:
     file_handle = open(current_file, 'r')
     file_contents = file_handle.read().split('\n')

@@ -6,10 +6,10 @@ $TTL		3600
 				3600	; retry   1 hour
 				3600000	; expire  1000 hours
 				86400 )	; minimum 24 hours
-	in	ns	ns.university.edu.
-	in	ns	ns2.university.edu.
-  in  mx  10 mail1.university.edu.
-  in  mx  20 mail2.university.edu.
+	in	ns	ns.sub.university.edu.
+	in	ns	ns2.sub.university.edu.
+  in  mx  10 mail1.sub.university.edu.
+  in  mx  20 mail2.sub.university.edu.
 	in	txt	"Contact 1:  Stephen Harrell (sharrell@university.edu)"
   in  a   192.168.0.1
 
@@ -19,4 +19,8 @@ localhost	in	a		127.0.0.1
 www       in  cname sub.university.edu.
 desktop-1 in  aaaa  3FFE:800::2A8:79FF:FE32:1982
 desktop-1 in  a     192.168.1.100
+mail1     in  a     192.168.1.101
+mail2     in  a     192.168.1.102
+ns        in  a     192.168.1.103
+ns2       in  a     192.168.1.104
           in  hinfo PC NT
