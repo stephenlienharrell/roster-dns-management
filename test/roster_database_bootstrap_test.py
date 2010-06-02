@@ -147,7 +147,7 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
         '-d %s -n %s '
         '--ssl-cert %s --ssl-key %s '
         '--root-config-dir %s --backup-dir %s -i %s/init '
-        '-p %s --run-as %U --force' % (
+        '-p %s --run-as %s --force' % (
             EXEC,
             self.cfg_exporter['backup_dir'],
             self.cfg_database['login'],u'another_new_user',
