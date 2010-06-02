@@ -98,10 +98,7 @@ class TestdbAccess(unittest.TestCase):
 
     self.db_instance = self.config_instance.GetDb()
 
-    schema = roster_core.embedded_files.SCHEMA_FILE
-    self.db_instance.StartTransaction()
-    self.db_instance.cursor.execute(schema)
-    self.db_instance.EndTransaction()
+    self.db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
     self.db_instance.StartTransaction()
@@ -451,6 +448,22 @@ class TestdbAccess(unittest.TestCase):
     time = self.db_instance.GetCurrentTime()
     self.db_instance.EndTransaction()
     self.assertTrue(isinstance(time, datetime.datetime))
+
+  def testCreateRosterDatabase(self):
+    self.db_instance.CreateRosterDatabase()
+
+    self.db_instance.StartTransaction()
+    self.db_instance.cursor.execute('SHOW TABLES')
+    table_names = self.db_instance.cursor.fetchall()
+    self.db_instance.cursor.execute('SET FOREIGN_KEY_CHECKS=0')
+    for table in table_names:
+      table_name = table.values()[0]
+      self.db_instance.cursor.execute('DROP TABLE %s' %
+                                      table_name)
+    self.db_instance.cursor.execute('SET FOREIGN_KEY_CHECKS=1')
+    self.db_instance.EndTransaction()
+ 
+    self.db_instance.CreateRosterDatabase()
 
   def testDumpDatabase(self):
     self.db_instance.StartTransaction()

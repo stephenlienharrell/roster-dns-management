@@ -74,14 +74,16 @@ import Queue
 import threading
 import time
 import uuid
+import warnings
 
 import MySQLdb
 import MySQLdb.cursors
 
 import constants
-import helpers_lib
 import data_validation
+import embedded_files
 import errors
+import helpers_lib
 
 
 class TransactionError(errors.DbAccessError):
@@ -715,6 +717,43 @@ class dbAccess(object):
     """
     self.cursor.execute('SELECT NOW()')
     return self.cursor.fetchone()['NOW()']
+
+  def CreateRosterDatabase(self, schema=None):
+    """Destroys existing table structure in database and replaces it
+    with schema that is passed in(or default schema).
+
+    DO NOT RUN THIS AGAINST A DATABASE THAT IS NOT READY TO BE CLEARED
+
+    This function is used because of a poorly understood bug in MySQLdb
+    that does not allow our schema to be executed as one big query. The 
+    work around is splitting the whole thing up and commiting each piece
+    separately.
+
+    Inputs:
+      schema: string of sql schema
+    """
+    if( schema is None ):
+      schema = embedded_files.SCHEMA_FILE
+    schema_lines = schema.split('\n')
+    execute_lines = []
+    continued_line = []
+    for line in schema_lines:
+      if( line.lstrip().startswith('#') ):
+        continue
+      if( line.endswith(';') ):
+        continued_line.append(line)
+        execute_lines.append('\n'.join(continued_line))
+        continued_line = []
+      else:
+        continued_line.append(line)
+      
+    warnings.filterwarnings('ignore', 'Unknown table.*')
+    for line in execute_lines:
+      self.StartTransaction()
+      try:
+        self.cursor.execute(line)
+      finally:
+        self.EndTransaction()
 
   def DumpDatabase(self):
     """This will dump the entire database to memory.

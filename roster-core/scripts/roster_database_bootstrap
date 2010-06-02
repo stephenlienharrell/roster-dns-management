@@ -260,12 +260,8 @@ def main(args):
            '--force.')
     sys.exit(1)
 
-  schema = roster_core.embedded_files.SCHEMA_FILE
-  db_instance.StartTransaction()
-  try:
-    db_instance.cursor.execute(schema)
-  finally:
-    db_instance.EndTransaction()
+  db_instance.CreateRosterDatabase()
+
   db_instance.StartTransaction()
   try:
     db_instance.MakeRow(u'users',
