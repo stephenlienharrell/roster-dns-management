@@ -82,7 +82,7 @@ def main(args):
                     default='nobody')
   parser.add_option('--lock-file', action='store', dest='lock_file',
                     help='Location of roster server lock file.',
-                    default='/var/lock/rosterd')
+                    default='/var/lock/roster')
   parser.add_option('-l', '--ldap-server', action='store', dest='ldap_server',
                     help='URL of ldap server to authenticate with.',
                     metavar='<ldap-server>', default=None)
@@ -97,9 +97,6 @@ def main(args):
                     dest='get_credentials_wait_increment', metavar='<int>',
                     help='Seconds to add wait with incorrect password.',
                     default='1')
-  parser.add_option('-b', '--binddn', action='store', dest='binddn',
-                    help='Binddn for ldap server.', metavar='<binddn>',
-                    default=None)
   parser.add_option('--credential-expiry-time', action='store',
                     dest='credential_expiry_time', metavar='<time>',
                     help='Time in seconds for credentials to expire.',
@@ -130,6 +127,14 @@ def main(args):
   parser.add_option('--root-config-dir', action='store', dest='root_config_dir',
                     help='Directory where bind config files will be dumped.',
                     default='/opt/roster/tmp')
+  parser.add_option('--run-as', action='store', dest='run_as',
+                    help='Run as uid', type='int',
+                    default=0)
+  parser.add_option('-p','--db-password', action='store', dest='password',
+                    help='Password for the database user. Do not use this '
+                    'flag unless you need to. If not used a password prompt '
+                    'will be presented.',
+                    default='', metavar='<password>')
   parser.add_option('--named-dir', action='store', dest='named_dir',
                     help='Directory where named files will live.',
                     default='/etc/named')
@@ -141,9 +146,12 @@ def main(args):
   if( not os.path.exists(options.root_config_dir) ):
     os.makedirs(options.root_config_dir)
 
-  if( os.getuid() != 0 ):
-    print '%s: Need to be root.' % sys.argv[0]
-    sys.exit(1)
+  if( os.getuid() != options.run_as ):
+    if( options.run_as == 0 ):
+      print '%s: Need to be root.' % sys.argv[0]
+    else:
+      print '%s: Need to be uid %s.' % (sys.argv[0], options.run_as)
+      sys.exit(1)
 
   args_dict = {'-c/--config-file': options.config_file,
                '-u/--user-name': options.user_name,
@@ -160,8 +168,10 @@ def main(args):
     parser.print_help()
     sys.exit(1)
 
-  password = getpass.getpass(
-      'Enter database password for %s: ' % options.user_name)
+  if( not options.password ):
+    options.password = getpass.getpass(
+        'Enter database password for %s: ' % options.user_name)
+
   module_list = []
   for module in dir(roster_server):
     if( module.startswith('_') ):
@@ -195,7 +205,7 @@ def main(args):
   config_parser.set('database', 'server', options.hostname)
   config_parser.set('database', 'login', options.user_name)
   config_parser.set('database', 'database', options.database)
-  config_parser.set('database', 'passwd', password)
+  config_parser.set('database', 'passwd', options.password)
   config_parser.set('database', 'big_lock_timeout', options.big_lock_timeout)
   config_parser.set('database', 'big_lock_wait', options.big_lock_wait)
 
