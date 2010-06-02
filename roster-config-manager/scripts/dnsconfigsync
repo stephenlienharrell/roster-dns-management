@@ -54,8 +54,7 @@ def main(args):
            '\n'
            'To sync bind trees:\n'
            '\t%s -i <audit-id> [-c <config-file>] [-d <dest-directory>]\n'
-           '\t[-u <rsync-user>] [-p <rsync-port>]\n' % tuple(
-             [sys.argv[0] for x in range(1)))
+           '\t[-u <rsync-user>] [-p <rsync-port>]\n' % sys.argv[0])
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 

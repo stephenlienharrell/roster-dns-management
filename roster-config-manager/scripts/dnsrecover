@@ -50,15 +50,16 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  name = sys.argv[0]
   usage = ('\n'
            '\n'
            'To recover up to a certian audit ID:\n'
            '\t%s -i <id>\n'
            '\n'
            'To recover a single audit step:\n'
-           '\t%s -i <id> --single\n' % (name, name))
-  parser = OptionParser()
+           '\t%s -i <id> --single\n' % tuple(
+             [sys.argv[0] for x in range(2)]))
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-i', '--id', dest='id', action='store',
                     help='Audit log ID to recover to.',

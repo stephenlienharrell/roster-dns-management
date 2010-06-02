@@ -49,7 +49,16 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser()
+  usage = ('\n'
+           '\n'
+           'To export database to config files:\n'
+           '\t%s [-d <output-directory>] [-f] '
+           '\t[--config-file <config-file>] [-t <tree-exporter-executable>]\n'
+           '\t[-c <check-config-executable>] [-s <config-sync-excutable>]\n'
+           '\t[--named-checkzone <named-checkzone-executable>\n'
+           '\t[--named-checkconf <named-checkconf-executable>\n' % sys.argv[0])
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-d', '--directory', action='store', dest='directory',
                     help='Directory to scan.', metavar='<directory>',

@@ -45,7 +45,13 @@ from roster_config_manager import zone_importer_lib
 
 
 def main(args):
-  parser = OptionParser()
+  usage = ('\n'
+           '\n'
+           'To import zone files:\n'
+           '\t%s -c <config-file> -z <zone-view> (-d <directory> | -f <file>)\n'
+           '\t[-v <records-view>] [-z <zone-view>] [-u <username>]\n' % sys.argv[0])
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-c', '--config-file', action='store', dest='config',
                     help='Database config file.', metavar='<config-file>',
@@ -81,7 +87,7 @@ def main(args):
     sys.exit(1)
 
   if( options.zone_view is None ):
-    print "Must specify --zone_view flag"
+    print "Must specify --zone-view flag"
     parser.print_help()
     sys.exit(1)
 

@@ -49,7 +49,12 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  parser = OptionParser()
+  usage = ('\n'
+           '\n'
+           'To export all bind trees:\n'
+           '\t%s [-c <config-file>] [-f] [-q]\n' % sys.argv[0])
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
