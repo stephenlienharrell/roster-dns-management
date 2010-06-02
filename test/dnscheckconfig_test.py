@@ -86,7 +86,7 @@ class TestCheckConfig(unittest.TestCase):
     if( os.path.exists('backup') ):
       shutil.rmtree('backup')
     for fname in os.listdir('.'):
-      if( fname.startswith('bind_configs_1') ):
+      if( fname.startswith('bind_configs_') ):
         shutil.rmtree(fname)
 
   def testCheckConfig(self):
@@ -107,16 +107,13 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    tar = tarfile.open(self.tree_exporter_instance.tar_file_name)
-    tar.extractall()
-    tar.close()
 
     output = os.popen3('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
         KEY_FILE, EXEC))[2]
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
 
-    output = os.popen('python %s -d test_data/backup -i 1 --config-file %s' % (
+    output = os.popen('python %s -i 24 --config-file %s' % (
         EXEC, CONFIG_FILE))
     self.assertEqual(output.read(), '')
     output.close()
@@ -151,16 +148,13 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    tar = tarfile.open(self.tree_exporter_instance.tar_file_name)
-    tar.extractall()
-    tar.close()
 
     output = os.popen3('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
         KEY_FILE, EXEC))[2]
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
 
-    output = os.popen('python %s -d test_data/backup -i 1 --config-file %s' % (
+    output = os.popen('python %s -i 23 --config-file %s' % (
         EXEC, CONFIG_FILE))
     self.assertEqual(output.read(),
         "ERROR: zone sub.university.edu/IN: sub.university.edu/MX "

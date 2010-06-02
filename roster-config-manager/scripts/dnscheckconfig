@@ -97,6 +97,8 @@ def main(args):
   if( options.id ):
     file_list = os.listdir(backup_directory)
     for fname in file_list:
+      if( not fname.startswith('dns_tree') ):
+        continue
       if( fname.split('-')[1].split('.')[0] == options.id ):
         tar = tarfile.open('%s/%s' % (backup_directory, fname))
         tar.extractall()
