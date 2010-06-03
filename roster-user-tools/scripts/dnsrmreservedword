@@ -59,7 +59,7 @@ def main(args):
     args: list of arguments from the command line
   """
   command = 'remove'
-  if( not args[0].startswith('-') ):
+  if( args and not args[0].startswith('-') ):
     command = args.pop(0)
   usage = ('\n'
            '\n'
