@@ -53,6 +53,9 @@ class CoreFlags:
     self.args = args
     self.command = command
     self.SetCommands(commands)
+    if( self.command and self.command not in self.functions_dict ):
+      cli_common_lib.DnsError(
+          'This tool does not have a %s command.' % self.command, 1)
     self.SetCoreFlags()
     self.SetActionFlags()
     self.SetDataFlags()
