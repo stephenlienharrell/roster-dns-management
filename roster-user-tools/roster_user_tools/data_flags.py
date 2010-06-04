@@ -283,8 +283,7 @@ class Host(core_flags.CoreFlags):
       self.parser.add_option('-i', '--ip-address', action='store',
                              dest='ip_address', default=None,
                              help='Full IP address of machine.',
-                             metavar='<ip-address>',
-                             default=None)
+                             metavar='<ip-address>')
       self.AddFlagRule('ip_address', required=not_list)
       self.parser.add_option('-t', '--target', action='store', dest='target',
                              help='String of machine host name.',
