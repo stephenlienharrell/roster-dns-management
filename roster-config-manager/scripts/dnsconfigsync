@@ -65,16 +65,37 @@ def main(args):
                     dest='destination_directory',
                     help='Destination directory on dns servers.',
                     metavar='<destination-directory>',
-                    default='/etc/named')
+                    default=None)
   parser.add_option('-i', '--id', dest='id',
                     help='Tarfile with id output from Roster.',
                     metavar='<id>', default=None)
   parser.add_option('-u', '--user-name', action='store', dest='user_name',
                     help='Rsync username.', metavar='<user-name>',
                     default=None)
-  parser.add_option('-p', '--port', action='store', dest='port',
+  parser.add_option('--rsync-port', action='store', dest='port',
                     help='Rsync port number.', metavar='<port>',
                     default=None)
+  parser.add_option('--ssh-port', action='store', dest='ssh_port',
+                    help='SSH port number.', metavar='<ssh-port>',
+                    default=None)
+  parser.add_option('--ssh-id', action='store', dest='ssh_id',
+                    help='SSH id file.', metavar='<ssh-id>',
+                    default=None)
+  parser.add_option('-r', '--rsync-exec', action='store', dest='rsync_exec',
+                    help='Rsync executable location.', metavar='<rsync-exec>',
+                    default='rsync')
+  parser.add_option('--rndc-exec', action='store', dest='rndc_exec',
+                    help='Rndc executable location.', metavar='<rndc-exec>',
+                    default='/usr/sbin/rndc')
+  parser.add_option('--rndc-key', action='store', dest='rndc_key',
+                    help='Rndc key file.', metavar='<rndc-key>',
+                    default=None)
+  parser.add_option('--rndc-conf', action='store', dest='rndc_conf',
+                    help='Rndc conf file.', metavar='<rndc-conf>',
+                    default=None)
+  parser.add_option('-s', '--ssh-exec', action='store', dest='ssh_exec',
+                    help='SSH executable location.', metavar='<ssh-exec>',
+                    default='ssh')
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -84,15 +105,31 @@ def main(args):
   server_config_file.read(options.config_file)
 
 
-
   backup_directory = server_config_file.get(
       'exporter', 'backup_dir').rstrip('/')
   temp_root_directory = server_config_file.get(
       'exporter', 'root_config_dir').rstrip('/')
+  if( not options.destination_directory ):
+    options.destination_directory = server_config_file.get(
+        'exporter', 'named_dir')
+  if( options.rndc_key ):
+    if( options.rndc_key.startswith('./')
+        or not options.rndc_key.startswith('/') ):
+      options.rndc_key = '%s/%s' % (os.getcwd(), options.rndc_key.lstrip('./'))
+    options.rndc_exec = '%s -k %s' % (
+        options.rndc_exec, os.path.expanduser(options.rndc_key))
+  if( options.rndc_conf ):
+    if( options.rndc_conf.startswith('./')
+        or not options.rndc_conf.startswith('/') ):
+      options.rndc_conf = '%s/%s' % (os.getcwd(), options.rndc_conf.lstrip('./'))
+    options.rndc_exec = '%s -c %s' % (
+        options.rndc_exec, os.path.expanduser(options.rndc_conf))
 
   if( options.id ):
     file_list = os.listdir(backup_directory)
     for fname in file_list:
+      if( not fname.startswith('dns_tree') ):
+        continue
       if( fname.split('-')[1].split('.')[0] == options.id ):
         tar = tarfile.open('%s/%s' % (
             backup_directory, fname))
@@ -100,11 +137,20 @@ def main(args):
         tar.close()
         root_directory = '%s_%s' % (temp_root_directory, options.id)
         shutil.move(temp_root_directory, root_directory)
+        if( root_directory.startswith('./') ):
+          root_directory = '%s/%s' % (os.getcwd(), root_directory.lstrip('./'))
         break
+    else:
+      print "ERROR: Audit log id %s not found" % options.id
+      sys.exit(1)
   else:
     print 'ERROR: An audit log id must be specified with -i/--id.'
     sys.exit(1)
   try:
+    if( options.ssh_port ):
+      options.ssh_exec = '\'%s -p %s\'' % (options.ssh_exec, options.ssh_port)
+    if( options.ssh_id ):
+      options.ssh_exec = '\'%s -i %s\'' % (options.ssh_exec, options.ssh_id)
     dns_server_sets = None
     file_dict = {}
     for server_set in os.listdir(root_directory):
@@ -114,7 +160,7 @@ def main(args):
           server_set.replace('servers', 'config')))
       for dns_server in config_parser.get(
             'dns_server_set_parameters', 'dns_servers').split(','):
-        rsync_dir = '%s/%s/*' % (root_directory, server_set)
+        rsync_dir = '%s/%s/*' % (os.path.expanduser(root_directory), server_set)
         rsync_url_parts = []
         if( options.user_name ):
           rsync_url_parts.append('%s@' % options.user_name)
@@ -123,8 +169,11 @@ def main(args):
           rsync_url_parts.append(':%s' % options.port)
         rsync_url_string = ''.join(rsync_url_parts)
         print 'Connecting to rsync on "%s"' % dns_server
-        rsync_string = 'rsync %s %s:%s -r' % (rsync_dir, rsync_url_string,
-                                              options.destination_directory)
+        rsync_string = '%s -avz -e %s %s %s:%s -r' % (
+            options.rsync_exec, options.ssh_exec,
+            rsync_dir,
+            rsync_url_string,
+            options.destination_directory)
         handle = os.popen(rsync_string)
         rsync_text = handle.read()
         handle.close()
@@ -133,7 +182,9 @@ def main(args):
           print rsync_text
 
         print 'Connecting to ssh on "%s"' % dns_server
-        ssh_string = 'ssh %s \'/usr/sbin/rndc reload\'' % rsync_url_string
+        ssh_string = '%s %s \'%s reload\'' % (options.ssh_exec.strip('\''),
+                                              rsync_url_string,
+                                              options.rndc_exec)
 
         handle = os.popen(ssh_string)
         ssh_text = handle.read()

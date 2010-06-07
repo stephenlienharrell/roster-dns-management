@@ -370,9 +370,8 @@ class BindTreeExport(object):
     if( not named_conf_header ):
       raise Error('Named conf global options missing for server set "%s"' % (
           dns_server_set))
-    named_conf_lines.append(named_conf_header)
-    named_conf_lines.extend(['options {', '  directory "%s";' % self.named_dir,
-                             '};'])
+    named_conf_lines.extend(['options {', '\tdirectory "%s/named";' % (
+        self.named_dir), named_conf_header, '};'])
     for acl_range in data['acl_ranges']:
       if( not acl_range['acl_ranges_acl_name'] in acl_dict ):
         acl_dict[acl_range['acl_ranges_acl_name']] = {}
@@ -413,8 +412,8 @@ class BindTreeExport(object):
                   'zone_origin'].rstrip('.')))
           named_conf_lines.append('\t\ttype %s;' % cooked_data[
               dns_server_set]['views'][view_name]['zones'][zone]['zone_type'])
-          named_conf_lines.append('\t\tfile "/etc/named/%s/%s.db";' % (
-              view_name, zone))
+          named_conf_lines.append('\t\tfile "%s/named/%s/%s.db";' % (
+              self.named_dir.rstrip('/'), view_name, zone))
           zone_options = cooked_data[dns_server_set]['views'][view_name][
               'zones'][zone]['zone_options'].replace('\n', '\n\t\t')
           named_conf_lines.append('\t\t%s' % zone_options.rsplit('\n\t\t', 1)[0])

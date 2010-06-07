@@ -99,7 +99,7 @@ def main(args):
   elif( os.path.exists(options.directory) and options.force ):
     shutil.rmtree(options.directory)
 
-  dnstreeexport_array = [options.tree_export, '-d', options.directory]
+  dnstreeexport_array = [options.tree_export]
   if( options.config_file ):
     dnstreeexport_array.extend(['-c', options.config_file])
   tree_return = os.system(' '.join(dnstreeexport_array))
@@ -107,14 +107,20 @@ def main(args):
   if( tree_return != 0 ):
     sys.exit(tree_return)
 
-  dnscheckconfig_array = [options.check_config, '-d', options.directory]
+  dnscheckconfig_array = [options.check_config]
+  if( options.config_file ):
+    dnscheckconfig_array.extend(['--config-file', options.config_file])
+  if( options.directory ):
+    dnscheckconfig_array.extend(['-d', options.directory])
   if( options.named_checkzone ):
     dnscheckconfig_array.extend(['-z', options.named_checkzone])
   if( options.named_checkconf ):
     dnscheckconfig_array.extend(['-c', options.named_checkconf])
   config_return = os.system(' '.join(dnscheckconfig_array))
 
-  dnsconfigsync_array = [options.config_sync, '-r', options.directory]
+  dnsconfigsync_array = [options.config_sync]
+  if( options.config_file ):
+    dnsconfigsync_array.extend(['--config-file', options.config_file])
   if( options.destination_directory ):
     dnsconfigsync_array.extend(['-d', options.destination_directory])
   if( config_return != 0 ):

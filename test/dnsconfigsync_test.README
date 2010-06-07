@@ -1,0 +1,23 @@
+This test requires that special measures are taken to run.
+
+To run this test you will need:
+
+1. A running BIND9 instance.
+2. Proper ssh keys to the root user of this system.
+
+DO NOT:
+
+1. Run this on a system with a production DNS server.
+2. Run this on a system where having root access can lead to catastrphic
+   repurcussions.
+3. Make the ssh keys in test_data visible by anyone but the user this test
+   is run.
+
+To set up this unittest:
+
+1. Generate an ssh key and place it in test_data.
+   Name it roster_id_dsa.pub. Make sure to chmod 600.
+2. Add this key to /root/.ssh/authorized_keys
+3. Install and start a disposable BIND9 server.
+4. Generate an rndc key file named rndc.key and copy it to the bind directory
+   and test_data.
