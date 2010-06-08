@@ -42,6 +42,11 @@ import inspect
 import uuid
 import os
 
+
+class ConfigError(Exception):
+  pass
+
+
 class CredCache(object):
   """Credentials cache for XMLRPC services.
 
@@ -95,7 +100,7 @@ class CredCache(object):
          continue
        if( authenticate_module_arg not in self.config_instance.config_file[
                self.authentication_method] ):
-         raise self.config_instance.ConfigError(
+         raise ConfigError(
              'Could not find "%s" value in "%s" in the "%s" section.' % (
                  authenticate_module_arg, self.config_instance.config_file_path,
                  self.authentication_method))
