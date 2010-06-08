@@ -69,7 +69,7 @@ class ChangesNotFoundError(Error):
 
 class BindTreeExport(object):
   """This class exports zones"""
-  def __init__(self, config_file_name):
+  def __init__(self, config_file_name, directory=None):
     """Sets self.db_instance
 
     Inputs:
@@ -82,7 +82,10 @@ class BindTreeExport(object):
     self.cooked_data = {}
     self.root_config_dir = config_instance.config_file['exporter'][
         'root_config_dir']
-    self.named_dir = config_instance.config_file['exporter']['named_dir']
+    if( directory ):
+      self.named_dir = directory
+    else:
+      self.named_dir = config_instance.config_file['exporter']['named_dir']
     self.backup_dir = config_instance.config_file['exporter']['backup_dir']
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
@@ -370,6 +373,7 @@ class BindTreeExport(object):
     if( not named_conf_header ):
       raise Error('Named conf global options missing for server set "%s"' % (
           dns_server_set))
+    print named_conf_header
     named_conf_lines.extend(['options {', '\tdirectory "%s/named";' % (
         self.named_dir), named_conf_header, '};'])
     for acl_range in data['acl_ranges']:

@@ -39,11 +39,32 @@ __version__ = '#TRUNK#'
 import sys
 import os
 import tarfile
-import uuid
 import shutil
 import ConfigParser
+import glob
 
 from optparse import OptionParser
+
+
+def ChangeNamedDirectory(file_name, directory):
+  file = open(file_name, 'r')
+  file_contents = file.readlines()
+  file.close()
+  for i, line in enumerate(file_contents):
+    if( line.strip().startswith('directory') ):
+      if( len(line.split('"')) == 3 ):
+        linearray = line.split('"')
+        linearray[1] = directory
+        file_contents[i] = '"'.join(linearray)
+        file = open(file_name, 'w')
+        file.writelines(''.join(file_contents))
+        file.close()
+        break
+  else:
+    print 'ERROR: Could not find any valid directory statements in %s.' % (
+        file_name)
+    sys.exit(1)
+
 
 def main(args):
   """Collects command line arguments. Checks configs.
@@ -62,6 +83,10 @@ def main(args):
   parser.add_option('-d', '--directory', action='store', dest='directory',
                     help='Directory to scan.', metavar='<directory>',
                     default=None)
+  parser.add_option('-o', '--output-directory', action='store',
+                    dest='output_directory',
+                    help='Directory to temporarily output files to. Must be '
+                         'same in named.conf.', default='temp_dir')
   parser.add_option('-z', '--named-checkzone', action='store',
                     dest='named_checkzone',
                     help='Location of named_checkzone binary.',
@@ -82,6 +107,9 @@ def main(args):
   (globals()['options'], args) = parser.parse_args(args)
 
 
+  if( os.path.exists(options.output_directory) ):
+    shutil.rmtree(options.output_directory)
+
   server_config_file = ConfigParser.SafeConfigParser()
   server_config_file.read(options.config_file)
 
@@ -92,28 +120,67 @@ def main(args):
 
   temp_root_directory = server_config_file.get('exporter',
                                                'root_config_dir').rstrip('/')
+  temp_root_directory = 'bind_configs'
+  if( not os.path.exists(temp_root_directory) ):
+    os.makedirs(temp_root_directory)
 
 
-  if( options.id ):
+  err_files = []
+  try:
     file_list = os.listdir(backup_directory)
-    for fname in file_list:
-      if( not fname.startswith('dns_tree') ):
+  except OSError:
+    print ('ERROR: Directory %s does not exist or you '
+           'do not have permission.' % backup_directory)
+    sys.exit(1)
+  if( options.id ):
+    for file_name in file_list:
+      if( not file_name.startswith('dns_tree') ):
         continue
-      if( fname.split('-')[1].split('.')[0] == options.id ):
-        tar = tarfile.open('%s/%s' % (backup_directory, fname))
-        tar.extractall()
-        tar.close()
-        root_directory = '%s_%s_%s' % (temp_root_directory, options.id,
-                                       str(uuid.uuid4()))
-        shutil.move(temp_root_directory, root_directory)
-        break
+      try:
+        if( file_name.split('-')[1].split('.')[0] == options.id ):
+          tar = tarfile.open('%s/%s' % (backup_directory, file_name))
+          tar.extractall()
+          tar.close()
+          shutil.move(temp_root_directory, options.output_directory)
+          break
+      except IndexError:
+        err_files.append(file_name)
+        continue
+        # If this error occurs, skip if correct numbered file is found.
     else:
-      print 'ERROR: ID %s not found.' % options.id
+      # No break, could mean wrong filenames or nonexistant
+      if( err_files ):
+        print 'ERROR: Filenames: %s not named correctly' % ', '.join(err_files)
+      else:
+        print 'ERROR: ID %s not found.' % options.id
       sys.exit(1)
   else:
-    print 'ERROR: An audit log id must be specified with -i/--id'
-    sys.exit(1)
-
+    newest = -1
+    new_file_name = None
+    for file_name in file_list:
+      if( not file_name.startswith('dns_tree') ):
+        continue
+      try:
+        id = int(file_name.split('-')[1].split('.')[0])
+      except IndexError:
+        err_files.append(file_name)
+        break
+        # If this error occurs, error out completely
+      if( id > newest ):
+        newest = id
+        new_file_name = file_name
+    file_name = new_file_name
+    if( err_files ):
+      print 'ERROR: Filenames: %s not named correctly' % ', '.join(err_files)
+      sys.exit(1)
+    if( new_file_name is None ):
+      print ('ERROR: An unknown error has occurred trying to find the newest '
+             'file.')
+      sys.exit(1)
+    tar = tarfile.open('%s/%s' % (backup_directory, file_name))
+    tar.extractall()
+    tar.close()
+    shutil.move(temp_root_directory, options.output_directory)
 
   if( not os.path.exists(options.named_checkzone) ):
     print 'ERROR: Could not find "named-checkzone" binary.'
@@ -122,9 +189,9 @@ def main(args):
     print 'ERROR: Could not find "named-checkconf" binary.'
     sys.exit(1)
 
-  named_files = os.popen(
-      'ls %s/*/named.conf' % root_directory).read().split()
+  named_files = glob.glob('%s/*/named.conf' % options.output_directory)
   for current_file in named_files:
+    ChangeNamedDirectory(current_file, options.output_directory)
     handle = os.popen('%s %s' % (options.named_checkconf, current_file))
     checknamed_text = handle.read()
     return_val = handle.close()
@@ -136,7 +203,7 @@ def main(args):
       sys.exit(1)
 
 
-  zone_files = os.popen('ls %s/*/*/*/*.db' % root_directory).read().split()
+  zone_files = glob.glob('%s/*/*/*/*.db' % options.output_directory)
   for current_file in zone_files:
     file_handle = open(current_file, 'r')
     file_contents = file_handle.read().split('\n')
@@ -157,6 +224,7 @@ def main(args):
         print 'Finished - %s' % current_file
     else:
       print 'ERROR: %s' % checkzone_text
+      sys.exit(1)
 
   if( options.verbose ):
     print '--------------------------------------------------------------------'

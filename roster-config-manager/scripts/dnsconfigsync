@@ -125,27 +125,62 @@ def main(args):
     options.rndc_exec = '%s -c %s' % (
         options.rndc_exec, os.path.expanduser(options.rndc_conf))
 
+  file_list = os.listdir(backup_directory)
+  error_files = []
   if( options.id ):
-    file_list = os.listdir(backup_directory)
-    for fname in file_list:
-      if( not fname.startswith('dns_tree') ):
+    for file_name in file_list:
+      if( not file_name.startswith('dns_tree') ):
         continue
-      if( fname.split('-')[1].split('.')[0] == options.id ):
-        tar = tarfile.open('%s/%s' % (
-            backup_directory, fname))
-        tar.extractall()
-        tar.close()
-        root_directory = '%s_%s' % (temp_root_directory, options.id)
-        shutil.move(temp_root_directory, root_directory)
-        if( root_directory.startswith('./') ):
-          root_directory = '%s/%s' % (os.getcwd(), root_directory.lstrip('./'))
-        break
+      try:
+        if( file_name.split('-')[1].split('.')[0] == options.id ):
+          tar = tarfile.open('%s/%s' % (
+              backup_directory, file_name))
+          tar.extractall()
+          tar.close()
+          root_directory = '%s_%s' % (temp_root_directory, options.id)
+          if( root_directory.startswith('./') ):
+            root_directory = '%s/%s' % (os.getcwd(),
+                                        root_directory.lstrip('./'))
+          shutil.move(temp_root_directory, root_directory)
+          break
+      except IndexError:
+        error_files.append(file_name)
+        continue
+        # If this error occurs, skip if correct numbered file is found.
     else:
-      print "ERROR: Audit log id %s not found" % options.id
+      # No break, could mean wrong filenames or nonexistant
+      if( error_files ):
+        print 'ERROR: Filenames: %s not named correctly' % ', '.join(error_files)
+      else:
+        print 'ERROR: ID %s not found.' % options.id
       sys.exit(1)
   else:
-    print 'ERROR: An audit log id must be specified with -i/--id.'
-    sys.exit(1)
+    newest = 0 
+    new_file_name = None
+    for file_name in file_list:
+      if( not file_name.startswith('dns_tree') ):
+        continue
+      try:
+        id = int(file_name.split('-')[1].split('.')[0])
+      except IndexError:
+        error_files.append(file_name)
+        break
+        # If this error occurs, error out completely
+      if( id > newest ):
+        newest = id
+        new_file_name = file_name
+    if( error_files ):
+      print 'ERROR: Filenames: %s not named correctly' % ', '.join(error_files)
+      sys.exit(1)
+    if( new_file_name is None ):
+      print ('ERROR: An unknown error has occurred trying to find the newest '
+             'file.')
+    tar = tarfile.open('%s/%s' % (backup_directory, new_file_name))
+    tar.extractall()
+    tar.close()
+    root_directory = '%s_%s' % (temp_root_directory, options.id)
+    shutil.move(temp_root_directory, root_directory)
+
   try:
     if( options.ssh_port ):
       options.ssh_exec = '\'%s -p %s\'' % (options.ssh_exec, options.ssh_port)
