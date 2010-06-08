@@ -28,14 +28,57 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Toplevel RosterServer API.  This presents entities to external consumers."""
+
+"""PAM module for PAM authentication in RosterServer."""
 
 
-from server import Server
-import general_ldap
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
 
 
-__all__ = ['Server', 'general_ldap', 'pam']
+import PAM
 
 
-# vi: set ai aw sw=2:
+class AuthenticationMethod(object):
+  """PAM Authentication class.
+  
+  Most of this code borrowed from
+  http://people.debian.org/~goedson/ejabberd/ejabberd_pam_authentication.py
+  Which is under the GPL v2 license.
+  """
+  def __init__(self):
+    self.requires = {} 
+
+  def PAMAuthConversation(self, user_name, password):
+    """Defines a PAM conversation function to pass user_name and password."""
+    def pam_conversation(auth, query_list, userdata):
+        """Does the conversation to feed PAM with user_name and password."""
+        resp = []
+        for i in range(len(query_list)):
+            _, query_type = query_list[i]
+            if query_type == PAM.PAM_PROMPT_ECHO_ON:
+                val = user_name
+                resp.append((val, 0))
+            elif query_type == PAM.PAM_PROMPT_ECHO_OFF:
+                val = password
+                resp.append((val, 0))
+            else:
+                return None
+        return resp
+    return pam_conversation 
+
+
+def Authenticate(self, user_name=None, password=None):
+    """Check, using PAM, if the user_name and password provided match."""
+    auth = PAM.pam()
+    auth.start('passwd')
+    auth.set_item(PAM.PAM_CONV, self.PAMAuthConversation(user_name, password))
+    try:
+        auth.authenticate()
+    except PAM.error:
+        return False
+    except:
+        return False
+    else:
+        return True

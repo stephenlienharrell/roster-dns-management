@@ -85,11 +85,14 @@ class CredCache(object):
       boolean of whether or not user is authenticated
     """
     try:
-      authenticate_module = __import__('roster_server.%s' % self.authentication_method)
-      authentication_module = getattr(authenticate_module, self.authentication_method)
+      authenticate_module = __import__(
+          'roster_server.%s' % self.authentication_method)
+      authentication_module = getattr(
+          authenticate_module, self.authentication_method)
     except ImportError:
       authentication_module = __import__(self.authentication_method)
-    authentication_module_instance = authentication_module.AuthenticationMethod()
+    authentication_module_instance = (
+        authentication_module.AuthenticationMethod())
     authenticate_module_args = inspect.getargspec(
         authentication_module_instance.Authenticate)[0]
     if( authenticate_module_args[0] == 'self' ):
