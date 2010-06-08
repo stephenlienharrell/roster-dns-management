@@ -28,58 +28,40 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Fake ldap library with limited functionality"""
+
+"""Test general_ldap module."""
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import roster_core
+import unittest
+
+import fakeldap
+from roster_server import general_ldap
 
 
-OPT_X_TLS = None
-OPT_X_TLS_CACERTFILE = None
+class TestGeneralLdapModule(unittest.TestCase):
+  def testGeneralLdapModule(self):
+    general_ldap_instance = general_ldap.AuthenticationMethod(
+        ldap_module=fakeldap)
+    self.assertTrue(general_ldap_instance.Authenticate(
+        user_name=u'jcollins', password=u'test',
+        binddn='uid=%s,ou=People,dc=dc,dc=university,dc=edu',
+        cert_file=None, server=None, version='VERSION3', tls='on'))
+    self.assertFalse(general_ldap_instance.Authenticate(
+        user_name=u'jcollins', password=u'wrongpass',
+        binddn='uid=%s,ou=People,dc=dc,dc=university,dc=edu',
+        cert_file=None, server=None, version='VERSION3', tls='on'))
+    self.assertFalse(general_ldap_instance.Authenticate(
+        user_name=u'wronguser', password=u'wrongpass',
+        binddn='uid=%s,ou=People,dc=dc,dc=university,dc=edu',
+        cert_file=None, server=None, version='VERSION3', tls='on'))
+    self.assertFalse(general_ldap_instance.Authenticate(
+        user_name=u'jcollins', password=u'wrongpass',
+        binddn='uid=%s,ou=Wrong,dc=dc,dc=university,dc=edu',
+        cert_file=None, server=None, version='VERSION3', tls='on'))
 
-def set_option(option, value):
-  pass
-
-def VERSION3(self):
-  pass
-
-class LDAPError(roster_core.CoreError):
-  pass
-
-class AuthenticationMethod(object):
-
-  def __init__(self, server=None):
-    self.protocol_version = 0
-
-  def Authenticate(self, user_name=None, binddn=None, password=None,
-                   server=None):
-    binddn = binddn % user_name
-    if( binddn == 'uid=shuey,ou=People,dc=dc,dc=university,'
-                  'dc=edu' and password == 'testpass' ):
-      return True
-    elif( binddn == 'uid=sharrell,ou=People,dc=dc,dc=university,'
-                    'dc=edu' and password == 'test' ):
-      return True
-    elif( binddn == 'uid=jcollins,ou=People,dc=dc,dc=university,'
-                    'dc=edu' and password == 'test' ):
-      return True
-    elif( binddn.startswith('uid=user') and password == 'tost' ):
-      return True
-    else:
-      return False
-
-  def unbind_s(self):
-    pass
-
-  def simple_bind_s(self, binddn, password):
-    if( binddn == 'uid=jcollins,ou=People,dc=dc,dc=university,dc=edu' and
-        password == 'test' ):
-      pass
-    else:
-      raise LDAPError()
-
-initialize = AuthenticationMethod
+if( __name__ == '__main__' ):
+  unittest.main()
