@@ -82,7 +82,7 @@ def main(args):
                     default='nobody')
   parser.add_option('--lock-file', action='store', dest='lock_file',
                     help='Location of roster server lock file.',
-                    default='/var/lock/roster')
+                    default='/var/lock/rosterd')
   parser.add_option('-l', '--ldap-server', action='store', dest='ldap_server',
                     help='URL of ldap server to authenticate with.',
                     metavar='<ldap-server>', default=None)
