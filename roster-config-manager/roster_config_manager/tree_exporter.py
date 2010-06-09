@@ -275,7 +275,8 @@ class BindTreeExport(object):
         if( not os.path.exists(named_directory) ):
           os.makedirs(named_directory)
         dns_server_set_directory = ('%s/%s_servers/named' % 
-                                   (self.root_config_dir, dns_server_set))
+                                   (self.root_config_dir.rstrip('/'),
+                                    dns_server_set))
         if( not os.path.exists(dns_server_set_directory) ):
           os.makedirs(dns_server_set_directory)
         config_file = '%s/%s_config' % (dns_server_set_directory,
