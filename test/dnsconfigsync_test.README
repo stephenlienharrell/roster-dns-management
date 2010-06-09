@@ -21,3 +21,7 @@ To set up this unittest:
 3. Install and start a disposable BIND9 server.
 4. Generate an rndc key file named rndc.key and copy it to the bind directory
    and test_data.
+5. You may have to manually run ssh and/or rsync with the keys for
+   these commands to recognise them before running the unittest. If
+   you get a password prompt during the unittest, this is most likely the
+   case.
