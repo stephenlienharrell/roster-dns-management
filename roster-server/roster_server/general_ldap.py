@@ -89,7 +89,12 @@ class AuthenticationMethod(object):
           '"%s" is an invalid option.' % tls)
 
     ldap_server = self.ldap_module.initialize(server)
-    ldap_server.protocol_version = getattr(self.ldap_module, version)
+    try:
+      ldap_server.protocol_version = getattr(self.ldap_module, version)
+    except AttributeError:
+      raise GeneralLDAPConfigError(
+          'Version must be set to "VERSION1, VERSION2, VERSION3, VERSION_MAX '
+          'or VERSION_MIN" in user config file. Not "%s".' % version)
     try:
       ldap_server.simple_bind_s(binddn, password)
       authenticated = True

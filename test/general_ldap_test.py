@@ -62,6 +62,16 @@ class TestGeneralLdapModule(unittest.TestCase):
         user_name=u'jcollins', password=u'wrongpass',
         binddn='uid=%s,ou=Wrong,dc=dc,dc=university,dc=edu',
         cert_file=None, server=None, version='VERSION3', tls='on'))
+    self.assertRaises(general_ldap.GeneralLDAPConfigError,
+        general_ldap_instance.Authenticate,
+        user_name=u'jcollins', password=u'test',
+        binddn='uid=%s,ou=Wrong,dc=dc,dc=university,dc=edu',
+        cert_file=None, server=None, version='3', tls='on')
+    self.assertRaises(general_ldap.GeneralLDAPConfigError,
+        general_ldap_instance.Authenticate,
+        user_name=u'jcollins', password=u'test',
+        binddn='uid=%s,ou=Wrong,dc=dc,dc=university,dc=edu',
+        cert_file=None, server=None, version='VERSION3', tls='1')
 
 if( __name__ == '__main__' ):
   unittest.main()
