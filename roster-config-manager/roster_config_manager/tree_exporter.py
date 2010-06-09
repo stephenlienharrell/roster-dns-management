@@ -270,8 +270,8 @@ class BindTreeExport(object):
         dummy_config_file = StringIO.StringIO()
         config_parser = ConfigParser.SafeConfigParser()
         ## Make Files
-        named_directory = '%s/%s_servers' % (self.root_config_dir,
-            dns_server_set)
+        named_directory = '%s/%s_servers' % (
+            self.root_config_dir.rstrip('/'), dns_server_set)
         if( not os.path.exists(named_directory) ):
           os.makedirs(named_directory)
         dns_server_set_directory = ('%s/%s_servers/named' % 
@@ -303,7 +303,7 @@ class BindTreeExport(object):
                     'zone_origin'],
                 record_argument_definitions, zone, view)
             self.AddToTarFile(tar_file, zone_file, zone_file_string)
-        named_conf_file = '%s/named.conf' % named_directory
+        named_conf_file = '%s/named.conf' % named_directory.rstrip('/')
         named_conf_file_string = self.MakeNamedConf(data, cooked_data,
                                                     dns_server_set)
         self.AddToTarFile(tar_file, named_conf_file, named_conf_file_string)
@@ -443,7 +443,7 @@ class BindTreeExport(object):
       raise Error('Named conf global options missing for server set "%s"' % (
           dns_server_set))
     named_conf_header = self.NamedHeaderChangeDirectory(
-        named_conf_header, '%s/named' % self.named_dir)
+        named_conf_header, '%s/named' % self.named_dir.rstrip('/'))
     named_conf_lines.append(named_conf_header)
     for acl_range in data['acl_ranges']:
       if( not acl_range['acl_ranges_acl_name'] in acl_dict ):

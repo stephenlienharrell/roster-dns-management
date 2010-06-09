@@ -1380,7 +1380,7 @@ class TestTreeExporter(unittest.TestCase):
         '\t\tfile "%s/named/external/4.3.2.1.in-addr.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n\t};'
-        '\n};' % tuple([self.named_dir for x in range(5)]))
+        '\n};' % tuple([self.named_dir.rstrip('/') for x in range(5)]))
     for fname in ['audit_log_replay_dump-1.bz2', 'full_database_dump-1.bz2',
                   self.tree_exporter_instance.tar_file_name]:
       if( os.path.exists(fname) ):
@@ -2109,7 +2109,8 @@ class TestTreeExporter(unittest.TestCase):
                      '\t\t#Allow update\n'
                      '\t\tallow-update { none; };\n'
                      '\t};\n'
-                     '};' % tuple([self.named_dir for x in range(3)]))
+                     '};' % tuple(
+                          [self.named_dir.rstrip('/') for x in range(3)]))
     handle.close()
     handle = open(
         '%s/external_dns_servers/named/external/4.3.2.1.in-addr.db' %
@@ -2206,7 +2207,7 @@ class TestTreeExporter(unittest.TestCase):
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '};' % tuple([self.named_dir for x in range(5)]))
+        '};' % tuple([self.named_dir.rstrip('/') for x in range(5)]))
     handle.close()
     handle = open(
         '%s/internal_dns_servers/named/external/4.3.2.1.in-addr.db' %
@@ -2308,7 +2309,7 @@ class TestTreeExporter(unittest.TestCase):
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '};' % tuple([self.named_dir for x in range(2)]))
+        '};' % tuple([self.named_dir.rstrip('/') for x in range(2)]))
     handle.close()
     handle = open(
         '%s/private_dns_servers/named/private/university.edu.db' %
