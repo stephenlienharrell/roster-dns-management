@@ -146,7 +146,7 @@ class BindTreeExport(object):
               char_temp = 0
               while( char_temp < len(line) ):
                 if( line[char_temp] == '{' ):
-                  newline = '\tdirectory "%s";' % new_directory
+                  newline = '\tdirectory "%s";' % new_directory.rstrip('/')
                   namedconflines.insert(line_number + 1, newline)
                   return '\n'.join(namedconflines)
                 if( line[char_temp] == '}' ):
