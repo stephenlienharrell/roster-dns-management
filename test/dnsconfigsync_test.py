@@ -107,7 +107,7 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
-        u'set1', u'\tallow-transfer { "any"; };\n') # So we can test
+        u'set1', u'#options') # So we can test
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'any')
     self.tree_exporter_instance.ExportAllBindTrees()
 
