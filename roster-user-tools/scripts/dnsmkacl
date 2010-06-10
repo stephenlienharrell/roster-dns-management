@@ -93,7 +93,7 @@ def main(args):
       print 'ADDED ACL: acl: %s cidr_block: %s allowed: %s' % (
           options.acl, options.cidr_block, allowed == 1)
   else:
-    cli_common_lib_instance.DnsWarning('ACL already exists.')
+    cli_common_lib_instance.DnsError('ACL already exists.')
 
 
 if __name__ == "__main__":
