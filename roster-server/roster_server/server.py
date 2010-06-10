@@ -264,7 +264,7 @@ class Server(object):
         else:
           raise ArgumentError('Arguments do not match.')
       except Exception, e:
-        uuid_string = LogException(function, args, kwargs, user_name)
+        uuid_string = self.LogException(function, args, kwargs, user_name)
         raise e
       core_return = {'core_return': core_return, 'new_credential': cred_status,
                      'log_uuid_string': uuid_string}
@@ -297,7 +297,8 @@ class Server(object):
       elif( self.get_credentials_wait.has_key(user_name) ):
         self.get_credentials_wait.pop(user_name)
     except Exception, e:
-      LogException('GetCredentials', [user_name, '<password>'], {}, user_name)
+      self.LogException('GetCredentials', [user_name, '<password>'], {},
+                        user_name)
       raise e
 
     return cred_string
@@ -318,7 +319,8 @@ class Server(object):
       valid = self.cred_cache_instance.CheckCredential(
           credstring, user_name, core_instance)
     except Exception, e:
-      LogException('IsAuthenticated', [user_name, '<credstring>'], {}, user_name)
+      self.LogException('IsAuthenticated', [user_name, '<credstring>'], {},
+                        user_name)
       raise e
     if( valid == '' ):
       return True
