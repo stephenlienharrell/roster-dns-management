@@ -90,7 +90,11 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
   except xmlrpclib.Fault, e:
     if( raise_errors ):
       raise
-    print "SERVER ERROR: (%s) %s" % (core_return['log_uuid_string'],
+    if( type(core_return) == dict ):
+      uuid_string = core_return['log_uuid_string']
+    else:
+      uuid_string = core_return
+    print "SERVER ERROR: (%s) %s" % (uuid_string,
                                      e.faultString)
     sys.exit(1)
 
