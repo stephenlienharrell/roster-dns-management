@@ -129,14 +129,17 @@ class Server(object):
     """
     uuid_string = str(uuid.uuid4())
     log_file_handle = open(self.log_file, 'a')
+    log_file_handle.writelines('\n\n---------------------\n')
     log_file_handle.writelines(uuid_string)
-    log_file_handle.writelines('FUNCTION: %s' % function)
-    log_file_handle.writelines('ARGS: %s' % args)
-    log_file_handle.writelines('KWARGS: %s' % kwargs)
-    log_file_handle.writelines('USER: %s' % user_name)
-    log_file_handle.writelines('TIMESTAMP: %s' % (
+    log_file_handle.writelines('\n')
+    log_file_handle.writelines('FUNCTION: %s\n' % function)
+    log_file_handle.writelines('ARGS: %s\n' % args)
+    log_file_handle.writelines('KWARGS: %s\n' % kwargs)
+    log_file_handle.writelines('USER: %s\n' % user_name)
+    log_file_handle.writelines('TIMESTAMP: %s\n\n' % (
         datetime.datetime.now().isoformat()))
-    traceback.print_exc(log_file_handle)
+    traceback.print_exc(None, log_file_handle)
+    log_file_handle.writelines('\n---------------------\n')
     log_file_handle.close()
 
     return uuid_string
@@ -265,9 +268,10 @@ class Server(object):
           raise ArgumentError('Arguments do not match.')
       except Exception, e:
         uuid_string = self.LogException(function, args, kwargs, user_name)
-        raise e
+        return {'log_uuid_string': uuid_string, 'error': str(e),
+                'core_return': None, 'new_credential': None}
       core_return = {'core_return': core_return, 'new_credential': cred_status,
-                     'log_uuid_string': uuid_string}
+                     'log_uuid_string': uuid_string, 'error': None}
     else:
       core_return = 'ERROR: Invalid Credentials'
     return core_return
@@ -299,7 +303,8 @@ class Server(object):
     except Exception, e:
       self.LogException('GetCredentials', [user_name, '<password>'], {},
                         user_name)
-      raise e
+      return {'log_uuid_string': uuid_string, 'error': str(e),
+              'core_return': None, 'new_credential': None}
 
     return cred_string
 
@@ -321,7 +326,8 @@ class Server(object):
     except Exception, e:
       self.LogException('IsAuthenticated', [user_name, '<credstring>'], {},
                         user_name)
-      raise e
+      return {'log_uuid_string': uuid_string, 'error': str(e),
+              'core_return': None, 'new_credential': None}
     if( valid == '' ):
       return True
     return False

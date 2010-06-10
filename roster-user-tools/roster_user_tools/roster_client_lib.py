@@ -90,14 +90,13 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
   except xmlrpclib.Fault, e:
     if( raise_errors ):
       raise
-    if( type(core_return) == dict ):
-      uuid_string = core_return['log_uuid_string']
-    else:
-      uuid_string = core_return
-    print "SERVER ERROR: (%s) %s" % (uuid_string,
-                                     e.faultString)
-    sys.exit(1)
+    cli_common_lib.ServerErrror(str(e), 'UNKNOWN', 1) # This should never happen
 
+  if( type(core_return) == dict and core_return['error'] ):
+    if( raise_errors ):
+      raise xmlrpclib.Fault(core_return['error'])
+    cli_common_lib.ServerErrror(credential['error'],
+                                credential['log_uuid_string'], 1)
 
   if( core_return == 'ERROR: Invalid Credentials' ):
       if( not CheckCredentials(user_name, credfile, server_name,
@@ -133,6 +132,10 @@ def GetCredentials(user_name, password, credfile=None,
   """
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
   credential = server.GetCredentials(user_name, password)
+  if( type(credential) == dict ):
+    if( 'error' in credential ):
+      cli_common_lib.ServerErrror(credential['error'],
+                                  credential['log_uuid_string'], 1)
   if( credfile is not None ):
     credfile = os.path.expanduser(credfile)
     try:
@@ -172,7 +175,12 @@ def IsAuthenticated(user_name, credfile,
   else:
     return False
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
-  return server.IsAuthenticated(user_name, credstring)
+  authenticated = server.IsAuthenticated(user_name, credstring)
+  if( type(authenticated) == dict and 'error' in authenticated ):
+      cli_common_lib.ServerErrror(authenticated['error'],
+                                  authenticated['log_uuid_string'], 1)
+  else:
+    return authenticated
 
 def CheckCredentials(username, credfile, server, password=None):
   """Checks if credential file is valid.

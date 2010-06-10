@@ -79,6 +79,32 @@ class TestCredentialsLibrary(unittest.TestCase):
     self.credential = self.server_instance.GetCredentials(USERNAME, u'test')
     self.server_instance.core_store = [] # Clear out core instance from above
 
+    self.logfile = self.config_instance.config_file['server']['server_log_file']
+
+  def tearDown(self):
+    if( os.path.exists(self.logfile) ):
+      os.remove(self.logfile)
+
+  def testLogException(self):
+    try:
+      raise Exception
+    except Exception, e:
+      self.server_instance.LogException('testfunction', ['arg1', 'arg2'],
+                                        {'kwarg': 'value'}, USERNAME)
+    logfile_handle = open(self.logfile, 'r')
+    logfile_lines = logfile_handle.readlines()
+    logfile_handle.close()
+
+    self.assertEqual(logfile_lines[4:8],
+        ['FUNCTION: testfunction\n', "ARGS: ['arg1', 'arg2']\n",
+         "KWARGS: {'kwarg': 'value'}\n", 'USER: sharrell\n'])
+    self.assertEqual(logfile_lines[9:],
+        ['\n', 'Traceback (most recent call last):\n',
+         '  File "./xml_rpc_server_test.py", line 90, in testLogException\n',
+         '    raise Exception\n', 'Exception\n', '\n',
+         '---------------------\n'])
+    self.assertEqual(len(logfile_lines), 16)
+
   def testCoreRun(self):
     new_cred = self.server_instance.GetCredentials(u'shuey', 'testpass')
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
@@ -87,14 +113,14 @@ class TestCredentialsLibrary(unittest.TestCase):
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
                                       u'sharrell': 128},
-                      'log_uuid_string': None})
+                      'log_uuid_string': None, 'error': None})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
                                       u'sharrell': 128},
-                      'log_uuid_string': None})
+                      'log_uuid_string': None, 'error': None})
     self.assertTrue(len(self.server_instance.core_store))
     time.sleep(6)
     self.server_instance.CleanupCoreStore()
@@ -105,21 +131,21 @@ class TestCredentialsLibrary(unittest.TestCase):
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
                                       u'sharrell': 128},
-                      'log_uuid_string': None})
+                      'log_uuid_string': None, 'error': None})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
                                       u'sharrell': 128},
-                      'log_uuid_string': None})
+                      'log_uuid_string': None, 'error': None})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
                                       u'sharrell': 128},
-                      'log_uuid_string': None})
+                      'log_uuid_string': None, 'error': None})
     self.assertEqual(len(self.server_instance.core_store), 1)
 
   def testCoreStoreCleanup(self):
