@@ -167,6 +167,20 @@ class Testdnsrmacl(unittest.TestCase):
         'REMOVED ACL: acl: acl1 cidr_block: 192.168.1.0/24 allowed: 1\n')
     self.assertEqual(self.core_instance.ListACLs(),
         {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
+    self.core_instance.MakeACL(u'acl1', u'192.168.2.0/24', 0)
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.2.0/24 '
+        '-u %s -p %s --config-file %s -s %s -c %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        'REMOVED ACL: acl: acl1 cidr_block: 192.168.2.0/24 allowed: N/A\n')
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
+        '-u %s -p %s --config-file %s -s %s -c %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        'REMOVED ACL: acl: acl1 cidr_block: 192.168.1.0/24 allowed: N/A\n')
+    self.assertEqual(self.core_instance.ListACLs(),
+        {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
 
   def testErrors(self):
     command = os.popen('python %s -a acl1 --cidr-block 192.168.2.0/24 '
