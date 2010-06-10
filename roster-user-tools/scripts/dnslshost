@@ -65,8 +65,8 @@ def main(args):
   usage = ('\n'
            '\n'
            'To list hosts:\n'
-           '%s\t --cidr-block <cidr-block> [-v <view-name>] '
-           '[-z <zone-name>]\n'% tuple(
+           '\t%s --cidr-block <cidr-block> [-v <view-name>]\n'
+           '\t[-z <zone-name>]\n'% tuple(
              [sys.argv[0] for x in range(1)]))
   args_instance = Args(command, ['host'], args, usage)
   options = args_instance.options
