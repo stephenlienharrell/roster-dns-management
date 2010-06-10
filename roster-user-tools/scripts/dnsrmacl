@@ -95,11 +95,17 @@ def main(args):
       allowed = 1 
     elif( options.deny ):
       allowed = 0 
-    roster_client_lib.RunFunction(
+    core_return = roster_client_lib.RunFunction(
         u'RemoveCIDRBlockFromACL', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
-        args=[options.acl, options.cidr_block, allowed])
-    if( not options.quiet ):
+        args=[options.acl, options.cidr_block, allowed])['core_return']
+    if( allowed is None ):
+      allowed = 'N/A'
+    if( not core_return ):
+      cli_common_lib.DnsError(
+          'No acl found with acl: %s cidr_block: %s allowed: %s' % (
+              options.acl, options.cidr_block, allowed))
+    elif( not options.quiet ):
       print 'REMOVED ACL: acl: %s cidr_block: %s allowed: %s' % (
           options.acl, options.cidr_block, allowed)
 

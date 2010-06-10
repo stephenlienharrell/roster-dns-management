@@ -169,6 +169,12 @@ class Testdnsrmacl(unittest.TestCase):
         {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
 
   def testErrors(self):
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.2.0/24 '
+        '--deny -u %s -p %s --config-file %s -s %s -c %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        'CLIENT ERROR: No acl found with acl: acl1 cidr_block: 192.168.2.0/24 '
+        'allowed: 0\n')
     command = os.popen('python %s -u %s -p %s --config-file %s '
                        '--force -s %s -c %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
