@@ -611,7 +611,7 @@ class Core(object):
     return row_count
 
 
-  def ListDnsServers(self):
+  def ListDnsServers(self, dns_server_name=None):
     """List dns servers.
 
     Raises:
@@ -622,6 +622,8 @@ class Core(object):
     """
     self.user_instance.Authorize('ListDnsServers')
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
+    dns_server_dict['dns_server_name'] = dns_server_name
+
     self.db_instance.StartTransaction()
     try:
       dns_servers = self.db_instance.ListRow('dns_servers', dns_server_dict)
@@ -731,7 +733,7 @@ class Core(object):
                                   current_args, success)
     return row_count
 
-  def ListDnsServerSets(self):
+  def ListDnsServerSets(self, dns_server_set_name=None):
     """List all dns server sets
 
 
@@ -743,6 +745,8 @@ class Core(object):
     """
     self.user_instance.Authorize('ListDnsServerSets')
     dns_server_set_dict = self.db_instance.GetEmptyRowDict('dns_server_sets')
+    dns_server_set_dict['dns_server_set_name'] = dns_server_set_name
+
     self.db_instance.StartTransaction()
     try:
       dns_server_sets = self.db_instance.ListRow('dns_server_sets',

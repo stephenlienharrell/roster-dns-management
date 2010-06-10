@@ -144,6 +144,23 @@ class TestDnslsdnsservers(unittest.TestCase):
                                      'set1 dns1,dns2\n'
                                      'set2 dns2\n\n')
     command.close()
+    command = os.popen('python %s assignment -e set2 -u %s '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 'set  dns_servers\n'
+                                     '----------------\n'
+                                     'set2 dns2\n\n')
+    command.close()
+    command = os.popen('python %s assignment -d dns2 -u %s '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 'set  dns_servers\n'
+                                     '----------------\n'
+                                     'set1 dns2\n'
+                                     'set2 dns2\n\n')
+    command.close()
     command = os.popen('python %s assignment -u %s -d dns1 '
                        '-p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
@@ -173,6 +190,14 @@ class TestDnslsdnsservers(unittest.TestCase):
                                      'dns1\n'
                                      'dns2\n\n')
     command.close()
+    command = os.popen('python %s dns_server -d dns2 -u %s '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 'dns_server\n'
+                                     '----------\n'
+                                     'dns2\n\n')
+    command.close()
 
   def testListDnsServerSets(self):
     self.core_instance.MakeDnsServerSet(u'set1')
@@ -184,6 +209,14 @@ class TestDnslsdnsservers(unittest.TestCase):
     self.assertEqual(command.read(), 'dns_server_set\n'
                                      '--------------\n'
                                      'set1\n'
+                                     'set2\n\n')
+    command.close()
+    command = os.popen('python %s dns_server_set -e set2 -u %s '
+                       '-p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 'dns_server_set\n'
+                                     '--------------\n'
                                      'set2\n\n')
     command.close()
 

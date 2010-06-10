@@ -163,6 +163,8 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set3')
     self.assertEqual(set(self.core_instance.ListDnsServerSets()),
                      set([u'set1', u'set2', u'set3']))
+    self.assertEqual(set(self.core_instance.ListDnsServerSets(u'set3')),
+                     set([u'set3']))
     self.assertTrue(self.core_instance.RemoveDnsServerSet(u'set3'))
     self.assertEqual(set(self.core_instance.ListDnsServerSets()),
                      set([u'set1', u'set2']))
@@ -176,6 +178,8 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeDnsServer(u'dns3')
     self.assertEqual(set(self.core_instance.ListDnsServers()),
                      set([u'dns1', u'dns2', u'dns3']))
+    self.assertEqual(set(self.core_instance.ListDnsServers(u'dns3')),
+                     set([u'dns3']))
     self.assertTrue(self.core_instance.RemoveDnsServer(u'dns3'))
     self.assertEqual(set(self.core_instance.ListDnsServers()),
                      set([u'dns1', u'dns2']))
@@ -194,6 +198,12 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(u'dns3', u'set2')
     self.assertEqual(self.core_instance.ListDnsServerSetAssignments(),
                      {u'set1': [u'dns1'], u'set2': [u'dns2', u'dns3']})
+    self.assertEqual(self.core_instance.ListDnsServerSetAssignments(
+        dns_server_set_name=u'set2'),
+        {u'set2': [u'dns2', u'dns3']})
+    self.assertEqual(self.core_instance.ListDnsServerSetAssignments(
+        dns_server_set_name=u'set2', dns_server_name=u'dns2'),
+        {u'set2': [u'dns2']})
     self.assertTrue(self.core_instance.RemoveDnsServerSetAssignments(
         u'dns2', u'set2'))
     self.assertEqual(self.core_instance.ListDnsServerSetAssignments(),
