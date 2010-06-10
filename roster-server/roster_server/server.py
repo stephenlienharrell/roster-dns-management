@@ -301,8 +301,8 @@ class Server(object):
       elif( self.get_credentials_wait.has_key(user_name) ):
         self.get_credentials_wait.pop(user_name)
     except Exception, e:
-      self.LogException('GetCredentials', [user_name, '<password>'], {},
-                        user_name)
+      uuid_string = self.LogException(
+          'GetCredentials', [user_name, '<password>'], {}, user_name)
       return {'log_uuid_string': uuid_string, 'error': str(e),
               'core_return': None, 'new_credential': None}
 
@@ -324,8 +324,8 @@ class Server(object):
       valid = self.cred_cache_instance.CheckCredential(
           credstring, user_name, core_instance)
     except Exception, e:
-      self.LogException('IsAuthenticated', [user_name, '<credstring>'], {},
-                        user_name)
+      uuid_string = self.LogException(
+          'IsAuthenticated', [user_name, '<credstring>'], {}, user_name)
       return {'log_uuid_string': uuid_string, 'error': str(e),
               'core_return': None, 'new_credential': None}
     if( valid == '' ):
