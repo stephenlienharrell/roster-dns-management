@@ -95,8 +95,8 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
   if( type(core_return) == dict and core_return['error'] ):
     if( raise_errors ):
       raise xmlrpclib.Fault(core_return['error'])
-    cli_common_lib.ServerError(credential['error'],
-                                credential['log_uuid_string'], 1)
+    cli_common_lib.ServerError(core_return['error'],
+                               core_return['log_uuid_string'], 1)
 
   if( core_return == 'ERROR: Invalid Credentials' ):
       if( not CheckCredentials(user_name, credfile, server_name,
@@ -135,7 +135,7 @@ def GetCredentials(user_name, password, credfile=None,
   if( type(credential) == dict ):
     if( 'error' in credential ):
       cli_common_lib.ServerError(credential['error'],
-                                  credential['log_uuid_string'], 1)
+                                 credential['log_uuid_string'], 1)
   if( credfile is not None ):
     credfile = os.path.expanduser(credfile)
     try:
@@ -178,7 +178,7 @@ def IsAuthenticated(user_name, credfile,
   authenticated = server.IsAuthenticated(user_name, credstring)
   if( type(authenticated) == dict and 'error' in authenticated ):
       cli_common_lib.ServerError(authenticated['error'],
-                                  authenticated['log_uuid_string'], 1)
+                                 authenticated['log_uuid_string'], 1)
   else:
     return authenticated
 
