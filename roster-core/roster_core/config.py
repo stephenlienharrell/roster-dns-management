@@ -77,7 +77,7 @@ class Config(object):
                               'run_as_username': 'str',
                               'server_killswitch': 'boolean',
                               'lock_file': 'str', 'ssl_key_file': 'str',
-                              'ssl_cert_file': 'str'},
+                              'server_log_file': 'str', 'ssl_cert_file': 'str'},
                    'credentials': {'authentication_method': 'str',
                                    'exp_time': 'int'},
                    'exporter': {'backup_dir': 'str',

@@ -90,7 +90,8 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
   except xmlrpclib.Fault, e:
     if( raise_errors ):
       raise
-    print "SERVER ERROR: %s" % e.faultString
+    print "SERVER ERROR: (%s) %s" % (core_return['log_uuid_string'],
+                                     e.faultString)
     sys.exit(1)
 
 

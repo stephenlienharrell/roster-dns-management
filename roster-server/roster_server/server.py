@@ -43,6 +43,8 @@ import os
 import inspect
 import SocketServer
 import time
+import traceback
+import uuid
 import xmlrpclib
 
 import roster_core
@@ -97,6 +99,8 @@ class Server(object):
     if( core_die_time is None ):
       self.core_die_time = self.config_instance.config_file['server'][
           'core_die_time']
+    self.log_file = self.config_instance.config_file['server'][
+        'server_log_file']
     self.get_credentials_wait_increment = self.config_instance.config_file[
         'server']['get_credentials_wait_increment']
     self.server_killswitch = self.config_instance.config_file['server'][
@@ -110,6 +114,32 @@ class Server(object):
     self.core_store = [] # {'user': user, 'last_used': last_used, 'instance': }
     self.get_credentials_wait = {} # {'user1': 3, 'user2': 4}
     self.last_cleaned = datetime.datetime.now()
+
+  def LogException(self, function, args, kwargs, user_name):
+    """Save functions traceback to logfile
+    
+    Inputs:
+      function: string of function name
+      args: args list
+      kwargs: keyword args dict
+      user_name: username string
+
+    Outputs:
+      str: uuid string from logfile
+    """
+    uuid_string = str(uuid.uuid4())
+    log_file_handle = open(self.log_file, 'a')
+    log_file_handle.writelines(uuid_string)
+    log_file_handle.writelines('FUNCTION: %s' % function)
+    log_file_handle.writelines('ARGS: %s' % args)
+    log_file_handle.writelines('KWARGS: %s' % kwargs)
+    log_file_handle.writelines('USER: %s' % user_name)
+    log_file_handle.writelines('TIMESTAMP: %s' % (
+        datetime.datetime.now().isoformat()))
+    traceback.print_exc(log_file_handle)
+    log_file_handle.close()
+
+    return uuid_string
 
   def CleanupCoreStore(self):
     """Cleans up expired instances in core_store"""
@@ -188,6 +218,7 @@ class Server(object):
                              'new_credential': u'
                                  be4d4ecf-d670-44a0-b957-770e118e2755'}
     """
+    uuid_string = None
     credfile = unicode(credfile)
     user_name = unicode(user_name)
     ## Instantiate the core instance
@@ -216,22 +247,27 @@ class Server(object):
         raise FunctionError('Function does not exist.')
 
       types = inspect.getargspec(run_func)
-      ## Figure out what each function is expecting
-      if( types[3] is None and len(types[0]) == 1 ):
-        # Nothing in core function
-        core_return = run_func()
-      elif( types[3] is None and len(types[0]) != 1 ):
-        # Arguments only in core function
-        core_return = run_func(*args)
-      elif( types[3] is not None and (len(types[0]) - len(types[3])) == 1 ):
-        # KWArguments only in core function
-        core_return = run_func(**kwargs)
-      elif( types[3] is not None and (len(types[0]) - len(types[3])) != 1 ):
-        # Both kwargs and args in core function
-        core_return = run_func(*args, **kwargs)
-      else:
-        raise ArgumentError('Arguments do not match.')
-      core_return = {'core_return': core_return, 'new_credential': cred_status}
+      try:
+        ## Figure out what each function is expecting
+        if( types[3] is None and len(types[0]) == 1 ):
+          # Nothing in core function
+          core_return = run_func()
+        elif( types[3] is None and len(types[0]) != 1 ):
+          # Arguments only in core function
+          core_return = run_func(*args)
+        elif( types[3] is not None and (len(types[0]) - len(types[3])) == 1 ):
+          # KWArguments only in core function
+          core_return = run_func(**kwargs)
+        elif( types[3] is not None and (len(types[0]) - len(types[3])) != 1 ):
+          # Both kwargs and args in core function
+          core_return = run_func(*args, **kwargs)
+        else:
+          raise ArgumentError('Arguments do not match.')
+      except Exception, e:
+        uuid_string = LogException(function, args, kwargs, user_name)
+        raise e
+      core_return = {'core_return': core_return, 'new_credential': cred_status,
+                     'log_uuid_string': uuid_string}
     else:
       core_return = 'ERROR: Invalid Credentials'
     return core_return
@@ -247,18 +283,22 @@ class Server(object):
       string: string of credential
               example: u'be4d4ecf-d670-44a0-b957-770e118e2755'
     """
-    user_name = unicode(user_name)
-    core_instance = self.GetCoreInstance(user_name)
-    cred_string = self.cred_cache_instance.GetCredentials(user_name, password,
-                                                          core_instance)
-    if( cred_string == '' ):
-      if( not self.get_credentials_wait.has_key(user_name) ):
-        self.get_credentials_wait.update({user_name: 0})
-      time.sleep(self.get_credentials_wait[user_name])
-      self.get_credentials_wait[user_name] = self.get_credentials_wait[
-          user_name] + self.get_credentials_wait_increment
-    elif( self.get_credentials_wait.has_key(user_name) ):
-      self.get_credentials_wait.pop(user_name)
+    try:
+      user_name = unicode(user_name)
+      core_instance = self.GetCoreInstance(user_name)
+      cred_string = self.cred_cache_instance.GetCredentials(user_name, password,
+                                                            core_instance)
+      if( cred_string == '' ):
+        if( not self.get_credentials_wait.has_key(user_name) ):
+          self.get_credentials_wait.update({user_name: 0})
+        time.sleep(self.get_credentials_wait[user_name])
+        self.get_credentials_wait[user_name] = self.get_credentials_wait[
+            user_name] + self.get_credentials_wait_increment
+      elif( self.get_credentials_wait.has_key(user_name) ):
+        self.get_credentials_wait.pop(user_name)
+    except Exception, e:
+      LogException('GetCredentials', [user_name, '<password>'], {}, user_name)
+      raise e
 
     return cred_string
 
@@ -271,11 +311,15 @@ class Server(object):
     Outputs:
       bool: bool of valid string
     """
-    user_name = unicode(user_name)
-    credstring = unicode(credstring)
-    core_instance = self.GetCoreInstance(user_name)
-    valid = self.cred_cache_instance.CheckCredential(
-        credstring, user_name, core_instance)
+    try:
+      user_name = unicode(user_name)
+      credstring = unicode(credstring)
+      core_instance = self.GetCoreInstance(user_name)
+      valid = self.cred_cache_instance.CheckCredential(
+          credstring, user_name, core_instance)
+    except Exception, e:
+      LogException('IsAuthenticated', [user_name, '<credstring>'], {}, user_name)
+      raise e
     if( valid == '' ):
       return True
     return False

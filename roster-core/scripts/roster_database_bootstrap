@@ -121,6 +121,9 @@ def main(args):
   parser.add_option('--ssl-key', action='store', dest='ssl_key',
                     help='SSL Key file for XML-RPC.',
                     default=None)
+  parser.add_option('--server-log-file', action='store', dest='server_log_file',
+                    help='Server log file location',
+                    default='/var/log/rosterd')
   parser.add_option('--backup-dir', action='store', dest='backup_dir',
                     help='Directory where backups will be put.',
                     default='/opt/roster/backups')
@@ -221,6 +224,7 @@ def main(args):
   config_parser.set('server', 'lock_file', options.lock_file)
   config_parser.set('server', 'ssl_cert_file', options.ssl_cert)
   config_parser.set('server', 'ssl_key_file', options.ssl_key)
+  config_parser.set('server', 'server_log_file', options.server_log_file)
   config_parser.set('server', 'get_credentials_wait_increment',
                     options.get_credentials_wait_increment)
   config_parser.set('server', 'server_killswitch', 'on')

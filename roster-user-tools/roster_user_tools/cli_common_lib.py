@@ -110,7 +110,7 @@ class CliCommonLib:
   ## Function accessors, need to be removed at some point
   def DnsError(self, message, exit_status=0):
     return DnsError(message, exit_status)
-  def ServerError(self, message, exit_status=0):
+  def ServerError(self, message, uuid_string, exit_status=0):
     return ServerError(message, exit_status)
   def DnsWarning(self, message):
     return DnsWarning(message)
@@ -132,14 +132,14 @@ def DnsError(message, exit_status=0):
   if( exit_status ):
     sys.exit(exit_status)
 
-def ServerError(message, exit_status=0):
+def ServerError(message, uuid_string, exit_status=0):
   """Prints standardized server error message to screen.
 
   Inputs:
     message: string of message to be displayed on screen
     exit_status: integer of retrun code, assumed not exit if 0
   """
-  print "SERVER ERROR: %s" % message
+  print "SERVER ERROR: (%s) %s" % (uuid_string, message)
   if( exit_status ):
     sys.exit(exit_status)
 

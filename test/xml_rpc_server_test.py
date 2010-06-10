@@ -86,13 +86,15 @@ class TestCredentialsLibrary(unittest.TestCase):
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
-                                      u'sharrell': 128}})
+                                      u'sharrell': 128},
+                      'log_uuid_string': None})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
-                                      u'sharrell': 128}})
+                                      u'sharrell': 128},
+                      'log_uuid_string': None})
     self.assertTrue(len(self.server_instance.core_store))
     time.sleep(6)
     self.server_instance.CleanupCoreStore()
@@ -102,19 +104,22 @@ class TestCredentialsLibrary(unittest.TestCase):
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
-                                      u'sharrell': 128}})
+                                      u'sharrell': 128},
+                      'log_uuid_string': None})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
-                                      u'sharrell': 128}})
+                                      u'sharrell': 128},
+                      'log_uuid_string': None})
     self.assertEqual(self.server_instance.CoreRun('ListUsers', USERNAME,
                                                   self.credential),
                      {'new_credential': u'',
                       'core_return': {u'shuey': 64, u'jcollins': 32,
                                       u'tree_export_user': 0,
-                                      u'sharrell': 128}})
+                                      u'sharrell': 128},
+                      'log_uuid_string': None})
     self.assertEqual(len(self.server_instance.core_store), 1)
 
   def testCoreStoreCleanup(self):
