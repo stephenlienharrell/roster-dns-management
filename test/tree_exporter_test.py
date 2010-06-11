@@ -67,7 +67,6 @@ class TestTreeExporter(unittest.TestCase):
         CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
-    self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
 
     schema = roster_core.embedded_files.SCHEMA_FILE
     db_instance.StartTransaction()
@@ -80,6 +79,8 @@ class TestTreeExporter(unittest.TestCase):
     db_instance.EndTransaction()
     db_instance.close()
     self.db_instance = db_instance
+
+    self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
 
     db_instance.StartTransaction()
 

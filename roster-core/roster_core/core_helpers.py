@@ -239,12 +239,13 @@ class CoreHelpers(object):
 
     fwd_dict = self.db_instance.GetEmptyRowDict('records')
     fwd_dict['record_type'] = record_type
-    if( not view_name ):
-      view_name = u'any'
-    elif( view_name.endswith('_dep') or view_name == u'any' ):
+    if( view_name is not None and view_name.endswith('_dep')
+        or view_name == u'any' ):
       fwd_dict['record_view_dependency'] = view_name
-    else:
+      ptr_dict['record_view_dependency'] = view_name
+    elif( view_name is not None ):
       fwd_dict['record_view_dependency'] = '%s_dep' % view_name
+      ptr_dict['record_view_dependency'] = '%s_dep' % view_name
     fwd_args_dict = self.db_instance.GetEmptyRowDict(
         'record_arguments_records_assignments')
     fwd_args_dict['record_arguments_records_assignments_argument_name'] = (
@@ -283,13 +284,17 @@ class CoreHelpers(object):
     finally:
       self.db_instance.EndTransaction()
     records_dict = {}
+    orig_view = view_name
     for record in ptr_record_list:
+      view_name = orig_view
       record_zone_name = record['record_zone_name']
       db_view_name = record['record_view_dependency'].rsplit('_dep', 1)[0]
-      if( db_view_name != view_name and view_name != 'any'):
+      if( db_view_name != view_name and (db_view_name != u'any' and view_name is not None) ):
         continue
       if( zone_name and record_zone_name != zone_name ):
         continue
+      if( view_name is None ):
+        view_name = db_view_name
       if( db_view_name not in zones[record_zone_name]  ):
         raise errors.CoreError('No zone view combination found for '
                                '"%s" zone and "%s" view.' % (
@@ -306,20 +311,23 @@ class CoreHelpers(object):
             u'forward': False, u'host': record['argument_value'].rstrip('.'),
             u'zone': record['record_zone_name'], 'zone_origin': zone_origin})
     for record in fwd_record_list:
+      view_name = orig_view
       ip_address = record['argument_value']
       record_zone_name = record['record_zone_name']
       db_view_name = record['record_view_dependency'].rsplit('_dep', 1)[0]
-      if( db_view_name != view_name and view_name != 'any'):
+      if( db_view_name != view_name and (db_view_name != u'any' and view_name is not None) ):
         continue
       if( zone_name and record_zone_name != zone_name ):
         continue
+      if( view_name is None ):
+        view_name = db_view_name
       zone_origin = zones[record_zone_name][db_view_name]['zone_origin']
       if( IPy.IP(ip_address) in user_cidr ):
-        if( not view_name in records_dict ):
-          records_dict[view_name] = {}
-        if( not ip_address in records_dict[view_name] ):
-           records_dict[view_name][ip_address] = []
-        records_dict[view_name][ip_address].append({
+        if( not db_view_name in records_dict ):
+          records_dict[db_view_name] = {}
+        if( not ip_address in records_dict[db_view_name] ):
+           records_dict[db_view_name][ip_address] = []
+        records_dict[db_view_name][ip_address].append({
             u'forward': True, u'host': '%s.%s' % (
                 record['record_target'], zone_origin.rstrip('.')),
             u'zone': record['record_zone_name'],

@@ -40,6 +40,7 @@ import datetime
 import time
 import unittest
 import os
+import sys
 
 
 import roster_core
@@ -100,7 +101,7 @@ class TestCredentialsLibrary(unittest.TestCase):
          "KWARGS: {'kwarg': 'value'}\n", 'USER: sharrell\n'])
     self.assertEqual(logfile_lines[9:],
         ['\n', 'Traceback (most recent call last):\n',
-         '  File "./xml_rpc_server_test.py", line 90, in testLogException\n',
+         '  File "%s", line 91, in testLogException\n' % sys.argv[0],
          '    raise Exception\n', 'Exception\n', '\n',
          '---------------------\n'])
     self.assertEqual(len(logfile_lines), 16)

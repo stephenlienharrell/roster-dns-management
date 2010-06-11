@@ -269,9 +269,8 @@ class TestDnsMkZone(unittest.TestCase):
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-                     'SERVER ERROR: <class \'roster_core.data_validation.'
-                     'UnexpectedDataError\'>:Invalid data type Hostname '
+    self.assertEqual(output.read().split(')')[1],
+                     ' Invalid data type Hostname '
                      'for zone_origin: foo.com\n')
     output.close()
 

@@ -220,11 +220,11 @@ class TestCoreHelpers(unittest.TestCase):
                  [{u'forward': False, u'host': u'host3.university.edu',
                    u'zone_origin': u'1.168.192.in-addr.arpa.',
                    u'zone': u'reverse_zone'}]},
-         u'any':
-            {u'192.168.1.5': [{u'forward': True,
-                u'host': u'host3.university.edu',
-                u'zone_origin': u'university.edu.',
-                u'zone': u'forward_zone'}]}})
+         u'test_view3':
+            {u'192.168.1.5':
+                 [{u'forward': True, u'host': u'host3.university.edu',
+                   u'zone_origin': u'university.edu.',
+                   u'zone': u'forward_zone'}]}})
 
   def testUnReverseIP(self):
     self.assertEqual(self.core_helper_instance.UnReverseIP(
