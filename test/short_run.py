@@ -80,6 +80,17 @@ if( __name__ == '__main__' ):
       print error
       print shortrun_instance.error_tests[error]
       print '---------------------------'
+    print "Failed %s tests: %s" % (
+        len(shortrun_instance.error_tests),
+        ', '.join(shortrun_instance.error_tests.keys()))
 
   except KeyboardInterrupt:
+    for error in shortrun_instance.error_tests:
+      print '---------------------------'
+      print error
+      print shortrun_instance.error_tests[error]
+      print '---------------------------'
+    print "Failed %s tests: %s" % (
+        len(shortrun_instance.error_tests),
+        ', '.join(shortrun_instance.error_tests.keys()))
     print "Tests canceled."
