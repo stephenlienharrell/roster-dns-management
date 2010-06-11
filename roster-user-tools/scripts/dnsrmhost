@@ -66,8 +66,8 @@ def main(args):
   usage = ('\n'
            '\n'
            'To remove a host:\n'
-           '%s\t --ip-address <ip-address> -t <target> -z <zone-name>\n'
-           '\t[--ttl <ttl>] [-v <view-name>]\n' % tuple(
+           '\t%s --ip-address <ip-address> -t <target>\n'
+           '\t-z <zone-name> [--ttl <ttl>] [-v <view-name>]\n' % tuple(
                [sys.argv[0] for x in range(1)]))
   args_instance = Args(command, ['host'], args, usage)
   options = args_instance.options
