@@ -114,10 +114,11 @@ class CliCommonLib:
     return ServerError(message, exit_status)
   def DnsWarning(self, message):
     return DnsWarning(message)
-  def PrintColumns(self, print_list, first_line_header=False):
+  def PrintColumns(self, print_list, first_line_header=True):
     return PrintColumns(print_list, first_line_header)
-  def PrintRecords(self, records_dictionary, ip_address_list=[]):
-    return PrintRecords(records_dictionary, ip_address_list)
+  def PrintRecords(self, records_dictionary, ip_address_list=[],
+                   print_headers=False):
+    return PrintRecords(records_dictionary, ip_address_list, print_headers)
   def PrintHosts(self, records_dictionary, ip_address_list, view_name=None):
     return PrintHosts(records_dictionary, ip_address_list, view_name)
 

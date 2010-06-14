@@ -227,7 +227,7 @@ class Testdnslshost(unittest.TestCase):
   def testListSingleIP(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
-    output = os.popen('python %s --cidr-block 192.168.1.5 '
+    output = os.popen('python %s --cidr-block 192.168.1.5 --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
@@ -237,7 +237,7 @@ class Testdnslshost(unittest.TestCase):
         '192.168.1.5 Forward host3.university.edu forward_zone any\n\n')
     output.close()
     output = os.popen('python %s --cidr-block 192.168.1.4 '
-                      '-s %s -u %s -p %s --config-file %s' % (
+                      '-s %s -u %s -p %s --config-file %s --no-header' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
@@ -247,7 +247,7 @@ class Testdnslshost(unittest.TestCase):
   def testListCIDR(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.4/30')
-    output = os.popen('python %s --cidr-block 192.168.1.4/30 '
+    output = os.popen('python %s --cidr-block 192.168.1.4/30 --no-header '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -264,22 +264,25 @@ class Testdnslshost(unittest.TestCase):
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        '192.168.1.4 Reverse host2.university.edu reverse_zone test_view2\n'
-        '192.168.1.5 --      --                   --           --\n'
-        '192.168.1.6 --      --                   --           --\n'
-        '192.168.1.7 Reverse host5.university.edu reverse_zone test_view2\n'
-        '192.168.1.4 --      --                   --           --\n'
-        '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
-        '192.168.1.5 Forward host3.university.edu forward_zone test_view\n'
-        '192.168.1.6 --      --                   --           --\n'
-        '192.168.1.7 --      --                   --           --\n'
-        '192.168.1.4 --      --                   --           --\n'
-        '192.168.1.5 Forward host3.university.edu forward_zone any\n'
-        '192.168.1.6 --      --                   --           --\n'
-        '192.168.1.7 --      --                   --           --\n\n')
+        'View:       test_view2\n'
+        '192.168.1.4 Reverse    host2.university.edu reverse_zone test_view2\n'
+        '192.168.1.5 --         --                   --           --\n'
+        '192.168.1.6 --         --                   --           --\n'
+        '192.168.1.7 Reverse    host5.university.edu reverse_zone test_view2\n'
+        'View:       test_view\n'
+        '192.168.1.4 --         --                   --           --\n'
+        '192.168.1.5 Reverse    host3.university.edu reverse_zone test_view\n'
+        '192.168.1.5 Forward    host3.university.edu forward_zone test_view\n'
+        '192.168.1.6 --         --                   --           --\n'
+        '192.168.1.7 --         --                   --           --\n'
+        'View:       any\n'
+        '192.168.1.4 --         --                   --           --\n'
+        '192.168.1.5 Forward    host3.university.edu forward_zone any\n'
+        '192.168.1.6 --         --                   --           --\n'
+        '192.168.1.7 --         --                   --           --\n\n')
 
     output.close()
-    output = os.popen('python %s --cidr-block 192.168.1.4/30 '
+    output = os.popen('python %s --cidr-block 192.168.1.4/30 --no-header '
                       '-v any -s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -289,7 +292,7 @@ class Testdnslshost(unittest.TestCase):
         '192.168.1.6 --      --                   --           --\n'
         '192.168.1.7 --      --                   --           --\n\n')
     output.close()
-    output = os.popen('python %s --cidr-block 10.0.0.4/30 '
+    output = os.popen('python %s --cidr-block 10.0.0.4/30 --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -299,7 +302,7 @@ class Testdnslshost(unittest.TestCase):
         '10.0.0.6 -- -- -- --\n'
         '10.0.0.7 -- -- -- --\n\n')
     output.close()
-    output = os.popen('python %s --cidr-block 192.168.1.4/32 '
+    output = os.popen('python %s --cidr-block 192.168.1.4/32 --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
