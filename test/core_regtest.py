@@ -715,10 +715,10 @@ class TestCore(unittest.TestCase):
   def testReservedWordMakeRemoveList(self):
     self.core_instance.MakeReservedWord(u'word1')
     self.assertEqual(self.core_instance.ListReservedWords(),
-                     [u'damn', u'word1'])
-    self.assertTrue(self.core_instance.RemoveReservedWord(u'damn'))
-    self.assertEqual(self.core_instance.ListReservedWords(),
                      [u'word1'])
+    self.assertTrue(self.core_instance.RemoveReservedWord(u'word1'))
+    self.assertEqual(self.core_instance.ListReservedWords(),
+                     [])
 
   def testListAuditLog(self):
     begin_time = datetime.datetime.now().replace(microsecond=0)

@@ -1560,7 +1560,7 @@ class TestTreeExporter(unittest.TestCase):
         [u'reserved_word_id', u'reserved_word'])
 
     self.assertEqual(raw_data[1]['reserved_words']['rows'],
-        [{'reserved_word': "'damn'", 'reserved_word_id': '1'}])
+        [])
 
     self.assertEqual(raw_data[1]['zone_types']['rows'],
         [{'zone_type': "'forward'", 'zone_type_id': '3'},

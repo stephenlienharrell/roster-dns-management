@@ -686,9 +686,6 @@ INSERT INTO record_arguments (record_arguments_type, argument_name,
     ('mx', 'mail_server', '1', 'Hostname'),
     ('ptr', 'assignment_host', '0', 'Hostname');
 
-# code always expects reserved_words to be populated
-INSERT INTO reserved_words (reserved_word) VALUES ('damn');
-
 # make acl any keyword for named.conf
 INSERT INTO acls (acl_name) VALUES ('any');
 INSERT INTO acl_ranges (acl_ranges_acl_name, acl_range_allowed) VALUES 

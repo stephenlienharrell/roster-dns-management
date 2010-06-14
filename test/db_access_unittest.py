@@ -146,7 +146,7 @@ class TestdbAccess(unittest.TestCase):
   def testInitDataValidation(self):
     self.db_instance.InitDataValidation()
     self.assertEqual(self.db_instance.data_validation_instance.reserved_words, 
-                     [u'damn'])
+                     [])
 
   def testGetUserAuthorizationInfo(self):
     self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'notindb'), {})

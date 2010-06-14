@@ -133,23 +133,21 @@ class Testdnsrmreservedword(unittest.TestCase):
   def testMakeUserGroupUserGroupAssignments(self):
     self.core_instance.MakeReservedWord(u'reserved1')
     self.core_instance.MakeReservedWord(u'reserved2')
-    self.assertEqual(self.core_instance.ListReservedWords(), [u'damn',
-                                                              u'reserved1',
+    self.assertEqual(self.core_instance.ListReservedWords(), [u'reserved1',
                                                               u'reserved2'])
     output = os.popen('python %s -w reserved1 -q '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     output.close()
-    self.assertEqual(self.core_instance.ListReservedWords(), [u'damn',
-                                                              u'reserved2'])
+    self.assertEqual(self.core_instance.ListReservedWords(), [u'reserved2'])
     output = os.popen('python %s -w reserved2 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'REMOVED RESERVED_WORD: reserved2\n')
     output.close()
-    self.assertEqual(self.core_instance.ListReservedWords(), [u'damn'])
+    self.assertEqual(self.core_instance.ListReservedWords(), [)
 
 if( __name__ == '__main__' ):
       unittest.main()

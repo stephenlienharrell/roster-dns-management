@@ -135,7 +135,7 @@ class Testdnslsreservedword(unittest.TestCase):
     self.core_instance.MakeReservedWord(u'reserved_word2')
     output = os.popen('python %s -s %s -u %s -p %s --config-file %s' % (
         EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), 'damn\nreserved_word1\nreserved_word2\n')
+    self.assertEqual(output.read(), 'reserved_word1\nreserved_word2\n')
     output.close()
 
 if( __name__ == '__main__' ):

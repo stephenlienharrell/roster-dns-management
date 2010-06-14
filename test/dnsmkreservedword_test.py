@@ -137,7 +137,7 @@ class Testdnsmkreservedword(unittest.TestCase):
                           PASSWORD, USER_CONFIG))
     output.close()
     self.assertEqual(self.core_instance.ListReservedWords(),
-                     [u'damn', u'test_word'])
+                     [u'test_word'])
     output = os.popen('python %s -w test_word2'
                       ' -s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -145,7 +145,7 @@ class Testdnsmkreservedword(unittest.TestCase):
     self.assertEqual(output.read(), 'ADDED RESERVED_WORD: test_word2\n')
     output.close()
     self.assertEqual(self.core_instance.ListReservedWords(),
-                     [u'damn', u'test_word', u'test_word2'])
+                     [u'test_word', u'test_word2'])
 
 if( __name__ == '__main__' ):
       unittest.main()
