@@ -200,17 +200,21 @@ def PrintRecords(records_dictionary, ip_address_list=[]):
     ip_address_list = list(set(ip_address_list))
 
   print_list = []
-  for view in records_dictionary:
+  if( len(records_dictionary) == 0 ):
     for ip_address in ip_address_list:
-      if( ip_address in records_dictionary[view] ):
-        for record in records_dictionary[view][ip_address]:
-          direction = 'Reverse'
-          if( record['forward'] ):
-            direction = 'Forward'
-          print_list.append([ip_address, direction, record['host'],
-                                  record['zone'], view])
-      else:
-        print_list.append([ip_address, '--', '--', '--', '--'])
+      print_list.append([ip_address, '--', '--', '--', '--'])
+  else:
+    for view in records_dictionary:
+      for ip_address in ip_address_list:
+        if( ip_address in records_dictionary[view] ):
+          for record in records_dictionary[view][ip_address]:
+            direction = 'Reverse'
+            if( record['forward'] ):
+              direction = 'Forward'
+            print_list.append([ip_address, direction, record['host'],
+                                    record['zone'], view])
+        else:
+          print_list.append([ip_address, '--', '--', '--', '--'])
   return PrintColumns(print_list)
 
 def PrintHosts(records_dictionary, ip_address_list, view_name=None):

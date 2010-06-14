@@ -289,6 +289,16 @@ class Testdnslshost(unittest.TestCase):
         '192.168.1.6 --      --                   --           --\n'
         '192.168.1.7 --      --                   --           --\n\n')
     output.close()
+    output = os.popen('python %s --cidr-block 10.0.0.4/30 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                           EXEC, self.server_name, USERNAME,
+                           PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        '10.0.0.4 -- -- -- --\n'
+        '10.0.0.5 -- -- -- --\n'
+        '10.0.0.6 -- -- -- --\n'
+        '10.0.0.7 -- -- -- --\n\n')
+    output.close()
 
 if( __name__ == '__main__' ):
       unittest.main()
