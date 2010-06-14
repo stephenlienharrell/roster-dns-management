@@ -87,8 +87,9 @@ class TestCheckConfig(unittest.TestCase):
 
   def setUp(self):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
-    self.bind_config_dir = os.path.expanduser(
-        self.config_instance.config_file['exporter']['root_config_dir'])
+    self.root_config_dir = self.config_instance.config_file[
+        'exporter']['root_config_dir'].lstrip('./').rstrip('/')
+    self.bind_config_dir = os.path.expanduser(self.root_config_dir)
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
@@ -179,11 +180,13 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named/test_view/sub.university.edu.db',
+        '%s/set1_servers/named/test_view/sub.university.edu.db' % (
+            self.root_config_dir),
         'ns2 3600 in aa 192.168.1.104', 'ns2 3600 in a 192.168.1.104')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named/test_view/sub.university.edu.db',
+        '%s/set1_servers/named/test_view/sub.university.edu.db' % (
+            self.root_config_dir),
         ' 810 10800', ' 10800')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))

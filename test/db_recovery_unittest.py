@@ -141,7 +141,7 @@ class TestdbAccess(unittest.TestCase):
     self.tree_exporter_instance.ExportAllBindTrees()
 
     self.core_instance.MakeRecord(
-        u'mx', u'university.edu.', u'university.edu',
+        u'mx', u'department', u'university.edu',
         {u'priority': 20, u'mail_server': u'smtp.university.edu.'}, ttl=10)
 
     self.assertEqual(self.core_instance.ListRecords(),
@@ -151,7 +151,7 @@ class TestdbAccess(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-         {'target': u'university.edu.', 'ttl': 10, u'priority': 20,
+         {'target': u'department', 'ttl': 10, u'priority': 20,
           'record_type': u'mx', 'view_name': u'any', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'mail_server': u'smtp.university.edu.'}])
