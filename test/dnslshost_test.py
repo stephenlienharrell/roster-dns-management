@@ -299,6 +299,13 @@ class Testdnslshost(unittest.TestCase):
         '10.0.0.6 -- -- -- --\n'
         '10.0.0.7 -- -- -- --\n\n')
     output.close()
+    output = os.popen('python %s --cidr-block 192.168.1.4/32 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                           EXEC, self.server_name, USERNAME,
+                           PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        '192.168.1.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
+    output.close()
 
 if( __name__ == '__main__' ):
       unittest.main()
