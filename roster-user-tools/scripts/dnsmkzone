@@ -64,12 +64,12 @@ def main(args):
   usage = ('\n'
            '\n'
            'To make forward zones:\n'
-           '%s\t forward -z <zone-name> -v <view-name> [-0 <options>]\n'
-           '\t[--origin <origin>] [-t <type>] [--cidr-block <cidr-block>]\n'
+           '\t%s forward -z <zone-name> -v <view-name> --origin <origin> '
+           '\t-t <type> --cidr-block <cidr-block> [-o <options>]\n'
            '\n'
            'To make reverse zones:\n'
-           '%s\t reverse -z <zone-name> -v <view-name> [-0 <options>]\n'
-           '\t[--origin <origin>] [-t <type>] [--cidr-block <cidr-block>]\n' % ( 
+           '\t%s reverse -z <zone-name> -v <view-name> --origin <origin>'
+           '\t-t <type> --cidr-block <cidr-block> [-o <options>]\n' % (
                tuple([sys.argv[0] for x in range(2)])))
   args_instance = Args(command, ['forward', 'reverse'], args, usage)
   options = args_instance.options
