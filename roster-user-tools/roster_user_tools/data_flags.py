@@ -306,7 +306,8 @@ class Host(core_flags.CoreFlags):
                            dest='view_name',
                            help=('String of the view name <view-name>. '
                                  'Example: "internal"'),
-                           metavar='<view-name>', default=None)
+                           metavar='<view-name>',
+                           default=u'any' if not_list else None)
     self.AddFlagRule('view_name', required=False, command='host')
 
 
