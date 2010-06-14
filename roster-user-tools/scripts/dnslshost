@@ -83,14 +83,12 @@ def main(args):
       server_name=options.server, args=[options.cidr_block],
       kwargs={'view_name': options.view_name, 'zone_name': options.zone_name})[
           'core_return']
-  ip_address_list = roster_client_lib.RunFunction('CIDRExpand',
-                                                  options.username,
-                                                  credfile=options.credfile,
-                                                  server_name=options.server,
-                                                  args=[options.cidr_block])[
-                                                      'core_return']
+  ip_address_list = roster_client_lib.RunFunction(
+      'CIDRExpand', options.username, credfile=options.credfile,
+      server_name=options.server, args=[options.cidr_block])['core_return']
 
-  print cli_common_lib_instance.PrintRecords(records_dict, ip_address_list)
+  print cli_common_lib_instance.PrintRecords(
+      records_dict, ip_address_list, print_headers=not options.no_header)
 
 
 if __name__ == "__main__":

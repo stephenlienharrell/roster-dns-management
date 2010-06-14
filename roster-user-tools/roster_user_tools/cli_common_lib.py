@@ -187,7 +187,7 @@ def PrintColumns(print_list, first_line_header=False):
       print_string_list.append('%s\n' % ''.join(hyphen_list))
   return ''.join(print_string_list)
 
-def PrintRecords(records_dictionary, ip_address_list=[]):
+def PrintRecords(records_dictionary, ip_address_list=[], print_headers=True):
   """Prints records dictionary in a nice usable format.
 
   Inputs:
@@ -205,6 +205,8 @@ def PrintRecords(records_dictionary, ip_address_list=[]):
       print_list.append([ip_address, '--', '--', '--', '--'])
   else:
     for view in records_dictionary:
+      if( print_headers ):
+        print_list.append(['View:', view, '', '', ''])
       for ip_address in ip_address_list:
         if( ip_address in records_dictionary[view] ):
           for record in records_dictionary[view][ip_address]:

@@ -302,12 +302,16 @@ class Host(core_flags.CoreFlags):
                            dest='zone_name', help='String of the zone name.',
                            metavar='<zone-name>', default=None)
     self.AddFlagRule('zone_name', required=not_list)
+    if( not_list ):
+      default_view = u'any'
+    else:
+      default_view = None
     self.parser.add_option('-v', '--view-name', action='store',
                            dest='view_name',
                            help=('String of the view name <view-name>. '
                                  'Example: "internal"'),
                            metavar='<view-name>',
-                           default=u'any' if not_list else None)
+                           default=default_view)
     self.AddFlagRule('view_name', required=False, command='host')
 
 
