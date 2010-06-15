@@ -126,7 +126,7 @@ def main(args):
                                 quiet=options.quiet, raise_errors=True)
     removed_type = True
   except xmlrpclib.Fault, error:
-    error_string = error.faultString.split(':')[1]
+    error_string = error.faultString
     if(  error_string == 'Record not found.' ):
       removed_type = False
     else:
@@ -142,7 +142,7 @@ def main(args):
                                 quiet=options.quiet, raise_errors=True)
     removed_ptr = True
   except xmlrpclib.Fault, error:
-    error_string = error.faultString.split(':')[1]
+    error_string = error.faultString
     if( error_string == 'No records found.' ):
       removed_ptr = False
     else:
