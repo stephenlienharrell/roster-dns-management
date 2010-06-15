@@ -83,8 +83,6 @@ def main(args):
 
   if( not options.quiet and core_return ):
     view = options.view_name
-    if( not options.view_name ):
-      view = u'any'
     print 'REMOVED ZONE: zone_name: %s view_name: %s' % (
         options.zone_name, view)
   elif( not core_return ):
