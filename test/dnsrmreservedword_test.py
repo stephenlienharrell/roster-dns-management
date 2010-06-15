@@ -147,7 +147,7 @@ class Testdnsrmreservedword(unittest.TestCase):
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'REMOVED RESERVED_WORD: reserved2\n')
     output.close()
-    self.assertEqual(self.core_instance.ListReservedWords(), [)
+    self.assertEqual(self.core_instance.ListReservedWords(), [])
 
 if( __name__ == '__main__' ):
       unittest.main()
