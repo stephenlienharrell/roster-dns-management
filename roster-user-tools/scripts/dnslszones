@@ -64,18 +64,16 @@ def main(args):
   usage = ('\n'
            '\n'
            'To list all zones:\n'
-           '%s\t all [-z <zone-name>] [-v <view-name>] [-0 <options>]\n'
-           '\t[--origin <origin>] [-t <type>] [--cidr-block <cidr-block>]\n'
+           '\t%s all\n'
            '\n'
            'To list forward zones:\n'
-           '%s\t forward [-z <zone-name>] [-v <view-name>] [-0 <options>]\n'
+           '\t%s forward [-z <zone-name>] [-v <view-name>] [-0 <options>]\n'
            '\t[--origin <origin>] [-t <type>] [--cidr-block <cidr-block>]\n'
            '\n'
            'To list reverse zones:\n'
-           '%s\t reverse [-z <zone-name>] [-v <view-name>] [-0 <options>]\n'
+           '\t%s reverse [-z <zone-name>] [-v <view-name>] [-0 <options>]\n'
            '\t[--origin <origin>] [-t <type>] [--cidr-block <cidr-block>]\n'
-           '\n'
-           )
+           '\n' % tuple([sys.argv[0] for x in range(3)]))
   args_instance = Args(command, ['forward', 'reverse', 'all'], args, usage)
   options = args_instance.options
 
@@ -84,6 +82,18 @@ def main(args):
   except cli_common_lib.ArgumentError, e:
     print 'ERROR: %s' % e
     sys.exit(1)
+
+  if( options.origin and not options.origin.endswith('.') ):
+    cli_common_lib.DnsError('Zone origin must terminate with "."', 1)
+
+  views = roster_client_lib.RunFunction(
+      u'ListViews', options.username,
+      credfile=options.credfile, credstring=options.credstring,
+      server_name=options.server, kwargs={
+          u'view_name': options.view_name})['core_return']
+
+  if( options.view_name and not views ):
+    cli_common_lib.DnsError('View not found.', 1)
 
   zones = roster_client_lib.RunFunction(
       u'ListZones', options.username,
@@ -105,6 +115,8 @@ def main(args):
                    'zone_options', 'cidr_block']]
 
   if( command == 'reverse' ):
+    if( not reverse_range_zone_assignments ):
+      cli_common_lib.DnsError('No zones found.', 1)
     for zone in reverse_range_zone_assignments:
       for view in zones[zone]:
         print_list.append([zone, view, zones[zone][view]['zone_type'],
@@ -113,6 +125,8 @@ def main(args):
                            reverse_range_zone_assignments[zone]])
 
   elif( command == 'forward' ):
+    if( not zones ):
+      cli_common_lib.DnsError('No zones found.', 1)
     for zone in zones:
       for view in zones[zone]:
         if( zone in reverse_range_zone_assignments ):

@@ -145,12 +145,6 @@ class TestDnslszones(unittest.TestCase):
         'test_zone any       master    university.edu. options      -\n'
         'zone2     test_view master    school.edu.     stuff        -\n\n')
     command.close()
-    command = os.popen('python %s reverse -u %s -p %s --config-file %s -s %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
-    self.assertEqual(command.read(),
-        'zone_name view_name zone_type zone_origin zone_options cidr_block\n'
-        '-----------------------------------------------------------------\n\n')
-    command.close()
 
   def testListReverseZones(self):
     self.core_instance.MakeView(u'test_view')
@@ -167,12 +161,6 @@ class TestDnslszones(unittest.TestCase):
         'reverse_zone test_view master    university.edu. options      10/8\n'
         'reverse_zone any       master    university.edu. options      '
         '10/8\n\n')
-    command.close()
-    command = os.popen('python %s forward -u %s -p %s --config-file %s -s %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
-    self.assertEqual(command.read(),
-        'zone_name view_name zone_type zone_origin zone_options cidr_block\n'
-        '-----------------------------------------------------------------\n\n')
     command.close()
 
   def testListAllZones(self):
@@ -198,6 +186,18 @@ class TestDnslszones(unittest.TestCase):
         'reverse_zone test_view master    university2.edu. options      10/8\n'
         'reverse_zone any       master    university2.edu. options      '
         '10/8\n\n')
+    command.close()
+
+  def testErrors(self):
+    command = os.popen('python %s forward -v fake_view -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password,
+                           USER_CONFIG, self.server_name))
+    self.assertEqual(command.read(), 'CLIENT ERROR: View not found.\n')
+    command.close()
+    command = os.popen('python %s forward -u %s -p %s --config-file %s -s %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
+    self.assertEqual(command.read(), 'CLIENT ERROR: No zones found.\n')
     command.close()
 
 if( __name__ == '__main__' ):
