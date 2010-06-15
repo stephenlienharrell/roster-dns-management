@@ -166,7 +166,8 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named/test_view/sub.university.edu.db',
+        '%s/set1_servers/named/test_view/sub.university.edu.db' % (
+            self.root_config_dir),
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aa 192.168.1.104')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -201,11 +202,11 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named/test_view/sub.university.edu.db',
-        ' 10800', ' 810 10800')
+        '%s/set1_servers/named/test_view/sub.university.edu.db' % (
+            self.root_config_dir), ' 10800', ' 810 10800')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named.conf',
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'type master;', 'type bad_type;')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -215,11 +216,11 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named.conf',
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'type bad_type;', 'type master;')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named.conf',
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'file "test_data/named/named/test_view/sub.university.edu.db";',
         'wrong;')
     output = os.popen('python %s --config-file %s' % (
@@ -231,12 +232,12 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named.conf',
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'wrong;',
         'file "test_data/named/named/test_view/sub.university.edu.db";')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        'bind_configs/set1_servers/named.conf',
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         '#options',
         'options\n{\ndirectory "another";\n};\n')
     output = os.popen('python %s --config-file %s' % (
