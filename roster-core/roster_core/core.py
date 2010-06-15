@@ -2539,25 +2539,13 @@ class Core(object):
           raise errors.CoreError('No records found.')
         elif( len(final_id) == 1 ):
           records_dict['records_id'] = final_id[0]
-          if( len(new_records) == 0 ):
-            raise errors.CoreError(
-                'Tried to find record with ID "%s" type "%s" target "%s" '
-                'zone_name "%s" view "%s" ttl "%s" but could not.' % (
-                    final_id[0], records_dict['record_type'],
-                    records_dict['record_target'],
-                    records_dict['record_zone_name'],
-                    records_dict['record_view_dependency'],
-                    records_dict['record_ttl']))
-          if( len(new_records) > 1 ):
-            raise errors.CoreError(
-                'Tried to find record with ID "%s" type "%s" target "%s" '
-                'zone_name "%s" view "%s" ttl "%s" but found multiple.' % (
-                    final_id[0], records_dict['record_type'],
-                    records_dict['record_target'],
-                    records_dict['record_zone_name'],
-                    records_dict['record_view_dependency'],
-                    records_dict['record_ttl']))
-          self.db_instance.RemoveRow('records', new_records[0])
+          for record in new_records:
+            if( record['records_id'] == final_id[0] ):
+              self.db_instance.RemoveRow('records', record)
+              break
+          else:
+            raise errors.CoreError('Could not remove record with ID "%s" '
+                                   'for an unknown reason.' % filal_id[0])
         else:
           raise errors.CoreError('Multiple records found for used search '
                                  'terms.')
