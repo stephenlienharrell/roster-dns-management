@@ -515,16 +515,6 @@ class TestCore(unittest.TestCase):
                         'view_name': u'any', 'last_user': u'sharrell',
                         'zone_name': u'university.edu',
                         u'mail_server': u'smtp-2.university.edu.'}])
-    self.core_instance.MakeRecord(u'soa', u'university_edu',
-                                  u'university.edu',
-                                  {u'name_server': u'test.',
-                                   u'admin_email': u'test.',
-                                   u'serial_number': 2,
-                                   u'refresh_seconds': 4,
-                                   u'retry_seconds': 4,
-                                   u'expiry_seconds': 4,
-                                   u'minimum_seconds': 4},
-                                  ttl=10, view_name=u'any')
     new_args_dict = self.core_instance.GetEmptyRecordArgsDict(u'mx')
     new_args_dict['priority'] = 30
     self.core_instance.UpdateRecord(u'mx', u'university_edu',
@@ -592,6 +582,27 @@ class TestCore(unittest.TestCase):
     self.assertRaises(core.RecordError, self.core_instance.UpdateRecord,
                       u'cname', 'c6', 'university.edu',
                       {u'assignment_host': None}, update_target=u'computer5')
+    self.assertRaises(core.RecordError, self.core_instance.UpdateRecord,
+                      u'cname', 'c6', 'university.edu',
+                      {u'assignment_host': None}, update_target=u'computer5.')
+    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+                      u'a', u'computer5.net', u'university.edu',
+                      {u'assignment_ip': u'10.0.1.1'}, ttl=10)
+    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+                      u'soa', u'computer5.net', u'university.edu',
+                      {u'assignment_ip': u'10.0.1.1'}, ttl=10)
+    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+                      u'soa', u'university_edu', u'university.edu',
+                      {u'name_server': u'test.', u'admin_email': u'test.',
+                       u'serial_number': 2, u'refresh_seconds': 4,
+                       u'retry_seconds': 4, u'expiry_seconds': 4,
+                       u'minimum_seconds': 4}, ttl=10, view_name=u'any')
+    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+                      u'soa', u'university_edu', u'university.edu',
+                      {u'name_server': u'test.', u'admin_email': u'test.',
+                       u'serial_number': 2, u'refresh_seconds': 4,
+                       u'retry_seconds': 4, u'expiry_seconds': 4,
+                       u'minimum_seconds': 4}, ttl=10, view_name=None)
 
   def testSOA(self):
     self.core_instance.MakeView(u'test_view')

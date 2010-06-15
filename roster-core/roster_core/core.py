@@ -2254,6 +2254,8 @@ class Core(object):
         raise RecordError('"." not allowed in non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
+    if( record_type == u'soa' and (view_name is None or view_name == u'any') ):
+      raise RecordError('An SOA cannot be made in the "any" view.')
     if( view_name is None or view_name == u'any'):
       view_name = u'any'
     else:
