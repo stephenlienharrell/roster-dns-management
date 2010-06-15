@@ -182,21 +182,21 @@ class TestDnslszones(unittest.TestCase):
     self.core_instance.MakeZone(u'zone2', u'master', u'school.edu.',
                                 view_name=u'test_view', zone_options=u'stuff',
                                 make_any=False)
-    self.core_instance.MakeZone(u'reverse_zone', u'master', u'university.edu.',
+    self.core_instance.MakeZone(u'reverse_zone', u'master', u'university2.edu.',
                                 view_name=u'test_view', zone_options=u'options')
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone', u'10/8')
     command = os.popen('python %s all -u %s -p %s --config-file %s -s %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
     self.assertEqual(command.read(),
-        'zone_name    view_name zone_type zone_origin     zone_options '
+        'zone_name    view_name zone_type zone_origin      zone_options '
         'cidr_block\n'
-        '--------------------------------------------------------------'
+        '---------------------------------------------------------------'
         '----------\n'
-        'test_zone    test_view master    university.edu. options      -\n'
-        'test_zone    any       master    university.edu. options      -\n'
-        'zone2        test_view master    school.edu.     stuff        -\n'
-        'reverse_zone test_view master    university.edu. options      10/8\n'
-        'reverse_zone any       master    university.edu. options      '
+        'test_zone    test_view master    university.edu.  options      -\n'
+        'test_zone    any       master    university.edu.  options      -\n'
+        'zone2        test_view master    school.edu.      stuff        -\n'
+        'reverse_zone test_view master    university2.edu. options      10/8\n'
+        'reverse_zone any       master    university2.edu. options      '
         '10/8\n\n')
     command.close()
 

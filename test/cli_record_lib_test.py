@@ -238,7 +238,7 @@ class TestCliRecordLib(unittest.TestCase):
 
     options.zone_name = u'ipv6_zone'
     self.core_instance.MakeZone(options.zone_name, u'master',
-                                u'university.edu.',
+                                u'university2.edu.',
                                 view_name=options.view_name)
     options.target = u'ipv6host'
     self.core_instance.MakeRecord(

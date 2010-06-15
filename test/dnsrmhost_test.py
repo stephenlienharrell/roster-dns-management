@@ -303,7 +303,7 @@ class Testdnsrmhost(unittest.TestCase):
 
   def testRemoveIPV6(self):
     self.core_instance.MakeZone(u'ipv6_zone', u'master',
-                                u'university.edu.',
+                                u'university2.edu.',
                                 view_name=u'test_view')
     self.core_instance.MakeZone(
         u'ipv6_zone_rev', u'master',
@@ -333,7 +333,7 @@ class Testdnsrmhost(unittest.TestCase):
         view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
-          u'ipv6host.university.edu.'}, view_name=u'test_view')
+          u'ipv6host.university2.edu.'}, view_name=u'test_view')
     self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6_zone_rev',
                                                       u'2001::/124')
     self.assertEqual(self.core_instance.ListRecords(record_type=u'aaaa'),
@@ -359,7 +359,7 @@ class Testdnsrmhost(unittest.TestCase):
         'ttl: 3600\n'
         '    assignment_ip: 2001:0000:0000:0000:0000:0000:0000:0001\n'
         'REMOVED PTR: 1 zone_name: ipv6_zone_rev view_name: test_view '
-        'ttl: 3600\n    assignment_host: ipv6host.university.edu.\n')
+        'ttl: 3600\n    assignment_host: ipv6host.university2.edu.\n')
     output.close()
     self.assertEqual(self.core_instance.ListRecords(record_type=u'aaaa'),
         [{'target': u'host2', 'ttl': 3600, 'record_type': u'aaaa',

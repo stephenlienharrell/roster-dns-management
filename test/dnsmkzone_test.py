@@ -147,13 +147,13 @@ class TestDnsMkZone(unittest.TestCase):
                 {'zone_type': u'master', 'zone_options': u'',
                  'zone_origin': u'dept.univiersity.edu.'}}})
     output = os.popen('python %s forward -z test_zone2 -v test_view --origin '
-                      'dept.univiersity.edu. --type master --dont-make-any '
+                      'dept2.univiersity.edu. --type master --dont-make-any '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'ADDED FORWARD ZONE: zone_name: test_zone2 zone_type: '
-                     'master zone_origin: dept.univiersity.edu. '
+                     'master zone_origin: dept2.univiersity.edu. '
                      'zone_options: None view_name: test_view\n')
     output.close()
     self.assertEqual(self.core_instance.ListZones(),
@@ -164,7 +164,7 @@ class TestDnsMkZone(unittest.TestCase):
          u'test_zone2':
              {u'test_view':
                  {'zone_type': u'master', 'zone_options': u'',
-                  'zone_origin': u'dept.univiersity.edu.'}}})
+                  'zone_origin': u'dept2.univiersity.edu.'}}})
 
   def testMakeReverseZoneOrigin(self):
     self.core_instance.MakeView(u'test_view')

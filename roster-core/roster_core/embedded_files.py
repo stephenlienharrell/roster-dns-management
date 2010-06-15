@@ -296,7 +296,9 @@ CREATE TABLE `zone_view_assignments` (
     (`zone_view_assignments_view_dependency`) REFERENCES `view_dependencies`
     (`view_dependency`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `unique_zone_name_zone_dependency` UNIQUE
-    (`zone_view_assignments_zone_name`,`zone_view_assignments_view_dependency`)
+    (`zone_view_assignments_zone_name`,`zone_view_assignments_view_dependency`),
+  CONSTRAINT `unique_zone_origin_view_dependency` UNIQUE
+    (`zone_view_assignments_view_dependency`,`zone_origin`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

@@ -215,6 +215,7 @@ class TestDnsMkHost(unittest.TestCase):
         u'private_dep')
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
+    zone_view_assignments_dict['zone_origin'] = u'university2.edu.'
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
         u'internal_dep')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
@@ -225,6 +226,7 @@ class TestDnsMkHost(unittest.TestCase):
         u'private_dep')
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
+    zone_view_assignments_dict['zone_origin'] = u'university3.edu.'
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
         u'private_dep')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
@@ -256,7 +258,7 @@ class TestDnsMkHost(unittest.TestCase):
     zone_view_assignments_dict['zone_view_assignments_zone_type'] = u'slave'
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
         u'bio.university.edu')
-    zone_view_assignments_dict['zone_origin'] = u'university.edu.'
+    zone_view_assignments_dict['zone_origin'] = u'university4.edu.'
     zone_view_assignments_dict['zone_options'] = (
         u'#Allow update\nallow-transfer { any; };\n')
 

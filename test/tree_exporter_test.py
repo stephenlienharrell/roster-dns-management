@@ -210,6 +210,7 @@ class TestTreeExporter(unittest.TestCase):
         u'private_dep')
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
+    zone_view_assignments_dict['zone_origin'] = u'university2.edu.'
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
         u'internal_dep')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
@@ -220,6 +221,7 @@ class TestTreeExporter(unittest.TestCase):
         u'private_dep')
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
+    zone_view_assignments_dict['zone_origin'] = u'university3.edu.'
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
         u'private_dep')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
@@ -255,6 +257,7 @@ class TestTreeExporter(unittest.TestCase):
     zone_view_assignments_dict['zone_options'] = (
         u'#Allow update\nallow-transfer { any; };\n')
 
+    zone_view_assignments_dict['zone_origin'] = u'university4.edu.'
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
         u'external_dep')
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
@@ -1504,17 +1507,17 @@ class TestTreeExporter(unittest.TestCase):
           'zone_view_assignments_zone_name':u'university.edu',
           'zone_view_assignments_view_dependency':u'private_dep',
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
-         {'zone_origin':u'university.edu.',
+         {'zone_origin':u'university2.edu.',
           'zone_view_assignments_zone_type':u'master',
           'zone_view_assignments_zone_name':u'int.university.edu',
           'zone_view_assignments_view_dependency':u'internal_dep',
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
-         {'zone_origin':u'university.edu.',
+         {'zone_origin':u'university2.edu.',
           'zone_view_assignments_zone_type':u'master',
           'zone_view_assignments_zone_name':u'int.university.edu',
           'zone_view_assignments_view_dependency':u'private_dep',
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
-         {'zone_origin':u'university.edu.',
+         {'zone_origin':u'university3.edu.',
           'zone_view_assignments_zone_type':u'master',
           'zone_view_assignments_zone_name':u'priv.university.edu',
           'zone_view_assignments_view_dependency':u'private_dep',
@@ -1539,7 +1542,7 @@ class TestTreeExporter(unittest.TestCase):
           'zone_view_assignments_zone_name':u'4.3.2.1.in-addr',
           'zone_view_assignments_view_dependency':u'external_dep',
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
-         {'zone_origin':u'university.edu.',
+         {'zone_origin':u'university4.edu.',
           'zone_view_assignments_zone_type':u'slave',
           'zone_view_assignments_zone_name':u'bio.university.edu',
           'zone_view_assignments_view_dependency':u'external_dep',

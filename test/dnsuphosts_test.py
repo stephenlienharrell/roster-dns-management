@@ -141,7 +141,7 @@ class TestDnsMkHost(unittest.TestCase):
                                 u'university.edu.',
                                 view_name=u'test_view3')
     self.core_instance.MakeZone(u'ipv6_zone', u'master',
-                                u'university.edu.',
+                                u'university2.edu.',
                                 view_name=u'test_view')
     self.core_instance.MakeZone(
         u'ipv6_zone_rev', u'master',
@@ -203,7 +203,7 @@ class TestDnsMkHost(unittest.TestCase):
           u'2001:0000:0000:0000:0000:0000:0000:0002'}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
-          u'ipv6host.university.edu.'}, view_name=u'test_view')
+          u'ipv6host.university2.edu.'}, view_name=u'test_view')
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
     self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6_zone_rev',
@@ -257,9 +257,9 @@ class TestDnsMkHost(unittest.TestCase):
         '# Columns are arranged as so:\n'
         '# Ip_Address Fully_Qualified_Domain Hostname\n'
         '#2001:0000:0000:0000:0000:0000:0000:0000\n'
-        '2001:0000:0000:0000:0000:0000:0000:0001  ipv6host.university.edu  '
+        '2001:0000:0000:0000:0000:0000:0000:0001  ipv6host.university2.edu  '
         'ipv6host\n'
-        '2001:0000:0000:0000:0000:0000:0000:0002  host_ipv6.university.edu '
+        '2001:0000:0000:0000:0000:0000:0000:0002  host_ipv6.university2.edu '
         'host_ipv6 # No reverse assignment\n'
         '#2001:0000:0000:0000:0000:0000:0000:0003\n'
         '#2001:0000:0000:0000:0000:0000:0000:0004\n'
@@ -299,7 +299,7 @@ class TestDnsMkHost(unittest.TestCase):
           u'2001:0000:0000:0000:0000:0000:0000:0002'}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
-          u'ipv6host.university.edu.'}, view_name=u'test_view')
+          u'ipv6host.university2.edu.'}, view_name=u'test_view')
     output = os.popen('python %s dump -r 2001::/124 -f %s -z ipv6_zone '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
@@ -334,9 +334,9 @@ class TestDnsMkHost(unittest.TestCase):
         '# Columns are arranged as so:\n'
         '# Ip_Address Fully_Qualified_Domain Hostname\n'
         '#2001:0000:0000:0000:0000:0000:0000:0000\n'
-        '2001:0000:0000:0000:0000:0000:0000:0001  ipv6host.university.edu  '
+        '2001:0000:0000:0000:0000:0000:0000:0001  ipv6host.university2.edu  '
         'ipv6host\n'
-        '2001:0000:0000:0000:0000:0000:0000:0002  newhost.university.edu '
+        '2001:0000:0000:0000:0000:0000:0000:0002  newhost.university2.edu '
         'newhost # No reverse assignment\n'
         '#2001:0000:0000:0000:0000:0000:0000:0003\n'
         '#2001:0000:0000:0000:0000:0000:0000:0004\n'
@@ -587,7 +587,7 @@ class TestDnsMkHost(unittest.TestCase):
           u'2001:0000:0000:0000:0000:0000:0000:0002'}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'ptr', u'1', u'ipv6_zone_rev', {u'assignment_host':
-          u'ipv6host.university.edu.'}, view_name=u'test_view')
+          u'ipv6host.university2.edu.'}, view_name=u'test_view')
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
     self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6_zone_rev',
