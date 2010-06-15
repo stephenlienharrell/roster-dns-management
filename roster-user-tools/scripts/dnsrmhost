@@ -130,7 +130,8 @@ def main(args):
     if(  error_string == 'Record not found.' ):
       removed_type = False
     else:
-      raise
+      print 'SERVER ERROR: %s' % error_string
+      sys.exit(1)
   reverse_ip = roster_client_lib.RunFunction(
       'ReverseIP', options.username, credfile=options.credfile,
       server_name=options.server, args=[options.ip_address])['core_return']
@@ -146,7 +147,8 @@ def main(args):
     if( error_string == 'No records found.' ):
       removed_ptr = False
     else:
-      raise
+      print 'SERVER ERROR: %s' % error_string
+      sys.exit(1)
   if( not removed_type and not removed_ptr ):
     cli_common_lib_instance.DnsError('Record not found.')
 

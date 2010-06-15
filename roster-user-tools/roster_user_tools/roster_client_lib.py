@@ -94,7 +94,8 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
 
   if( type(core_return) == dict and core_return['error'] ):
     if( raise_errors ):
-      raise xmlrpclib.Fault(1, core_return['error'])
+      raise xmlrpclib.Fault(1, '(%s) %s' % (core_return['log_uuid_string'],
+                                            core_return['error']))
     cli_common_lib.ServerError(core_return['error'],
                                core_return['log_uuid_string'], 1)
 
