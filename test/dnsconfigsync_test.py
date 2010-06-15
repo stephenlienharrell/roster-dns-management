@@ -61,6 +61,8 @@ DATA_FILE = 'test_data/test_data.sql'
 SSH_ID = 'test_data/roster_id_dsa'
 SSH_USER = 'root'
 TEST_DNS_SERVER = u'localhost'
+NS_IP_ADDRESS = '127.0.0.1'
+NS_DOMAIN = '' #Blank since using localhost
 
 
 class TestCheckConfig(unittest.TestCase):
@@ -125,8 +127,8 @@ class TestCheckConfig(unittest.TestCase):
     self.assertTrue('server reload successful' in lines)
     command.close()
 
-    command = os.popen('dig @%s.rcac.purdue.edu mail1.sub.university.edu' % (
-        TEST_DNS_SERVER))
+    command = os.popen('dig @%s%s mail1.sub.university.edu' % (
+        TEST_DNS_SERVER, NS_DOMAIN))
     lines = command.readlines()
     id = lines[5].split()[-1]
     outputlines = ''.join(lines)
@@ -155,10 +157,11 @@ class TestCheckConfig(unittest.TestCase):
         'ns2.sub.university.edu.  3600  IN  A 192.168.1.104\n'
         '\n'
         '%s'
-        ';; SERVER: 128.210.9.65#53(128.210.9.65)\n'
+        ';; SERVER: %s#53(%s)\n'
         '%s'
         ';; MSG SIZE  rcvd: 125\n'
-        '\n' % (lines[1], id, lines[22], lines[24]))
+        '\n' % (lines[1], id, lines[22], NS_IP_ADDRESS, NS_IP_ADDRESS,
+                lines[24]))
     self.assertEqual(set(outputlines.split()), set(outputlines.split()))
     command.close()
 

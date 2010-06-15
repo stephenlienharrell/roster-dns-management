@@ -312,21 +312,21 @@ class TestAuditLog(unittest.TestCase):
     records = {u'any':
         {u'123.210.23.1':
         [{u'forward': False,
-          u'host': u'math-b44-c6506-01-23.tcom.university.edu',
+          u'host': u'math-b44-c6506-01-23.dept.university.edu',
           'zone_origin': u'210.123.in-addr.arpa.',
           u'zone': u'210.123.in-addr.arpa'},
          {u'forward': True,
-          u'host': u'math-b44-c6506-01-23.tcom.university.edu',
-          u'zone_origin': u'tcom.university.edu.',
-          u'zone': u'tcom.university.edu'}],
+          u'host': u'math-b44-c6506-01-23.dept.university.edu',
+          u'zone_origin': u'dept.university.edu.',
+          u'zone': u'dept.university.edu'}],
          u'123.210.23.2':\
          [{u'forward': False,
-           u'host': u'pdntest23.tcom.university.edu',
+           u'host': u'test_server23.dept.university.edu',
            'zone_origin': u'210.123.in-addr.arpa.',
            u'zone': u'210.123.in-addr.arpa'},
-          {u'forward': True, u'host': u'pdntest23.tcom.university.edu',
-           u'zone_origin': u'tcom.university.edu.',
-           u'zone': u'tcom.university.edu'}]}}
+          {u'forward': True, u'host': u'test_server23.dept.university.edu',
+           u'zone_origin': u'dept.university.edu.',
+           u'zone': u'dept.university.edu'}]}}
     all_ips = [u'123.210.23.0', u'123.210.23.1', u'123.210.23.2',
                u'123.210.23.3']
     cidr_block = '123.210.23/30'
@@ -373,13 +373,13 @@ class TestAuditLog(unittest.TestCase):
          'value="reverse" checked="checked" /><input type="hidden" '
          'name="default_reverse_123.210.23.1-0" value="1" /></td><td><input '
          'type="hidden" name="default_fqdn_123.210.23.1-0" '
-         'value="math-b44-c6506-01-23.tcom.university.edu" '
-         '/>math-b44-c6506-01-23.tcom.university.edu</td><td><input '
+         'value="math-b44-c6506-01-23.dept.university.edu" '
+         '/>math-b44-c6506-01-23.dept.university.edu</td><td><input '
          'type="text" name="host_123.210.23.1-0" value="math-b44-c6506-01-23" '
          '/><input type="hidden" name="default_host_123.210.23.1-0" '
          'value="math-b44-c6506-01-23" /></td> <td><input type="text" '
          'name="fqdn_123.210.23.1-0" '
-         'value="math-b44-c6506-01-23.tcom.university.edu" /></td></tr>',
+         'value="math-b44-c6506-01-23.dept.university.edu" /></td></tr>',
          '<tr>',
          '<td><input type="hidden" name="ip_addresses" value="123.210.23.2-0" '
          '/>123.210.23.2</td><td><input type="checkbox" '
@@ -390,12 +390,12 @@ class TestAuditLog(unittest.TestCase):
          'value="reverse" checked="checked" /><input type="hidden" '
          'name="default_reverse_123.210.23.2-0" value="1" /></td><td><input '
          'type="hidden" name="default_fqdn_123.210.23.2-0" '
-         'value="pdntest23.tcom.university.edu" />pdntest23.tcom.university.edu'
+         'value="test_server23.dept.university.edu" />test_server23.dept.university.edu'
          '</td><td><input type="text" name="host_123.210.23.2-0" '
-         'value="pdntest23" /><input type="hidden" '
-         'name="default_host_123.210.23.2-0" value="pdntest23" /></td> <td>'
+         'value="test_server23" /><input type="hidden" '
+         'name="default_host_123.210.23.2-0" value="test_server23" /></td> <td>'
          '<input type="text" name="fqdn_123.210.23.2-0" '
-         'value="pdntest23.tcom.university.edu" /></td></tr>',
+         'value="test_server23.dept.university.edu" /></td></tr>',
          '<tr bgcolor="#EEEEEE">',
          '<td><input type="hidden" name="ip_addresses" value="123.210.23.3-0" '
          '/>123.210.23.3</td><td><input type="checkbox" '
@@ -415,13 +415,13 @@ class TestAuditLog(unittest.TestCase):
          '</form>'])
 
     changed_records = {
-        'add': {'123.210.23.2-0': {'host': 'pdntest23wrong'},
+        'add': {'123.210.23.2-0': {'host': 'test_server23wrong'},
                 '123.210.23.3-0': {'host': 'new',
                                     'fqdn': 'new.org.university.edu'}},
         'remove': {'123.210.23.1-0': {
             'host': 'math-b44-c6506-01-23',
-            'fqdn': 'math-b44-c6506-01-23.tcom.university.edu'},
-                   '123.210.23.2-0': {'host': 'pdntest23'}}}
+            'fqdn': 'math-b44-c6506-01-23.dept.university.edu'},
+                   '123.210.23.2-0': {'host': 'test_server23'}}}
     error_ips = {'123.210.23.2-0':
         ['FQDN of 123.210.23.2-0 needs to be updated.']}
     html_page = web_lib.PrintAllRecordsPage(
@@ -464,8 +464,8 @@ class TestAuditLog(unittest.TestCase):
        'checked="checked" /><input type="hidden" '
        'name="default_reverse_123.210.23.1-0" value="1" /></td><td><input '
        'type="hidden" name="default_fqdn_123.210.23.1-0" '
-       'value="math-b44-c6506-01-23.tcom.university.edu" '
-       '/>math-b44-c6506-01-23.tcom.university.edu</td><td><input type="text" '
+       'value="math-b44-c6506-01-23.dept.university.edu" '
+       '/>math-b44-c6506-01-23.dept.university.edu</td><td><input type="text" '
        'name="host_123.210.23.1-0" value="" /><input type="hidden" '
        'name="default_host_123.210.23.1-0" value="math-b44-c6506-01-23" '
        '/></td> <td><input type="text" name="fqdn_123.210.23.1-0" value="" '
@@ -480,12 +480,12 @@ class TestAuditLog(unittest.TestCase):
        'checked="checked" /><input type="hidden" '
        'name="default_reverse_123.210.23.2-0" value="1" /></td><td><input '
        'type="hidden" name="default_fqdn_123.210.23.2-0" '
-       'value="pdntest23.tcom.university.edu" />pdntest23.tcom.university.edu'
+       'value="test_server23.dept.university.edu" />test_server23.dept.university.edu'
        '</td><td><input type="text" name="host_123.210.23.2-0" '
-       'value="pdntest23wrong" /><input type="hidden" '
-       'name="default_host_123.210.23.2-0" value="pdntest23" /></td> '
+       'value="test_server23wrong" /><input type="hidden" '
+       'name="default_host_123.210.23.2-0" value="test_server23" /></td> '
        '<td><input type="text" name="fqdn_123.210.23.2-0" '
-       'value="pdntest23.tcom.university.edu" /></td></tr>',
+       'value="test_server23.dept.university.edu" /></td></tr>',
        '<tr><td colspan=6 bgcolor=#FF6666>FQDN of 123.210.23.2-0 needs to be '
        'updated.</td></tr>',
        '<tr bgcolor="#66FF66">',
@@ -506,14 +506,14 @@ class TestAuditLog(unittest.TestCase):
        '<input type="submit" value="Submit" />',
        '</form>'])
     changed_records = {'add': {
-      '123.210.23.1-0': {'host': 'changed', 'fqdn': 'changed.tcom.university.edu'},
-      '123.210.23.2-0': {'fqdn': 'pdntest23s.tcom.university.edu'},
+      '123.210.23.1-0': {'host': 'changed', 'fqdn': 'changed.dept.university.edu'},
+      '123.210.23.2-0': {'fqdn': 'test_server23s.dept.university.edu'},
       '123.210.23.0-0': {'fqdn': 'forgot.host.'},
       '123.210.23.3-0': {'host': 'tr.', 'fqdn': 'tr.org.university.edu'}},
       'remove': {
       '123.210.23.1-0': {'host': 'math-b44-c6506-01-23',
-                          'fqdn': 'math-b44-c6506-01-23.tcom.university.edu'},
-      '123.210.23.2-0': {'fqdn': 'pdntest23.tcom.university.edu'}}}
+                          'fqdn': 'math-b44-c6506-01-23.dept.university.edu'},
+      '123.210.23.2-0': {'fqdn': 'test_server23.dept.university.edu'}}}
     error_ips = {
         '123.210.23.2-0': ['HOST of 123.210.23.2-0 needs to be updated.'],
         '123.210.23.0-0': ['HOST of 123.210.23.0-0 needs to be updated.'],
@@ -564,13 +564,13 @@ class TestAuditLog(unittest.TestCase):
          'value="reverse" checked="checked" /><input type="hidden" '
          'name="default_reverse_123.210.23.1-0" value="1" /></td><td><input '
          'type="hidden" name="default_fqdn_123.210.23.1-0" '
-         'value="math-b44-c6506-01-23.tcom.university.edu" />'
-         'math-b44-c6506-01-23.tcom.university.edu</td><td><input type="text" '
+         'value="math-b44-c6506-01-23.dept.university.edu" />'
+         'math-b44-c6506-01-23.dept.university.edu</td><td><input type="text" '
          'name="host_123.210.23.1-0" value="changed" /><input '
          'type="hidden" name="default_host_123.210.23.1-0" '
          'value="math-b44-c6506-01-23" /></td> <td><input type="text" '
          'name="fqdn_123.210.23.1-0" '
-         'value="changed.tcom.university.edu" /></td></tr>',
+         'value="changed.dept.university.edu" /></td></tr>',
          '<tr bgcolor="#FF6666">',
          '<td><input type="hidden" name="ip_addresses" value="123.210.23.2-0" '
          '/>123.210.23.2</td><td><input type="checkbox" '
@@ -581,12 +581,12 @@ class TestAuditLog(unittest.TestCase):
          'value="reverse" checked="checked" /><input type="hidden" '
          'name="default_reverse_123.210.23.2-0" value="1" /></td><td><input '
          'type="hidden" name="default_fqdn_123.210.23.2-0" '
-         'value="pdntest23.tcom.university.edu" />'
-         'pdntest23.tcom.university.edu</td><td><input type="text" '
-         'name="host_123.210.23.2-0" value="pdntest23" /><input type="hidden" '
-         'name="default_host_123.210.23.2-0" value="pdntest23" /></td> <td>'
+         'value="test_server23.dept.university.edu" />'
+         'test_server23.dept.university.edu</td><td><input type="text" '
+         'name="host_123.210.23.2-0" value="test_server23" /><input type="hidden" '
+         'name="default_host_123.210.23.2-0" value="test_server23" /></td> <td>'
          '<input type="text" name="fqdn_123.210.23.2-0" '
-         'value="pdntest23s.tcom.university.edu" /></td></tr>',
+         'value="test_server23s.dept.university.edu" /></td></tr>',
          '<tr><td colspan=6 bgcolor=#FF6666>HOST of 123.210.23.2-0 needs to be '
          'updated.</td></tr>',
          '<tr bgcolor="#FF6666">',
@@ -613,57 +613,59 @@ class TestAuditLog(unittest.TestCase):
 
   def testUpdateInputBoxes(self):
     changed_records = {'add': {
-      '128.210.189.1-0': {'host': 'changed', 'fqdn': 'changed.tcom.purdue.edu'},
-      '128.210.189.2-0': {'fqdn': 'pdntest189s.tcom.purdue.edu'},
-      '128.210.189.0-0': {'fqdn': 'forgot.host.'},
-      '128.210.189.3-0': {'host': 'tr.', 'fqdn': 'tr.rcac.purdue.edu'}},
+      '123.210.23.1-0': {'host': 'changed',
+                         'fqdn': 'changed.dept.university.edu'},
+      '123.210.23.2-0': {'fqdn': 'test_server189s.dept.university.edu'},
+      '123.210.23.0-0': {'fqdn': 'forgot.host.'},
+      '123.210.23.3-0': {'host': 'tr.', 'fqdn': 'tr.rcac.university.edu'}},
                        'remove': {
-      '128.210.189.1-0': {'host': 'math-b44-c6506-01-189',
-                          'fqdn': 'math-b44-c6506-01-189.tcom.purdue.edu'},
-      '128.210.189.2-0': {'fqdn': 'pdntest189.tcom.purdue.edu'}}}
+      '123.210.23.1-0': {'host': 'math-b44-c6506-01-189',
+                          'fqdn': 'math-b44-c6506-01-189.dept.university.edu'},
+      '123.210.23.2-0': {'fqdn': 'test_server189.dept.university.edu'}}}
     record_html_data = {
         'reverse': 'checked="checked"',
-        'real_ip_address': u'128.210.189.0', 'default_reverse': 1,
+        'real_ip_address': u'123.210.23.0', 'default_reverse': 1,
         'default_host_name': '', 'fqdn': '', 'host_name': '',
         'default_forward': 1, 'default_fqdn': '',
-        'forward': 'checked="checked"', 'ip_address': u'128.210.189.0-0'}
+        'forward': 'checked="checked"', 'ip_address': u'123.210.23.0-0'}
     error_ips = {
-        '128.210.189.2-0': ['HOST of 128.210.189.2-0 needs to be updated.'],
-        '128.210.189.0-0': ['HOST of 128.210.189.0-0 needs to be updated.'],
-        '128.210.189.3-0':
+        '123.210.23.2-0': ['HOST of 123.210.23.2-0 needs to be updated.'],
+        '123.210.23.0-0': ['HOST of 123.210.23.0-0 needs to be updated.'],
+        '123.210.23.3-0':
             ['The use of "." in the hostname is not allowed.']}
 
     record_html_data = web_lib.UpdateInputBoxes(
         changed_records, record_html_data, error_ips)
     self.assertEqual(record_html_data,
-        {'reverse': 'checked="checked"', 'real_ip_address': u'128.210.189.0',
+        {'reverse': 'checked="checked"', 'real_ip_address': u'123.210.23.0',
          'default_reverse': 1, 'default_host_name': '', 'fqdn': 'forgot.host.',
          'host_name': '', 'default_forward': 1, 'default_fqdn': '',
-         'forward': 'checked="checked"', 'ip_address': u'128.210.189.0-0'})
+         'forward': 'checked="checked"', 'ip_address': u'123.210.23.0-0'})
 
     changed_records = {'add': {
-      '128.210.189.1-0': {'host': 'changed', 'fqdn': 'changed.tcom.purdue.edu'},
-      '128.210.189.2-0': {'fqdn': 'pdntest189s.tcom.purdue.edu'},
-      '128.210.189.0-0': {'host': '', 'fqdn': 'forgot.host.'},
-      '128.210.189.3-0': {'host': 'tr.', 'fqdn': 'tr.rcac.purdue.edu'}},
+      '123.210.23.1-0': {'host': 'changed',
+                         'fqdn': 'changed.dept.university.edu'},
+      '123.210.23.2-0': {'fqdn': 'test_server189s.dept.university.edu'},
+      '123.210.23.0-0': {'host': '', 'fqdn': 'forgot.host.'},
+      '123.210.23.3-0': {'host': 'tr.', 'fqdn': 'tr.rcac.university.edu'}},
                        'remove': {
-      '128.210.189.1-0': {'host': 'math-b44-c6506-01-189',
-                          'fqdn': 'math-b44-c6506-01-189.tcom.purdue.edu'},
-      '128.210.189.2-0': {'fqdn': 'pdntest189.tcom.purdue.edu'}}}
+      '123.210.23.1-0': {'host': 'math-b44-c6506-01-189',
+                          'fqdn': 'math-b44-c6506-01-189.dept.university.edu'},
+      '123.210.23.2-0': {'fqdn': 'test_server189.dept.university.edu'}}}
     record_html_data = {
-        'reverse': 'checked="checked"', 'real_ip_address': u'128.210.189.1',
+        'reverse': 'checked="checked"', 'real_ip_address': u'123.210.23.1',
         'default_reverse': 1, 'default_host_name': u'math-b44-c6506-01-189',
-        'fqdn': u'math-b44-c6506-01-189.tcom.purdue.edu',
+        'fqdn': u'math-b44-c6506-01-189.dept.university.edu',
         'host_name': u'math-b44-c6506-01-189', 'default_forward': 1,
-        'default_fqdn': u'math-b44-c6506-01-189.tcom.purdue.edu',
-        'forward': 'checked="checked"', 'ip_address': u'128.210.189.1-0'}
+        'default_fqdn': u'math-b44-c6506-01-189.dept.university.edu',
+        'forward': 'checked="checked"', 'ip_address': u'123.210.23.1-0'}
     self.assertEqual(record_html_data,
-        {'reverse': 'checked="checked"', 'real_ip_address': u'128.210.189.1',
+        {'reverse': 'checked="checked"', 'real_ip_address': u'123.210.23.1',
          'default_reverse': 1, 'default_host_name': u'math-b44-c6506-01-189',
-         'fqdn': u'math-b44-c6506-01-189.tcom.purdue.edu',
+         'fqdn': u'math-b44-c6506-01-189.dept.university.edu',
          'host_name': u'math-b44-c6506-01-189', 'default_forward': 1,
-         'default_fqdn': u'math-b44-c6506-01-189.tcom.purdue.edu',
-         'forward': 'checked="checked"', 'ip_address': u'128.210.189.1-0'})
+         'default_fqdn': u'math-b44-c6506-01-189.dept.university.edu',
+         'forward': 'checked="checked"', 'ip_address': u'123.210.23.1-0'})
 
   def testPrintGetCIDRPage(self):
     self.assertEqual(web_lib.PrintGetCIDRPage(),
@@ -676,63 +678,63 @@ class TestAuditLog(unittest.TestCase):
 
   def testProcessPostDict(self):
     post_get_dict = {
-        'default_forward_128.210.189.1-0':
-            [Field('default_forward_128.210.189.1-0', '1')],
-        'default_forward_128.210.189.0-0':
-            [Field('default_forward_128.210.189.0-0', '1')],
+        'default_forward_123.210.23.1-0':
+            [Field('default_forward_123.210.23.1-0', '1')],
+        'default_forward_123.210.23.0-0':
+            [Field('default_forward_123.210.23.0-0', '1')],
         'ip_addresses':
-            [Field('ip_addresses', '128.210.189.0-0'),
-             Field('ip_addresses', '128.210.189.1-0'),
-             Field('ip_addresses', '128.210.189.2-0'),
-             Field('ip_addresses', '128.210.189.3-0')],
-        'default_forward_128.210.189.2-0':
-            [Field('default_forward_128.210.189.2-0', '1')],
-        'default_reverse_128.210.189.3-0':
-            [Field('default_reverse_128.210.189.3-0', '1')],
-        'forward_reverse_128.210.189.2-0':
-            [Field('forward_reverse_128.210.189.2-0', 'forward'),
-             Field('forward_reverse_128.210.189.2-0', 'reverse')],
-        'default_forward_128.210.189.3-0':
-            [Field('default_forward_128.210.189.3-0', '1')],
-        'default_host_128.210.189.2-0':
-            [Field('default_host_128.210.189.2-0', 'pdntest189')],
-        'fqdn_128.210.189.1-0':
-            [Field('fqdn_128.210.189.1-0', 'changed.tcom.purdue.edu')],
-        'default_fqdn_128.210.189.2-0':
-            [Field('default_fqdn_128.210.189.2-0',
-                   'pdntest189.tcom.purdue.edu')],
-        'default_reverse_128.210.189.2-0':
-            [Field('default_reverse_128.210.189.2-0', '1')],
-        'default_fqdn_128.210.189.1-0':
-            [Field('default_fqdn_128.210.189.1-0',
-                   'math-b44-c6506-01-189.tcom.purdue.edu')],
-        'default_reverse_128.210.189.0-0':
-            [Field('default_reverse_128.210.189.0-0', '1')],
-        'fqdn_128.210.189.0-0':
-            [Field('fqdn_128.210.189.0-0', 'forgot.host.')],
-        'default_reverse_128.210.189.1-0':
-            [Field('default_reverse_128.210.189.1-0', '1')],
-        'fqdn_128.210.189.2-0':
-            [Field('fqdn_128.210.189.2-0', 'pdntest189s.tcom.purdue.edu')],
-        'cidr_block': [Field('cidr_block', '128.210.189/30')],
-        'host_128.210.189.2-0': [Field('host_128.210.189.2-0', 'pdntest189')],
-        'forward_reverse_128.210.189.0-0':
-            [Field('forward_reverse_128.210.189.0-0', 'forward'),
-             Field('forward_reverse_128.210.189.0-0', 'reverse')],
-        'forward_reverse_128.210.189.1-0':
-            [Field('forward_reverse_128.210.189.1-0', 'forward'),
-             Field('forward_reverse_128.210.189.1-0', 'reverse')],
+            [Field('ip_addresses', '123.210.23.0-0'),
+             Field('ip_addresses', '123.210.23.1-0'),
+             Field('ip_addresses', '123.210.23.2-0'),
+             Field('ip_addresses', '123.210.23.3-0')],
+        'default_forward_123.210.23.2-0':
+            [Field('default_forward_123.210.23.2-0', '1')],
+        'default_reverse_123.210.23.3-0':
+            [Field('default_reverse_123.210.23.3-0', '1')],
+        'forward_reverse_123.210.23.2-0':
+            [Field('forward_reverse_123.210.23.2-0', 'forward'),
+             Field('forward_reverse_123.210.23.2-0', 'reverse')],
+        'default_forward_123.210.23.3-0':
+            [Field('default_forward_123.210.23.3-0', '1')],
+        'default_host_123.210.23.2-0':
+            [Field('default_host_123.210.23.2-0', 'test_server189')],
+        'fqdn_123.210.23.1-0':
+            [Field('fqdn_123.210.23.1-0', 'changed.dept.university.edu')],
+        'default_fqdn_123.210.23.2-0':
+            [Field('default_fqdn_123.210.23.2-0',
+                   'test_server189.dept.university.edu')],
+        'default_reverse_123.210.23.2-0':
+            [Field('default_reverse_123.210.23.2-0', '1')],
+        'default_fqdn_123.210.23.1-0':
+            [Field('default_fqdn_123.210.23.1-0',
+                   'math-b44-c6506-01-189.dept.university.edu')],
+        'default_reverse_123.210.23.0-0':
+            [Field('default_reverse_123.210.23.0-0', '1')],
+        'fqdn_123.210.23.0-0':
+            [Field('fqdn_123.210.23.0-0', 'forgot.host.')],
+        'default_reverse_123.210.23.1-0':
+            [Field('default_reverse_123.210.23.1-0', '1')],
+        'fqdn_123.210.23.2-0':
+            [Field('fqdn_123.210.23.2-0', 'test_server189s.dept.university.edu')],
+        'cidr_block': [Field('cidr_block', '123.210.23/30')],
+        'host_123.210.23.2-0': [Field('host_123.210.23.2-0', 'test_server189')],
+        'forward_reverse_123.210.23.0-0':
+            [Field('forward_reverse_123.210.23.0-0', 'forward'),
+             Field('forward_reverse_123.210.23.0-0', 'reverse')],
+        'forward_reverse_123.210.23.1-0':
+            [Field('forward_reverse_123.210.23.1-0', 'forward'),
+             Field('forward_reverse_123.210.23.1-0', 'reverse')],
         'edit': [Field('edit', 'true')],
-        'forward_reverse_128.210.189.3-0':
-            [Field('forward_reverse_128.210.189.3-0', 'forward'),
-             Field('forward_reverse_128.210.189.3-0', 'reverse')],
-        'default_host_128.210.189.1-0':
-            [Field('default_host_128.210.189.1-0', 'math-b44-c6506-01-189')],
+        'forward_reverse_123.210.23.3-0':
+            [Field('forward_reverse_123.210.23.3-0', 'forward'),
+             Field('forward_reverse_123.210.23.3-0', 'reverse')],
+        'default_host_123.210.23.1-0':
+            [Field('default_host_123.210.23.1-0', 'math-b44-c6506-01-189')],
         'view_name': [Field('view_name', 'any')],
-        'host_128.210.189.3-0': [Field('host_128.210.189.3-0', 'tr.')],
-        'fqdn_128.210.189.3-0': [Field('fqdn_128.210.189.3-0',
-                                       'tr.rcac.purdue.edu')],
-        'host_128.210.189.1-0': [Field('host_128.210.189.1-0', 'changed')]}
+        'host_123.210.23.3-0': [Field('host_123.210.23.3-0', 'tr.')],
+        'fqdn_123.210.23.3-0': [Field('fqdn_123.210.23.3-0',
+                                       'tr.rcac.university.edu')],
+        'host_123.210.23.1-0': [Field('host_123.210.23.1-0', 'changed')]}
 
     records_dict = web_lib.ProcessPostDict(post_get_dict)
     self.assertEqual(records_dict,
@@ -740,24 +742,24 @@ class TestAuditLog(unittest.TestCase):
                        'default_reverse': '0'},
          'edit': {'forward': '0', '': 'true', 'reverse': '0',
                   'default_forward': '0', 'default_reverse': '0'},
-         '128.210.189.3-0': {'reverse': '1', 'default_reverse': '1',
-                             'fqdn': 'tr.rcac.purdue.edu', 'host': 'tr.',
+         '123.210.23.3-0': {'reverse': '1', 'default_reverse': '1',
+                             'fqdn': 'tr.rcac.university.edu', 'host': 'tr.',
                              'default_forward': '1', 'forward': '1'},
-         '128.210.189.1-0': {'reverse': '1', 'default_reverse': '1',
-                             'fqdn': 'changed.tcom.purdue.edu',
+         '123.210.23.1-0': {'reverse': '1', 'default_reverse': '1',
+                             'fqdn': 'changed.dept.university.edu',
                              'host': 'changed', 'default_forward': '1',
                              'default_fqdn':
-                                 'math-b44-c6506-01-189.tcom.purdue.edu',
+                                 'math-b44-c6506-01-189.dept.university.edu',
                              'forward': '1',
                              'default_host': 'math-b44-c6506-01-189'},
-         '128.210.189.0-0': {'forward': '1', 'fqdn': 'forgot.host.',
+         '123.210.23.0-0': {'forward': '1', 'fqdn': 'forgot.host.',
                              'reverse': '1', 'default_forward': '1',
                              'default_reverse': '1'},
-         '128.210.189.2-0': {'reverse': '1', 'default_reverse': '1',
-                             'fqdn': 'pdntest189s.tcom.purdue.edu',
-                             'host': 'pdntest189', 'default_forward': '1',
-                             'default_fqdn': 'pdntest189.tcom.purdue.edu',
-                             'forward': '1', 'default_host': 'pdntest189'},
+         '123.210.23.2-0': {'reverse': '1', 'default_reverse': '1',
+                             'fqdn': 'test_server189s.dept.university.edu',
+                             'host': 'test_server189', 'default_forward': '1',
+                             'default_fqdn': 'test_server189.dept.university.edu',
+                             'forward': '1', 'default_host': 'test_server189'},
          'block': {'forward': '0', 'reverse': '0', 'default_forward': '0',
                    'default_reverse': '0'},
          'name': {'forward': '0', 'reverse': '0', 'default_forward': '0',
