@@ -233,8 +233,12 @@ def main(args):
            '\n'
            'To update a cidr block at once:\n'
            '\t%s update -r <cidr-block> [-f <file-name>] [-v <view-name]\n'
+           '\t[-z <zone-name>] [--commit|--no-commit]\n'
+           '\n'
+           'To dump and update a cidr block:\n'
+           '\t%s edit -r <cidr_block> [-f <file-name>] [-v <view-name>]\n'
            '\t[-z <zone-name>] [--commit|--no-commit]\n' % tuple(
-             [sys.argv[0] for x in range(2)]))
+             [sys.argv[0] for x in range(3)]))
   args_instance = Args(command,
       ['update', 'dump', 'edit'], args, usage)
   options = args_instance.options
