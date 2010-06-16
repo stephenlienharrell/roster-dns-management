@@ -269,9 +269,8 @@ class TestDnsMkZone(unittest.TestCase):
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read().split(')')[1],
-                     ' Invalid data type Hostname '
-                     'for zone_origin: foo.com\n')
+    self.assertEqual(output.read(),
+                     'CLIENT ERROR: Zone origin must terminate with "."\n')
     output.close()
 
 if( __name__ == '__main__' ):

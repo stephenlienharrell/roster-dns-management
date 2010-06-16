@@ -1624,10 +1624,13 @@ class Core(object):
     search_any_dict = self.db_instance.GetEmptyRowDict('zone_view_assignments')
     search_any_dict['zone_view_assignments_view_dependency'] = u'any'
     search_any_dict['zone_view_assignments_zone_name'] = zone_name
+    zone_type_dict = {'zone_type': zone_type}
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
+        if( not self.db_instance.ListRow('zone_types', zone_type_dict) ):
+          raise errors.CoreError('Invalid zone type.')
         if( not self.db_instance.ListRow('zones', zone_dict) ):
           self.db_instance.MakeRow('zones', zone_dict)
         self.db_instance.MakeRow('zone_view_assignments',

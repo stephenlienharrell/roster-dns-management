@@ -64,12 +64,13 @@ def main(args):
   usage = ('\n'
            '\n'
            'To make forward zones:\n'
-           '\t%s forward -z <zone-name> -v <view-name> --origin <origin> '
-           '\t-t <type> --cidr-block <cidr-block> [-o <options>]\n'
+           '\t%s forward -z <zone-name> -v <view-name> --origin <origin>\n'
+           '\t-t <type> [-o <options>]\n'
            '\n'
            'To make reverse zones:\n'
-           '\t%s reverse -z <zone-name> -v <view-name> --origin <origin>'
-           '\t-t <type> --cidr-block <cidr-block> [-o <options>]\n' % (
+           '\t%s reverse -z <zone-name> -v <view-name> -t <type>\n'
+           '\t(--origin <origin> | --cidr-block <cidr-block>)\n'
+           '\t[-o <options>]\n' % (
                tuple([sys.argv[0] for x in range(2)])))
   args_instance = Args(command, ['forward', 'reverse'], args, usage)
   options = args_instance.options
@@ -80,12 +81,13 @@ def main(args):
     print 'ERROR: %s' % e
     sys.exit(1)
 
-  views = roster_client_lib.RunFunction(u'ListViews', options.username,
-                                        credfile=options.credfile,
-                                        credstring=options.credstring,
-                                        kwargs={u'view_name': options.view_name},
-                                        server_name=options.server)[
-                                            'core_return']
+  if( options.origin and not options.origin.endswith('.') ):
+    cli_common_lib.DnsError('Zone origin must terminate with "."', 1)
+
+  views = roster_client_lib.RunFunction(
+      u'ListViews', options.username, credfile=options.credfile,
+      credstring=options.credstring, kwargs={u'view_name': options.view_name},
+      server_name=options.server)['core_return']
   if( options.view_name not in views and options.view_name ):
     cli_common_lib.DnsError('The view specified does not exist.', 1)
 
@@ -94,8 +96,8 @@ def main(args):
         u'ListReverseRangeZoneAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        kwargs={'zone_name': options.zone_name, 'cidr_block': options.cidr_block})[
-            'core_return']
+        kwargs={'zone_name': options.zone_name,
+                'cidr_block': options.cidr_block})['core_return']
     if( options.cidr_block ):
       options.origin = roster_client_lib.RunFunction(
           u'ReverseIP', options.username, credfile=options.credfile,

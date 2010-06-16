@@ -393,6 +393,8 @@ class TestCore(unittest.TestCase):
                   'zone_origin': u'test_zone.'},
          u'test_view': {'zone_type': u'slave', 'zone_options': u'',
                         'zone_origin': u'test_zone.'}}})
+    self.assertRaises(roster_core.errors.CoreError, self.core_instance.MakeZone,
+                      u'test_zone', u'wrongtype', u'test_zone.')
 
   def testReverseRangeZoneAssignmentMakeRemoveListUpdateRemove(self):
     self.core_instance.MakeZone(u'10.in-addr.arpa', u'master',
