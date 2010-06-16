@@ -92,7 +92,7 @@ def main(args):
       server_name=options.server, kwargs={
           u'view_name': options.view_name})['core_return']
 
-  if( options.view_name and not views ):
+  if( options.view_name and not views and options.view_name != 'any' ):
     cli_common_lib.DnsError('View not found.', 1)
 
   zones = roster_client_lib.RunFunction(
