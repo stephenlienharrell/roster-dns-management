@@ -192,12 +192,12 @@ class Zone(core_flags.CoreFlags):
     make = self.action == 'Make'
     # All flags
     if( make ):
-      default_zone = u'any'
+      default_view = u'any'
     else:
-      default_zone = None
+      default_view = None
     self.parser.add_option('-v', '--view-name', action='store',
                            dest='view_name',
-                           help='String of view name.', default=None)
+                           help='String of view name.', default=default_view)
     self.AddFlagRule('view_name', command='forward', required=make)
     self.AddFlagRule('view_name', command='reverse', required=make)
     self.parser.add_option('-z', '--zone-name', action='store',

@@ -162,7 +162,7 @@ class Testdnsrmzone(unittest.TestCase):
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'REMOVED ZONE: zone_name: test_zone view_name: any\n')
+        'REMOVED ZONE: zone_name: test_zone view_name: None\n')
     output.close()
     self.assertEqual(self.core_instance.ListZones(), {})
 
