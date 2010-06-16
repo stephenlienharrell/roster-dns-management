@@ -74,11 +74,12 @@ def main(args):
            '\t%s assignment -n <user-name> -g <group>\n'
            '\n'
            'To list a forward zone permission:\n'
-           '\t%s forward -z <zone-name> -g <group> -f --access-right <access-right>\n'
+           '\t%s forward -z <zone-name> -g <group>\n'
+           '\t--access-right <access-right>\n'
            '\n'
            'To list a reverse range permission:\n'
-           '\t%s reverse -z <zone-name> -b <cidr-block> -g <group> -r '
-               '--access-right <access-right>\n' % tuple(
+           '\t%s reverse -z <zone-name> -b <cidr-block> -g <group>\n'
+           '\t--access-right <access-right>\n' % tuple(
                    [sys.argv[0] for x in range(5)]))
   args_instance = Args(command,
       ['user', 'group', 'assignment', 'forward', 'reverse'], args, usage)
