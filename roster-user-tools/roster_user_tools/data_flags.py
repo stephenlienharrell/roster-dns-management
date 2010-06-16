@@ -290,7 +290,7 @@ class Host(core_flags.CoreFlags):
                              metavar='<ip-address>')
       self.AddFlagRule('ip_address', required=not_list)
       self.parser.add_option('-t', '--target', action='store', dest='target',
-                             help='String of machine host name.',
+                             help='String of machine host name. (Not FQDN)',
                              metavar='<target>', default=None)
       self.AddFlagRule('target', required=not_list)
       self.parser.add_option('--ttl', action='store', dest='ttl',
