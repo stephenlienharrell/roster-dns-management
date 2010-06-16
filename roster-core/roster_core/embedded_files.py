@@ -237,7 +237,7 @@ CREATE TABLE `credentials` (
 
   PRIMARY KEY (`credential_id`),
   CONSTRAINT `user_name_4` FOREIGN KEY (`credential_user_name`)
-    REFERENCES `users` (`user_name`) ON UPDATE CASCADE
+    REFERENCES `users` (`user_name`) ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
