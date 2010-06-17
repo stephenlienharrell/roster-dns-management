@@ -64,7 +64,7 @@ def main(args):
   usage = ('\n'
            '\n'
            'To list views:\n'
-           '\t%s view [-v <view-name>] [-o <options>]\n'
+           '\t%s view [-v <view-name>]\n'
            '\n'
            'To list dns server set view assignments:\n'
            '\t%s dns_server_set [-v <view-name>] [-e <dns-server-set>]\n'
@@ -110,7 +110,7 @@ def main(args):
         server_name=options.server)['core_return']
 
     if( not options.no_header ):
-      print_list = [['view_name', 'acl_name']]
+      print_list = [['dns_server_set', 'view_name']]
 
     for assignment in dns_server_set_view_assignments:
       print_list.append(

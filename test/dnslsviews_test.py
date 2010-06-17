@@ -187,9 +187,9 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-                     'view_name acl_name\n'
-                     '------------------\n'
-                     'set1      test_view\n\n')
+                     'dns_server_set view_name\n'
+                     '------------------------\n'
+                     'set1           test_view\n\n')
     command.close()
 
   def testErrors(self):

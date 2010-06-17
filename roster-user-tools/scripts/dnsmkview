@@ -64,17 +64,17 @@ def main(args):
   usage = ('\n'
            '\n'
            'To make views:\n'
-           '\t%s view [-v <view-name>] [-o <options>]\n'
+           '\t%s view -v <view-name> [-o <options>]\n'
            '\n'
            'To make dns server set view assignments:\n'
-           '\t%s dns_server_set [-v <view-name>] [-e <dns-server-set>]\n'
+           '\t%s dns_server_set -v <view-name> -e <dns-server-set>\n'
            '\n'
            'To make acl view assignments:\n'
-           '\t%s acl [-v <view-name>] [-a <acl-name>]\n'
+           '\t%s acl -v <view-name> -a <acl-name>\n'
            '\n'
            'To make view assignments:\n'
-           '\t%s view_subset [-v <view-superset-name>]\n'
-           '\t[-V <view-subset-name>]\n' % tuple(
+           '\t%s view_subset -v <view-superset-name>\n'
+           '\t-V <view-subset-name>\n' % tuple(
                [sys.argv[0] for x in range(4)]))
 
   args_instance = Args(command,
