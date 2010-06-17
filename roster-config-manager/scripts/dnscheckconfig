@@ -54,10 +54,12 @@ def ChangeNamedDirectory(file_name, directory):
     if( line.strip().startswith('directory') ):
       if( len(line.split('"')) == 3 ):
         linearray = line.split('"')
+        old_directory = linearray[1]
         linearray[1] = directory
         file_contents[i] = '"'.join(linearray)
         file = open(file_name, 'w')
-        file.writelines(''.join(file_contents))
+        file.writelines(''.join(file_contents).replace(old_directory,
+                                                       directory))
         file.close()
         break
   else:
@@ -120,7 +122,6 @@ def main(args):
 
   temp_root_directory = server_config_file.get('exporter',
                                                'root_config_dir').rstrip('/')
-  temp_root_directory = 'bind_configs'
   if( not os.path.exists(temp_root_directory) ):
     os.makedirs(temp_root_directory)
 

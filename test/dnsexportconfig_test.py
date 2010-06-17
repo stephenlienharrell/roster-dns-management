@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Regression test for roster_user_tools_bootstrap
+"""Regression test for dnsexportconfig
 
 Make sure you are running this against a database that can be destroyed.
 
@@ -45,6 +45,7 @@ import sys
 import shutil
 import unittest
 import tarfile
+import StringIO
 
 import roster_core
 from roster_config_manager import tree_exporter
@@ -62,10 +63,37 @@ SSH_USER = 'root'
 
 
 class TestCheckConfig(unittest.TestCase):
+  def TarReplaceString(self, tar_file_name, member, string1, string2):
+    tar_contents = {}
+    exported_file = tarfile.open(tar_file_name, 'r')
+    for current_member in exported_file.getmembers():
+      tar_contents[current_member.name] = exported_file.extractfile(
+          current_member.name).read()
+    tarred_file_handle = exported_file.extractfile(member)
+    tarred_file = tarred_file_handle.read()
+    tarred_file_handle.close()
+    exported_file.close()
+
+    tarred_file = tarred_file.replace(string1, string2)
+
+    exported_file = tarfile.open(tar_file_name, 'w')
+    for current_member in tar_contents:
+      info = tarfile.TarInfo(name=current_member)
+      if( current_member == member ):
+        info.size = len(tarred_file)
+        exported_file.addfile(info, StringIO.StringIO(tarred_file))
+      else:
+        info.size = len(tar_contents[current_member])
+        exported_file.addfile(info, StringIO.StringIO(
+            tar_contents[current_member]))
+    exported_file.close()
+
   def setUp(self):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
-    self.bind_config_dir = os.path.expanduser(
-        self.config_instance.config_file['exporter']['root_config_dir'])
+    self.root_config_dir = self.config_instance.config_file[
+        'exporter']['root_config_dir'].rstrip('/').lstrip('./')
+    self.backup_dir = self.config_instance.config_file[
+        'exporter']['backup_dir'].rstrip('/').lstrip('./')
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
@@ -86,11 +114,10 @@ class TestCheckConfig(unittest.TestCase):
   def tearDown(self):
     if( os.path.exists(KEY_FILE) ):
       os.remove(KEY_FILE)
-    if( os.path.exists('backup') ):
-      shutil.rmtree('backup')
-    for fname in os.listdir('.'):
-      if( fname.startswith('bind_configs') ):
-        shutil.rmtree(fname)
+    if( os.path.exists(self.backup_dir) ):
+      shutil.rmtree(self.backup_dir)
+    if( os.path.exists(self.root_config_dir) ):
+      shutil.rmtree(self.root_config_dir)
 
   def testCheckConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
@@ -118,56 +145,5 @@ class TestCheckConfig(unittest.TestCase):
                                   'server reload successful', '', ''])
     output.close()
     
-  def testCheckErrorConfig(self):
-    f = open('test_data/test_zone.db', 'r')
-    fcontents = f.read()
-    f.close()
-    
-    fcontents = fcontents.replace('mail1.sub.university.edu.',
-                                  'mail1.university.edu.')
-    fcontents = fcontents.replace('mail1     in  a     192.168.1.101\n', '')
-
-    f = open('test_data/test_zone2.db', 'w')
-    f.writelines(fcontents)
-    f.close()
-
-    self.assertEqual(self.core_instance.ListRecords(), []) 
-    output = os.popen('python %s -f test_data/test_zone2.db '
-                      '--zone-view test_view -u %s --config-file %s' % ( 
-                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
-                     'Loading in test_data/test_zone2.db\n'
-                     '15 records loaded from zone test_data/test_zone2.db\n'
-                     '15 total records added\n')
-    output.close()
-
-    self.core_instance.MakeDnsServer(TEST_DNS_SERVER)
-    self.core_instance.MakeDnsServerSet(u'set1')
-    self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
-    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
-
-    self.tree_exporter_instance.ExportAllBindTrees()
-    tar = tarfile.open(self.tree_exporter_instance.tar_file_name)
-    tar.extractall()
-    tar.close()
-
-    output = os.popen3('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
-        KEY_FILE, EXEC))[2]
-    self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
-    output.close()
-
-    output = os.popen('python %s -f -u %s --config-file %s --ssh-id %s' % (
-        EXEC, SSH_USER, CONFIG_FILE, SSH_ID))
-    self.assertEqual(output.read(),
-        "ERROR: zone sub.university.edu/IN: sub.university.edu/MX "
-        "'mail1.university.edu' (out of zone) has no addresses records "
-        "(A or AAAA)\n"
-        "zone sub.university.edu/IN: loaded serial 809\n"
-        "OK\n\n")
-    output.close()
-
-    os.remove('test_data/test_zone2.db')
-
 if( __name__ == '__main__' ):
       unittest.main()

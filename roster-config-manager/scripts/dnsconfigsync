@@ -209,7 +209,6 @@ def main(args):
             rsync_dir,
             rsync_url_string,
             options.destination_directory)
-        print rsync_string
         handle = os.popen(rsync_string)
         rsync_text = handle.read()
         handle.close()

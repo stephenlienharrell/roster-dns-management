@@ -89,6 +89,10 @@ class TestCheckConfig(unittest.TestCase):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
     self.root_config_dir = self.config_instance.config_file[
         'exporter']['root_config_dir'].lstrip('./').rstrip('/')
+    self.backup_dir = self.config_instance.config_file[
+        'exporter']['backup_dir'].lstrip('./').rstrip('/')
+    self.named_dir = self.config_instance.config_file[
+        'exporter']['named_dir'].lstrip('./').rstrip('/')
     self.bind_config_dir = os.path.expanduser(self.root_config_dir)
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
@@ -110,11 +114,10 @@ class TestCheckConfig(unittest.TestCase):
   def tearDown(self):
     if( os.path.exists(KEY_FILE) ):
       os.remove(KEY_FILE)
-    if( os.path.exists('backup') ):
-      shutil.rmtree('backup')
-    for fname in os.listdir('.'):
-      if( fname.startswith('bind_configs_') ):
-        shutil.rmtree(fname)
+    if( os.path.exists(self.backup_dir) ):
+      shutil.rmtree(self.backup_dir)
+    if( os.path.exists(self.root_config_dir) ):
+      shutil.rmtree(self.root_config_dir)
 
   def testCheckConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
@@ -169,7 +172,7 @@ class TestCheckConfig(unittest.TestCase):
         '%s/set1_servers/named/test_view/sub.university.edu.db' % (
             self.root_config_dir),
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aa 192.168.1.104')
-    output = os.popen('python %s --config-file %s' % (
+    output = os.popen('python %s --config-file %s --' % (
         EXEC, CONFIG_FILE))
     self.assertEqual(output.read(),
         "ERROR: temp_dir/set1_servers/named/test_view/sub.university.edu.db"
@@ -221,7 +224,7 @@ class TestCheckConfig(unittest.TestCase):
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
         '%s/set1_servers/named.conf' % self.root_config_dir,
-        'file "test_data/named/named/test_view/sub.university.edu.db";',
+        'file "%s/named/test_view/sub.university.edu.db";' % self.named_dir,
         'wrong;')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -234,7 +237,7 @@ class TestCheckConfig(unittest.TestCase):
         self.tree_exporter_instance.tar_file_name,
         '%s/set1_servers/named.conf' % self.root_config_dir,
         'wrong;',
-        'file "test_data/named/named/test_view/sub.university.edu.db";')
+        'file "%s/named/test_view/sub.university.edu.db";' % self.named_dir)
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
         '%s/set1_servers/named.conf' % self.root_config_dir,
