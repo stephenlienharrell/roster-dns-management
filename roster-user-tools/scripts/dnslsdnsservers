@@ -63,13 +63,13 @@ def main(args):
   usage = ('\n'
            '\n'
            'To list a dns server:\n'
-           '\t%s dns_server -d <dns-server>\n'
+           '\t%s dns_server [-d <dns-server>]\n'
            '\n'
            'To list a dns server set:\n'
-           '\t%s dns_server_set -e <dns-server-set>\n'
+           '\t%s dns_server_set [-e <dns-server-set>]\n'
            '\n'
            'To list a dns server set assignment:\n'
-           '\t%s assignment -d <dns-server> -e <dns-server-set>\n' % tuple(
+           '\t%s assignment [-d <dns-server>] [-e <dns-server-set>]\n' % tuple(
                [sys.argv[0] for x in range(3)]))
   args_instance = Args(command, ['dns_server', 'dns_server_set', 'assignment'],
                        args, usage)
