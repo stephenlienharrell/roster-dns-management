@@ -278,9 +278,7 @@ def EditFile(fname):
   """
   if( 'EDITOR' not in os.environ ):
       DnsError('EDITOR environment variable not set.', 1)
-  edit_process = os.popen('%s %s' % (os.environ['EDITOR'], fname))
-  output = edit_process.read()
-  closenum = edit_process.close()
+  closenum = os.system('%s %s' % (os.environ['EDITOR'], fname))
 
   if( closenum is None ):
     return_code = 0

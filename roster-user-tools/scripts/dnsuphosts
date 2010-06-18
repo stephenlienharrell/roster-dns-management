@@ -232,7 +232,7 @@ def main(args):
            '\t[-z <zone-name>]\n'
            '\n'
            'To update a cidr block at once:\n'
-           '\t%s update -r <cidr-block> [-f <file-name>] [-v <view-name]\n'
+           '\t%s update [-f <file-name>] [-v <view-name]\n'
            '\t[-z <zone-name>] [--commit|--no-commit]\n'
            '\n'
            'To dump and update a cidr block:\n'

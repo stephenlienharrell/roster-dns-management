@@ -398,7 +398,6 @@ class Hosts(core_flags.CoreFlags):
                            default=None)
     self.AddFlagRule('range', required=True, command='dump')
     self.AddFlagRule('range', required=True, command='edit')
-    self.AddFlagRule('range', required=False, command='update')
     self.parser.add_option('--ttl', action='store', dest='ttl',
                            help='Time to live.', metavar='<ttl>', default=3600)
     self.AddFlagRule('ttl', required=False, command='update')
