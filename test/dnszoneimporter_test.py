@@ -120,7 +120,7 @@ class TestDnsZoneImport(unittest.TestCase):
   def testImportForwardZone(self):
     self.core_instance.MakeView(u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), [])
-    output = os.popen('python %s -f test_data/test_zone.db -z test_view '
+    output = os.popen('python %s -f test_data/test_zone.db -v test_view '
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
@@ -199,7 +199,7 @@ class TestDnsZoneImport(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                      '-z test_view -u %s --config-file %s' % (
+                      '-v test_view -u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(
         output.read(),
@@ -234,7 +234,7 @@ class TestDnsZoneImport(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_reverse_zone.db '
-                      '-z test_view -u %s --config-file %s' % (
+                      '-v test_view -u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(
         output.read(),
