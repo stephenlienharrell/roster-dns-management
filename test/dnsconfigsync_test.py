@@ -96,7 +96,7 @@ class TestCheckConfig(unittest.TestCase):
   def testNull(self):
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_zone.db '
-                      '--zone-view test_view -u %s --config-file %s' % ( 
+                      '--view test_view -u %s --config-file %s' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'

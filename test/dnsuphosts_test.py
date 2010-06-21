@@ -528,7 +528,7 @@ class TestDnsMkHost(unittest.TestCase):
     handle.writelines(file_contents)
     handle.close()
     output = os.popen('python %s update -f %s -v test_view -s %s -u %s '
-                      '--commit -p %s --config-file %s -r 192.168.1.4/30' % (
+                      '--commit -p %s --config-file %s' % (
                           EXEC, INVALID_HOSTS,
                           self.server_name, USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
@@ -554,7 +554,7 @@ class TestDnsMkHost(unittest.TestCase):
     handle.writelines(file_contents)
     handle.close()
     output = os.popen('python %s update -f %s -v test_view -s %s -u %s -p '
-                      '%s --config-file %s -r 192.168.1.4/30 '
+                      '%s --config-file %s '
                       '--commit' % (
                           EXEC, INVALID_HOSTS, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
