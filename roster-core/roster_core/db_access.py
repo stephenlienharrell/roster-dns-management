@@ -531,19 +531,20 @@ class dbAccess(object):
     query_where = []
     if( len(tables) > 1 ):
       if( not self.foreign_keys ):
-        self.cursor.execute('select table_name, column_name, '
+        self.cursor.execute('SELECT table_name, column_name, '
                             'referenced_table_name, referenced_column_name '
-                            'from information_schema.key_column_usage where '
-                            'referenced_table_name is not null')
+                            'FROM information_schema.key_column_usage WHERE '
+                            'referenced_table_name IS NOT NULL AND '
+                            'referenced_table_schema="%s"' % self.db_name)
         self.foreign_keys = self.cursor.fetchall()
 
       for key in self.foreign_keys:
         if( key['table_name'] in table_names and
             key['referenced_table_name'] in table_names ):
+          
           query_where.append('(%(table_name)s.%(column_name)s='
                              '%(referenced_table_name)s.'
                              '%(referenced_column_name)s)' % key)
-
       if( not query_where ):
         raise InvalidInputError('Multiple tables were passed in but no joins '
                                 'were found')
