@@ -55,7 +55,11 @@ from roster_user_tools  import roster_client_lib
 import roster_server
 
 USER_CONFIG = 'test_data/roster_user_tools.conf'
-CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
+if( len(sys.argv) > 1 ):
+  CONFIG_FILE = sys.argv[1]
+  del sys.argv[1]
+else:
+  CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TEST_FILE = 'test_data/test_named'
@@ -158,7 +162,7 @@ class TestDnsMkHost(unittest.TestCase):
     output.close()
     timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%d %H:%M:%S')
     # Print the file list of set1 from the database
-    output = os.popen('python %s list -d set1 -t "%s" '
+    output = os.popen('python %s list -d set1 -t "%s" --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
@@ -232,9 +236,15 @@ class TestDnsMkHost(unittest.TestCase):
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(), '1 %s set1\n2 %s set1\n3 %s set1\n'
-                                    '4 %s set1\n\n' % (
-        timestamp_string, timestamp_string, timestamp_string, timestamp_string))
+    self.assertEqual(output.read(),
+        'option_id timestamp           dns_server_set\n'
+        '--------------------------------------------\n'
+        '1         %s set1\n'
+        '2         %s set1\n'
+        '3         %s set1\n'
+        '4         %s set1\n\n' % (
+            timestamp_string, timestamp_string, timestamp_string,
+            timestamp_string))
     # Write latest configuration to a file
     config_dict = self.core_instance.db_instance.GetEmptyRowDict(
         'named_conf_global_options')
@@ -283,7 +293,7 @@ class TestDnsMkHost(unittest.TestCase):
     output.close()
     timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%d %H:%M:%S')
     # Print the file list of set1 from the database
-    output = os.popen('python %s list -d set1 -t "%s" '
+    output = os.popen('python %s list -d set1 -t "%s" --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, timestamp_string, self.server_name,
                            USERNAME, PASSWORD, USER_CONFIG))
@@ -318,12 +328,6 @@ class TestDnsMkHost(unittest.TestCase):
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: Timestamp incorrectly formatted.\n')
-    output.close()
-    output = os.popen('python %s dump -s %s -u %s -p %s --config-file %s' % (
-        EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'CLIENT ERROR: Either an option id or dns server set and '
-        'timestamp are needed.\n')
     output.close()
     output = os.popen('python %s dump -d set2 -s %s -u %s -p %s '
                       '--config-file %s' % (

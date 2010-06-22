@@ -93,7 +93,7 @@ def main(args):
            '\tNote: If option-id is not specified, will use latest '
            'configuration.\n'
            'To update to an existing file:\n'
-           '\t%s update -f <file-name> -d <dns-server-set>\n'
+           '\t%s update -d <dns-server-set> [-f <file-name>]\n'
            '\n'
            'To revert a change:\n'
            '\t%s revert -d <dns-server-set> -i <option-id>\n' % tuple(
@@ -131,20 +131,20 @@ def main(args):
                                                options.dns_server_set,
                                            'timestamp': timestamp},
         server_name=options.server)['core_return']
-    print_list = []
+    if( options.no_header ):
+      print_list = []
+    else:
+      print_list = [['option_id', 'timestamp', 'dns_server_set']]
     for option in named_options:
       print_list.append([option['id'],
         datetime.datetime.strptime(option['timestamp'].value,
                                    "%Y%m%dT%H:%M:%S").strftime(
                                        '%Y-%m-%d %H:%M:%S'),
         option['dns_server_set_name']])
-    print cli_common_lib_instance.PrintColumns(print_list)
+    print cli_common_lib_instance.PrintColumns(
+        print_list, first_line_header=not options.no_header)
 
   elif( command in ['dump', 'edit'] ):
-    if( not options.option_id and not options.dns_server_set
-        and not options.timestamp):
-      cli_common_lib.DnsError('Either an option id or dns server set and '
-                              'timestamp are needed.', 1)
     if( options.option_id ):
       named_options = roster_client_lib.RunFunction(
           u'ListNamedConfGlobalOptionsClient', options.username,

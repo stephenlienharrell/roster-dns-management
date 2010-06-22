@@ -411,7 +411,10 @@ class Hosts(core_flags.CoreFlags):
                            default='any')
     self.SetAllFlagRule('view_name', required=False)
 
-    self.SetAllFlagRule('file', required=False) # In action_flags.py
+    self.parser.add_option('-f', '--file', action='store', dest='file',
+                           help='File name of hosts file to write to database.',
+                           metavar='<file-name>', default='hosts_out')
+    self.SetAllFlagRule('file', required=False)
 
 
 class NamedGlobals(core_flags.CoreFlags):
@@ -443,10 +446,18 @@ class NamedGlobals(core_flags.CoreFlags):
                            help='Suppress program output.', default=False)
     self.SetAllFlagRule('quiet', required=False)
 
-    # In action_flags.py
+    self.parser.add_option('-f', '--file', action='store', dest='file',
+                           help='File name of named header dump.',
+                           metavar='<file-name>', default='named_header')
     self.AddFlagRule('file', required=False, command='dump')
     self.AddFlagRule('file', required=False, command='update')
     self.AddFlagRule('file', required=False, command='edit')
+
+    self.parser.add_option(
+        '--no-header', action='store_true', dest='no_header',
+        help='Do not display a header.', default=False)
+    self.AddFlagRule('no_header', required=False)
+
 
 
 class Credential(core_flags.CoreFlags):
