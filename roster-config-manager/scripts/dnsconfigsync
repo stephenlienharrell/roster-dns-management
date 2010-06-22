@@ -109,6 +109,8 @@ def main(args):
       'exporter', 'backup_dir').rstrip('/')
   temp_root_directory = server_config_file.get(
       'exporter', 'root_config_dir').rstrip('/')
+  if( not os.path.exists(temp_root_directory) ):
+    os.makedirs(temp_root_directory)
   if( not options.destination_directory ):
     options.destination_directory = server_config_file.get(
         'exporter', 'named_dir')
@@ -227,9 +229,15 @@ def main(args):
 
         if( ssh_text != ''):
           print ssh_text
+      else:
+        print "WARNING: No dns servers found."
+    else:
+      print "WARNING: No dns server set directories found."
   finally:
     if( os.path.exists(root_directory) ):
       shutil.rmtree(root_directory)
+    if( os.path.exists(temp_root_directory) ):
+      shutil.rmtree(temp_root_directory)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
