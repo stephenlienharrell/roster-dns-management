@@ -340,6 +340,9 @@ class BindTreeExport(object):
     finally:
       full_dump_file.close()
 
+    if( os.path.exists(self.root_config_dir) ):
+      shutil.rmtree(self.root_config_dir)
+
   def CookRawDump(self, raw_dump):
     """This takes raw data from the database and turns it into a 
     mysqldump-like output.
