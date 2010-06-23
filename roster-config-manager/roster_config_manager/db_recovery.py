@@ -132,4 +132,4 @@ class Recover(object):
     self.PushBackup(audit_id)
 
     for current_id in range(audit_id + 1, audit_log_id):
-      RunAuditStep(current_id)
+      self.RunAuditStep(current_id)

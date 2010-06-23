@@ -229,10 +229,6 @@ def main(args):
 
         if( ssh_text != ''):
           print ssh_text
-      else:
-        print "WARNING: No dns servers found."
-    else:
-      print "WARNING: No dns server set directories found."
   finally:
     if( os.path.exists(root_directory) ):
       shutil.rmtree(root_directory)

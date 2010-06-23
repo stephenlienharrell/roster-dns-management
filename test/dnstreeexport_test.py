@@ -70,6 +70,7 @@ class TestDnsMkHost(unittest.TestCase):
         'named_dir'].rstrip('/')
 
     db_instance = self.config_instance.GetDb()
+    self.db_instance = db_instance
 
     schema = roster_core.embedded_files.SCHEMA_FILE
     db_instance.StartTransaction()
@@ -1466,6 +1467,77 @@ class TestDnsMkHost(unittest.TestCase):
     output = os.popen('python %s -c %s --force' % (
         EXEC, CONFIG_FILE))
     self.assertEquals(output.read(), '')
+    output.close()
+
+  for fname in os.listdir('.'):
+    if( fname.endswith('.bz2') ):
+      os.remove(fname)
+
+  def testErrors(self):
+    zones_dict = {}
+
+    try:
+      self.db_instance.StartTransaction()
+      zones_dict['zone_name'] = u'university.edu'
+      self.db_instance.RemoveRow('zones', zones_dict)
+
+      zones_dict['zone_name'] = u'int.university.edu'
+      self.db_instance.RemoveRow('zones', zones_dict)
+
+      zones_dict['zone_name'] = u'priv.university.edu'
+      self.db_instance.RemoveRow('zones', zones_dict)
+
+      zones_dict['zone_name'] = u'168.192.in-addr'
+      self.db_instance.RemoveRow('zones', zones_dict)
+
+      zones_dict['zone_name'] = u'4.3.2.1.in-addr'
+      self.db_instance.RemoveRow('zones', zones_dict)
+    finally:
+      self.db_instance.EndTransaction()
+
+    output = os.popen('python %s -c %s' % (
+        EXEC, CONFIG_FILE))
+    self.assertEquals(output.read(), 'ERROR: Missing zones or views.\n')
+    output.close()
+
+    views_dict = {}
+    try:
+      self.db_instance.StartTransaction()
+      views_dict['view_options'] = u'recursion no;'
+
+      views_dict['view_name'] = u'internal'
+      self.db_instance.RemoveRow('views', views_dict)
+
+      views_dict['view_name'] = u'external'
+      self.db_instance.RemoveRow('views', views_dict)
+
+      views_dict['view_name'] = u'private'
+      self.db_instance.RemoveRow('views', views_dict)
+    finally:
+      self.db_instance.EndTransaction()
+
+    output = os.popen('python %s -c %s' % (
+        EXEC, CONFIG_FILE))
+    self.assertEquals(output.read(), 'ERROR: Missing zones or views.\n')
+    output.close()
+
+    dns_server_sets_dict = {}
+    try:
+      self.db_instance.StartTransaction()
+      dns_server_sets_dict['dns_server_set_name'] = u'internal_dns'
+      self.db_instance.RemoveRow('dns_server_sets', dns_server_sets_dict)
+
+      dns_server_sets_dict['dns_server_set_name'] = u'external_dns'
+      self.db_instance.RemoveRow('dns_server_sets', dns_server_sets_dict)
+
+      dns_server_sets_dict['dns_server_set_name'] = u'private_dns'
+      self.db_instance.RemoveRow('dns_server_sets', dns_server_sets_dict)
+    finally:
+      self.db_instance.EndTransaction()
+
+    output = os.popen('python %s -c %s' % (
+        EXEC, CONFIG_FILE))
+    self.assertEquals(output.read(), 'ERROR: No dns server sets found.\n')
     output.close()
 
   for fname in os.listdir('.'):

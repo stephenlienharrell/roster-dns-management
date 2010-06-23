@@ -122,31 +122,37 @@ class TestDnsRecover(unittest.TestCase):
     self.core_instance.MakeZone(u'university.edu', u'master',
                                 u'university.edu.', view_name=u'test_view')
     self.core_instance.MakeRecord(
-        u'soa', u'soa1', u'university.edu',
+        u'soa', u'@', u'university.edu',
         {u'name_server': u'ns1.university.edu.',
          u'admin_email': u'admin.university.edu.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.assertEqual(self.core_instance.ListRecords(),
-        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
+    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
+
     self.tree_exporter_instance.ExportAllBindTrees()
     self.core_instance.MakeView(u'test_view2')
     self.core_instance.MakeView(u'bad_view')
 
-    output = os.popen('python %s -i 5 '
+    output = os.popen('python %s -i 10 '
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
-        'Loading database from backup with ID 4\n')
+        'Loading database from backup with ID 9\n')
     output.close()
     self.assertEqual(self.core_instance.ListRecords(),
-        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -156,7 +162,7 @@ class TestDnsRecover(unittest.TestCase):
 
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    output = os.popen('python %s -i 7 --single '
+    output = os.popen('python %s -i 12 --single '
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
@@ -174,7 +180,7 @@ class TestDnsRecover(unittest.TestCase):
                       '-u %s --config-file %s' % (
                           EXEC, log_id, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
-        'Not replaying action with id 8, action was unsuccessful.\n')
+        'Not replaying action with id 13, action was unsuccessful.\n')
     output.close()
 
   def testRunAuditStep(self):
@@ -202,6 +208,7 @@ class TestDnsRecover(unittest.TestCase):
         u"Replaying action with id 1: MakeView\n"
          "with arguments: [u'test_view', None]\n")
     output.close()
+    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
     output = os.popen('python %s -i 2 --single '
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))

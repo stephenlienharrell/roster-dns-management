@@ -266,7 +266,11 @@ class BindTreeExport(object):
 
       temp_tar_file_name = 'temp_file.tar.bz2'
       tar_file = tarfile.open(temp_tar_file_name, 'w:bz2')
+      found_view = False
+      if( len(cooked_data) == 0 ):
+        raise Error('No dns server sets found.')
       for dns_server_set in cooked_data:
+        found_zone = False
         dummy_config_file = StringIO.StringIO()
         config_parser = ConfigParser.SafeConfigParser()
         ## Make Files
@@ -292,6 +296,7 @@ class BindTreeExport(object):
           view_directory = '%s/%s' % (dns_server_set_directory, view)
           if( not os.path.exists(view_directory) ):
             os.makedirs(view_directory)
+          found_view = True
           for zone in cooked_data[dns_server_set]['views'][view]['zones']:
             if( view not in zone_view_assignments[zone] ):
               continue
@@ -303,14 +308,18 @@ class BindTreeExport(object):
                     'zone_origin'],
                 record_argument_definitions, zone, view)
             self.AddToTarFile(tar_file, zone_file, zone_file_string)
+            found_zone = True
         named_conf_file = '%s/named.conf' % named_directory.rstrip('/')
         named_conf_file_string = self.MakeNamedConf(data, cooked_data,
                                                     dns_server_set)
         self.AddToTarFile(tar_file, named_conf_file, named_conf_file_string)
+      if( not found_view or not found_zone ):
+        raise Error('Missing zones or views.')
 
       audit_log_replay_dump, full_database_dump = self.CookRawDump(raw_dump)
 
       success = True
+      tar_file.close()
     finally:
       log_id = self.log_instance.LogAction(u'tree_export_user',
                                            function_name,

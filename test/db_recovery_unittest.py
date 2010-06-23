@@ -125,19 +125,25 @@ class TestdbAccess(unittest.TestCase):
     self.core_instance.MakeZone(u'university.edu', u'master',
                                 u'university.edu.', view_name=u'test_view')
     self.core_instance.MakeRecord(
-        u'soa', u'soa1', u'university.edu',
+        u'soa', u'@', u'university.edu',
         {u'name_server': u'ns1.university.edu.',
          u'admin_email': u'admin.university.edu.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), 
-        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
+    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
+
     self.tree_exporter_instance.ExportAllBindTrees()
 
     self.core_instance.MakeRecord(
@@ -145,7 +151,7 @@ class TestdbAccess(unittest.TestCase):
         {u'priority': 20, u'mail_server': u'smtp.university.edu.'}, ttl=10)
 
     self.assertEqual(self.core_instance.ListRecords(),
-        [{u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -158,13 +164,13 @@ class TestdbAccess(unittest.TestCase):
 
     old_stdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.db_recovery_instance.PushBackup(4)
+    self.db_recovery_instance.PushBackup(9)
     self.assertEqual(sys.stdout.flush(),
-                     'Loading database from backup with ID 4\n')
+                     'Loading database from backup with ID 9\n')
     sys.stdout = old_stdout
 
     self.assertEqual(self.core_instance.ListRecords(),
-        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -215,30 +221,37 @@ class TestdbAccess(unittest.TestCase):
     self.core_instance.MakeZone(u'university.edu', u'master',
                                 u'university.edu.', view_name=u'test_view')
     self.core_instance.MakeRecord(
-        u'soa', u'soa1', u'university.edu',
+        u'soa', u'@', u'university.edu',
         {u'name_server': u'ns1.university.edu.',
          u'admin_email': u'admin.university.edu.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), 
-        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
+    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
+
     self.tree_exporter_instance.ExportAllBindTrees()
+
     self.core_instance.MakeView(u'test_view2')
     self.core_instance.MakeView(u'bad_view')
     old_stdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.db_recovery_instance.RunAuditRange(5)
+    self.db_recovery_instance.RunAuditRange(10)
     self.assertEqual(sys.stdout.flush(),
-        'Loading database from backup with ID 4\n')
+        'Loading database from backup with ID 9\n')
     sys.stdout = old_stdout
     self.assertEqual(self.core_instance.ListRecords(), 
-        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -248,7 +261,7 @@ class TestdbAccess(unittest.TestCase):
     self.tree_exporter_instance.ExportAllBindTrees()
     old_stdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.db_recovery_instance.RunAuditStep(7)
+    self.db_recovery_instance.RunAuditStep(12)
     self.assertEqual(sys.stdout.flush(),
         u'Not replaying action with id ExportAllBindTrees, '
         'action not allowed.\n')
@@ -264,7 +277,7 @@ class TestdbAccess(unittest.TestCase):
     sys.stdout = StdOutStream()
     self.db_recovery_instance.RunAuditStep(log_id)
     self.assertEqual(sys.stdout.flush(),
-        'Not replaying action with id 8, action was unsuccessful.\n')
+        'Not replaying action with id 13, action was unsuccessful.\n')
     sys.stdout = old_stdout
 
 if( __name__ == '__main__' ):
