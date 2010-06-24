@@ -102,7 +102,7 @@ def main(args):
 
     if( options.view_name in views ):
       cli_common_lib_instance.DnsError(
-          'View "%s" already exists.' % options.view_names, 1)
+          'View "%s" already exists.' % options.view_name, 1)
 
     roster_client_lib.RunFunction(
         u'MakeView', options.username, credfile=options.credfile,
