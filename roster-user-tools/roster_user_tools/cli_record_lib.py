@@ -91,11 +91,12 @@ class CliRecordLib:
           args=[options.target, options.view_name],
           raise_errors=raise_errors)['core_return'][0]
     elif( record_type == u'aaaa' ):
-      expanded_ip = roster_client_lib.RunFunction(
-          u'ExpandIPV6', options.username, credfile=options.credfile,
-          args=[record_args_dict['assignment_ip']], server_name=options.server,
-          raise_errors=raise_errors)['core_return']
-      record_args_dict['assignment_ip'] = expanded_ip
+      if( record_args_dict['assignment_ip'] is not None ):
+        expanded_ip = roster_client_lib.RunFunction(
+            u'ExpandIPV6', options.username, credfile=options.credfile,
+            args=[record_args_dict['assignment_ip']], server_name=options.server,
+            raise_errors=raise_errors)['core_return']
+        record_args_dict['assignment_ip'] = expanded_ip
     ## Check if view exists
     if( not views.has_key(options.view_name) and options.view_name != 'any' ):
       self.cli_common_lib_instance.DnsError('View does not exist!', 2)
@@ -204,17 +205,18 @@ class CliRecordLib:
         self.cli_common_lib_instance.DnsError('Must specify --%s-%s' % (
             record_type, item.replace('_', '-')), 1)
     if( record_type == u'ptr' ):
-      options.target = roster_client_lib.RunFunction(
+      options.target, options.zone_name = roster_client_lib.RunFunction(
           'GetPTRTarget', options.username, credfile=options.credfile,
           server_name=options.server,
           args=[options.target, options.view_name],
-          raise_errors=raise_errors)['core_return'][0]
-    elif( record_type == u'aaaa' ):
-      expanded_ip = roster_client_lib.RunFunction(
-          u'ExpandIPV6', options.username, credfile=options.credfile,
-          args=[record_args_dict['assignment_ip']], server_name=options.server,
           raise_errors=raise_errors)['core_return']
-      record_args_dict['assignment_ip'] = expanded_ip
+    elif( record_type == u'aaaa' ):
+      if( record_args_dict['assignment_ip'] is not None ):
+        expanded_ip = roster_client_lib.RunFunction(
+            u'ExpandIPV6', options.username, credfile=options.credfile,
+            args=[record_args_dict['assignment_ip']], server_name=options.server,
+            raise_errors=raise_errors)['core_return']
+        record_args_dict['assignment_ip'] = expanded_ip
 
     options.credfile = os.path.expanduser(options.credfile)
     views = roster_client_lib.RunFunction(
@@ -270,16 +272,17 @@ class CliRecordLib:
     """
     search_target = options.target
     if( record_type == u'ptr' ):
-        search_target = roster_client_lib.RunFunction(
+        search_target, options.zone_name = roster_client_lib.RunFunction(
             'GetPTRTarget', options.username, credfile=options.credfile,
             server_name=options.server,
-            args=[options.target, options.view_name])['core_return'][0]
+            args=[options.target, options.view_name])['core_return']
     elif( record_type == u'aaaa' ):
-      expanded_ip = roster_client_lib.RunFunction(
-          u'ExpandIPV6', options.username, credfile=options.credfile,
-          args=[record_args_dict['assignment_ip']],
-          server_name=options.server)['core_return']
-      record_args_dict['assignment_ip'] = expanded_ip
+      if( record_args_dict['assignment_ip'] is not None ):
+        expanded_ip = roster_client_lib.RunFunction(
+            u'ExpandIPV6', options.username, credfile=options.credfile,
+            args=[record_args_dict['assignment_ip']],
+            server_name=options.server)['core_return']
+        record_args_dict['assignment_ip'] = expanded_ip
     records = roster_client_lib.RunFunction(
         'ListRecords', options.username, credfile=options.credfile,
         server_name=options.server,

@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Make record tool for Roster"""
+"""List record tool for Roster"""
 
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
@@ -81,8 +81,8 @@ def main(args):
            '-t <hostname>\n'
            '\n'
            'To list an "hinfo" record (hardware info):\n'
-           '\t%s hinfo --hinfo-hardware <hardware-info> '
-           '--hinfo-os <operating-system> -z <zone-name> -t <hostname>\n'
+           '\t%s hinfo --hardware <hardware-info> '
+           '--os <operating-system> -z <zone-name> -t <hostname>\n'
            '\n'
            'To list a "txt" record (text):\n'
            '\t%s txt --quoted-text <text> -z <zone-name> -t <hostname>\n'

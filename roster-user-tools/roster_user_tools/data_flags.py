@@ -179,10 +179,13 @@ class Record(core_flags.CoreFlags):
                                 'refreshed.',
                            metavar='<ttl>', default=DEFAULT_TTL)
     self.SetAllFlagRule('ttl', required=False)
+    default_view = None
+    if( self.action == 'Make' ):
+      default_view = u'any'
     self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
                            help='String of view name.', metavar='<view-name>',
-                           default='any')
-    self.SetAllFlagRule('view_name', required=False)
+                           default=default_view)
+    self.SetAllFlagRule('view_name', required=self.action == 'Remove')
 
 
 class Zone(core_flags.CoreFlags):
