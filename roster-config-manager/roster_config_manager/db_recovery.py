@@ -97,10 +97,14 @@ class Recover(object):
       audit_log = self.db_instance.ListRow('audit_log', audit_dict)
     finally:
       self.db_instance.EndTransaction()
+    if( audit_log == () ):
+      print 'Not replaying action with id %s, action is blank.' % audit_log_id
+      return
     action = audit_log[0]['action']
     success = audit_log[0]['success']
     if( action in forbidden_actions ):
-      print 'Not replaying action with id %s, action not allowed.' % action
+      print 'Not replaying action with id %s, action not allowed.' % (
+          audit_log_id)
     elif( not success ):
       print 'Not replaying action with id %s, action was unsuccessful.' % (
           audit_log_id)
