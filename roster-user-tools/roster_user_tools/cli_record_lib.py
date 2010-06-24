@@ -85,11 +85,11 @@ class CliRecordLib:
                                               'core_return']
     search_target = options.target
     if( record_type == u'ptr' ):
-      search_target = roster_client_lib.RunFunction(
+      search_target, options.zone_name = roster_client_lib.RunFunction(
           'GetPTRTarget', options.username, credfile=options.credfile,
           server_name=options.server,
           args=[options.target, options.view_name],
-          raise_errors=raise_errors)['core_return'][0]
+          raise_errors=raise_errors)['core_return']
     elif( record_type == u'aaaa' ):
       if( record_args_dict['assignment_ip'] is not None ):
         expanded_ip = roster_client_lib.RunFunction(

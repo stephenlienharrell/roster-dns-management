@@ -131,14 +131,14 @@ class Testdnsmkview(unittest.TestCase):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
-    command = os.popen('python %s view -v test_view -a acl1 '
+    command = os.popen('python %s view -v test_view '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'REMOVED VIEW view_name: view_name: test_view options None\n'
-        'REMOVED VIEW ACL ASSIGNMENT: view_name: test_view acl_name: acl1\n')
+        'REMOVED VIEW view_name: view_name: test_view options None\n')
     command.close()
+    self.assertEqual(self.core_instance.ListViewToACLAssignments(), [])
 
   def testMakeViewAclAssignment(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
@@ -228,19 +228,6 @@ class Testdnsmkview(unittest.TestCase):
     self.assertEqual(command.read(),
         'CLIENT ERROR: The -v/--view-name flag is required.\n')
     command.close()
-    command = os.popen('python %s view -v test_view '
-                       '-c %s -u %s -p %s --config-file %s -s %s' % (
-                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
-                           self.server_name))
-    self.assertEqual(command.read(), 
-        'CLIENT ERROR: The -a/--acl flag is required.\n')
-    command = os.popen('python %s view -v test_view --acl test_acl '
-                       '-c %s -u %s -p %s --config-file %s -s %s' % (
-                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
-                           self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: ACL "test_acl" does not '
-                                     'exist.\n')
-
 
 if( __name__ == '__main__' ):
       unittest.main()

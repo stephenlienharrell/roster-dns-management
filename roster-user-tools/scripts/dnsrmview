@@ -92,14 +92,6 @@ def main(args):
       kwargs={u'view_name': options.view_name})['core_return']
 
   if( command == 'view' ):
-    acls = roster_client_lib.RunFunction(
-        u'ListACLs', options.username, credfile=options.credfile,
-        credstring=options.credstring, server_name=options.server,
-        kwargs={u'acl_name': options.acl})['core_return']
-    if( acls == {} ):
-      cli_common_lib_instance.DnsError(
-          'ACL "%s" does not exist.' % options.acl, 1)
-
     if( options.view_name not in views ):
       cli_common_lib_instance.DnsError(
           'View "%s" does not exist.' % options.view_name, 1)
@@ -112,13 +104,6 @@ def main(args):
     if( not options.quiet ):
       print 'REMOVED VIEW view_name: view_name: %s options %s' % (
           options.view_name, options.options)
-    roster_client_lib.RunFunction(
-        u'RemoveViewToACLAssignments', options.username,
-        credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.view_name, options.acl])
-    if( not options.quiet ):
-      print 'REMOVED VIEW ACL ASSIGNMENT: view_name: %s acl_name: %s' % (
-          options.view_name, options.acl)
 
   elif( command == 'dns_server_set' ):
     if( options.view_name not in views ):
