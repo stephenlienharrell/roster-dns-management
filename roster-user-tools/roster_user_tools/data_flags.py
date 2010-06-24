@@ -277,6 +277,8 @@ class View(core_flags.CoreFlags):
     self.parser.add_option('-a', '--acl', action='store', dest='acl',
                            help='String of access control list name.',
                            default=None)
+    if( self.action != 'Remove' ):
+      self.AddFlagRule('acl', required=not_list, command='view')
     self.AddFlagRule('acl', required=not_list, command='acl')
 
 
