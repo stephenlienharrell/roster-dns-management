@@ -166,8 +166,7 @@ class TestDnsRecover(unittest.TestCase):
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
-        u'Not replaying action with id ExportAllBindTrees, '
-        'action not allowed.\n')
+        u'Not replaying action with id 12, action not allowed.\n')
     output.close()
 
     log_instance = audit_log.AuditLog(log_to_syslog=False, log_to_db=True,

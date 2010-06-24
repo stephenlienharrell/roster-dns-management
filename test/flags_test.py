@@ -180,7 +180,7 @@ class TestCoreHelpers(unittest.TestCase):
          'username': u'sharrell', 'credfile': None, 'config_file': None,
          'name_server': None, 'quoted_text': None, 'password': None,
          'target': None, 'os': None, 'no_header': False, 'server': None,
-         'view_name': 'any', 'mail_server': None, 'admin_email': None,
+         'view_name': None, 'mail_server': None, 'admin_email': None,
          'assignment_ip': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
@@ -233,7 +233,7 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(args_instance.options.server, None)
 
   def testRemoveRecordArgs(self):
-    args = ['--assignment-ip', 'test', '-t', 'test', '-z', 'test']
+    args = ['--assignment-ip', 'test', '-t', 'test', '-z', 'test', '-v', 'any']
     usage = "test usage"
 
     args_instance = RemoveRecordArgs('a',
@@ -250,7 +250,7 @@ class TestCoreHelpers(unittest.TestCase):
          'assignment_host': None, 'username': u'sharrell', 'credfile': None,
          'config_file': None, 'name_server': None, 'quoted_text': None,
          'password': None, 'target': None, 'os': None, 'quiet': False,
-         'server': None, 'view_name': 'any', 'mail_server': None,
+         'server': None, 'view_name': None, 'mail_server': None,
          'admin_email': None, 'assignment_ip': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
@@ -268,7 +268,7 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(args_instance.options.server, None)
 
   def testSetCommands(self):
-    args = ['--assignment-ip', 'test', '-t', 'test', '-z', 'test']
+    args = ['--assignment-ip', 'test', '-t', 'test', '-z', 'test', '-v', 'any']
     usage = "test usage"
 
     args_instance = RemoveRecordArgs('a',
@@ -281,7 +281,7 @@ class TestCoreHelpers(unittest.TestCase):
                'args': {'username': False, 'credfile': False,
                         'config_file': False, 'target': True, 'quiet': False,
                         'server': False, 'credstring': False,
-                        'view_name': False, 'ttl': False, 'zone_name': True,
+                        'view_name': True, 'ttl': False, 'zone_name': True,
                         'password': False, 'assignment_ip': True},
                'dependent_args': [], 'forbidden_args': {}},
          'soa': {'independent_args': [],
@@ -291,7 +291,7 @@ class TestCoreHelpers(unittest.TestCase):
                           'retry_seconds': True, 'ttl': False,
                           'minimum_seconds': True, 'server': False,
                           'credstring': False, 'refresh_seconds': True,
-                          'view_name': False, 'zone_name': True,
+                          'view_name': True, 'zone_name': True,
                           'serial_number': True, 'password': False,
                           'target': True},
                  'dependent_args': [], 'forbidden_args': {}},
@@ -299,28 +299,28 @@ class TestCoreHelpers(unittest.TestCase):
                 'args': {'username': False, 'credfile': False,
                          'config_file': False, 'target': True,
                          'name_server': True, 'server': False,
-                         'credstring': False, 'view_name': False, 'ttl': False,
+                         'credstring': False, 'view_name': True, 'ttl': False,
                          'zone_name': True, 'password': False},
                 'dependent_args': [], 'forbidden_args': {}},
          'mx': {'independent_args': [],
                 'args': {'username': False, 'credfile': False,
                          'config_file': False, 'target': True, 'server': False,
                          'priority': True, 'credstring': False,
-                         'view_name': False, 'ttl': False, 'zone_name': True,
+                         'view_name': True, 'ttl': False, 'zone_name': True,
                          'mail_server': True, 'password': False},
                 'dependent_args': [], 'forbidden_args': {}},
          'aaaa': {'independent_args': [],
                   'args': {'username': False, 'credfile': False,
                            'config_file': False, 'target': True,
                            'server': False, 'credstring': False,
-                           'view_name': False, 'ttl': False, 'zone_name': True,
+                           'view_name': True, 'ttl': False, 'zone_name': True,
                            'password': False, 'assignment_ip': True},
                   'dependent_args': [], 'forbidden_args': {}},
          'cname': {'independent_args': [],
                    'args': {'username': False, 'credfile': False,
                             'assignment_host': True, 'config_file': False,
                             'target': True, 'server': False,
-                            'credstring': False, 'view_name': False,
+                            'credstring': False, 'view_name': True,
                             'ttl': False, 'zone_name': True, 'password': False},
                    'dependent_args': [], 'forbidden_args': {}},
          'srv': {'independent_args': [],
@@ -328,14 +328,14 @@ class TestCoreHelpers(unittest.TestCase):
                           'assignment_host': True, 'config_file': False,
                           'target': True, 'weight': True, 'server': False,
                           'priority': True, 'credstring': False,
-                          'view_name': False, 'ttl': False, 'zone_name': True,
+                          'view_name': True, 'ttl': False, 'zone_name': True,
                           'password': False, 'port': True},
                  'dependent_args': [], 'forbidden_args': {}},
          'hinfo': {'independent_args': [],
                    'args': {'username': False, 'credfile': False,
                             'config_file': False, 'target': True,
                             'server': False, 'hardware': True,
-                            'credstring': False, 'view_name': False,
+                            'credstring': False, 'view_name': True,
                             'ttl': False, 'zone_name': True, 'password': False,
                             'os': True},
                    'dependent_args': [], 'forbidden_args': {}},
@@ -343,14 +343,14 @@ class TestCoreHelpers(unittest.TestCase):
                  'args': {'username': False, 'credfile': False,
                           'config_file': False, 'target': True, 'ttl': False,
                           'server': False, 'credstring': False,
-                          'view_name': False, 'zone_name': True,
+                          'view_name': True, 'zone_name': True,
                           'quoted_text': True, 'password': False},
                  'dependent_args': [], 'forbidden_args': {}},
          'ptr': {'independent_args': [],
                  'args': {'username': False, 'credfile': False,
                           'assignment_host': True, 'config_file': False,
                           'target': True, 'server': False, 'credstring': False,
-                          'view_name': False, 'ttl': False, 'zone_name': True,
+                          'view_name': True, 'ttl': False, 'zone_name': True,
                           'password': False},
                  'dependent_args': [], 'forbidden_args': {}}})
 

@@ -482,7 +482,7 @@ class Testdnsrmrecord(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
-    command = os.popen('python %s a -t t -u '
+    command = os.popen('python %s a -t t -v any -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))

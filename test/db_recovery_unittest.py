@@ -263,8 +263,7 @@ class TestdbAccess(unittest.TestCase):
     sys.stdout = StdOutStream()
     self.db_recovery_instance.RunAuditStep(12)
     self.assertEqual(sys.stdout.flush(),
-        u'Not replaying action with id ExportAllBindTrees, '
-        'action not allowed.\n')
+        u'Not replaying action with id 12, action not allowed.\n')
     sys.stdout = old_stdout
 
     log_instance = audit_log.AuditLog(log_to_syslog=False, log_to_db=True,
