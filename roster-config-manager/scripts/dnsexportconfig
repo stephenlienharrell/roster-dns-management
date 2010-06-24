@@ -100,7 +100,7 @@ def main(args):
                     default=None)
   parser.add_option('--config-file', action='store', dest='config_file',
                     help='Roster config file location.',
-                    default=None)
+                    default='/etc/roster/roster_server.conf')
   parser.add_option('--destination-directory',
                     dest='destination_directory',
                     help='(dnsconfigsync)Destination directory on dns servers.',
