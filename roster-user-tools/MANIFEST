@@ -8,6 +8,7 @@ roster_user_tools/cli_record_lib.py
 roster_user_tools/roster_client_lib.py
 scripts/dnslsdnsservers
 scripts/dnslshost
+scripts/dnslsauditlog
 scripts/dnslsrecord
 scripts/dnslsreservedwords
 scripts/dnslsusergroup
