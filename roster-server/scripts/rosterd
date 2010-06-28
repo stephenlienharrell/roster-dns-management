@@ -48,8 +48,6 @@ import pwd
 import roster_core
 import roster_server
 
-LOCKFILE='/var/lock/roster'
-
 class ServerThread(Thread):
   """Thread for Roster server to run"""
   def __init__(self, config_instance, key_file, cert_file, host, port):
@@ -81,7 +79,7 @@ def main(args):
   # Collect command-line args
   parser = OptionParser()
   parser.add_option('--lock-file', action='store', dest='lock_file',
-                    help='Lock file location.', default=LOCKFILE)
+                    help='Lock file location.', default=None)
   parser.add_option('-c', '--cert-file', action='store', dest='cert_file',
                     help='SSL cert file path.', default=None)
   parser.add_option('-k', '--key-file', action='store', dest='key_file',
