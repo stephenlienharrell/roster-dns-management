@@ -129,7 +129,7 @@ def main(args):
   if( options.lock_file is None ):
     options.lock_file = config_instance.config_file['server']['lock_file']
 
-  if( os.access(options.lock_file.replace('/roster', ''), os.W_OK) ):
+  if( os.access(options.lock_file, os.W_OK) ):
     open(options.lock_file, 'w').close()
     username = config_instance.config_file['server']['run_as_username']
     if( os.getuid() == 0 ):
