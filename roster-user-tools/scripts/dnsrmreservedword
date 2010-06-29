@@ -79,12 +79,12 @@ def main(args):
   if( not options.word and len(parser.largs) == 1 ):
     options.word = parser.largs[0]
 
-  roster_client_lib.RunFunction(u'RemoveReservedWord',
-                                options.username,
-                                credfile=options.credfile,
-                                credstring=options.credstring,
-                                server_name=options.server,
-                                args=[options.word])
+  rows_modified = roster_client_lib.RunFunction(
+      u'RemoveReservedWord', options.username, credfile=options.credfile,
+      credstring=options.credstring, server_name=options.server,
+      args=[options.word])['core_return']
+  if( rows_modified == 0 ):
+    cli_common_lib.DnsError('Reserved word not found.', 1)
 
   if( not options.quiet ):
     print 'REMOVED RESERVED_WORD: %s' % options.word

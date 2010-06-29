@@ -130,7 +130,7 @@ class Testdnsrmreservedword(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
-  def testMakeUserGroupUserGroupAssignments(self):
+  def testRemoveReservedWord(self):
     self.core_instance.MakeReservedWord(u'reserved1')
     self.core_instance.MakeReservedWord(u'reserved2')
     self.assertEqual(self.core_instance.ListReservedWords(), [u'reserved1',
@@ -148,6 +148,12 @@ class Testdnsrmreservedword(unittest.TestCase):
     self.assertEqual(output.read(), 'REMOVED RESERVED_WORD: reserved2\n')
     output.close()
     self.assertEqual(self.core_instance.ListReservedWords(), [])
+    output = os.popen('python %s -w reserved2 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(), 'CLIENT ERROR: Reserved word not found.\n')
+    output.close()
 
 if( __name__ == '__main__' ):
       unittest.main()
