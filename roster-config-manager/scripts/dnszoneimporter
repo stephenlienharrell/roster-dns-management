@@ -68,7 +68,7 @@ def main(args):
   parser.add_option('-v', '--view', action='store', dest='view',
                     help='View to assign zone to. '
                          '(This cannot be the any view)',
-                    metavar='<view>', default=u'any')
+                    metavar='<view>', default=None)
   parser.add_option('--use-specific-view', action='store_true',
                     dest='use_specific_view',
                     help='Records will be put in the any view unless this '
