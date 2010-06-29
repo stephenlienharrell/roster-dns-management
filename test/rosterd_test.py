@@ -64,12 +64,14 @@ CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
 EXEC='../roster-server/scripts/rosterd'
 LOCKFILE='test_data/lockfile'
+INACCESSABLE_LOCKFILE='test_data/lockfiledir/lockfile'
 
 class StartServer(threading.Thread):
   def __init__(self, lockfile):
     threading.Thread.__init__(self)
     self.lockfile = lockfile
     self.output = ''
+    self.pid = None
 
   def run(self):
     command = os.popen(
@@ -99,15 +101,15 @@ class TestRosterd(unittest.TestCase):
     db_instance.cursor.execute(data)
     db_instance.EndTransaction()
     db_instance.close()
-    open(LOCKFILE, 'w').close()
 
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
+    if( os.path.exists(LOCKFILE) ):
+      os.remove(LOCKFILE)
 
   def testStartServer(self):
     server = StartServer(LOCKFILE)
-    os.system('chmod 700 %s' % LOCKFILE)
     server.start()
     time.sleep(1)
     if( os.path.exists(LOCKFILE) ):
@@ -116,9 +118,27 @@ class TestRosterd(unittest.TestCase):
     server.join()
     self.assertEqual(server.getOutput(), '')
 
-  def testStartFakeFile(self):
+  def testKillServer(self):
     server = StartServer(LOCKFILE)
-    os.system('chmod 000 %s' % LOCKFILE)
+    server.start()
+    time.sleep(1)
+    os.system('python %s --config-file %s --stop --lock-file %s' % (
+      EXEC, CONFIG_FILE, LOCKFILE))
+    time.sleep(1)
+    self.assertFalse(os.path.exists(LOCKFILE))
+    if( os.path.exists(
+        self.config_instance.config_file['server']['lock_file']) ):
+      os.remove(self.config_instance.config_file['server']['lock_file'])
+    command = os.popen('python %s --config-file %s --stop' % (
+      EXEC, CONFIG_FILE))
+    self.assertEqual(command.read(), 'ERROR: Lock file "%s" not found, is '
+        'rosterd running?\n' % self.config_instance.config_file['server'][
+            'lock_file'])
+    command.close()
+
+  def testWithLockfile(self):
+    open(LOCKFILE, 'w').close()
+    server = StartServer(LOCKFILE)
     server.start()
     time.sleep(1)
     if( os.path.exists(LOCKFILE) ):
@@ -126,7 +146,23 @@ class TestRosterd(unittest.TestCase):
     time.sleep(1)
     server.join()
     self.assertEqual(server.getOutput(),
-                     'ERROR: Could not access lock file "test_data/lockfile". '
+                     'ERROR: Lockfile exists. Is rosterd running?\n')
+
+  def testStartFakeFile(self):
+    os.makedirs('test_data/lockfiledir')
+    os.system('chmod 000 test_data/lockfiledir')
+    server = StartServer(INACCESSABLE_LOCKFILE)
+    server.start()
+    time.sleep(1)
+    if( os.path.exists(INACCESSABLE_LOCKFILE) ):
+      os.remove(INACCESSABLE_LOCKFILE)
+    time.sleep(1)
+    server.join()
+    os.system('chmod 700 test_data/lockfiledir')
+    os.system('rm -rf test_data/lockfiledir') # Need force flag
+    self.assertEqual(server.getOutput(),
+                     'ERROR: Could not access lock file '
+                     '"test_data/lockfiledir/lockfile". '
                      'Do you have permission?\n')
 
   def testStartWorldFile(self):

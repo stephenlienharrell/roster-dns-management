@@ -74,6 +74,15 @@ class ServerThread(Thread):
     # This should probably be wrapped in a try/except, to catch signals
     daemon.Serve(server_name=self.host, port=int(self.port))
 
+def RemoveLockFile(lock_file):
+  """Removes lock file.
+
+  Inputs:
+    lock_file: string of lock file name
+  """
+  if( os.path.exists(lock_file) ):
+    os.remove(lock_file)
+
 def main(args):
   """Make Roster server thread, watch lock file and stop if neccesarry."""
   # Collect command-line args
@@ -96,7 +105,11 @@ def main(args):
   parser.add_option('-p', '--port', dest='port', metavar='<port>',
                     help='Port of server to be created.',
                     default=u'8000')
+  parser.add_option('-s', '--stop', dest='stop', action='store_true',
+                    help='Stops rosterd. Will remove lockfile even if '
+                         'rosterd is not running.', default=False)
   (globals()['options'], args) = parser.parse_args(args)
+
   if( options.config_file is not None ):
     if( not os.path.exists(options.config_file) ):
       print 'ERROR: Config file "%s" does not exist.' % options.config_file
@@ -127,27 +140,41 @@ def main(args):
   if( options.lock_file is None ):
     options.lock_file = config_instance.config_file['server']['lock_file']
 
-  if( os.access(options.lock_file, os.W_OK) ):
-    open(options.lock_file, 'w').close()
-    username = config_instance.config_file['server']['run_as_username']
-    if( os.getuid() == 0 ):
-      pw = pwd.getpwnam(username)
-      os.setuid(pw.pw_uid)
-    ServerThread(config_instance, options.key_file, options.cert_file,
-                 options.host, options.port).start()
-  else:
-    print 'ERROR: Could not access lock file "%s". Do you have permission?' % (
-        options.lock_file)
-    sys.exit(1)
+  if( options.stop ):
+    if( os.path.exists(options.lock_file) ):
+      os.remove(options.lock_file)
+    else:
+      print 'ERROR: Lock file "%s" not found, is rosterd running?' % (
+          options.lock_file)
+      sys.exit(1)
 
-  try:
-    while( True ):
+  else:
+
+    if( os.access('/'.join(options.lock_file.rstrip('/').split('/')[:-1]),
+                  os.W_OK) ):
       if( os.path.exists(options.lock_file) ):
-        time.sleep(1)
-      else:
-        sys.exit(0)
-  finally: # Make sure all threads are killed.
-    sys.exit(0)
+        print 'ERROR: Lockfile exists. Is rosterd running?'
+        sys.exit(1)
+      open(options.lock_file, 'w').close()
+      username = config_instance.config_file['server']['run_as_username']
+      if( os.getuid() == 0 ):
+        pw = pwd.getpwnam(username)
+        os.setuid(pw.pw_uid)
+      ServerThread(config_instance, options.key_file, options.cert_file,
+                   options.host, options.port).start()
+    else:
+      print 'ERROR: Could not access lock file "%s". Do you have permission?' % (
+          options.lock_file)
+      sys.exit(1)
+
+    try:
+      while( True ):
+        if( os.path.exists(options.lock_file) ):
+          time.sleep(1)
+        else:
+          break
+    finally: # Make sure all threads are killed.
+      sys.exit(0)
 
 if __name__ == "__main__":
   main(sys.argv[1:])
