@@ -128,6 +128,11 @@ class Server(object):
       str: uuid string from logfile
     """
     uuid_string = str(uuid.uuid4())
+    if( not os.path.exists ):
+      try:
+        open(self.log_file, 'w').close()
+      except:
+        raise ServerError('Could not write to logfile "%s"' % self.log_file)
     log_file_handle = open(self.log_file, 'a')
     log_file_handle.writelines('\n\n---------------------\n')
     log_file_handle.writelines(uuid_string)
