@@ -100,8 +100,8 @@ class TestCheckConfig(unittest.TestCase):
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
-                     '16 records loaded from zone test_data/test_zone.db\n'
-                     '16 total records added\n')
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
     output.close()
 
     self.core_instance.MakeDnsServer(TEST_DNS_SERVER)
@@ -113,7 +113,7 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'any')
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    command = os.popen('python %s -i 25 -u %s --ssh-id %s --config-file %s' % (EXEC,
+    command = os.popen('python %s -i 26 -u %s --ssh-id %s --config-file %s' % (EXEC,
         SSH_USER, SSH_ID, CONFIG_FILE))
     lines = command.read().split('\n')
     # These lines will likely need changed depending on implementation

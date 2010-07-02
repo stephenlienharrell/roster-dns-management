@@ -576,7 +576,7 @@ class TestCore(unittest.TestCase):
                       u'cname', u'computer5', u'university.edu',
                       {u'assignment_host': u'c5.university.edu.'}, ttl=10)
     self.assertEqual(self.core_instance.ListRecords(record_type=u'cname'),[])
-    self.core_instance.MakeRecord(u'cname', u'c6',
+    self.core_instance.MakeRecord(u'cname', u'c.6',
                                   u'university.edu',
                                   {u'assignment_host':
                                    u'computer6.university.edu.'},
@@ -588,10 +588,10 @@ class TestCore(unittest.TestCase):
                       u'cname', 'c6', 'university.edu',
                       {u'assignment_host': None}, update_target=u'computer5.')
     self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
-                      u'a', u'computer5.net', u'university.edu',
+                      u'a', u'computer5.net.', u'university.edu',
                       {u'assignment_ip': u'10.0.1.1'}, ttl=10)
     self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
-                      u'soa', u'computer5.net', u'university.edu',
+                      u'soa', u'computer5.net.', u'university.edu',
                       {u'assignment_ip': u'10.0.1.1'}, ttl=10)
     self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
                       u'soa', u'university_edu', u'university.edu',

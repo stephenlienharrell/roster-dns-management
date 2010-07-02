@@ -129,7 +129,7 @@ class TestZoneImport(unittest.TestCase):
                                                      u'external')
     importer_instance.MakeRecordsFromZone()
     self.assertEquals(self.core_instance.ListRecords(record_type=u'soa'),
-                      [{u'serial_number': 810, u'refresh_seconds': 10800,
+                      [{u'serial_number': 811, u'refresh_seconds': 10800,
                         'target': u'@',
                         u'name_server': u'ns.university.edu.',
                         u'retry_seconds': 3600, 'ttl': 3600,
@@ -188,7 +188,12 @@ class TestZoneImport(unittest.TestCase):
                         'record_type': u'cname', 'view_name': u'any',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.edu',
-                        u'assignment_host': u'sub.university.edu.'}])
+                        u'assignment_host': u'sub.university.edu.'},
+                       {'target': u'www.data', 'ttl': 3600,
+                        'record_type': u'cname', 'view_name': u'any',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.edu',
+                        u'assignment_host': u'ns.university.edu.'}])
     self.assertEquals(self.core_instance.ListRecords(record_type=u'hinfo'), 
                       [{'target': u'ns2', 'ttl': 3600,
                         u'hardware': u'PC', 'record_type': u'hinfo',

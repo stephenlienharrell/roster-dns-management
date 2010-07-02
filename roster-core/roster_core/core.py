@@ -2253,8 +2253,8 @@ class Core(object):
                                    u'mail_server': 'mail.sub.university.edu.'})
     """
     if( record_type != u'ptr' ):
-      if( '.' in target ):
-        raise RecordError('"." not allowed in non-ptr target.')
+      if( target.endswith('.') ):
+        raise RecordError('"." not allowed as terminator in non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
     if( view_name is None or view_name == u'any'):
@@ -2336,8 +2336,8 @@ class Core(object):
       CoreError Raised for any internal problems.
     """
     if( search_record_type != u'ptr' ):
-      if( '.' in update_target ):
-        raise RecordError('"." not allowed in non-ptr target.')
+      if( update_target.endswith('.') ):
+        raise RecordError('"." not allowed as terminator in non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     if( search_view_name is None ):
       search_view_name = u'any'

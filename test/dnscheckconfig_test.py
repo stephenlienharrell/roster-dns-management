@@ -126,8 +126,8 @@ class TestCheckConfig(unittest.TestCase):
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
-                     '16 records loaded from zone test_data/test_zone.db\n'
-                     '16 total records added\n')
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
     output.close()
 
     self.core_instance.MakeDnsServer(u'dns1')
@@ -143,7 +143,7 @@ class TestCheckConfig(unittest.TestCase):
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
 
-    output = os.popen('python %s -i 24 --config-file %s' % (
+    output = os.popen('python %s -i 25 --config-file %s' % (
         EXEC, CONFIG_FILE))
     self.assertEqual(output.read(), '')
     output.close()
@@ -155,8 +155,8 @@ class TestCheckConfig(unittest.TestCase):
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
-                     '16 records loaded from zone test_data/test_zone.db\n'
-                     '16 total records added\n')
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
     output.close()
 
     self.core_instance.MakeDnsServer(u'dns1')
@@ -191,7 +191,7 @@ class TestCheckConfig(unittest.TestCase):
         self.tree_exporter_instance.tar_file_name,
         '%s/set1_servers/named/test_view/sub.university.edu.db' % (
             self.root_config_dir),
-        ' 810 10800', ' 10800')
+        ' 811 10800', ' 10800')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     self.assertEqual(output.read(),

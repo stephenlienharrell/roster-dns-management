@@ -194,7 +194,14 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeRecord(u'a', u'host5', u'forward_zone',
                                   {u'assignment_ip': u'192.168.1.17'},
                                   view_name=u'test_view3')
+    self.core_instance.MakeRecord(u'cname', u'www.host5', u'forward_zone',
+                                  {u'assignment_host':
+                                      u'host5.university.edu.'},
+                                  view_name=u'test_view3')
     self.core_instance.MakeRecord(u'a', u'host6', u'forward_zone',
+                                  {u'assignment_ip': u'192.168.1.8'},
+                                  view_name=u'test_view')
+    self.core_instance.MakeRecord(u'a', u'www.host6', u'forward_zone',
                                   {u'assignment_ip': u'192.168.1.8'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'8',
@@ -231,6 +238,12 @@ class TestDnsMkHost(unittest.TestCase):
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     output.close()
+    output = os.popen('python %s -q -i 192.168.1.6 -z forward_zone -t '
+                      'www.machine1 -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    output.close()
     output = os.popen('python %s -q -i 192.168.1.10 -z forward_zone -t '
                       '@ -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
@@ -262,6 +275,10 @@ class TestDnsMkHost(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'reverse_zone',
           u'assignment_host': u'machine1.university.edu.'},
+         {'target': u'6', 'ttl': 3600, 'record_type': u'ptr',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'reverse_zone',
+          u'assignment_host': u'www.machine1.university.edu.'},
          {'target': u'10', 'ttl': 3600, 'record_type': u'ptr',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'reverse_zone',

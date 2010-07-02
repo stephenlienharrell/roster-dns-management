@@ -177,6 +177,25 @@ class TestDnsMkRecord(unittest.TestCase):
                      '    assignment_ip: 10.10.10.0\n')
     #The command will succeed, return 0 (False)
     self.assertFalse(self.retCode(command.close()))
+    command = os.popen('python %s '
+                       'a --assignment-ip="10.10.10.0" -t '
+                       'machine. -v test_view -z test_zone -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password,
+                           USER_CONFIG, self.server_name))
+    self.assertEqual(command.read().split(')')[1],
+        ' "." not allowed as terminator in non-ptr target.\n')
+    command.close()
+    command = os.popen('python %s '
+                       'a --assignment-ip="10.10.10.0" -t '
+                       'www.machine -v test_view -z test_zone -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password,
+                           USER_CONFIG, self.server_name))
+    self.assertEqual(command.read(),
+        'ADDED A: www.machine zone_name: test_zone view_name: test_view '
+        'ttl: 3600\n    assignment_ip: 10.10.10.0\n')
+    command.close()
     self.assertEqual(self.core_instance.ListRecords(record_type=u'a'),
                      [{'target': u'machine1', 'ttl': 3600,
                        'record_type': u'a', 'view_name': u'test_view',
@@ -185,6 +204,10 @@ class TestDnsMkRecord(unittest.TestCase):
                       {'target': u'machine', 'ttl': 3600,
                        'record_type': u'a', 'view_name': u'test_view',
                        'last_user': USERNAME, 'zone_name': u'test_zone',
+                       u'assignment_ip': u'10.10.10.0'},
+                      {'target': u'www.machine', 'ttl': 3600,
+                       'record_type': u'a', 'view_name': u'test_view',
+                       'last_user': u'sharrell', 'zone_name': u'test_zone',
                        u'assignment_ip': u'10.10.10.0'}])
 
   def testAAAAZoneMakeRemoveListUpdate(self):
