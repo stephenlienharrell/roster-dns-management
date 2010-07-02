@@ -527,10 +527,13 @@ class TestDnsMkRecord(unittest.TestCase):
     self.assertTrue(self.retCode(command.close()))
     command = os.popen('python %s '
                        'ns --name-server="university.edu." '
-                       '-q -t machine -v test_view -z test_zone -u '
+                       '-t machine -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
+    self.assertEqual(command.read(),
+        'ADDED NS: machine zone_name: test_zone view_name: test_view '
+        'ttl: 3600\n    name_server: university.edu.\n')
     self.assertFalse(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(record_type=u'ns'),
                      [{'target': u'machine1',

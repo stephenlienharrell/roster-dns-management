@@ -119,14 +119,18 @@ class CliRecordLib:
             break
         else:
           self.cli_common_lib_instance.DnsError('Duplicate record!', 4)
-      function = u'MakeRecord'
       if( fix_ptr_origin and record_type == u'ptr' ):
-        function = u'MakePTRRecord'
-      roster_client_lib.RunFunction(
-          function, options.username, credfile=options.credfile,
-          args=[record_type, options.target, options.zone_name, record_args_dict],
-          kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
-          server_name=options.server, raise_errors=raise_errors)
+        roster_client_lib.RunFunction(
+            'MakePTRRecord', options.username, credfile=options.credfile,
+            args=[options.target, record_args_dict],
+            kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
+            server_name=options.server, raise_errors=raise_errors)
+      else:
+        roster_client_lib.RunFunction(
+            'MakeRecord', options.username, credfile=options.credfile,
+            args=[record_type, options.target, options.zone_name, record_args_dict],
+            kwargs={'view_name': options.view_name, 'ttl': int(options.ttl)},
+            server_name=options.server, raise_errors=raise_errors)
       if( options.view_name is None ):
         options.view_name = u'any'
       if( options.ttl is None ):
@@ -139,9 +143,9 @@ class CliRecordLib:
             arg_list.append('DEFAULT')
           else:
             arg_list.append(str(record_args_dict[argument]))
-        print 'ADDED AAAA: %s zone_name: %s view_name: %s ttl: %s' % (
-            options.target, options.zone_name, options.view_name,
-            options.ttl)
+        print 'ADDED %s: %s zone_name: %s view_name: %s ttl: %s' % (
+            options.record_type.upper(), options.target, options.zone_name,
+            options.view_name, options.ttl)
         print '    %s' % ' '.join(arg_list)
     elif( record_type == u'ptr' ):
       roster_client_lib.RunFunction(
