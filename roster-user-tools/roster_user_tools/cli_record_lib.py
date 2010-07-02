@@ -144,7 +144,7 @@ class CliRecordLib:
           else:
             arg_list.append(str(record_args_dict[argument]))
         print 'ADDED %s: %s zone_name: %s view_name: %s ttl: %s' % (
-            options.record_type.upper(), options.target, options.zone_name,
+            record_type.upper(), options.target, options.zone_name,
             options.view_name, options.ttl)
         print '    %s' % ' '.join(arg_list)
     elif( record_type == u'ptr' ):
