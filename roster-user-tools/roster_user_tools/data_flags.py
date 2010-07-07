@@ -186,6 +186,7 @@ class Record(core_flags.CoreFlags):
                            help='String of view name.', metavar='<view-name>',
                            default=default_view)
     self.SetAllFlagRule('view_name', required=self.action == 'Remove')
+    self.AddFlagRule('view_name', required=self.action == 'Make', command='soa')
 
 
 class Zone(core_flags.CoreFlags):
