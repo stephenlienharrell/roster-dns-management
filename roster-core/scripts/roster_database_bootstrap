@@ -171,6 +171,14 @@ def main(args):
     parser.print_help()
     sys.exit(1)
 
+  # START CONFIG
+  write_config = False
+  if( os.path.exists(options.config_file) ):
+    response = raw_input('Config file %s exists, use it? (Y/n): ')
+    if( response.lower() in ['n', 'no'] ):
+      write_config = True
+  else:
+    write_config = True
   if( not options.password ):
     options.password = getpass.getpass(
         'Enter database password for %s: ' % options.user_name)
@@ -252,6 +260,7 @@ def main(args):
   finally:
     config_parser_file.close()
 
+  # END CONFIG
   config_instance = roster_core.Config(options.config_file)
   db_instance = config_instance.GetDb()
   db_instance.StartTransaction()

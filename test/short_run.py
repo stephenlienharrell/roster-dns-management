@@ -31,6 +31,8 @@ class ShortRun(object):
     unittests = glob.glob('*test.py')
 
     for i, unittest in enumerate(unittests):
+      if( unittest in sys.argv ):
+        continue # Blacklist
       timediff = datetime.datetime.now() - self.init_time
       self.stat_string = ('---------------------------\n'
                          'Current Test: %s (%s/%s)\n'

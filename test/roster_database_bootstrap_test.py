@@ -162,6 +162,9 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE)
     ## Check base_communicate in setUp if module selected is wrong
+    self.base_communicate = (
+        'n\n1\nuid=%%s,ou=People,dc=dc,dc=university,dc=edu\n'
+        '/etc/roster_certs/host.cert\n3\nldaps://ldap.university.edu:636\n')
     command.communicate(self.base_communicate)
 
     self.db_instance.StartTransaction()
