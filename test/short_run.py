@@ -39,7 +39,7 @@ class ShortRun(object):
                          'Time elapsed: %s\n'
                          'Failed tests: %s\n\n'
                          'Detailed errors will show after exiting.' % (
-          unittest, i + 1, len(unittests), str(timediff),
+          unittest, i + 1, len(unittests) - len(sys.argv), str(timediff),
           ', '.join(self.error_tests.keys())))
       window.clear()
       window.addstr('%s\n\n%s' % (self.current_string,
@@ -58,7 +58,7 @@ class ShortRun(object):
                          'Time elapsed: %s\n'
                          'Failed tests: %s\n\n'
                          'Detailed errors will show after exiting.' % (
-          unittest, i + 1, len(unittests), str(timediff),
+          unittest, i + 1, len(unittests) - len(sys.argv), str(timediff),
           ', '.join(self.error_tests.keys())))
       window.clear()
       window.addstr('%s\n\n%s' % (self.current_string,

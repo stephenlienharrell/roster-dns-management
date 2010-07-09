@@ -1480,24 +1480,12 @@ class TestDnsMkHost(unittest.TestCase):
       self.db_instance.StartTransaction()
       zones_dict['zone_name'] = u'university.edu'
       self.db_instance.RemoveRow('zones', zones_dict)
-
-      zones_dict['zone_name'] = u'int.university.edu'
-      self.db_instance.RemoveRow('zones', zones_dict)
-
-      zones_dict['zone_name'] = u'priv.university.edu'
-      self.db_instance.RemoveRow('zones', zones_dict)
-
-      zones_dict['zone_name'] = u'168.192.in-addr'
-      self.db_instance.RemoveRow('zones', zones_dict)
-
-      zones_dict['zone_name'] = u'4.3.2.1.in-addr'
-      self.db_instance.RemoveRow('zones', zones_dict)
     finally:
       self.db_instance.EndTransaction()
-
-    output = os.popen('python %s -c %s' % (
+    output = os.popen('python %s -c %s -f' % (
         EXEC, CONFIG_FILE))
-    self.assertEquals(output.read(), 'ERROR: Missing zones or views.\n')
+    self.assertEquals(output.read(),
+        'ERROR: Server set private_dns has no zones in private view.\n')
     output.close()
 
     views_dict = {}
@@ -1518,8 +1506,10 @@ class TestDnsMkHost(unittest.TestCase):
 
     output = os.popen('python %s -c %s' % (
         EXEC, CONFIG_FILE))
-    self.assertEquals(output.read(), 'ERROR: Missing zones or views.\n')
+    self.assertEquals(output.read(),
+        'ERROR: Server set external_dns has no views.\n')
     output.close()
+
 
     dns_server_sets_dict = {}
     try:

@@ -125,12 +125,12 @@ class TestDnsZoneImport(unittest.TestCase):
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
-                     '16 records loaded from zone test_data/test_zone.db\n'
-                     '16 total records added\n')
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
     output.close()
     self.assertEqual(
         self.core_instance.ListRecords(),
-        [{u'serial_number': 810, u'refresh_seconds': 10800, 'target': u'@',
+        [{u'serial_number': 811, u'refresh_seconds': 10800, 'target': u'@',
           u'name_server': u'ns.university.edu.', u'retry_seconds': 3600,
           'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -186,6 +186,10 @@ class TestDnsZoneImport(unittest.TestCase):
          {'target': u'localhost', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'any', 'last_user': u'sharrell',
           'zone_name': u'sub.university.edu', u'assignment_ip': u'127.0.0.1'},
+         {'target': u'www.data', 'ttl': 3600, 'record_type': u'cname',
+          'view_name': u'any', 'last_user': u'sharrell',
+          'zone_name': u'sub.university.edu',
+          u'assignment_host': u'ns.university.edu.'},
          {'target': u'mail1', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'any', 'last_user': u'sharrell',
           'zone_name': u'sub.university.edu',

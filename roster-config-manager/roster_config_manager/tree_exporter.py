@@ -730,6 +730,17 @@ class BindTreeExport(object):
           for view_dependency in data['view_dependency_assignments']:
             if( view_name == view_dependency[
                   'view_dependency_assignments_view_name'] ):
+              if( not view_name in cooked_data[
+                    dns_server_set_name]['views'] ):
+                cooked_data[dns_server_set_name]['views'][view_name] = {}
+              if( not 'acls' in cooked_data[
+                    dns_server_set_name]['views'][view_name] ):
+                cooked_data[dns_server_set_name]['views'][view_name][
+                    'acls'] = self.ListACLNamesByView(data, view_name)
+              if( not 'zones' in cooked_data[
+                    dns_server_set_name]['views'][view_name] ):
+                cooked_data[dns_server_set_name]['views'][view_name][
+                    'zones'] = {}
 
               for zone in data['zone_view_assignments']:
                 view_dependency_name = view_dependency[
@@ -738,17 +749,6 @@ class BindTreeExport(object):
                 if( view_dependency_name == zone[
                       'zone_view_assignments_view_dependency'] and
                       (zone_name, view_dependency_name) in sorted_records ):
-                  if( not view_name in cooked_data[
-                        dns_server_set_name]['views'] ):
-                    cooked_data[dns_server_set_name]['views'][view_name] = {}
-                  if( not 'acls' in cooked_data[
-                        dns_server_set_name]['views'][view_name] ):
-                    cooked_data[dns_server_set_name]['views'][view_name][
-                        'acls'] = self.ListACLNamesByView(data, view_name)
-                  if( not 'zones' in cooked_data[
-                        dns_server_set_name]['views'][view_name] ):
-                    cooked_data[dns_server_set_name]['views'][view_name][
-                        'zones'] = {}
                   if( not zone_name in cooked_data[
                         dns_server_set_name]['views'][view_name]['zones'] ):
                     cooked_data[dns_server_set_name]['views'][view_name][
