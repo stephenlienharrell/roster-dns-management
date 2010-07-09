@@ -97,7 +97,11 @@ def main(args):
       print_list = [['view_name', 'view_options']]
 
     for view in views:
-      print_list.append([view, views[view]])
+      if( views[view] == '' ):
+        view_options = ''
+      else:
+        view_options = repr(views[view])
+      print_list.append([view, view_options])
 
     print cli_common_lib.PrintColumns(print_list,
         first_line_header=not options.no_header)

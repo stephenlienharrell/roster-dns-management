@@ -141,9 +141,9 @@ class TestDnslszones(unittest.TestCase):
         'cidr_block\n'
         '-----------------------------------------------------------'
         '----------\n'
-        'test_zone test_view master    university.edu. options      -\n'
-        'test_zone any       master    university.edu. options      -\n'
-        'zone2     test_view master    school.edu.     stuff        -\n\n')
+        'test_zone test_view master    university.edu. \'options\'    -\n'
+        'test_zone any       master    university.edu. \'options\'    -\n'
+        'zone2     test_view master    school.edu.     \'stuff\'      -\n\n')
     command.close()
 
   def testListReverseZones(self):
@@ -158,8 +158,8 @@ class TestDnslszones(unittest.TestCase):
         'cidr_block\n'
         '--------------------------------------------------------------'
         '----------\n'
-        'reverse_zone test_view master    university.edu. options      10/8\n'
-        'reverse_zone any       master    university.edu. options      '
+        'reverse_zone test_view master    university.edu. \'options\'    10/8\n'
+        'reverse_zone any       master    university.edu. \'options\'    '
         '10/8\n\n')
     command.close()
 
@@ -180,11 +180,11 @@ class TestDnslszones(unittest.TestCase):
         'cidr_block\n'
         '---------------------------------------------------------------'
         '----------\n'
-        'test_zone    test_view master    university.edu.  options      -\n'
-        'test_zone    any       master    university.edu.  options      -\n'
-        'zone2        test_view master    school.edu.      stuff        -\n'
-        'reverse_zone test_view master    university2.edu. options      10/8\n'
-        'reverse_zone any       master    university2.edu. options      '
+        'test_zone    test_view master    university.edu.  \'options\'    -\n'
+        'test_zone    any       master    university.edu.  \'options\'    -\n'
+        'zone2        test_view master    school.edu.      \'stuff\'      -\n'
+        'reverse_zone test_view master    university2.edu. \'options\'    10/8\n'
+        'reverse_zone any       master    university2.edu. \'options\'    '
         '10/8\n\n')
     command.close()
 

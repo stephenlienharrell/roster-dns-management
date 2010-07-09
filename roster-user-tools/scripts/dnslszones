@@ -119,9 +119,12 @@ def main(args):
       cli_common_lib.DnsError('No zones found.', 1)
     for zone in reverse_range_zone_assignments:
       for view in zones[zone]:
+        if( zones[zone][view]['zone_options'] == '' ):
+          zone_options = ''
+        else:
+          zone_options = repr(zones[zone][view]['zone_options'])
         print_list.append([zone, view, zones[zone][view]['zone_type'],
-                           zones[zone][view]['zone_origin'],
-                           zones[zone][view]['zone_options'],
+                           zones[zone][view]['zone_origin'], zone_options,
                            reverse_range_zone_assignments[zone]])
 
   elif( command == 'forward' ):
@@ -131,9 +134,13 @@ def main(args):
       for view in zones[zone]:
         if( zone in reverse_range_zone_assignments ):
           continue
+        if( zones[zone][view]['zone_options'] == '' ):
+          zone_options = ''
+        else:
+          zone_options = repr(zones[zone][view]['zone_options'])
         print_list.append([zone, view, zones[zone][view]['zone_type'],
                            zones[zone][view]['zone_origin'],
-                           zones[zone][view]['zone_options'], '-'])
+                           zone_options, '-'])
 
   elif( command == 'all' ):
     for zone in zones:
@@ -142,9 +149,13 @@ def main(args):
           cidr = reverse_range_zone_assignments[zone]
         else:
           cidr = '-'
+        if( zones[zone][view]['zone_options'] == '' ):
+          zone_options = ''
+        else:
+          zone_options = repr(zones[zone][view]['zone_options'])
         print_list.append([zone, view, zones[zone][view]['zone_type'],
                            zones[zone][view]['zone_origin'],
-                           zones[zone][view]['zone_options'], cidr])
+                           zone_options, cidr])
     
   print cli_common_lib_instance.PrintColumns(print_list,
                                     first_line_header=(not options.no_header))
