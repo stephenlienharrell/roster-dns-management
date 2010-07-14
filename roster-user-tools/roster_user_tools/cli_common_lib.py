@@ -43,6 +43,9 @@ import roster_client_lib
 class ArgumentError(Exception):
   pass
 
+class HostsError(Exception):
+  pass
+
 class CliCommonLib:
   """Command line common library"""
   def __init__(self, options):
@@ -121,6 +124,28 @@ class CliCommonLib:
     return PrintRecords(records_dictionary, ip_address_list, print_headers)
   def PrintHosts(self, records_dictionary, ip_address_list, view_name=None):
     return PrintHosts(records_dictionary, ip_address_list, view_name)
+
+def SortRecordsDict(records_dictionary, view_name):
+  """Retries records from database and sorts them
+
+  Inputs:
+    records_dictionary: dictionary of records from core
+    view_name: string of view name
+
+  Outputs:
+    dict: sorted dictionary of records
+  """
+  sorted_records = {}
+  for ip_address in records_dictionary[view_name]:
+    for record in records_dictionary[view_name][ip_address]:
+      record['view'] = view_name
+      if( ip_address not in sorted_records ):
+        sorted_records[ip_address] = {'forward': [], 'reverse': []} 
+      if( record['forward'] ):
+        sorted_records[ip_address]['forward'].append(record)
+      else:
+        sorted_records[ip_address]['reverse'].append(record)
+  return sorted_records
 
 def DnsError(message, exit_status=0):
   """Prints standardized client error message to screen.
@@ -230,42 +255,48 @@ def PrintHosts(records_dictionary, ip_address_list, view_name=None):
   """
   print_dict = {}
   print_list = []
-  for view in records_dictionary:
-    for ip_address in ip_address_list:
-      print_dict[ip_address] = {}
-      if( ip_address in records_dictionary[view] and view == view_name ):
-        print_dict[ip_address].update({'forward': False, 'reverse': False})
-        for record in records_dictionary[view][ip_address]:
-          if( record['forward'] ):
-            print_dict[ip_address].update({'host': record['host'],
-              'forward': True, 'zone_origin': record['zone_origin']})
-          else:
-            print_dict[ip_address].update({'host': record['host'],
-              'reverse': True, 'zone_origin': record['zone_origin']})
+  sorted_records = SortRecordsDict(records_dictionary, view_name)
   for ip_address in ip_address_list:
-    if( print_dict[ip_address] == {} ):
+    if( ip_address not in sorted_records ):
       print_list.append(['#%s' % ip_address, '', '', ''])
+      continue
+    if( len(sorted_records[ip_address]['reverse']) > 1 ):
+      raise HostsError('Multiple reverse records found for %s' % str(sorted_records[ip_address]))
+    elif( len(sorted_records[ip_address]['reverse']) == 0 ):
+      for record in sorted_records[ip_address]['forward']:
+        forward_zone_origin = record['zone_origin'].rstrip('.')
+        shorthost = record['host'].rsplit('.%s' % forward_zone_origin, 1)[0]
+        longhost = record['host']
+        if( longhost.startswith('@.') ):
+          longhost = record['host'].lstrip('@.')
+        print_list.append(['#%s' % ip_address, longhost,
+                           shorthost, '# No reverse assignment'])
     else:
-      forward_zone_origin = print_dict[ip_address]['zone_origin'].rstrip('.')
-      if( print_dict[ip_address]['forward'] and print_dict[ip_address][
-          'reverse'] ):
-        shorthost = print_dict[ip_address]['host'].rsplit(
-            '.%s' % forward_zone_origin, 1)[0]
-        longhost = print_dict[ip_address]['host']
-        if( longhost.startswith('@.') ):
-          longhost = print_dict[ip_address]['host'].lstrip('@.')
-        print_list.append([ip_address, longhost, shorthost, ''])
-      elif( print_dict[ip_address]['forward'] ):
-        shorthost = print_dict[ip_address]['host'].rsplit(
-            '.%s' % forward_zone_origin, 1)[0]
-        longhost = print_dict[ip_address]['host']
-        if( longhost.startswith('@.') ):
-          longhost = print_dict[ip_address]['host'].lstrip('@.')
-        print_list.append([ip_address, longhost, shorthost,
-                           '# No reverse assignment'])
+      reverse_record = sorted_records[ip_address]['reverse'][0]
+      for record_number, record in enumerate(
+          sorted_records[ip_address]['forward']):
+        last_record = record
+        if( record['host'].replace('@.', '') ==
+            reverse_record['host'].replace('@.', '') ):
+          forward_zone_origin = record['zone_origin'].rstrip('.')
+          shorthost = record['host'].rsplit('.%s' % forward_zone_origin, 1)[0]
+          longhost = record['host']
+          if( longhost.startswith('@.') ):
+            longhost = record['host'].lstrip('@.')
+          print_list.append([ip_address, longhost, shorthost, ''])
+          sorted_records[ip_address]['forward'].pop(record_number)
+          break
       else:
-        print_list.append(['#%s' % ip_address, print_dict[ip_address]['host'],
+        print_list.append(['#%s' % ip_address, reverse_record['host'],
                            '', '# No forward assignment'])
+      for record in sorted_records[ip_address]['forward']:
+        forward_zone_origin = record['zone_origin'].rstrip('.')
+        shorthost = record['host'].rsplit('.%s' % forward_zone_origin, 1)[0]
+        longhost = record['host']
+        if( longhost.startswith('@.') ):
+          longhost = record['host'].lstrip('@.')
+        print_list.append(['#%s' % ip_address, longhost,
+                           shorthost, '# No reverse assignment'])
   return PrintColumns(print_list)
 
 def EditFile(fname):

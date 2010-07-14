@@ -170,6 +170,9 @@ class TestDnsMkHost(unittest.TestCase):
     self.core_instance.MakeRecord(u'a', u'host3', u'forward_zone',
                                   {u'assignment_ip': u'192.168.1.5'},
                                   view_name=u'test_view')
+    self.core_instance.MakeRecord(u'a', u'www.host3', u'forward_zone',
+                                  {u'assignment_ip': u'192.168.1.5'},
+                                  view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'4',
                                   u'reverse_zone',
                                   {u'assignment_host': u'host2.university.edu.'},
@@ -197,6 +200,9 @@ class TestDnsMkHost(unittest.TestCase):
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'aaaa', u'ipv6host', u'ipv6_zone', {u'assignment_ip':
+          u'2001:0000:0000:0000:0000:0000:0000:0001'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'host_ipv6', u'ipv6_zone', {u'assignment_ip':
           u'2001:0000:0000:0000:0000:0000:0000:0001'}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'aaaa', u'host_ipv6', u'ipv6_zone', {u'assignment_ip':
@@ -231,8 +237,12 @@ class TestDnsMkHost(unittest.TestCase):
         '#\n'
         '# Columns are arranged as so:\n'
         '# Ip_Address Fully_Qualified_Domain Hostname\n'
-        '#192.168.1.4 host2.university.edu       # No forward assignment\n'
-        '192.168.1.5  host3.university.edu host3 # No reverse assignment\n'
+        '#192.168.1.4 host2.university.edu               '
+        '# No forward assignment\n'
+        '#192.168.1.5 host3.university.edu     host3     '
+        '# No reverse assignment\n'
+        '#192.168.1.5 www.host3.university.edu www.host3 '
+        '# No reverse assignment\n'
         '#192.168.1.6\n'
         '#192.168.1.7\n')
     handle.close()
@@ -259,7 +269,9 @@ class TestDnsMkHost(unittest.TestCase):
         '#2001:0000:0000:0000:0000:0000:0000:0000\n'
         '2001:0000:0000:0000:0000:0000:0000:0001  ipv6host.university2.edu  '
         'ipv6host\n'
-        '2001:0000:0000:0000:0000:0000:0000:0002  host_ipv6.university2.edu '
+        '#2001:0000:0000:0000:0000:0000:0000:0001 host_ipv6.university2.edu '
+        'host_ipv6 # No reverse assignment\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0002 host_ipv6.university2.edu '
         'host_ipv6 # No reverse assignment\n'
         '#2001:0000:0000:0000:0000:0000:0000:0003\n'
         '#2001:0000:0000:0000:0000:0000:0000:0004\n'
@@ -336,7 +348,9 @@ class TestDnsMkHost(unittest.TestCase):
         '#2001:0000:0000:0000:0000:0000:0000:0000\n'
         '2001:0000:0000:0000:0000:0000:0000:0001  ipv6host.university2.edu  '
         'ipv6host\n'
-        '2001:0000:0000:0000:0000:0000:0000:0002  newhost.university2.edu '
+        '#2001:0000:0000:0000:0000:0000:0000:0001 newhost.university2.edu '
+        'newhost # No reverse assignment\n'
+        '#2001:0000:0000:0000:0000:0000:0000:0002 newhost.university2.edu '
         'newhost # No reverse assignment\n'
         '#2001:0000:0000:0000:0000:0000:0000:0003\n'
         '#2001:0000:0000:0000:0000:0000:0000:0004\n'
@@ -357,7 +371,7 @@ class TestDnsMkHost(unittest.TestCase):
     # Check initial records
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'),
-        [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -376,6 +390,9 @@ class TestDnsMkHost(unittest.TestCase):
          {'target': u'host3', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
+         {'target': u'www.host3', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
          {'target': u'4', 'ttl': 3600, 'record_type': u'ptr',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'reverse_zone',
@@ -388,9 +405,34 @@ class TestDnsMkHost(unittest.TestCase):
     finally:
       handle.close()
 
+    self.assertEqual(file_contents,
+        '#:range:192.168.1.4/30\n'
+        '#:view_dependency:test_view_dep\n'
+        '# Do not delete any lines in this file!\n'
+        '# To remove a host, comment it out, to add a host,\n'
+        '# uncomment the desired ip address and specify a\n'
+        '# hostname. To change a hostname, edit the hostname\n'
+        '# next to the desired ip address.\n'
+        '#\n'
+        '# The "@" symbol in the host column signifies inheritance\n'
+        '# of the origin of the zone, this is just shorthand.\n'
+        '# For example, @.university.edu. would be the same as\n'
+        '# university.edu.\n'
+        '#\n'
+        '# Columns are arranged as so:\n'
+        '# Ip_Address Fully_Qualified_Domain Hostname\n'
+        '#192.168.1.4 host2.university.edu               '
+        '# No forward assignment\n'
+        '#192.168.1.5 host3.university.edu     host3     '
+        '# No reverse assignment\n'
+        '#192.168.1.5 www.host3.university.edu www.host3 '
+        '# No reverse assignment\n'
+        '#192.168.1.6\n'
+        '#192.168.1.7\n')
+
     # Replace some information in the file
     new_file_contents = file_contents.replace(
-        '#192.168.1.6', '192.168.1.6 host5.university.edu host5')
+        '#192.168.1.5', '192.168.1.5')
     new_file_contents = new_file_contents.replace('host2', 'host7')
     new_file_contents = new_file_contents.replace('host3.', '')
     new_file_contents = new_file_contents.replace('host3', '@')
@@ -418,32 +460,60 @@ class TestDnsMkHost(unittest.TestCase):
         '#\n'
         '# Columns are arranged as so:\n'
         '# Ip_Address Fully_Qualified_Domain Hostname\n'
-        '#192.168.1.4 host7.university.edu       # No forward assignment\n'
-        '192.168.1.5  university.edu @ # No reverse assignment\n'
-        '192.168.1.6 host5.university.edu host5\n'
+        '#192.168.1.4 host7.university.edu               '
+        '# No forward assignment\n'
+        '192.168.1.5 university.edu     @     # No reverse assignment\n'
+        '192.168.1.5 www.university.edu www.@ # No reverse assignment\n'
+        '#192.168.1.6\n'
         '#192.168.1.7\n')
     handle.close()
 
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
+    handle = open(TEST_FILE, 'r')
+    file_contents = handle.read()
+    handle.close()
     # Run updater
     output = os.popen('python %s update -f %s -z forward_zone -v test_view -s '
                       '%s -u %s -p %s --config-file %s --commit' % (
                           EXEC, TEST_FILE, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'Host: host5.university.edu with ip address '
-                     '192.168.1.6 will be ADDED\n'
-                     'Host: host3.university.edu with ip address '
-                     '192.168.1.5 will be REMOVED\n'
-                     'Host: university.edu with ip address '
-                     '192.168.1.5 will be ADDED\n')
+        'CLIENT ERROR: Host with IP 192.168.1.5 cannot be uncommented\n')
+    output.close()
+
+    new_file_contents = new_file_contents.replace(
+        '192.168.1.5', '#192.168.1.5')
+    handle = open(TEST_FILE, 'w')
+    try:
+      handle.writelines(new_file_contents)
+    finally:
+      handle.close()
+
+    handle = open(TEST_FILE, 'r')
+    file_contents = handle.read()
+    handle.close()
+
+    new_file_contents = new_file_contents.replace(
+        '#192.168.1.6', '192.168.1.6 new_host.university.edu new_host')
+
+    handle = open(TEST_FILE, 'w')
+    handle.writelines(new_file_contents)
+    handle.close()
+
+    output = os.popen('python %s update -f %s -z forward_zone -v test_view -s '
+                      '%s -u %s -p %s --config-file %s --commit' % (
+                          EXEC, TEST_FILE, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'Host: new_host.university.edu with ip address 192.168.1.6 '
+        'will be ADDED\n')
     output.close()
 
     # Check final records
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'),
-        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 6, u'refresh_seconds': 5, 'target': u'soa1',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -459,24 +529,24 @@ class TestDnsMkHost(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone',
           u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+         {'target': u'host3', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
+         {'target': u'www.host3', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
          {'target': u'4', 'ttl': 3600, 'record_type': u'ptr',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'reverse_zone',
           u'assignment_host': u'host2.university.edu.'},
-         {'target': u'host5', 'ttl': 3600, 'record_type': u'a',
+         {'target': u'new_host', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.6'},
          {'target': u'6', 'ttl': 3600, 'record_type': u'ptr',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'reverse_zone',
-          u'assignment_host': u'host5.university.edu.'},
-         {'target': u'@', 'ttl': 3600, 'record_type': u'a',
-          'view_name': u'test_view', 'last_user': u'sharrell',
-          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
-         {'target': u'5', 'ttl': 3600, 'record_type': u'ptr',
-          'view_name': u'test_view', 'last_user': u'sharrell',
-          'zone_name': u'reverse_zone',
-          u'assignment_host': u'university.edu.'}])
+          u'assignment_host': u'new_host.university.edu.'}])
+
     output = os.popen('python %s dump -r 192.168.1.4/30 -f %s '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
@@ -501,9 +571,13 @@ class TestDnsMkHost(unittest.TestCase):
         '#\n'
         '# Columns are arranged as so:\n'
         '# Ip_Address Fully_Qualified_Domain Hostname\n'
-        '#192.168.1.4 host2.university.edu       # No forward assignment\n'
-        '192.168.1.5  university.edu       @\n'
-        '192.168.1.6  host5.university.edu host5\n'
+        '#192.168.1.4 host2.university.edu               '
+        '# No forward assignment\n'
+        '#192.168.1.5 host3.university.edu     host3     '
+        '# No reverse assignment\n'
+        '#192.168.1.5 www.host3.university.edu www.host3 '
+        '# No reverse assignment\n'
+        '192.168.1.6  new_host.university.edu  new_host\n'
         '#192.168.1.7\n')
     handle.close()
 
@@ -564,7 +638,8 @@ class TestDnsMkHost(unittest.TestCase):
     output.close()
 
   def testEdit(self):
-    os.environ['EDITOR'] = 'python fake_editor.py host3 new_host'
+    os.environ['EDITOR'] = ('python fake_editor.py "#192.168.1.6" '
+                            '"192.168.1.6 host6.university.edu host6"')
     self.core_instance.MakeRecord(
         u'soa', u'soa2', u'ipv6_zone',
         {u'name_server': u'ns1.university.edu.',
@@ -597,10 +672,9 @@ class TestDnsMkHost(unittest.TestCase):
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, TEST_FILE, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG)))
-    self.assertEqual(output.read(), 'Host: host3.university.edu with ip '
-                                    'address 192.168.1.5 will be REMOVED\n'
-                                    'Host: new_host.university.edu with ip '
-                                    'address 192.168.1.5 will be ADDED\n')
+    self.assertEqual(output.read(),
+        'Host: host6.university.edu with ip '
+        'address 192.168.1.6 will be ADDED\n')
     output.close()
     handle = open(TEST_FILE, 'r')
     self.assertEqual(
@@ -620,9 +694,13 @@ class TestDnsMkHost(unittest.TestCase):
         '#\n'
         '# Columns are arranged as so:\n'
         '# Ip_Address Fully_Qualified_Domain Hostname\n'
-        '#192.168.1.4 host2.university.edu       # No forward assignment\n'
-        '192.168.1.5  new_host.university.edu new_host # No reverse assignment\n'
-        '#192.168.1.6\n'
+        '#192.168.1.4 host2.university.edu               '
+        '# No forward assignment\n'
+        '#192.168.1.5 host3.university.edu     host3     '
+        '# No reverse assignment\n'
+        '#192.168.1.5 www.host3.university.edu www.host3 '
+        '# No reverse assignment\n'
+        '192.168.1.6 host6.university.edu host6\n'
         '#192.168.1.7\n')
 
 if( __name__ == '__main__' ):

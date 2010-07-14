@@ -544,7 +544,7 @@ class CoreHelpers(object):
               record_data = {
                   'target': record['record_target'],
                   'zone_name': record['record_zone_name'],
-                  'view_name': records_dict['record_view_dependency']},
+                  'view_name': record['view_name']},
               current_transaction=True)
           if( record['record_type'] == u'ptr' ):
             if( record['record_arguments'][

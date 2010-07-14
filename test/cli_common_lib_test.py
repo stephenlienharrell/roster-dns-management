@@ -154,17 +154,32 @@ class Testdnslshost(unittest.TestCase):
              'zone': 'reverse_zone'}]},
         'any': {'192.168.1.5': [
             {'forward': True, 'host': 'host3.university.edu',
+             'zone_origin': 'university.edu.', 'zone': 'forward_zone'}],
+                '192.168.1.6': [
+            {'forward': True, 'host': 'host2.university.edu',
+             'zone_origin': 'university.edu.', 'zone': 'forward_zone'},
+            {'forward': False, 'host': 'host2.university.edu',
+             'zone_origin': '168.192.in-addr.arpa.', 'zone': 'reverse_zone'},
+            {'forward': True, 'host': 'www.host2.university.edu',
              'zone_origin': 'university.edu.', 'zone': 'forward_zone'}]}}
     options.server = self.server_name
     self.assertEqual(cli_common_lib.PrintRecords(records_dictionary,
                                                  print_headers=False),
-                     '192.168.1.5 Reverse host3.university.edu reverse_zone '
-                     'test_view\n192.168.1.5 Forward host3.university.edu '
-                     'forward_zone any\n')
+        '192.168.1.6 --      --                       --           --\n'
+        '192.168.1.5 Reverse host3.university.edu     reverse_zone test_view\n'
+        '192.168.1.6 Forward host2.university.edu     forward_zone any\n'
+        '192.168.1.6 Reverse host2.university.edu     reverse_zone any\n'
+        '192.168.1.6 Forward www.host2.university.edu forward_zone any\n'
+        '192.168.1.5 Forward host3.university.edu     forward_zone any\n')
     self.assertEqual(cli_common_lib.PrintRecords(
-        records_dictionary, [u'192.168.1.5'], print_headers=False),
-        u'192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
-        '192.168.1.5 Forward host3.university.edu forward_zone any\n')
+        records_dictionary, [u'192.168.1.5', u'192.168.1.6'],
+        print_headers=False),
+        u'192.168.1.5 Reverse host3.university.edu     reverse_zone test_view\n'
+        '192.168.1.6 --      --                       --           --\n'
+        '192.168.1.5 Forward host3.university.edu     forward_zone any\n'
+        '192.168.1.6 Forward host2.university.edu     forward_zone any\n'
+        '192.168.1.6 Reverse host2.university.edu     reverse_zone any\n'
+        '192.168.1.6 Forward www.host2.university.edu forward_zone any\n')
 
   def testPrintHosts(self):
     records_dictionary = {
@@ -178,7 +193,7 @@ class Testdnslshost(unittest.TestCase):
     options.server = self.server_name
     self.assertEqual(cli_common_lib.PrintHosts(
         records_dictionary, [u'192.168.1.5'], view_name='any'),
-        u'192.168.1.5 host3.university.edu host3 # No reverse assignment\n')
+        u'#192.168.1.5 host3.university.edu host3 # No reverse assignment\n')
 
   def testDisallowFlags(self):
     parser = OptionParser()
