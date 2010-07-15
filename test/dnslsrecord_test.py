@@ -306,12 +306,12 @@ class TestDnslsRecord(unittest.TestCase):
     command.close()
 
   def testCNAMEList(self):
-    self.core_instance.MakeRecord(u'cname', u'machine1', u'test_zone',
+    self.core_instance.MakeRecord(u'cname', u'machine2', u'test_zone',
                                   {u'assignment_host': u'university.edu.'},
                                   view_name=u'test_view')
     command = os.popen('python %s '
                        'cname --assignment-host="university.edu." '
-                       '-t machine1 -v test_view -z test_zone -u '
+                       '-t machine2 -v test_view -z test_zone -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
@@ -320,7 +320,7 @@ class TestDnslsRecord(unittest.TestCase):
         'assignment_host\n'
         '--------------------------------------------------------'
         '---------------\n'
-        'machine1 3600 cname       test_view sharrell  test_zone '
+        'machine2 3600 cname       test_view sharrell  test_zone '
         'university.edu.\n\n')
     command.close()
 

@@ -232,17 +232,5 @@ class TestZoneExport(unittest.TestCase):
         'www 3600 in cname sub.university.edu.\n'
         'www.data 3600 in cname ns.university.edu.\n')
 
-    self.core_instance.MakeRecord(u'a', u'desktop-1',
-                                  u'sub.university.edu',
-                                  {u'assignment_ip': '192.168.1.100'},
-                                  view_name=u'any')
-    records = self.core_instance.ListRecords(zone_name=u'sub.university.edu')
-    argument_definitions = self.core_instance.ListRecordArgumentDefinitions()
-    self.assertRaises(zone_exporter_lib.DuplicateRecordError,
-                      zone_exporter_lib.MakeZoneString, records, 
-                      u'sub.university.edu.', argument_definitions,
-                      u'sub.university.edu', u'external')
-
-
 if( __name__ == '__main__' ):
   unittest.main()

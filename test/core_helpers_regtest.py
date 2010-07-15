@@ -348,13 +348,45 @@ class TestCoreHelpers(unittest.TestCase):
                           u'view_name': u'test_view', 'record_arguments':
                               {u'assignment_ip': u'192.168.0.88'}}]), 2)
     self.assertEqual(
-        self.core_instance.ListRecords(record_type=u'a', target=u'host1'),
-        [])
+        self.core_instance.ListRecords(record_type=u'a', target=u'host1'), [])
     self.assertEqual(
         self.core_instance.ListRecords(record_type=u'a', target=u'blah'),
         [{'target': u'blah', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone', u'assignment_ip': u'192.168.0.88'}])
+    self.assertRaises(
+        roster_core.core_helpers.RecordsBatchError,
+        self.core_helper_instance.ProcessRecordsBatch, add_records=[{
+            'record_target': u'blah', 'ttl': 3600, 'record_type': u'a',
+            'view_name': u'test_view',
+            'last_user': u'sharrell',
+            'record_zone_name': u'forward_zone',
+            'record_arguments': {u'assignment_ip': u'192.168.0.88'}}])
+    self.assertRaises(
+        roster_core.core_helpers.RecordsBatchError,
+        self.core_helper_instance.ProcessRecordsBatch, add_records=[
+            {'record_type': u'aaaa', 'record_target': u'host2',
+             'record_zone_name': u'ipv6zone',
+             'record_arguments': {u'assignment_ip':
+                 u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+             'view_name': u'test_view'}])
+    self.core_instance.MakeRecord(
+        u'cname', u'university_edu', u'forward_zone',
+        {u'assignment_host': u'blah.university.edu.'}, view_name=u'test_view')
+    self.assertRaises(
+        roster_core.core_helpers.RecordsBatchError,
+        self.core_helper_instance.ProcessRecordsBatch, add_records=[
+          {'record_type': u'a', 'record_target': u'university_edu',
+            'record_zone_name': u'forward_zone',
+            'record_arguments': {u'assignment_ip': u'192.168.1.1'},
+          'view_name': u'test_view'}])
+    self.assertRaises(
+        roster_core.core_helpers.RecordsBatchError,
+        self.core_helper_instance.ProcessRecordsBatch, add_records=[
+            {'record_type': u'cname', 'record_target': u'blah',
+             'record_zone_name': u'forward_zone',
+             u'view_name': u'test_view', 'record_arguments':
+                 {u'assignment_host': u'hostname.'}}])
 
 if( __name__ == '__main__' ):
       unittest.main()

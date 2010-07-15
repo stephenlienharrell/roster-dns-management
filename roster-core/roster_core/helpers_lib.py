@@ -230,5 +230,100 @@ def ExpandIPV6(ip_address):
 
   return ipv6_address.strFullsize()
 
+def GetRecordsFromRecordRowsAndArgumentRows(record_data, record_args_dict):
+  """Takes data from joined records and record_arguments_record_assignments
+  and creates record rows that are combined.
+
+  Inputs:
+    record_data: List of rows from ListRow with records and
+                 records_arguments_record_assignments joined.
+
+  Outputs:
+    list of record dictionaries
+      Each dictionary can have different args depending on record type.
+      All of them will include record_type, target, zone_name, ttl, and
+      view_name regardless of record type. Below is an example of an mx
+      record search.
+      example: [{'record_type': 'mx', 'target': 'university.edu.',
+                 'zone_name': 'university.edu', ttl: 3600,
+                 'view_name': 'external', 'priority': 10,
+                 'mail_server': 'smtp-01.university.edu.',
+                 'last_user': 'sharrell},
+                {'record_type': 'mx', 'target': 'university.edu.',
+                 'zone_name': 'university.edu', ttl: 3600,
+                 'view_name': 'external', 'priority': 20,
+                 'mail_server': 'smtp-02.university.edu.'},
+                 'last_user': 'sharrell}]
+  """
+  full_record_dicts = {}
+  del_id_list = []
+  for record in record_data:
+    if( record['record_arguments_records_assignments_argument_name'] in
+        record_args_dict and
+        record_args_dict[record[
+            'record_arguments_records_assignments_argument_name']] is
+        not None and
+        unicode(record_args_dict[record[
+          'record_arguments_records_assignments_argument_name']]) !=
+        record['argument_value'] ):
+      del_id_list.append(record['records_id'])
+
+    if( not record['record_arguments_records_assignments_record_id'] in
+        full_record_dicts ):
+      full_record_dicts[
+          record['record_arguments_records_assignments_record_id']] = {}
+
+      full_record_dicts[
+          record['record_arguments_records_assignments_record_id']][
+              'record_type'] = record['record_type']
+
+      full_record_dicts[
+          record['record_arguments_records_assignments_record_id']][
+              'zone_name'] = record['record_zone_name']
+      if( record['record_view_dependency'].endswith('_dep') ):
+        record['record_view_dependency'] = record[
+            'record_view_dependency'][:-4:]
+      full_record_dicts[
+          record['record_arguments_records_assignments_record_id']][
+              'view_name'] = record['record_view_dependency']
+
+      full_record_dicts[
+          record['record_arguments_records_assignments_record_id']][
+              'target'] = record['record_target']
+
+      full_record_dicts[
+          record['record_arguments_records_assignments_record_id']][
+              'ttl'] = record['record_ttl']
+
+      full_record_dicts[
+          record['record_arguments_records_assignments_record_id']][
+              'last_user'] = record['record_last_user']
+
+    if( record['argument_value'].isdigit() ):
+      record['argument_value'] = int(record['argument_value'])
+
+    full_record_dicts[
+        record['record_arguments_records_assignments_record_id']][record[
+            'record_arguments_records_assignments_argument_name']] = record[
+            'argument_value']
+
+  for record_id in set(del_id_list):
+    del full_record_dicts[record_id]
+
+  return full_record_dicts.values()
+
+def UnicodeString(string):
+  """Returns unicode string if object is a string
+
+  Inputs:
+    string: string to unicode
+
+  Outputs:
+    unicode string: if input is a string
+  """
+  if( type(string) == str ):
+    return unicode(string)
+  return string
+
 
 # vi: set ai aw sw=2:

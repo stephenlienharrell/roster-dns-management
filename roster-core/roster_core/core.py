@@ -2177,61 +2177,8 @@ class Core(object):
     finally:
       self.db_instance.EndTransaction()
 
-    full_record_dicts = {}
-    del_id_list = []
-    for record in records:
-      if( record['record_arguments_records_assignments_argument_name'] in
-          record_args_dict and 
-          record_args_dict[record[
-              'record_arguments_records_assignments_argument_name']] is 
-          not None and
-          unicode(record_args_dict[record[
-            'record_arguments_records_assignments_argument_name']]) !=
-          record['argument_value'] ):
-        del_id_list.append(record['records_id'])
-
-      if( not record['record_arguments_records_assignments_record_id'] in
-          full_record_dicts ):
-        full_record_dicts[
-            record['record_arguments_records_assignments_record_id']] = {}
-
-        full_record_dicts[
-            record['record_arguments_records_assignments_record_id']][
-                'record_type'] = record['record_type']
-
-        full_record_dicts[
-            record['record_arguments_records_assignments_record_id']][
-                'zone_name'] = record['record_zone_name']
-        if( record['record_view_dependency'].endswith('_dep') ):
-          record['record_view_dependency'] = record[
-              'record_view_dependency'][:-4:]
-        full_record_dicts[
-            record['record_arguments_records_assignments_record_id']][
-                'view_name'] = record['record_view_dependency']
-
-        full_record_dicts[
-            record['record_arguments_records_assignments_record_id']][
-                'target'] = record['record_target']
-
-        full_record_dicts[
-            record['record_arguments_records_assignments_record_id']][
-                'ttl'] = record['record_ttl']
-
-        full_record_dicts[
-            record['record_arguments_records_assignments_record_id']][
-                'last_user'] = record['record_last_user']
-
-      if( record['argument_value'].isdigit() ):
-        record['argument_value'] = int(record['argument_value'])
-
-      full_record_dicts[
-          record['record_arguments_records_assignments_record_id']][record[
-              'record_arguments_records_assignments_argument_name']] = record[
-              'argument_value']
-    for record_id in set(del_id_list):
-      del full_record_dicts[record_id]
-
-    return full_record_dicts.values()
+    return helpers_lib.GetRecordsFromRecordRowsAndArgumentRows(
+        records, record_args_dict)
 
   def MakeRecord(self, record_type, target, zone_name, record_args_dict,
                  view_name=None, ttl=None):
@@ -2271,26 +2218,53 @@ class Core(object):
     if( ttl is None ):
       ttl = constants.DEFAULT_TTL
 
+    if( record_type in ['cname', 'a', 'aaaa'] ):
+      search_type = None
+    else:
+      search_type = record_type
     records_dict = {'records_id': None,
                     'record_target': target,
                     'record_type': None,
-                    'record_ttl': ttl,
+                    'record_ttl': None,
                     'record_zone_name': zone_name,
                     'record_view_dependency': view_name,
-                    'record_last_user': self.user_instance.GetUserName()}
+                    'record_last_user': None}
+    record_args_assignment_dict = self.db_instance.GetEmptyRowDict(
+        'record_arguments_records_assignments')
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        if( record_type == 'a' or record_type == 'cname' ):
-          current_records = self.db_instance.ListRow('records', records_dict)
-          for record in current_records:
-            if( (record['record_type'] == 'a' and record_type == 'cname') or
-                record['record_type'] == 'cname' ):
-              raise RecordError('Record already exists with that target '
-                                'target: %s type: %s' %
-                                (record['record_type'],
-                                 record['record_target']))
+        if( record_type == 'cname' ):
+          all_records = self.db_instance.ListRow('records', records_dict)
+          if( len(all_records) > 0 ):
+            raise RecordError('Record already exists with target %s.' % target)
+        records_dict['record_type'] = u'cname'
+        cname_records = self.db_instance.ListRow(
+            'records', records_dict)
+        if( len(cname_records) > 0 ):
+          raise RecordError('CNAME already exists with target %s.' % target)
+
+        records_dict['record_type'] = search_type
+        raw_records = self.db_instance.ListRow(
+            'records', records_dict, 'record_arguments_records_assignments',
+            record_args_assignment_dict)
+
+        current_records = (
+            helpers_lib.GetRecordsFromRecordRowsAndArgumentRows(
+                raw_records, record_args_dict))
+        records_dict['record_ttl'] = ttl
+        records_dict['record_type'] = record_type
+        records_dict['record_last_user'] = self.user_instance.GetUserName()
+
+        for record in current_records:
+          for arg in record_args_dict.keys():
+            if( arg not in record ):
+              break
+            if( record_args_dict[arg] != record[arg] ):
+              break
+          else:
+            raise RecordError('Duplicate record found')
 
         records_dict['record_type'] = record_type
         record_id = self.db_instance.MakeRow('records', records_dict)
@@ -2336,7 +2310,7 @@ class Core(object):
       CoreError Raised for any internal problems.
     """
     if( search_record_type != u'ptr' ):
-      if( update_target.endswith('.') ):
+      if( update_target is not None and update_target.endswith('.') ):
         raise RecordError('"." not allowed as terminator in non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     if( search_view_name is None ):
@@ -2380,6 +2354,7 @@ class Core(object):
            u'record_arguments_records_assignments_record_id': None})
 
     update_records_dict = self.db_instance.GetEmptyRowDict('records')
+    update_records_dict['record_type'] = search_record_type
     update_records_dict['record_target'] = update_target
     update_records_dict['record_zone_name'] = update_zone_name
     update_records_dict['record_view_dependency'] = update_view_name
@@ -2401,22 +2376,72 @@ class Core(object):
            u'argument_value': unicode(update_record_args_dict[update_argument]),
            u'record_arguments_records_assignments_record_id': None})
 
+    record_args_assignment_dict = self.db_instance.GetEmptyRowDict(
+        'record_arguments_records_assignments')
+
+    merged_records_dict = {}
+    for key in search_records_dict:
+      merged_records_dict[helpers_lib.UnicodeString(key)] = (
+          helpers_lib.UnicodeString(search_records_dict[key]))
+    for key in update_records_dict:
+      if( key not in merged_records_dict or
+          update_records_dict[key] is not None ):
+        merged_records_dict[helpers_lib.UnicodeString(key)] = (
+          helpers_lib.UnicodeString(update_records_dict[key]))
+    merged_record_args_dict = {}
+    for key in search_record_args_dict:
+      merged_record_args_dict[helpers_lib.UnicodeString(key)] = (
+          helpers_lib.UnicodeString(search_record_args_dict[key]))
+    for key in update_record_args_dict:
+      if( key not in merged_record_args_dict or
+          update_record_args_dict[key] is not None ):
+        merged_record_args_dict[helpers_lib.UnicodeString(key)] = (
+          helpers_lib.UnicodeString(update_record_args_dict[key]))
+
     success = False
     try:
       self.db_instance.StartTransaction()
       row_count = 0
       try:
+        update_records_dict['record_type'] = None
+        if( search_record_type == 'cname' ):
+          all_records = self.db_instance.ListRow('records',
+                                                 update_records_dict)
+          if( len(all_records) > 0 ):
+            raise RecordError(
+                'Record already exists with target %s.' % (
+                    update_target))
+        update_records_dict['record_type'] = u'cname'
+        cname_records = self.db_instance.ListRow('records',
+                                                 update_records_dict)
+        if( len(cname_records) > 0 ):
+          raise RecordError('CNAME already exists with target %s.' % (
+              update_target))
+
+        update_records_dict['record_type'] = search_record_type
+        raw_records = self.db_instance.ListRow(
+            'records', merged_records_dict,
+            'record_arguments_records_assignments',
+            record_args_assignment_dict)
+        
+        current_records = (
+            helpers_lib.GetRecordsFromRecordRowsAndArgumentRows(
+                raw_records, merged_record_args_dict))
+        update_records_dict['record_ttl'] = update_ttl
+
+        for record in current_records:
+          for arg in update_record_args_dict.keys():
+            if( record[arg] is None ):
+              continue
+            if( update_record_args_dict[arg] != record[arg] ):
+              break
+          else:
+            raise RecordError('Duplicate record found')
+
         if( update_target is not None and update_target != search_target and
             (search_record_type == 'a' or search_record_type == 'cname') ):
           current_records = self.db_instance.ListRow('records',
                                                      update_records_dict)      
-          for record in current_records:
-            if( (record['record_type'] == 'a' and search_record_type == 'cname')
-                or record['record_type'] == 'cname' ):
-              raise RecordError('Record already exists with that '
-                                'target type: %s target: %s' %
-                                (record['record_type'],
-                                 record['record_target']))
         args_search_list = []
         record_ids = []
         final_id = []
@@ -2439,7 +2464,7 @@ class Core(object):
           if( record_id_dict[record_id] == len(search_args_list) ):
             final_id.append(record_id)
         if( len(final_id) == 0 ):
-          raise errors.CoreError('No records found.')
+          raise RecordError('No records found.')
         elif( len(final_id) == 1 ):
           search_records_dict['records_id'] = final_id[0]
           new_records = self.db_instance.ListRow('records',
@@ -2456,8 +2481,8 @@ class Core(object):
                     'record_arguments_records_assignments',
                     search_args, update_args)
         else:
-          raise errors.CoreError('Multiple records found for used search '
-                                 'terms.')
+          raise RecordError('Multiple records found for used search '
+                            'terms.')
         if( update_view_name is None ):
           update_view_name = search_view_name
         if( update_zone_name is None ):

@@ -544,7 +544,7 @@ class CoreHelpers(object):
               record_data = {
                   'target': record['record_target'],
                   'zone_name': record['record_zone_name'],
-                  'view_name': record['view_name']},
+                  'view_name': view_name},
               current_transaction=True)
           if( record['record_type'] == u'ptr' ):
             if( record['record_arguments'][
@@ -561,31 +561,55 @@ class CoreHelpers(object):
           records_dict = {'records_id': None,
                           'record_target': record['record_target'],
                           'record_type': None,
-                          'record_ttl': ttl,
+                          'record_ttl': None,
                           'record_zone_name': record['record_zone_name'],
                           'record_view_dependency': view_name,
-                          'record_last_user': self.user_instance.GetUserName()}
-          if( record['record_type'] == 'a' or record['record_type'] == 'cname' ):
-            current_records = self.db_instance.ListRow('records', records_dict)
-            for record in current_records:
-              if( record['record_type'] == 'a' or
-                  record['record_type'] == 'cname' ):
-                raise RecordsBatchError(
-                    '%s: Record already exists with that target '
-                    'target: %s type: %s' %
-                        (record['record_target'],
-                         record['record_target'],
-                         record['record_type']))
+                          'record_last_user': None}
+
+          if( record['record_type'] == 'cname' ):
+            all_records = self.db_instance.ListRow('records', records_dict)
+            if( len(all_records) > 0 ):
+              raise RecordsBatchError(
+                  'Record already exists with target %s.' % (
+                      record['record_target']))
+          records_dict['record_type'] = u'cname'
+          cname_records = self.db_instance.ListRow('records', records_dict)
+          if( len(cname_records) > 0 ):
+            raise RecordsBatchError('CNAME already exists with target %s.' % (
+                record['record_target']))
+
+          record_args_assignment_dict = self.db_instance.GetEmptyRowDict(
+              'record_arguments_records_assignments')
+          records_dict['record_type'] = record['record_type']
+          raw_records = self.db_instance.ListRow(
+              'records', records_dict, 'record_arguments_records_assignments',
+              record_args_assignment_dict)
+          records_dict['record_last_user'] = self.user_instance.GetUserName()
+          records_dict['record_ttl'] = ttl
+          current_records = (
+              helpers_lib.GetRecordsFromRecordRowsAndArgumentRows(
+              raw_records, record['record_arguments']))
+          for current_record in current_records:
+            for arg in record['record_arguments'].keys():
+              if( arg not in current_record ):
+                break
+              if( record['record_arguments'][arg] is None ):
+                continue
+              if( record['record_arguments'][arg] != current_record[arg] ):
+                break
+            else:
+              raise RecordsBatchError('Duplicate record found')
+
 
           records_dict['record_type'] = record['record_type']
           record_id = self.db_instance.MakeRow('records', records_dict)
-          for k in record['record_arguments'].keys():
+          for arg in record['record_arguments'].keys():
             record_argument_assignments_dict = {
                'record_arguments_records_assignments_record_id': record_id,
                'record_arguments_records_assignments_type': record[
                    'record_type'],
-               'record_arguments_records_assignments_argument_name': k,
-               'argument_value': unicode(record['record_arguments'][k])}
+               'record_arguments_records_assignments_argument_name': arg,
+               'argument_value': unicode(record['record_arguments'][arg])}
             self.db_instance.MakeRow('record_arguments_records_assignments',
                                      record_argument_assignments_dict)
             log_dict['add'].append(record)
