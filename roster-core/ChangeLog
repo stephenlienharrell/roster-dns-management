@@ -11,6 +11,10 @@ Current Release
 - Made SetMaintenanceFlag function in core
 - Made CheckMaintenanceFlag function in core
 - Made DatabaseDump function in db_access
+- Fixed multiple cursors race condition.
+- Created new helpers_lib in core for static functions
+- Made server logging system
+- Added duplicate records checking to core
 
 2010-03-03 release-0.12
 - Fixed view handling of ListRecordsByCidrBlock

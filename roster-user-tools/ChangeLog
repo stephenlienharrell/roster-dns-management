@@ -2,9 +2,13 @@ Current Release
 - Updated all tools to use new flags class
 - Added new flags class
 - Added dnslsauditlog tool
-- Added help text to dnsmkusergroup
 - Added dnsssetmaintenance tool
+- Added help text to all usertools
 - Added dnscredential tool
+- Removed listing functionality from dnsmkhost
+- Switched all usertools to use new flags system
+- Renamed dnsuphost to dnsuphosts
+- Changed shebang of user tools to use python from env
 
 2010-03-03 release-0.12
 - Fixed dnsrmhost's duplicate errors

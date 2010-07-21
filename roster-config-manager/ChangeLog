@@ -8,6 +8,9 @@ Current Release
 - Added db_recovery library
 - Added PushBackup, RunAuditStep and RunAuditRange functions
 - Added dnsrecover tool
+- Several fixes to tree_exporter
+- Made EditFile function in cli_common_lib
+
 
 2010-03-03 release-0.12
 - Reordered records in zone_importer_lib so SOA comes first
