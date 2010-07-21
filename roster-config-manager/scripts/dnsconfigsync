@@ -67,7 +67,7 @@ def main(args):
                     metavar='<destination-directory>',
                     default=None)
   parser.add_option('-i', '--id', dest='id',
-                    help='Tarfile with id output from Roster.',
+                    help='ID of tarfile output from Roster tree export.',
                     metavar='<id>', default=None)
   parser.add_option('-u', '--user-name', action='store', dest='user_name',
                     help='Rsync username.', metavar='<user-name>',

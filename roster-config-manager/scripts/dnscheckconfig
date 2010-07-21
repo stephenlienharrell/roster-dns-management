@@ -103,7 +103,7 @@ def main(args):
                     help='Config File Location', metavar='<config-file>',
                     default='/etc/roster/roster_server.conf')
   parser.add_option('-i', '--id', dest='id',
-                    help='Tarfile with id output from Roster.',
+                    help='ID of tarfile output from Roster tree export.',
                     metavar='<id>', default=None)
 
   (globals()['options'], args) = parser.parse_args(args)

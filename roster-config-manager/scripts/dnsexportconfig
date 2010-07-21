@@ -76,7 +76,7 @@ def main(args):
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-i', '--id', dest='id',
-                    help='Tarfile with id output from Roster.',
+                    help='ID of tarfile output from Roster tree export.',
                     metavar='<id>', default=None)
   parser.add_option('-d', '--directory', action='store', dest='directory',
                     help='Backup directory to scan.', metavar='<directory>',
