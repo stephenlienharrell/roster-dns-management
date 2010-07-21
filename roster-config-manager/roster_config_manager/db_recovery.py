@@ -35,7 +35,7 @@ It should be only called by the roster recovery system.
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.14'
 
 import roster_core
 import tarfile

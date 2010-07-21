@@ -32,7 +32,7 @@
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.14'
 
 
 # This is the default TTL for all records inserted into the database.
