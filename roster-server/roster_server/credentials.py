@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -41,6 +41,7 @@ import datetime
 import inspect
 import uuid
 import os
+import sys
 
 
 class ConfigError(Exception):
@@ -58,17 +59,21 @@ class CredCache(object):
   """
 
   # This will need a config option for the core objects, probably
-  def __init__(self, config_instance, inf_renew_time):
+  def __init__(self, config_instance, inf_renew_time, unit_test=False):
     """Constructs a new credential cache.
     Inputs:
       config_instance: instance of Config
       inf_renew_time: the that each credential is renewed (seconds)
+       unit_test: boolean indicating a unit-test is being run.
     """
     self.config_instance = config_instance
     self.exp_time = self.config_instance.config_file['credentials']['exp_time']
+    if( unit_test ):
+      sys.path.append('./')
     self.authentication_method = self.config_instance.config_file[
-        'credentials']['authentication_method']
+       'credentials']['authentication_method']
     self.inf_renew_time = inf_renew_time
+    self.unit_test = unit_test
 
     # garbage_collector contains cred strings in insertion order, to be walked
     # when it's time to remove potentially expired Credentials.

@@ -50,7 +50,7 @@ import roster_server
 
 class ServerThread(Thread):
   """Thread for Roster server to run"""
-  def __init__(self, config_instance, key_file, cert_file, host, port):
+  def __init__(self, config_instance, key_file, cert_file, host, port, unit_test):
     """Initialize ServerThread
 
     Inputs:
@@ -58,19 +58,21 @@ class ServerThread(Thread):
       key_file: string of ssl key file location
       cert_file: string of ssl cert file location
       host: string of server url, if using ssl it must start with 'https://'
+      unit_test: boolean indicating if this is a being run for a unit-test
     """
     self.config_instance = config_instance
     self.key_file = key_file
     self.cert_file = cert_file
     self.host = host
     self.port = port
+    self.unit_test = unit_test
     Thread.__init__(self)
 
   def run(self):
     """Run Roster server"""
     # Gotta work debuglevel into the config at some point.
     daemon = roster_server.Server(self.config_instance, self.key_file,
-                                  self.cert_file)
+                                  self.cert_file, unit_test=self.unit_test)
     # This should probably be wrapped in a try/except, to catch signals
     daemon.Serve(server_name=self.host, port=int(self.port))
 
@@ -105,6 +107,9 @@ def main(args):
   parser.add_option('-p', '--port', dest='port', metavar='<port>',
                     help='Port of server to be created.',
                     default=u'8000')
+  parser.add_option('--unit-test', dest='unit_test',
+                    help='Run as unit-test..',
+                    default=False, action='store_true')
   parser.add_option('-s', '--stop', dest='stop', action='store_true',
                     help='Stops rosterd. Will remove lockfile even if '
                          'rosterd is not running.', default=False)
@@ -161,7 +166,7 @@ def main(args):
         pw = pwd.getpwnam(username)
         os.setuid(pw.pw_uid)
       ServerThread(config_instance, options.key_file, options.cert_file,
-                   options.host, options.port).start()
+                   options.host, options.port,options.unit_test).start()
     else:
       print 'ERROR: Could not access lock file "%s". Do you have permission?' % (
           options.lock_file)

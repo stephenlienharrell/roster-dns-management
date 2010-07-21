@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -70,7 +70,8 @@ class Server(object):
   """Daemon library used to serve commands to the client."""
   def __init__(self, config_instance, keyfile=None, certfile=None,
                inf_renew_time=None, core_die_time=None,
-               clean_time=None, unittest_timestamp=None):
+               clean_time=None, unittest_timestamp=None,
+               unit_test=False):
     """Sets up config instance. Stores core instances.
 
     Inputs:
@@ -80,6 +81,7 @@ class Server(object):
        inf_renew_time: time to refresh infinite credentials (seconds)
        core_die_time: time for each core instance to die (seconds)
        clean_time: time to wait between core instance cleanings (seconds)
+       unit_test: boolean indicating a unit-test is being run.
     """
     self.config_instance = config_instance
     self.keyfile = keyfile
@@ -109,7 +111,7 @@ class Server(object):
     if( clean_time is None ):
       self.clean_time = self.core_die_time
     self.cred_cache_instance = credentials.CredCache(self.config_instance,
-                                   inf_renew_time)
+                                   inf_renew_time, unit_test)
     self.unittest_timestamp = unittest_timestamp
     self.core_store = [] # {'user': user, 'last_used': last_used, 'instance': }
     self.get_credentials_wait = {} # {'user1': 3, 'user2': 4}
@@ -117,7 +119,7 @@ class Server(object):
 
   def LogException(self, function, args, kwargs, user_name):
     """Save functions traceback to logfile
-    
+
     Inputs:
       function: string of function name
       args: args list
