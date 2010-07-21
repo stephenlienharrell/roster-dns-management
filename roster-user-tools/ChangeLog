@@ -1,4 +1,6 @@
 Current Release
+
+2010-07-21 release-0.14
 - Updated all tools to use new flags class
 - Added new flags class
 - Added dnslsauditlog tool

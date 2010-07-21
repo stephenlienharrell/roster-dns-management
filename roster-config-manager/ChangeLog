@@ -1,4 +1,6 @@
 Current Release
+
+2010-07-21 release-0.14
 - Added username flag for dnszoneimporter
 - Added check to see if there are changes in the database before exporting
 - Database now being dumped every time the tree exporter is run
