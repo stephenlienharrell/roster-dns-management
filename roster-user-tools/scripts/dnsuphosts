@@ -375,9 +375,9 @@ def main(args):
           record_type = u'aaaa'
         if( record['host'] is None ):
           print 'Host: %s with ip address %s will be REMOVED' % (
-              original_hosts_dict[host][record_number]['host'], host)
-          zone_origin = '%s.' % original_hosts_dict[host][record_number][
-              'host'].split('%s.' % (original_hosts_dict[host][record_number][
+              original_hosts_dict[host][0]['host'], host)
+          zone_origin = '%s.' % original_hosts_dict[host][0][
+              'host'].split('%s.' % (original_hosts_dict[host][0][
                   'alias']), 1)[1]
           delete_list.append({'record_type': record_type,
                               'record_target': original_hosts_dict[
@@ -393,7 +393,8 @@ def main(args):
                               'record_zone_name': reverse_zone_name,
                               'record_arguments': {'assignment_host':
                                   '%s.' % original_hosts_dict[
-                                      host][record_number]['host']}})
+                                      host][0]['host']}})
+          break
         else:
           if( host in original_hosts_dict
               and len(original_hosts_dict[host]) <= record_number ):
@@ -463,6 +464,7 @@ def main(args):
                              'record_arguments': {'assignment_host':
                                  '%s.' % record['host']}})
             added_ptr = True
+          break
     while( not options.commit and not options.no_commit ):
       yes_no = raw_input('Do you want to commit these changes? (y/N): ')
       if( yes_no.lower() not in ['y', 'yes', 'n', 'no', ''] ):
