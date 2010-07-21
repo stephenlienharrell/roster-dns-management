@@ -179,6 +179,12 @@ def ReadHostsFile(options, hosts_file_contents, cli_common_lib_instance):
                                                   server_name=options.server,
                                                   args=[range])[
                                                       'core_return']
+  records_dictionary = roster_client_lib.RunFunction(
+      'ListRecordsByCIDRBlock', options.username, credfile=options.credfile,
+      server_name=options.server, args=[range],
+      kwargs={'view_name': options.view_name})['core_return']
+  sorted_records = cli_common_lib.SortRecordsDict(
+      records_dictionary, options.view_name)
   hosts_dict = {}
   ip_list_index = -1
   ip_address = None
@@ -197,7 +203,24 @@ def ReadHostsFile(options, hosts_file_contents, cli_common_lib_instance):
           ip_list_index = ip_list_index + 1
     except IndexError:
       continue
-    if( line.startswith('#') ):
+    ip_address = line.lstrip('#').split()[0]
+    if( line.startswith('#') and ip_address in sorted_records
+          and len(sorted_records[ip_address]['forward']) > 0
+          and len(sorted_records[ip_address]['reverse']) > 0 ):
+      line_array = line.lstrip('#').split()
+      if( not CheckIPV4(line_array[0]) and not CheckIPV6(line_array[0]) ):
+        cli_common_lib_instance.DnsError('Invalid ip address "%s" in file "%s"' % (
+            ip_address, options.file), 1)
+      else:
+        if( ip_address != ip_address_list[ip_list_index] and 
+            ip_address != last_ip_address ):
+          cli_common_lib_instance.DnsError(
+                'IP Address %s is out of order.' % ip_address, 1)
+        if( ip_address not in hosts_dict ):
+          hosts_dict[line_array[0]] = []
+      hosts_dict[ip_address].append({'host': None,
+                                     'alias': None})
+    elif( line.startswith('#') ):
       try:
         record_line = line.split('#')[1]
         host = None
@@ -352,11 +375,13 @@ def main(args):
           record_type = u'aaaa'
         if( record['host'] is None ):
           print 'Host: %s with ip address %s will be REMOVED' % (
-              original_hosts_dict[host]['host'], host)
+              original_hosts_dict[host][record_number]['host'], host)
           zone_origin = '%s.' % original_hosts_dict[host][record_number][
-              'host'].split('%s.' % (original_hosts_dict[host]['alias']), 1)[1]
+              'host'].split('%s.' % (original_hosts_dict[host][record_number][
+                  'alias']), 1)[1]
           delete_list.append({'record_type': record_type,
-                              'record_target': original_hosts_dict[host]['alias'],
+                              'record_target': original_hosts_dict[
+                                  host][record_number]['alias'],
                               'view_name': options.view_name,
                               'record_zone_name': zone_origin_dict[zone_origin],
                               'record_arguments': {'assignment_ip': host}})
@@ -367,7 +392,8 @@ def main(args):
                               'view_name': options.view_name,
                               'record_zone_name': reverse_zone_name,
                               'record_arguments': {'assignment_host':
-                                  '%s.' % original_hosts_dict[host]['host']}})
+                                  '%s.' % original_hosts_dict[
+                                      host][record_number]['host']}})
         else:
           if( host in original_hosts_dict
               and len(original_hosts_dict[host]) <= record_number ):

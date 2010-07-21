@@ -581,6 +581,59 @@ class TestDnsMkHost(unittest.TestCase):
         '#192.168.1.7\n')
     handle.close()
 
+    handle = open(TEST_FILE, 'r')
+    file_contents = handle.read()
+    handle.close()
+
+    file_contents = file_contents.replace('192.168.1.6', '#192.168.1.6')
+
+    handle = open(TEST_FILE, 'w')
+    handle.writelines(file_contents)
+    handle.close()
+
+    output = os.popen('python %s update -f %s -z forward_zone -v test_view -s '
+                      '%s -u %s -p %s --config-file %s --commit' % (
+                          EXEC, TEST_FILE, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'Host: new_host.university.edu with ip address 192.168.1.6 '
+        'will be REMOVED\n')
+    output.close()
+
+    output = os.popen('python %s dump -r 192.168.1.4/30 -f %s '
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
+                           EXEC, TEST_FILE, self.server_name, USERNAME,
+                           PASSWORD, USER_CONFIG))
+    output.close()
+
+    # Write another hosts file and check its contents
+    handle = open(TEST_FILE, 'r')
+    self.assertEqual(handle.read(),
+        '#:range:192.168.1.4/30\n'
+        '#:view_dependency:test_view_dep\n'
+        '# Do not delete any lines in this file!\n'
+        '# To remove a host, comment it out, to add a host,\n'
+        '# uncomment the desired ip address and specify a\n'
+        '# hostname. To change a hostname, edit the hostname\n'
+        '# next to the desired ip address.\n'
+        '#\n'
+        '# The "@" symbol in the host column signifies inheritance\n'
+        '# of the origin of the zone, this is just shorthand.\n'
+        '# For example, @.university.edu. would be the same as\n'
+        '# university.edu.\n'
+        '#\n'
+        '# Columns are arranged as so:\n'
+        '# Ip_Address Fully_Qualified_Domain Hostname\n'
+        '#192.168.1.4 host2.university.edu               '
+        '# No forward assignment\n'
+        '#192.168.1.5 host3.university.edu     host3     '
+        '# No reverse assignment\n'
+        '#192.168.1.5 www.host3.university.edu www.host3 '
+        '# No reverse assignment\n'
+        '#192.168.1.6\n'
+        '#192.168.1.7\n')
+    handle.close()
+
     if( os.path.exists(TEST_FILE) ):
       os.remove(TEST_FILE)
 
