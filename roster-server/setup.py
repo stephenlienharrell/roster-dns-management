@@ -54,8 +54,8 @@ setup(name='RosterServer',
                        'front-end. The config files for Bind are generated '
                        'from the MySQL database so a live MySQL database is '
                        'not needed.',
-      maintainer='Stephen Lien Harrell',
-      maintainer_email='stephen@teknikal.org',
+      maintainer='Roster Development Team',
+      maintainer_email='roster-discussion@googlegroups.com',
       url='http://code.google.com/p/roster-dns-management/',
       packages=['roster_server'],
       license=__license__,
