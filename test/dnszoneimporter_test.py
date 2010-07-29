@@ -111,6 +111,18 @@ class TestDnsZoneImport(unittest.TestCase):
     time.sleep(1)
     roster_client_lib.GetCredentials(USERNAME, u'test', credfile=CREDFILE,
                                      server_name=self.server_name)
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'sub.university.edu', u'master',
+                                u'sub.university.edu.', view_name=u'test_view')
+    self.core_instance.MakeZone(u'0.168.192.in-addr.arpa', u'master',
+                                u'0.168.192.in-addr.arpa.',
+                                view_name=u'test_view')
+    self.core_instance.MakeZone(u'8.0.e.f.f.3.ip6.arpa', u'master',
+                                u'8.0.e.f.f.3.ip6.arpa.', view_name=u'test_view')
+    self.core_instance.MakeReverseRangeZoneAssignment(
+        u'0.168.192.in-addr.arpa', u'192.168.0/24')
+    self.core_instance.MakeReverseRangeZoneAssignment(
+        u'8.0.e.f.f.3.ip6.arpa', u'3ffe:0800:0000:0000:0000:0000:0000:0000/24')
 
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
@@ -118,10 +130,9 @@ class TestDnsZoneImport(unittest.TestCase):
 
 
   def testImportForwardZone(self):
-    self.core_instance.MakeView(u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_zone.db -v test_view '
-                      '-u %s --config-file %s' % (
+                      '-u %s --config-file %s -z sub.university.edu' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
@@ -200,10 +211,10 @@ class TestDnsZoneImport(unittest.TestCase):
           u'assignment_ip': u'192.168.1.102'}])
 
   def testImportReverseIPV6Zone(self):
-    self.core_instance.MakeView(u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                      '-v test_view -u %s --config-file %s' % (
+                      '-v test_view -u %s --config-file %s '
+                      '-z 8.0.e.f.f.3.ip6.arpa' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(
         output.read(),
@@ -235,10 +246,10 @@ class TestDnsZoneImport(unittest.TestCase):
           u'assignment_host': u'desktop-1.university.edu.'}])
 
   def testImportReverseZone(self):
-    self.core_instance.MakeView(u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_reverse_zone.db '
-                      '-v test_view -u %s --config-file %s' % (
+                      '-v test_view -u %s --config-file %s '
+                      '-z 0.168.192.in-addr.arpa' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(
         output.read(),

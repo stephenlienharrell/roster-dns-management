@@ -1,0 +1,174 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Named importer tool for Roster"""
+
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+
+import getpass
+from MySQLdb import IntegrityError
+from optparse import OptionParser
+import sys
+
+import roster_core
+from roster_config_manager import zone_importer_lib
+from roster_config_manager import named_importer_lib
+
+
+def main(args):
+  """Collects command line arguments. Imports named files.
+
+  Inputs:
+    args: list of arguments from the command line
+  """
+  usage = ('')
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
+
+  parser.add_option('-f', '--named-file', action='store', dest='named_file',
+                    help='Named file location.', metavar='<file>',
+                    default=None)
+  parser.add_option('-p', '--prepend', action='store', dest='prepend',
+                    help='Prepend string before zone file locations.',
+                    default='')
+  parser.add_option('-c', '--config-file', action='store', dest='config_file',
+                    help='Path to server config file.',
+                    default='/etc/roster/roster_server.conf')
+  parser.add_option('-u', '--user', action='store', dest='user',
+                    help='Override username to run as.',
+                    default=unicode(getpass.getuser()))
+  parser.add_option('-e', '--dns-server-set', action='store',
+                    dest='dns_server_set',
+                    help='String of dns server set.')
+  parser.add_option('--use-specific-view', action='store_true',
+                    dest='use_specific_view',
+                    help='Records will be put in the any view unless this '
+                         'flag is used. If the flag is set records will go to '
+                         'the view specified with the -v flag.',
+                    default=False)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  isc_file_h = open(options.named_file, 'r')
+  try:
+    isc_file = isc_file_h.read()
+  finally:
+    isc_file_h.close()
+  
+  named_data = named_importer_lib.MakeNamedDict(isc_file)
+  config_instance = roster_core.Config(file_name=options.config_file)
+  core_instance = roster_core.Core(unicode(options.user), config_instance)
+  helper_instance = roster_core.CoreHelpers(core_instance)
+
+  try:
+    core_instance.MakeDnsServerSet(unicode(options.dns_server_set))
+  except IntegrityError, e:
+    if( 'Duplicate' not in str(e) ):
+      raise
+
+  core_instance.MakeNamedConfGlobalOption(
+      unicode(options.dns_server_set),
+      unicode(named_importer_lib.DumpNamedHeader(named_data)))
+
+  options_dict = named_importer_lib.MakeZoneViewOptions(named_data)
+
+  total_record_count = 0
+
+  for acl in named_data['acls']:
+    for ip in named_data['acls'][acl]:
+      core_instance.MakeACL(unicode(acl), unicode(ip), 1)
+  for view in named_data['views']:
+    if( named_data['views'][view]['options'] ):
+      view_options = options_dict['views'][view]
+    else:
+      view_options = None
+
+    try:
+      core_instance.MakeView(unicode(view), view_options=unicode(view_options))
+    except IntegrityError, e:
+      if( 'Duplicate' not in str(e) ):
+        raise
+
+    for zone in named_data['views'][view]['zones']:
+      if( zone == '.' ):
+        zone_name = 'cache'
+      else:
+        zone_name = zone
+      if( named_data['views'][view]['zones'][zone]['options'] ):
+        zone_options = unicode(options_dict['zones'][zone])
+      else:
+        zone_options = None
+        
+      try:
+        core_instance.MakeZone(
+            unicode(zone_name),
+            unicode(named_data['views'][view]['zones'][zone]['type']),
+            u'%s.' % zone.rstrip('.'), view_name=unicode(view),
+            zone_options=zone_options)
+      except IntegrityError, e:
+        if( 'Duplicate' not in str(e) ):
+          raise
+
+      if( options.use_specific_view ):
+        records_view = options.view
+      else:
+        records_view = u'any'
+
+      if( named_data['views'][view]['zones'][zone]['file'].endswith('named.ca') ):
+        continue
+      if( named_data['views'][view]['zones'][zone]['type'] == 'slave' ):
+        continue
+
+      try:
+        importer = zone_importer_lib.ZoneImport(
+            named_data['views'][view]['zones'][zone]['file'],
+            unicode(options.config_file), unicode(options.user), unicode(view),
+            unicode(zone_name), records_view=unicode(records_view))
+      except Exception, e:
+        raise
+        print "Error processing %s: %s %s" % (
+            named_data['views'][view]['zones'][zone]['file'], e.__class__,
+            str(e))
+        sys.exit(0)
+
+      record_count = importer.MakeRecordsFromZone()
+      #print '%s records loaded from zone %s' % (record_count, options.file)
+
+      total_record_count += record_count
+
+    print '%s total records added' % total_record_count
+                       
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

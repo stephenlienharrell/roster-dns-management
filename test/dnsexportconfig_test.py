@@ -120,14 +120,18 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.root_config_dir)
 
   def testCheckConfig(self):
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'sub.university.edu', u'master',
+                                u'sub.university.edu.', view_name=u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), []) 
     output = os.popen('python %s -f test_data/test_zone.db '
-                      '--view test_view -u %s --config-file %s' % ( 
+                      '--view test_view -u %s --config-file %s '
+                      '-z sub.university.edu' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
-                     '16 records loaded from zone test_data/test_zone.db\n'
-                     '16 total records added\n')
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
     output.close()
 
     self.core_instance.MakeDnsServer(TEST_DNS_SERVER)

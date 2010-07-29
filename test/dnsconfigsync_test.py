@@ -94,9 +94,13 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree('test_data/backup_dir')
 
   def testNull(self):
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'sub.university.edu', u'master',
+                                u'sub.university.edu.', view_name=u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_zone.db '
-                      '--view test_view -u %s --config-file %s' % ( 
+                      '--view test_view -u %s --config-file %s '
+                      '-z sub.university.edu' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'

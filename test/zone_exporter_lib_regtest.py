@@ -73,15 +73,21 @@ class TestZoneExport(unittest.TestCase):
     db_instance.close()
 
     self.core_instance = roster_core.Core(u'sharrell', config_instance)
-    importer_instance = zone_importer_lib.ZoneImport(ZONE_FILE,
-                                                            CONFIG_FILE,
-                                                            u'sharrell',
-                                                            u'external')
+    self.core_instance.MakeView(u'external')
+    self.core_instance.MakeZone(u'sub.university.edu', u'master',
+                                u'sub.university.edu.', view_name=u'external')
+    self.core_instance.MakeZone(u'0.168.192.in-addr.arpa', u'master',
+                                u'0.168.192.in-addr.arpa.',
+                                view_name=u'external')
+    self.core_instance.MakeReverseRangeZoneAssignment(
+        u'0.168.192.in-addr.arpa', u'192.168.0/24')
+
+    importer_instance = zone_importer_lib.ZoneImport(
+        ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.edu')
     importer_instance.MakeRecordsFromZone()
-    importer_instance = zone_importer_lib.ZoneImport(REVERSE_ZONE_FILE,
-                                                            CONFIG_FILE,
-                                                            u'sharrell',
-                                                            u'external')
+    importer_instance = zone_importer_lib.ZoneImport(
+        REVERSE_ZONE_FILE, CONFIG_FILE, u'sharrell', u'external',
+        u'0.168.192.in-addr.arpa')
     importer_instance.MakeRecordsFromZone()
 
   def testGetRecordsForZone(self):

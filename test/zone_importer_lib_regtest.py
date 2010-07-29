@@ -74,24 +74,22 @@ class TestZoneImport(unittest.TestCase):
 
     self.core_instance = roster_core.Core(u'sharrell', config_instance)
 
-  def testMakeViewAndZone(self):
-    importer_instance = zone_importer_lib.ZoneImport(ZONE_FILE,
-                                                     CONFIG_FILE,
-                                                     u'sharrell',
-                                                     u'external')
-    self.assertFalse(self.core_instance.ListViews())
-    self.assertFalse(self.core_instance.ListZones())
-    importer_instance.view = u'internal'
-    importer_instance.MakeViewAndZone()
-    self.assertTrue(self.core_instance.ListViews())
-    self.assertTrue(self.core_instance.ListZones())
-    importer_instance.MakeViewAndZone()
+    self.core_instance.MakeView(u'external')
+    self.core_instance.MakeZone(u'sub.university.edu', u'master',
+                                u'sub.university.edu.', view_name=u'external')
+    self.core_instance.MakeZone(u'0.168.192.in-addr.arpa', u'master',
+                                u'0.168.192.in-addr.arpa.',
+                                view_name=u'external')
+    self.core_instance.MakeZone(u'8.0.e.f.f.3.ip6.arpa', u'master',
+                                u'8.0.e.f.f.3.ip6.arpa.', view_name=u'external')
+    self.core_instance.MakeReverseRangeZoneAssignment(
+        u'0.168.192.in-addr.arpa', u'192.168.0/24')
+    self.core_instance.MakeReverseRangeZoneAssignment(
+        u'8.0.e.f.f.3.ip6.arpa', u'3ffe:0800:0000:0000:0000:0000:0000:0000/24')
 
   def testReverseZoneToCIDRBlock(self):
-    importer_instance = zone_importer_lib.ZoneImport(ZONE_FILE,
-                                                     CONFIG_FILE,
-                                                     u'sharrell',
-                                                     u'external')
+    importer_instance = zone_importer_lib.ZoneImport(
+        ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.edu')
     self.assertRaises(zone_importer_lib.Error,
                       importer_instance.ReverseZoneToCIDRBlock)
     importer_instance.origin = '0.0.0.10.in-addr.arpa.'
@@ -111,10 +109,8 @@ class TestZoneImport(unittest.TestCase):
 
 
   def testFixHostname(self):
-    importer_instance = zone_importer_lib.ZoneImport(ZONE_FILE,
-                                                     CONFIG_FILE,
-                                                     u'sharrell',
-                                                     u'external')
+    importer_instance = zone_importer_lib.ZoneImport(
+        ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.edu')
     self.assertEqual(importer_instance.FixHostname(u'host'),
                      u'host.sub.university.edu.')
     self.assertEqual(importer_instance.FixHostname(u'@'),
@@ -123,10 +119,8 @@ class TestZoneImport(unittest.TestCase):
                      u'university.edu.')
 
   def testMakeRecordsFromForwardZone(self):
-    importer_instance = zone_importer_lib.ZoneImport(ZONE_FILE,
-                                                     CONFIG_FILE,
-                                                     u'sharrell',
-                                                     u'external')
+    importer_instance = zone_importer_lib.ZoneImport(
+        ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.edu')
     importer_instance.MakeRecordsFromZone()
     self.assertEquals(self.core_instance.ListRecords(record_type=u'soa'),
                       [{u'serial_number': 811, u'refresh_seconds': 10800,
@@ -206,13 +200,13 @@ class TestZoneImport(unittest.TestCase):
                         u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'}])
 
   def testMakeRecordsFromReverseZone(self):
-    importer_instance = zone_importer_lib.ZoneImport(REVERSE_ZONE_FILE,
-                                                            CONFIG_FILE,
-                                                            u'sharrell',
-                                                            u'external')
+    importer_instance = zone_importer_lib.ZoneImport(
+        REVERSE_ZONE_FILE, CONFIG_FILE, u'sharrell', u'external',
+        u'0.168.192.in-addr.arpa')
     importer_instance.MakeRecordsFromZone()
-    self.assertEquals(self.core_instance.ListReverseRangeZoneAssignments(),
-                      {u'0.168.192.in-addr.arpa': u'192.168.0/24'})
+    self.assertEquals(self.core_instance.ListReverseRangeZoneAssignments(
+        zone_name=u'0.168.192.in-addr.arpa'),
+        {u'0.168.192.in-addr.arpa': u'192.168.0/24'})
     self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
                       [{'target': u'1', 'ttl': 86400,
                         'record_type': u'ptr', 'view_name': u'any',
@@ -231,14 +225,14 @@ class TestZoneImport(unittest.TestCase):
                         u'assignment_host': u'desktop-2.university.edu.'}])
 
   def testMakeRecordsFromIPV6ReverseZone(self):
-    importer_instance = zone_importer_lib.ZoneImport(REVERSE_IPV6_ZONE_FILE,
-                                                            CONFIG_FILE,
-                                                            u'sharrell',
-                                                            u'external')
+    importer_instance = zone_importer_lib.ZoneImport(
+        REVERSE_IPV6_ZONE_FILE, CONFIG_FILE, u'sharrell', u'external',
+        u'8.0.e.f.f.3.ip6.arpa')
     importer_instance.MakeRecordsFromZone()
-    self.assertEquals(self.core_instance.ListReverseRangeZoneAssignments(),
-                      {u'8.0.e.f.f.3.ip6.arpa': 
-                          u'3ffe:0800:0000:0000:0000:0000:0000:0000/24'})
+    self.assertEquals(self.core_instance.ListReverseRangeZoneAssignments(
+        zone_name=u'8.0.e.f.f.3.ip6.arpa'),
+        {u'8.0.e.f.f.3.ip6.arpa': 
+            u'3ffe:0800:0000:0000:0000:0000:0000:0000/24'})
     self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
                      [{'target':
                        u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0.0',

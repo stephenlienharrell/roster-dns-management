@@ -229,6 +229,8 @@ class DataValidation(object):
     Outputs:
       bool: if it is a valid hostname
     """
+    if( host_name == '.' ):
+      return True
     if( self.isUnicodeString(host_name) and host_name.endswith('.') and
         host_name.split('.') > 2 and not host_name.startswith('.') ):
       return True

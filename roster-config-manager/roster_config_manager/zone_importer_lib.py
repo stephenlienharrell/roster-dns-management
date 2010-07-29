@@ -55,7 +55,7 @@ class ZoneImport(object):
   the database.
   """
   def __init__(self, zone_file_name, config_file_name, user_name, zone_view,
-               records_view=None):
+               zone_name, records_view=None):
     """Sets self.core_instance, self.zone self.domain and self.view.
 
     Inputs:
@@ -68,26 +68,9 @@ class ZoneImport(object):
     self.core_instance = roster_core.Core(user_name, config_instance)
     self.zone = dns.zone.from_file(zone_file_name)
     self.origin = unicode(self.zone.origin)
-    self.zone_name = self.origin.strip('.')
+    self.zone_name = zone_name
     self.view = records_view
     self.zone_view = zone_view
-
-  def MakeViewAndZone(self):
-    """Makes view and zone.
-    
-    Inputs:
-      self.zone_name: unicode of zone name
-    """
-    if( self.zone_view is not None and
-        not self.core_instance.ListViews(view_name=self.zone_view) ):
-      self.core_instance.MakeView(self.zone_view)
-   
-    existing_zones = self.core_instance.ListZones(zone_origin=self.origin)
-    if( not existing_zones ):
-      self.core_instance.MakeZone(self.zone_name, u'master',
-                                  self.origin, view_name=self.zone_view)
-    else:
-      self.zone_name = existing_zones.keys()[0]
 
   def ReverseZoneToCIDRBlock(self):
     """Creates CIDR block from reverse zone name.
@@ -158,12 +141,6 @@ class ZoneImport(object):
       int: Amount of records added to db.
     """
     record_count = 0
-    self.MakeViewAndZone()
-    if( self.origin.endswith('in-addr.arpa.') or
-        self.origin.endswith('ip6.arpa.') ):
-      cidr_block = self.ReverseZoneToCIDRBlock()
-      self.core_instance.MakeReverseRangeZoneAssignment(self.zone_name,
-                                                        cidr_block)
     make_record_args_list = []
     for record_tuple in self.zone.items():
       record_target = unicode(record_tuple[0])

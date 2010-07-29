@@ -111,6 +111,10 @@ class TestCheckConfig(unittest.TestCase):
     db_instance.close()
     self.db_instance = db_instance
 
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'sub.university.edu', u'master',
+                                u'sub.university.edu.', view_name=u'test_view')
+
   def tearDown(self):
     if( os.path.exists(KEY_FILE) ):
       os.remove(KEY_FILE)
@@ -122,7 +126,8 @@ class TestCheckConfig(unittest.TestCase):
   def testCheckConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
     output = os.popen('python %s -f test_data/test_zone.db '
-                      '--view test_view -u %s --config-file %s' % ( 
+                      '--view test_view -u %s --config-file %s '
+                      '-z sub.university.edu' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
@@ -151,7 +156,8 @@ class TestCheckConfig(unittest.TestCase):
   def testCheckErrorConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
     output = os.popen('python %s -f test_data/test_zone.db '
-                      '--view test_view -u %s --config-file %s' % ( 
+                      '--view test_view -u %s --config-file %s '
+                      '-z sub.university.edu' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'

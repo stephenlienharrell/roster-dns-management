@@ -2995,11 +2995,24 @@ class TestComplete(unittest.TestCase):
         'server reload successful\n\n' % (
             TEST_DNS_SERVER, TEST_DNS_SERVER))
     command.close()
+    ## dnsmkzone forward -z sub.university.edu -v test_view -t master --origin sub.university.edu.
+    command_string = (
+        'python ../roster-user-tools/scripts/dnsmkzone '
+        'forward -z sub.university.edu -v test_view -t master '
+        '--origin sub.university.edu. '
+        '-u %s -p %s -s %s --config-file %s ' % (
+            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
+    command = os.popen(command_string)
+    self.assertEqual(command.read(),
+        'ADDED FORWARD ZONE: zone_name: sub.university.edu zone_type: master '
+        'zone_origin: sub.university.edu. zone_options: None '
+        'view_name: test_view\n')
+    command.close()
     ## dnszoneimporter
     command_string = (
         'python ../roster-config-manager/scripts/dnszoneimporter '
         ' -f test_data/test_zone.db -v test_view '
-        '-u %s --config-file %s ' % (
+        '-u %s --config-file %s -z sub.university.edu' % (
             USERNAME, self.userconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),

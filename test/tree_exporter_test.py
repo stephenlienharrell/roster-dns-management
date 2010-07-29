@@ -1567,6 +1567,7 @@ class TestTreeExporter(unittest.TestCase):
 
     self.assertEqual(raw_data[1]['zone_types']['rows'],
         [{'zone_type': "'forward'", 'zone_type_id': '3'},
+         {'zone_type': "'hint'", 'zone_type_id': '4'},
          {'zone_type': "'master'", 'zone_type_id': '1'},
          {'zone_type': "'slave'", 'zone_type_id': '2'}])
 

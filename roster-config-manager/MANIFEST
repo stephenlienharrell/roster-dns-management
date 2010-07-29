@@ -6,6 +6,7 @@ roster_config_manager/__init__.py
 roster_config_manager/tree_exporter.py
 roster_config_manager/zone_exporter_lib.py
 roster_config_manager/zone_importer_lib.py
+roster_config_manager/named_importer_lib.py
 roster_config_manager/db_recovery.py
 scripts/dnscheckconfig
 scripts/dnsconfigsync
@@ -13,3 +14,4 @@ scripts/dnsexportconfig
 scripts/dnstreeexport
 scripts/dnszoneimporter
 scripts/dnsrecover
+scripts/dnsnamedimporter

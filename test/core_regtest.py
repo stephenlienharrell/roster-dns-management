@@ -771,13 +771,16 @@ class TestCore(unittest.TestCase):
   def testListZoneTypes(self):
     self.assertEqual(set(self.core_instance.ListZoneTypes()), set([u'forward',
                                                                    u'master',
-                                                                   u'slave']))
+                                                                   u'slave',
+                                                                   u'hint']))
     self.assertTrue(self.core_instance.RemoveZoneType(u'forward'))
     self.assertEqual(set(self.core_instance.ListZoneTypes()), set([u'master',
-                                                                   u'slave']))
+                                                                   u'slave',
+                                                                   u'hint']))
     self.core_instance.MakeZoneType(u'newtype')
     self.assertEqual(set(self.core_instance.ListZoneTypes()), set([u'master',
                                                                    u'slave',
+                                                                   u'hint',
                                                                    u'newtype']))
 
   def testListMakeNamedConfGlobalOptions(self):

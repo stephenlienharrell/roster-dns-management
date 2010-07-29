@@ -78,6 +78,9 @@ def main(args):
   parser.add_option('-u', '--username', action='store', dest='user_name',
                     help='Override default username.', metavar='<user_name>',
                     default=None)
+  parser.add_option('-z', '--zone', action='store', dest='zone',
+                    help='Zone to put records in.', metavar='<zone>',
+                    default=None)
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -105,6 +108,11 @@ def main(args):
     parser.print_help()
     sys.exit(1)
 
+  if( options.zone is None ):
+    print "Must specify --zone flag."
+    parser.print_help()
+    sys.exit(1)
+
   if( options.view == u'any' ):
     print "View cannot be any."
     parser.print_help()
@@ -126,6 +134,7 @@ def main(args):
     print 'Loading in %s' % options.file
     importer = zone_importer_lib.ZoneImport(options.file, options.config,
                                             user, unicode(options.view),
+                                            unicode(options.zone),
                                             records_view=records_view)
 
     record_count = importer.MakeRecordsFromZone()
