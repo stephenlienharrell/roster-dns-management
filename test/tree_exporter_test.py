@@ -42,9 +42,11 @@ __version__ = '#TRUNK#'
 
 import os
 import shutil
+import sys
 import tarfile
 import unittest
 import datetime
+import glob
 import roster_core
 import ConfigParser
 from roster_config_manager import tree_exporter
@@ -53,6 +55,12 @@ from roster_config_manager import tree_exporter
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
+KSKFILE = 'test_data/Ksub.university.edu.+005+27931.key'
+ZSKFILE = 'test_data/Ksub.university.edu.+005+43557.key'
+ZONE_FILE = 'test_data/test_zone.db'
+DNSSEC_SIGNZONE_EXEC = '/usr/sbin/dnssec-signzone'
+DNSSEC_KEYGEN_EXEC = '/usr/sbin/dnssec-keygen'
+RANDOM = '/dev/urandom'
 
 
 class TestTreeExporter(unittest.TestCase):
@@ -179,10 +187,10 @@ class TestTreeExporter(unittest.TestCase):
     zones_dict['zone_name'] = u'priv.university.edu'
     db_instance.MakeRow('zones', zones_dict)
 
-    zones_dict['zone_name'] = u'168.192.in-addr'
+    zones_dict['zone_name'] = u'168.192.in-addr.arpa'
     db_instance.MakeRow('zones', zones_dict)
 
-    zones_dict['zone_name'] = u'4.3.2.1.in-addr'
+    zones_dict['zone_name'] = u'4.3.2.1.in-addr.arpa'
     db_instance.MakeRow('zones', zones_dict)
 
     # Make Zone/View assignments
@@ -231,7 +239,7 @@ class TestTreeExporter(unittest.TestCase):
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
         u'internal_dep')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'168.192.in-addr')
+        u'168.192.in-addr.arpa')
     zone_view_assignments_dict['zone_origin'] = u'168.192.in-addr.arpa.'
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
@@ -246,7 +254,7 @@ class TestTreeExporter(unittest.TestCase):
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
         u'external_dep')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'4.3.2.1.in-addr')
+        u'4.3.2.1.in-addr.arpa')
     zone_view_assignments_dict['zone_origin'] = u'4.3.2.1.in-addr.arpa.'
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
@@ -416,7 +424,7 @@ class TestTreeExporter(unittest.TestCase):
     records_dict['record_type'] = u'soa'
     records_dict['record_target'] = u'168.192.in-addr.arpa.'
     records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'168.192.in-addr'
+    records_dict['record_zone_name'] = u'168.192.in-addr.arpa'
     records_dict['record_view_dependency'] = u'internal_dep'
     db_instance.MakeRow('records', records_dict)
     record_arguments_record_assignments_dict = {}
@@ -535,7 +543,7 @@ class TestTreeExporter(unittest.TestCase):
     records_dict['record_type'] = u'soa'
     records_dict['record_target'] = u'4.3.2.1.in-addr.arpa.'
     records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'4.3.2.1.in-addr'
+    records_dict['record_zone_name'] = u'4.3.2.1.in-addr.arpa'
     records_dict['record_view_dependency'] = u'external_dep'
     db_instance.MakeRow('records', records_dict)
     record_arguments_record_assignments_dict = {}
@@ -986,7 +994,7 @@ class TestTreeExporter(unittest.TestCase):
     records_dict['record_type'] = u'ptr'
     records_dict['record_target'] = u'1'
     records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'4.3.2.1.in-addr'
+    records_dict['record_zone_name'] = u'4.3.2.1.in-addr.arpa'
     records_dict['record_view_dependency'] = u'external_dep'
     db_instance.MakeRow('records', records_dict)
     record_arguments_record_assignments_dict = {}
@@ -1007,7 +1015,7 @@ class TestTreeExporter(unittest.TestCase):
     records_dict['record_type'] = u'ptr'
     records_dict['record_target'] = u'4'
     records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'168.192.in-addr'
+    records_dict['record_zone_name'] = u'168.192.in-addr.arpa'
     records_dict['record_view_dependency'] = u'internal_dep'
     db_instance.MakeRow('records', records_dict)
     record_arguments_record_assignments_dict = {}
@@ -1141,6 +1149,10 @@ class TestTreeExporter(unittest.TestCase):
   def tearDown(self):
     if( os.path.exists(self.bind_config_dir) ):
         shutil.rmtree(self.bind_config_dir)
+    for file in glob.glob('*.key'):
+      os.remove(file)
+    for file in glob.glob('*.private'):
+      os.remove(file)
 
   def testTreeExporterListRecordArgumentDefinitions(self):
     search_record_arguments_dict = self.db_instance.GetEmptyRowDict(
@@ -1214,7 +1226,7 @@ class TestTreeExporter(unittest.TestCase):
                                'last_user': u'sharrell',
                                'zone_name': u'university.edu',
                                u'assignment_ip': u'1.2.3.6'}},
-                      (u'4.3.2.1.in-addr', u'external_dep'):
+                      (u'4.3.2.1.in-addr.arpa', u'external_dep'):
                           {5: {u'serial_number': 20091224,
                                u'refresh_seconds': 5,
                                'target': u'4.3.2.1.in-addr.arpa.',
@@ -1223,21 +1235,21 @@ class TestTreeExporter(unittest.TestCase):
                                u'minimum_seconds': 5, 'record_type': u'soa',
                                'view_name': u'external',
                                'last_user': u'sharrell',
-                               'zone_name': u'4.3.2.1.in-addr',
+                               'zone_name': u'4.3.2.1.in-addr.arpa',
                                u'admin_email': u'admin@university.edu.',
                                u'expiry_seconds': 5},
                            15: {'target': u'1', 'ttl': 3600,
                                 'record_type': u'ptr',
                                 'view_name': u'external',
                                 'last_user': u'sharrell',
-                                'zone_name': u'4.3.2.1.in-addr',
+                                'zone_name': u'4.3.2.1.in-addr.arpa',
                                 u'assignment_host': u'computer1'}},
-                      (u'168.192.in-addr', u'internal_dep'):
+                      (u'168.192.in-addr.arpa', u'internal_dep'):
                           {16: {'target': u'4', 'ttl': 3600,
                                 'record_type': u'ptr',
                                 'view_name': u'internal',
                                 'last_user': u'sharrell',
-                                'zone_name': u'168.192.in-addr',
+                                'zone_name': u'168.192.in-addr.arpa',
                                 u'assignment_host': u'computer4'},
                            2: {u'serial_number': 20091223,
                                u'refresh_seconds': 5,
@@ -1248,7 +1260,7 @@ class TestTreeExporter(unittest.TestCase):
                                'record_type': u'soa',
                                'view_name': u'internal',
                                'last_user': u'sharrell',
-                               'zone_name': u'168.192.in-addr',
+                               'zone_name': u'168.192.in-addr.arpa',
                                u'admin_email': u'admin@university.edu.',
                                u'expiry_seconds': 5}},
                       (u'university.edu', u'private_dep'):
@@ -1366,7 +1378,7 @@ class TestTreeExporter(unittest.TestCase):
         '\t};\n'
         '\tzone "168.192.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/internal/168.192.in-addr.db";\n'
+        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
@@ -1381,7 +1393,7 @@ class TestTreeExporter(unittest.TestCase):
         '\t};\n'
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/external/4.3.2.1.in-addr.db";\n'
+        '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n\t};'
         '\n};' % tuple([self.named_dir.rstrip('/') for x in range(5)]))
@@ -1524,22 +1536,22 @@ class TestTreeExporter(unittest.TestCase):
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
          {'zone_origin':u'168.192.in-addr.arpa.',
           'zone_view_assignments_zone_type':u'master',
-          'zone_view_assignments_zone_name':u'168.192.in-addr',
+          'zone_view_assignments_zone_name':u'168.192.in-addr.arpa',
           'zone_view_assignments_view_dependency':u'internal_dep',
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
          {'zone_origin':u'168.192.in-addr.arpa.',
           'zone_view_assignments_zone_type':u'master',
-          'zone_view_assignments_zone_name':u'168.192.in-addr',
+          'zone_view_assignments_zone_name':u'168.192.in-addr.arpa',
           'zone_view_assignments_view_dependency':u'external_dep',
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
          {'zone_origin':u'168.192.in-addr.arpa.',
           'zone_view_assignments_zone_type':u'master',
-          'zone_view_assignments_zone_name':u'168.192.in-addr',
+          'zone_view_assignments_zone_name':u'168.192.in-addr.arpa',
           'zone_view_assignments_view_dependency':u'private_dep',
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
          {'zone_origin':u'4.3.2.1.in-addr.arpa.',
           'zone_view_assignments_zone_type':u'master',
-          'zone_view_assignments_zone_name':u'4.3.2.1.in-addr',
+          'zone_view_assignments_zone_name':u'4.3.2.1.in-addr.arpa',
           'zone_view_assignments_view_dependency':u'external_dep',
           'zone_options':u'#Allow update\nallow-update { none; };\n'},
          {'zone_origin':u'university4.edu.',
@@ -1550,8 +1562,8 @@ class TestTreeExporter(unittest.TestCase):
 
     ## Testing the RawDump raw_data[1]
     self.assertEqual(raw_data[1]['zones']['rows'],
-        [{'zone_name': "'168.192.in-addr'", 'zones_id': '7'},
-         {'zone_name': "'4.3.2.1.in-addr'", 'zones_id': '8'},
+        [{'zone_name': "'168.192.in-addr.arpa'", 'zones_id': '7'},
+         {'zone_name': "'4.3.2.1.in-addr.arpa'", 'zones_id': '8'},
          {'zone_name': "'bio.university.edu'", 'zones_id': '2'},
          {'zone_name': "'cs.university.edu'", 'zones_id': '1'},
          {'zone_name': "'eas.university.edu'", 'zones_id': '3'},
@@ -1678,7 +1690,7 @@ class TestTreeExporter(unittest.TestCase):
                              u'assignment_ip':u'1.2.3.6'}],
                             'zone_origin': u'university.edu.',
                             'zone_options': u'#Allow update\nallow-update { none; };\n'},
-                            u'4.3.2.1.in-addr':{
+                            u'4.3.2.1.in-addr.arpa':{
                                 'zone_type':u'master',
                                 'records':[{
                                     u'serial_number':20091224,
@@ -1691,7 +1703,7 @@ class TestTreeExporter(unittest.TestCase):
                                     'record_type':u'soa',
                                     'view_name':u'external',
                                     'last_user':u'sharrell',
-                                    'zone_name':u'4.3.2.1.in-addr',
+                                    'zone_name':u'4.3.2.1.in-addr.arpa',
                                     u'admin_email':u'admin@university.edu.',
                                     u'expiry_seconds':5},
                                 {'target':u'1',
@@ -1699,7 +1711,7 @@ class TestTreeExporter(unittest.TestCase):
                                  'record_type':u'ptr',
                                  'view_name':u'external',
                                  'last_user':u'sharrell',
-                                 'zone_name':u'4.3.2.1.in-addr',
+                                 'zone_name':u'4.3.2.1.in-addr.arpa',
                                  u'assignment_host':u'computer1'}],
                                 'zone_origin':u'4.3.2.1.in-addr.arpa.',
                                 'zone_options':u'#Allow update\nallow-update { none; };\n'}},
@@ -1766,7 +1778,7 @@ class TestTreeExporter(unittest.TestCase):
             u'external':{
                 'acls':[u'public'],
                 'zones':{
-                    u'4.3.2.1.in-addr':{
+                    u'4.3.2.1.in-addr.arpa':{
                         'records':[{
                             u'admin_email': u'admin@university.edu.',
                             u'expiry_seconds': 5,
@@ -1780,14 +1792,14 @@ class TestTreeExporter(unittest.TestCase):
                             'target': u'4.3.2.1.in-addr.arpa.',
                             'ttl': 3600,
                             'view_name': u'external',
-                            'zone_name': u'4.3.2.1.in-addr'},
+                            'zone_name': u'4.3.2.1.in-addr.arpa'},
                         {u'assignment_host': u'computer1',
                          'last_user': u'sharrell',
                          'record_type': u'ptr',
                          'target': u'1',
                          'ttl': 3600,
                          'view_name': u'external',
-                         'zone_name': u'4.3.2.1.in-addr'}],
+                         'zone_name': u'4.3.2.1.in-addr.arpa'}],
                         'zone_options': u'#Allow update\nallow-update { none; };\n',
                         'zone_origin': u'4.3.2.1.in-addr.arpa.',
                         'zone_type': u'master'},
@@ -1855,7 +1867,7 @@ class TestTreeExporter(unittest.TestCase):
                     'zone_type': u'master'}}},
             u'internal': { 'acls': [u'public', u'secret'],
             'zones':{
-                u'168.192.in-addr':{
+                u'168.192.in-addr.arpa':{
                     'records':[{
                         u'assignment_host': u'computer4',
                         'last_user': u'sharrell',
@@ -1863,7 +1875,7 @@ class TestTreeExporter(unittest.TestCase):
                         'target': u'4',
                         'ttl': 3600,
                         'view_name': u'internal',
-                        'zone_name': u'168.192.in-addr'},
+                        'zone_name': u'168.192.in-addr.arpa'},
                         {u'admin_email': u'admin@university.edu.',
                          u'expiry_seconds': 5,
                          'last_user': u'sharrell',
@@ -1876,7 +1888,7 @@ class TestTreeExporter(unittest.TestCase):
                          'target': u'168.192.in-addr.arpa.',
                          'ttl': 3600,
                          'view_name': u'internal',
-                         'zone_name': u'168.192.in-addr'}],
+                         'zone_name': u'168.192.in-addr.arpa'}],
                     'zone_options': u'#Allow update\nallow-update { none; };\n',
                     'zone_origin': u'168.192.in-addr.arpa.',
                     'zone_type': u'master'},
@@ -1963,6 +1975,250 @@ class TestTreeExporter(unittest.TestCase):
         self.data[0], u'external')
     self.assertEqual(
         acl_names_external, [u'public'])
+
+  def testSignZone(self):
+    self.dnssec_tree_exporter_instance = tree_exporter.BindTreeExport(
+        CONFIG_FILE, dnssec=True, kskfile=KSKFILE, zskfile=ZSKFILE,
+        dnssec_signzone_exec=DNSSEC_SIGNZONE_EXEC)
+    signed_zone_file_lines = []
+    zone_file_string = open(ZONE_FILE).read()
+    self.assertEqual(len(zone_file_string.split('\n')), 28)
+    signed_zone_file_string = self.dnssec_tree_exporter_instance.SignZone(
+        zone_file_string, 'sub.university.edu')
+    self.assertEqual(len(signed_zone_file_string.split('\n')), 260)
+
+  def testTreeExporterExpportAllBindTreesDnssec(self):
+    self.dnssec_tree_exporter_instance = tree_exporter.BindTreeExport(
+        CONFIG_FILE, dnssec=True, dnssec_keygen_exec=DNSSEC_KEYGEN_EXEC,
+        dnssec_signzone_exec=DNSSEC_SIGNZONE_EXEC, random=RANDOM)
+    self.tree_exporter_instance = self.dnssec_tree_exporter_instance
+    self.core_instance.SetMaintenanceFlag(1)
+    self.assertRaises(tree_exporter.MaintenanceError,
+        self.tree_exporter_instance.ExportAllBindTrees)
+    self.core_instance.SetMaintenanceFlag(0)
+    self.tree_exporter_instance.ExportAllBindTrees()
+      
+    tar_file = tarfile.open(self.tree_exporter_instance.tar_file_name)
+    tar_file.extractall()
+    tar_file.close()
+
+    handle = open(
+        '%s/external_dns_servers/named/external_dns_config' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
+                     'dns_servers = ns1.university.edu,dns2.university.edu,'
+                     'dns3.university.edu\n'
+                     'dns_server_set_name = external_dns\n\n')
+    handle.close()
+    handle = open('%s/external_dns_servers/named.conf' % self.bind_config_dir,
+                  'r')
+    self.assertEqual(handle.read(),
+                     '#This named.conf file is autogenerated. DO NOT EDIT\n'
+                     'options {\n'
+                     '\tdirectory "%s/named";\n'
+                     '\trecursion no;\n'
+                     '\tmax-cache-size 512M;\n'
+                     '};\n\n'
+                     'logging {\n'
+                     '\tchannel "security" {\n'
+                     '\t\tfile "/var/log/named-security.log" versions 10 size '
+                     '10m;\n'
+                     '\t\tprint-time yes;\n'
+                     '\t};\n'
+                     '\tchannel "query_logging" {\n'
+                     '\t\tsyslog local5;\n'
+                     '\t\tseverity info;\n'
+                     '\t};\n'
+                     '\tcategory "client" { "null"; };\n'
+                     '\tcategory "update-security" { "security"; };\n'
+                     '\tcategory "queries" { "query_logging"; };\n'
+                     '};\n\n'
+                     'controls {\n'
+                     '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
+                     '};\n\n'
+                     'include "/etc/rndc.key";\n\n'
+                     'acl secret {\n'
+                     '\t!10.10/32;\n'
+                     '};\n\n'
+                     'acl public {\n'
+                     '\t10.10/32;\n'
+                     '\t192.168.1.4/30;\n'
+                     '};\n\n'
+                     'view "external" {\n'
+                     '\tmatch-clients { public; };\n'
+                     '\tzone "university.edu" {\n'
+                     '\t\ttype master;\n'
+                     '\t\tfile "%s/named/external/university.edu.db";\n'
+                     '\t\t#Allow update\n'
+                     '\t\tallow-update { none; };\n'
+                     '\t};\n'
+                     '\tzone "4.3.2.1.in-addr.arpa" {\n'
+                     '\t\ttype master;\n'
+                     '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
+                     '\t\t#Allow update\n'
+                     '\t\tallow-update { none; };\n'
+                     '\t};\n'
+                     '};' % tuple(
+                          [self.named_dir.rstrip('/') for x in range(3)]))
+    handle.close()
+    handle = open(
+        '%s/external_dns_servers/named/external/4.3.2.1.in-addr.arpa.db' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(len(handle.read().split()), 227)
+    handle.close()
+    handle = open(
+        '%s/external_dns_servers/named/external/university.edu.db' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(len(handle.read().split()), 322)
+    handle.close()
+    handle = open('%s/internal_dns_servers/named/internal_dns_config' %
+                  self.bind_config_dir, 'r')
+    self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
+                                    'dns_servers = ns1.int.university.edu,'
+                                    'dns1.university.edu\n'
+                                    'dns_server_set_name = internal_dns\n\n')
+    handle.close()
+    handle = open(
+        '%s/internal_dns_servers/named.conf' % self.bind_config_dir,
+        'r')
+    self.assertEqual(
+        handle.read(), '#This named.conf file is autogenerated. DO NOT EDIT\n'
+        'options {\n'
+        '\tdirectory "%s/named";\n'
+        '\trecursion no;\n'
+        '\tmax-cache-size 512M;\n'
+        '};\n\n'
+        'logging {\n'
+        '\tchannel "security" {\n'
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tprint-time yes;\n'
+        '\t};\n'
+        '\tchannel "query_logging" {\n'
+        '\t\tsyslog local5;\n'
+        '\t\tseverity info;\n'
+        '\t};\n'
+        '\tcategory "client" { "null"; };\n'
+        '\tcategory "update-security" { "security"; };\n'
+        '\tcategory "queries" { "query_logging"; };\n'
+        '};\n\n'
+        'controls {\n'
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
+        '};\n\n'
+        'include "/etc/rndc.key";\n\n'
+        'acl secret {\n'
+        '\t!10.10/32;\n'
+        '};\n\n'
+        'acl public {\n'
+        '\t10.10/32;\n'
+        '\t192.168.1.4/30;\n'
+        '};\n\n'
+        'view "internal" {\n'
+        '\tmatch-clients { public; secret; };\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/internal/university.edu.db";\n'
+        '\t\t#Allow update\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "168.192.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db";\n'
+        '\t\t#Allow update\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};\n'
+        'view "external" {\n'
+        '\tmatch-clients { public; };\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/external/university.edu.db";\n'
+        '\t\t#Allow update\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "4.3.2.1.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
+        '\t\t#Allow update\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};' % tuple([self.named_dir.rstrip('/') for x in range(5)]))
+    handle.close()
+    handle = open(
+        '%s/internal_dns_servers/named/external/4.3.2.1.in-addr.arpa.db' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(len(handle.read().split()), 227)
+    handle.close()
+    handle = open(
+        '%s/internal_dns_servers/named/external/university.edu.db' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(len(handle.read().split()), 322)
+    handle.close()
+    handle = open(
+        '%s/internal_dns_servers/named/internal/168.192.in-addr.arpa.db' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(len(handle.read().split()), 227)
+    handle.close()
+    handle = open(
+        '%s/internal_dns_servers/named/internal/university.edu.db' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(len(handle.read().split()), 367)
+    handle.close()
+    handle = open(
+        '%s/private_dns_servers/named/private_dns_config' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
+                                    'dns_servers = ns1.int.university.edu,'
+                                    'dns4.university.edu\n'
+                                    'dns_server_set_name = private_dns\n\n')
+    handle.close()
+    handle = open('%s/private_dns_servers/named.conf' % self.bind_config_dir,
+                  'r')
+    self.assertEqual(
+        handle.read(), '#This named.conf file is autogenerated. DO NOT EDIT\n'
+        'options {\n'
+        '\tdirectory "%s/named";\n'
+        '\trecursion no;\n'
+        '\tmax-cache-size 512M;\n'
+        '};\n\n'
+        'logging {\n'
+        '\tchannel "security" {\n'
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
+        '\t\tprint-time yes;\n'
+        '\t};\n'
+        '\tchannel "query_logging" {\n'
+        '\t\tsyslog local5;\n'
+        '\t\tseverity info;\n'
+        '\t};\n'
+        '\tcategory "client" { "null"; };\n'
+        '\tcategory "update-security" { "security"; };\n'
+        '\tcategory "queries" { "query_logging"; };\n'
+        '};\n\n'
+        'controls {\n'
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
+        '};\n\n'
+        'include "/etc/rndc.key";\n\n'
+        'acl secret {\n'
+        '\t!10.10/32;\n'
+        '};\n\n'
+        'acl public {\n'
+        '\t10.10/32;\n'
+        '\t192.168.1.4/30;\n'
+        '};\n\n'
+        'view "private" {\n'
+        '\tmatch-clients { secret; };\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/private/university.edu.db";\n'
+        '\t\t#Allow update\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};' % tuple([self.named_dir.rstrip('/') for x in range(2)]))
+    handle.close()
+    handle = open(
+        '%s/private_dns_servers/named/private/university.edu.db' %
+        self.bind_config_dir, 'r')
+    self.assertEqual(len(handle.read().split()), 232)
+    handle.close()
 
   def testTreeExporterListLatestNamedConfGlobalOptions(self):
     global_options_internal = (
@@ -2110,7 +2366,7 @@ class TestTreeExporter(unittest.TestCase):
                      '\t};\n'
                      '\tzone "4.3.2.1.in-addr.arpa" {\n'
                      '\t\ttype master;\n'
-                     '\t\tfile "%s/named/external/4.3.2.1.in-addr.db";\n'
+                     '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
                      '\t\t#Allow update\n'
                      '\t\tallow-update { none; };\n'
                      '\t};\n'
@@ -2118,7 +2374,7 @@ class TestTreeExporter(unittest.TestCase):
                           [self.named_dir.rstrip('/') for x in range(3)]))
     handle.close()
     handle = open(
-        '%s/external_dns_servers/named/external/4.3.2.1.in-addr.db' %
+        '%s/external_dns_servers/named/external/4.3.2.1.in-addr.arpa.db' %
         self.bind_config_dir, 'r')
     self.assertEqual(handle.read(),
                      '; This zone file is autogenerated. DO NOT EDIT.\n'
@@ -2193,7 +2449,7 @@ class TestTreeExporter(unittest.TestCase):
         '\t};\n'
         '\tzone "168.192.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/internal/168.192.in-addr.db";\n'
+        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
@@ -2208,14 +2464,14 @@ class TestTreeExporter(unittest.TestCase):
         '\t};\n'
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/external/4.3.2.1.in-addr.db";\n'
+        '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};' % tuple([self.named_dir.rstrip('/') for x in range(5)]))
     handle.close()
     handle = open(
-        '%s/internal_dns_servers/named/external/4.3.2.1.in-addr.db' %
+        '%s/internal_dns_servers/named/external/4.3.2.1.in-addr.arpa.db' %
         self.bind_config_dir, 'r')
     self.assertEqual(
         handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
@@ -2240,7 +2496,7 @@ class TestTreeExporter(unittest.TestCase):
         'computer3 3600 in a 1.2.3.6\n')
     handle.close()
     handle = open(
-        '%s/internal_dns_servers/named/internal/168.192.in-addr.db' %
+        '%s/internal_dns_servers/named/internal/168.192.in-addr.arpa.db' %
         self.bind_config_dir, 'r')
     self.assertEqual(
         handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
