@@ -51,7 +51,7 @@ import tarfile
 import roster_core
 from roster_config_manager import tree_exporter
 
-CONFIG_FILE = 'test_data/roster.conf.real'
+CONFIG_FILE = 'test_data/roster.conf'
 EXEC = '../roster-config-manager/scripts/dnsconfigsync'
 ZONE_IMPORTER_EXEC='../roster-config-manager/scripts/dnszoneimporter'
 KEY_FILE = 'test_data/rndc.key'
@@ -64,19 +64,15 @@ SSH_USER = 'root'
 TEST_DNS_SERVER = u'localhost'
 NS_IP_ADDRESS = '127.0.0.1'
 NS_DOMAIN = '' #Blank since using localhost
-DNSSEC_SIGNZONE_EXEC = '/usr/sbin/dnssec-signzone'
-DNSSEC_KEYGEN_EXEC = '/usr/sbin/dnssec-keygen'
-RANDOM = '/dev/urandom'
 
 
 class TestCheckConfig(unittest.TestCase):
   def setUp(self):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
+
     self.bind_config_dir = os.path.expanduser(
         self.config_instance.config_file['exporter']['root_config_dir'])
-    self.tree_exporter_instance = tree_exporter.BindTreeExport(
-        CONFIG_FILE, dnssec=True, dnssec_keygen_exec=DNSSEC_KEYGEN_EXEC,
-        dnssec_signzone_exec=DNSSEC_SIGNZONE_EXEC, random=RANDOM)
+    self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
@@ -159,7 +155,7 @@ class TestCheckConfig(unittest.TestCase):
         ';; global options:  printcmd\n'
         ';; Got answer:\n'
         ';; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: %s\n'
-        ';; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: '
+        ';; flags: qr ad rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: '
         '2\n'
         '\n'
         ';; QUESTION SECTION:\n'

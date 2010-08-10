@@ -246,6 +246,7 @@ class TestXMLServerClient(unittest.TestCase):
                                'cs': ['sharrell', 'shuey']})
 
   def testMultipleThreadedConnections(self):
+    print 1
     self.daemon_instance.core_die_time = 7200
     roster_client_lib.RunFunction(u'MakeZone', USERNAME,
                                   credstring=self.credential,
@@ -265,6 +266,7 @@ class TestXMLServerClient(unittest.TestCase):
       old_thread.join()
 
   def testMultipleThreadedConnectionsWithDifferentUsers(self):
+    print 2
     data_exporter = tree_exporter.BindTreeExport(CONFIG_FILE)
     self.daemon_instance.core_die_time = 7200
     roster_client_lib.RunFunction(u'MakeZone', USERNAME,

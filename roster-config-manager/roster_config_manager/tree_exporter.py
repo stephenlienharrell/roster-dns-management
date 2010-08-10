@@ -69,10 +69,8 @@ class ChangesNotFoundError(Error):
 
 class BindTreeExport(object):
   """This class exports zones"""
-  def __init__(self, config_file_name, directory=None, dnssec=False,
-               kskfile=None, zskfile=None, dnssec_signzone_exec=None,
-               dnssec_keygen_exec=None, temp_zone_file='.temp_zone_file',
-               random='/dev/urandom', encryption_algorithm='RSASHA1'):
+  def __init__(self, config_file_name, directory=None, dnssec=None,
+               kskfile=None, zskfile=None):
     """Sets self.db_instance
 
     Inputs:
@@ -92,14 +90,21 @@ class BindTreeExport(object):
     self.backup_dir = config_instance.config_file['exporter']['backup_dir']
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
-    self.dnssec = dnssec
-    self.dnssec_signzone_exec = dnssec_signzone_exec
-    self.dnssec_keygen_exec = dnssec_keygen_exec
-    self.random = random
-    self.encryption_algorithm = encryption_algorithm
+    if( dnssec is None ):
+      self.dnssec = config_instance.config_file['dnssec']['dnssec']
+    else:
+      self.dnssec = dnssec
+    self.dnssec_signzone_exec = config_instance.config_file[
+        'dnssec']['dnssec_signzone_exec']
+    self.dnssec_keygen_exec = config_instance.config_file[
+        'dnssec']['dnssec_keygen_exec']
+    self.random = config_instance.config_file['dnssec']['random']
+    self.encryption_algorithm = config_instance.config_file[
+        'dnssec']['encryption']
     self.kskfile = kskfile
     self.zskfile = zskfile
-    self.temp_zone_file = temp_zone_file
+    self.temp_zone_file = config_instance.config_file[
+        'dnssec']['temp_zone_file']
 
   def MakeKey(self, zone_name, ksk=False):
     """Makes a zsk or ksk

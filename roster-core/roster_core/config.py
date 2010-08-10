@@ -82,7 +82,12 @@ class Config(object):
                                    'exp_time': 'int'},
                    'exporter': {'backup_dir': 'str',
                                 'root_config_dir': 'str',
-                                'named_dir': 'str'}}
+                                'named_dir': 'str'},
+                   'dnssec': {'dnssec': 'boolean',
+                              'dnssec_signzone_exec': 'str',
+                              'dnssec_keygen_exec': 'str',
+                              'random': 'str', 'encryption': 'str',
+                              'temp_zone_file': 'str'}}
 
     for section in file_schema:
       self.config_file[section] = {}

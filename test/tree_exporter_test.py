@@ -1978,8 +1978,7 @@ class TestTreeExporter(unittest.TestCase):
 
   def testSignZone(self):
     self.dnssec_tree_exporter_instance = tree_exporter.BindTreeExport(
-        CONFIG_FILE, dnssec=True, kskfile=KSKFILE, zskfile=ZSKFILE,
-        dnssec_signzone_exec=DNSSEC_SIGNZONE_EXEC)
+        CONFIG_FILE, dnssec=True)
     signed_zone_file_lines = []
     zone_file_string = open(ZONE_FILE).read()
     self.assertEqual(len(zone_file_string.split('\n')), 28)
@@ -1989,8 +1988,7 @@ class TestTreeExporter(unittest.TestCase):
 
   def testTreeExporterExpportAllBindTreesDnssec(self):
     self.dnssec_tree_exporter_instance = tree_exporter.BindTreeExport(
-        CONFIG_FILE, dnssec=True, dnssec_keygen_exec=DNSSEC_KEYGEN_EXEC,
-        dnssec_signzone_exec=DNSSEC_SIGNZONE_EXEC, random=RANDOM)
+        CONFIG_FILE, dnssec=True)
     self.tree_exporter_instance = self.dnssec_tree_exporter_instance
     self.core_instance.SetMaintenanceFlag(1)
     self.assertRaises(tree_exporter.MaintenanceError,
@@ -2048,13 +2046,14 @@ class TestTreeExporter(unittest.TestCase):
                      '\tmatch-clients { public; };\n'
                      '\tzone "university.edu" {\n'
                      '\t\ttype master;\n'
-                     '\t\tfile "%s/named/external/university.edu.db";\n'
+                     '\t\tfile "%s/named/external/university.edu.db.signed";\n'
                      '\t\t#Allow update\n'
                      '\t\tallow-update { none; };\n'
                      '\t};\n'
                      '\tzone "4.3.2.1.in-addr.arpa" {\n'
                      '\t\ttype master;\n'
-                     '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
+                     '\t\tfile '
+                     '"%s/named/external/4.3.2.1.in-addr.arpa.db.signed";\n'
                      '\t\t#Allow update\n'
                      '\t\tallow-update { none; };\n'
                      '\t};\n'
@@ -2062,12 +2061,12 @@ class TestTreeExporter(unittest.TestCase):
                           [self.named_dir.rstrip('/') for x in range(3)]))
     handle.close()
     handle = open(
-        '%s/external_dns_servers/named/external/4.3.2.1.in-addr.arpa.db' %
-        self.bind_config_dir, 'r')
+        '%s/external_dns_servers/named/external/4.3.2.1.in-addr.arpa.db.'
+        'signed' % self.bind_config_dir, 'r')
     self.assertEqual(len(handle.read().split()), 227)
     handle.close()
     handle = open(
-        '%s/external_dns_servers/named/external/university.edu.db' %
+        '%s/external_dns_servers/named/external/university.edu.db.signed' %
         self.bind_config_dir, 'r')
     self.assertEqual(len(handle.read().split()), 322)
     handle.close()
@@ -2116,13 +2115,13 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { public; secret; };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/internal/university.edu.db";\n'
+        '\t\tfile "%s/named/internal/university.edu.db.signed";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "168.192.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db";\n'
+        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db.signed";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
@@ -2131,35 +2130,35 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { public; };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/external/university.edu.db";\n'
+        '\t\tfile "%s/named/external/university.edu.db.signed";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
+        '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db.signed";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};' % tuple([self.named_dir.rstrip('/') for x in range(5)]))
     handle.close()
     handle = open(
-        '%s/internal_dns_servers/named/external/4.3.2.1.in-addr.arpa.db' %
-        self.bind_config_dir, 'r')
+        '%s/internal_dns_servers/named/external/4.3.2.1.in-addr.arpa.db.'
+        'signed' % self.bind_config_dir, 'r')
     self.assertEqual(len(handle.read().split()), 227)
     handle.close()
     handle = open(
-        '%s/internal_dns_servers/named/external/university.edu.db' %
+        '%s/internal_dns_servers/named/external/university.edu.db.signed' %
         self.bind_config_dir, 'r')
     self.assertEqual(len(handle.read().split()), 322)
     handle.close()
     handle = open(
-        '%s/internal_dns_servers/named/internal/168.192.in-addr.arpa.db' %
-        self.bind_config_dir, 'r')
+        '%s/internal_dns_servers/named/internal/168.192.in-addr.arpa.db.'
+        'signed' % self.bind_config_dir, 'r')
     self.assertEqual(len(handle.read().split()), 227)
     handle.close()
     handle = open(
-        '%s/internal_dns_servers/named/internal/university.edu.db' %
+        '%s/internal_dns_servers/named/internal/university.edu.db.signed' %
         self.bind_config_dir, 'r')
     self.assertEqual(len(handle.read().split()), 367)
     handle.close()
@@ -2208,14 +2207,14 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { secret; };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "%s/named/private/university.edu.db";\n'
+        '\t\tfile "%s/named/private/university.edu.db.signed";\n'
         '\t\t#Allow update\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};' % tuple([self.named_dir.rstrip('/') for x in range(2)]))
     handle.close()
     handle = open(
-        '%s/private_dns_servers/named/private/university.edu.db' %
+        '%s/private_dns_servers/named/private/university.edu.db.signed' %
         self.bind_config_dir, 'r')
     self.assertEqual(len(handle.read().split()), 232)
     handle.close()

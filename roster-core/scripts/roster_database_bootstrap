@@ -141,6 +141,22 @@ def main(args):
   parser.add_option('--named-dir', action='store', dest='named_dir',
                     help='Directory where named files will live.',
                     default='/etc/named')
+  parser.add_option('--dnssec', action='store_true', dest='dnssec',
+                    help='Enable dnssec.', default=False)
+  parser.add_option('--dnssec-signzone-exec', action='store',
+                    dest='dnssec_signzone_exec',
+                    default='/usr/sbin/dnssec-signzone')
+  parser.add_option('--dnssec-keygen-exec', action='store',
+                    dest='dnssec_keygen_exec',
+                    default='/usr/sbin/dnssec-keygen')
+  parser.add_option('--dnssec-random', action='store', dest='random',
+                    help='Random entropy file location.',
+                    default='/dev/urandom')
+  parser.add_option('--dnssec-encryption', action='store', dest='encryption',
+                    help='Encryption algorithm', default='RSASHA1')
+  parser.add_option('--dnssec-temp-zone-file', action='store',
+                    dest='temp_zone_file', default='.temp_zone_file',
+                    help='Temporary zone file location')
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -241,6 +257,20 @@ def main(args):
   config_parser.set('credentials', 'authentication_method', module_list[module])
   config_parser.set('credentials', 'exp_time', options.credential_expiry_time)
   config_parser_file = open(options.config_file, 'wb')
+
+  config_parser.add_section('dnssec')
+  if( options.dnssec ):
+    dnssec = 'on'
+  else:
+    dnssec = 'off'
+  config_parser.set('dnssec', 'dnssec', dnssec)
+  config_parser.set('dnssec', 'dnssec_signzone_exec',
+                    options.dnssec_signzone_exec)
+  config_parser.set('dnssec', 'dnssec_keygen_exec',
+                    options.dnssec_keygen_exec)
+  config_parser.set('dnssec', 'random', options.random)
+  config_parser.set('dnssec', 'encryption', options.encryption)
+  config_parser.set('dnssec', 'temp_zone_file', options.temp_zone_file)
 
   config_parser.add_section(module_list[module])
   for variable in authentication_module_instance.requires:
