@@ -67,8 +67,12 @@ class CliCommonLib:
           self.options.credfile = self.config_file.get('user_tools', 'cred_file')
     else:
       config_file = ''
-      file_locations = [os.path.expanduser('~/.rosterrc'),
-                        '/etc/roster/roster_user_tools.conf']
+      if( 'ROSTER_USER_CONFIG' in os.environ ):
+        file_locations = [os.environ['ROSTER_USER_CONFIG']]
+      else:
+        file_locations = []
+      file_locations.extend([os.path.expanduser('~/.rosterrc'),
+                             '/etc/roster/roster_user_tools.conf'])
       for config_file in file_locations:
         if( os.path.exists(config_file) ):
           a = self.config_file.read(config_file)

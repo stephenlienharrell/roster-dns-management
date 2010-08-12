@@ -1,4 +1,5 @@
 Current Release
+- Added ability to pull config file from environ.
 
 2010-07-21 release-0.14
 - Updated all tools to use new flags class

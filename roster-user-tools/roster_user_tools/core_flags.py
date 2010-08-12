@@ -87,16 +87,16 @@ class CoreFlags:
           '--cred-string', action='store', dest='credstring',
           help='String of credential.', metavar='<cred-string>', default=None)
       self.SetAllFlagRule('credstring', required=False)
+      self.parser.add_option(
+          '-c', '--cred-file', action='store', dest='credfile',
+          help='Location of credential file.', metavar='<cred-file>',
+          default=None)
+      self.SetAllFlagRule('credfile', required=False)
 
     self.parser.add_option(
         '-s', '--server', action='store', dest='server',
         help='XML RPC Server URL.', metavar='<server>', default=None)
     self.SetAllFlagRule('server', required=False)
-    self.parser.add_option(
-        '-c', '--cred-file', action='store', dest='credfile',
-        help='Location of credential file.', metavar='<cred-file>',
-        default=None)
-    self.SetAllFlagRule('credfile', required=False)
     self.parser.add_option(
         '--config-file', action='store', dest='config_file',
         help='Config file location.', metavar='<file>', default=None)

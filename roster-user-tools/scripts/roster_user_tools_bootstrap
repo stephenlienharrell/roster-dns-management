@@ -68,6 +68,7 @@ def main(args):
   if( options.server is None ):
     print 'Server MUST be specified with --server to write the config file.'
     sys.exit(1)
+  print options.config_file
 
   config_file_object = ConfigParser.SafeConfigParser()
 
