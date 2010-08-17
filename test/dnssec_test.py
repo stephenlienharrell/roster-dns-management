@@ -51,7 +51,7 @@ import tarfile
 import roster_core
 from roster_config_manager import tree_exporter
 
-CONFIG_FILE = 'test_data/roster.conf'
+CONFIG_FILE = 'test_data/roster.conf.real'
 EXEC = '../roster-config-manager/scripts/dnsconfigsync'
 ZONE_IMPORTER_EXEC='../roster-config-manager/scripts/dnszoneimporter'
 KEY_FILE = 'test_data/rndc.key'
@@ -61,9 +61,9 @@ SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 SSH_ID = 'test_data/roster_id_dsa'
 SSH_USER = 'root'
-TEST_DNS_SERVER = u'localhost'
-NS_IP_ADDRESS = '127.0.0.1'
-NS_DOMAIN = '' #Blank since using localhost
+TEST_DNS_SERVER = u'testns1'
+NS_IP_ADDRESS = '128.210.9.65'
+NS_DOMAIN = '.rcac.purdue.edu' #Blank since using localhost
 
 
 class TestCheckConfig(unittest.TestCase):
