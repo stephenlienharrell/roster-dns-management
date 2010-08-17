@@ -99,10 +99,7 @@ class TestCheckConfig(unittest.TestCase):
     db_instance = self.config_instance.GetDb()
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
 
-    schema = roster_core.embedded_files.SCHEMA_FILE
-    db_instance.StartTransaction()
-    db_instance.cursor.execute(schema)
-    db_instance.EndTransaction()
+    self.db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()

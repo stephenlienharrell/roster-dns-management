@@ -61,9 +61,9 @@ SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 SSH_ID = 'test_data/roster_id_dsa'
 SSH_USER = 'root'
-TEST_DNS_SERVER = u'testns1'
-NS_IP_ADDRESS = '128.210.9.65'
-NS_DOMAIN = '.rcac.purdue.edu' #Blank since using localhost
+TEST_DNS_SERVER = u'localhost'
+NS_IP_ADDRESS = '127.0.0.1'
+NS_DOMAIN = '' #Blank since using localhost
 
 
 class TestCheckConfig(unittest.TestCase):
@@ -77,10 +77,7 @@ class TestCheckConfig(unittest.TestCase):
     db_instance = self.config_instance.GetDb()
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
 
-    schema = roster_core.embedded_files.SCHEMA_FILE
-    db_instance.StartTransaction()
-    db_instance.cursor.execute(schema)
-    db_instance.EndTransaction()
+    self.db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()

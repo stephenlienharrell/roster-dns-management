@@ -75,10 +75,7 @@ class TestCheckConfig(unittest.TestCase):
     db_instance = self.config_instance.GetDb()
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
 
-    schema = roster_core.embedded_files.SCHEMA_FILE
-    db_instance.StartTransaction()
-    db_instance.cursor.execute(schema)
-    db_instance.EndTransaction()
+    self.db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
@@ -117,8 +114,8 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'any')
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    command = os.popen('python %s -i 26 -u %s --ssh-id %s --config-file %s' % (EXEC,
-        SSH_USER, SSH_ID, CONFIG_FILE))
+    command = os.popen('python %s -i 26 -u %s --ssh-id %s --config-file %s' % (
+        EXEC, SSH_USER, SSH_ID, CONFIG_FILE))
     lines = command.read().split('\n')
     # These lines will likely need changed depending on implementation
     self.assertTrue('Connecting to rsync on "%s"' % TEST_DNS_SERVER in lines)
