@@ -63,7 +63,7 @@ class TestCredentialsLibrary(unittest.TestCase):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
     db_instance = self.config_instance.GetDb()
 
-    self.db_instance.CreateRosterDatabase()
+    db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
@@ -98,7 +98,7 @@ class TestCredentialsLibrary(unittest.TestCase):
          "KWARGS: {'kwarg': 'value'}\n", 'USER: sharrell\n'])
     self.assertEqual(logfile_lines[9:],
         ['\n', 'Traceback (most recent call last):\n',
-         '  File "%s", line 91, in testLogException\n' % sys.argv[0],
+         '  File "%s", line 88, in testLogException\n' % sys.argv[0],
          '    raise Exception\n', 'Exception\n', '\n',
          '---------------------\n'])
     self.assertEqual(len(logfile_lines), 16)

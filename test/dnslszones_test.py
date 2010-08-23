@@ -102,7 +102,7 @@ class TestDnslszones(unittest.TestCase):
 
     db_instance = self.config_instance.GetDb()
 
-    self.db_instance.CreateRosterDatabase()
+    db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()

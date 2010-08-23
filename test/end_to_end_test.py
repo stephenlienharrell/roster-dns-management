@@ -68,8 +68,8 @@ CHECKCONF_EXEC = '/usr/sbin/named-checkconf'
 #SSH
 SSH_ID = 'test_data/roster_id_dsa'
 SSH_USER = 'root'
-TEST_DNS_SERVER = u'test_server1' # change this to real bind servers
-TEST_DNS_SERVER2 = u'test_server2'
+TEST_DNS_SERVER = u'testns1' # change this to real bind servers
+TEST_DNS_SERVER2 = u'testns2'
 
 
 class InitThread(threading.Thread):
