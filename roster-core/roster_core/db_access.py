@@ -190,7 +190,7 @@ class dbAccess(object):
     if( self.connection is None ):
       self.connection = MySQLdb.connect(host=self.db_host, user=self.db_user,
                                         passwd=self.db_passwd, db=self.db_name,
-                                        use_unicode=True)
+                                        use_unicode=True, charset='utf8')
       self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
 
     while_sleep = 0

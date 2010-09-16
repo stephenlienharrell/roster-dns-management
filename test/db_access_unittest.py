@@ -41,6 +41,7 @@ __version__ = '#TRUNK#'
 
 
 import cPickle
+import codecs
 import datetime
 import unittest
 import time
@@ -487,6 +488,23 @@ class TestdbAccess(unittest.TestCase):
                       {'users_id': '1',
                        'access_level': '0',
                        'user_name': "'tree_export_user'"})
+
+  def testUnicode(self):
+    ## snowman chars are unicode chars that don't exist in ascii
+    snowman_chars = codecs.open('test_data/snowman', encoding='utf-8',
+                                mode='r').read()
+    users_dict = self.db_instance.GetEmptyRowDict('users')
+    users_dict['user_name'] = snowman_chars
+    users_dict['access_level'] = 32
+    self.db_instance.StartTransaction()
+    self.db_instance.MakeRow('users', users_dict)
+    self.db_instance.EndTransaction()
+    users_dict['access_level'] = None
+    self.db_instance.StartTransaction()
+    rows = self.db_instance.ListRow('users', users_dict)
+    self.db_instance.EndTransaction()
+    self.assertEquals(rows[0]['user_name'], snowman_chars)
+
 
 if( __name__ == '__main__' ):
     unittest.main()
