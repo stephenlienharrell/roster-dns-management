@@ -124,6 +124,7 @@ class TestDnsMkHost(unittest.TestCase):
     self.unittest_timestamp = datetime.datetime.now()
     self.daemon_thread = DaemonThread(self.config_instance, self.port,
                                       self.unittest_timestamp)
+    self.daemon_thread.daemon = True
     self.daemon_thread.start()
     self.core_instance = roster_core.Core(USERNAME, self.config_instance,
                                           unittest_timestamp=(

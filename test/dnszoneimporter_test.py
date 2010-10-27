@@ -102,6 +102,7 @@ class TestDnsZoneImport(unittest.TestCase):
     self.port = PickUnusedPort()
     self.server_name = 'https://%s:%s' % (HOST, self.port)
     self.daemon_thread = DaemonThread(self.config_instance, self.port)
+    self.daemon_thread.daemon = True
     self.daemon_thread.start()
     self.core_instance = roster_core.Core(USERNAME, self.config_instance)
     self.password = 'test'
@@ -136,8 +137,8 @@ class TestDnsZoneImport(unittest.TestCase):
                      '17 records loaded from zone test_data/test_zone.db\n'
                      '17 total records added\n')
     output.close()
-    self.assertEqual(
-        self.core_instance.ListRecords(),
+    for record in self.core_instance.ListRecords():
+        self.assertTrue(record in
         [{u'serial_number': 811, u'refresh_seconds': 10800, 'target': u'@',
           u'name_server': u'ns.university.edu.', u'retry_seconds': 3600,
           'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa',
@@ -218,8 +219,8 @@ class TestDnsZoneImport(unittest.TestCase):
         'Loading in test_data/test_reverse_ipv6_zone.db\n'
         '5 records loaded from zone test_data/test_reverse_ipv6_zone.db\n'
         '5 total records added\n')
-    self.assertEqual(
-        self.core_instance.ListRecords(),
+    for record in self.core_instance.ListRecords():
+        self.assertTrue(record in
         [{u'serial_number': 9, u'refresh_seconds': 10800, 'target': u'@',
           u'name_server': u'ns.university.edu.', u'retry_seconds': 3600,
           'ttl': 86400, u'minimum_seconds': 86400, 'record_type': u'soa',
@@ -253,8 +254,8 @@ class TestDnsZoneImport(unittest.TestCase):
         'Loading in test_data/test_reverse_zone.db\n'
         '6 records loaded from zone test_data/test_reverse_zone.db\n'
         '6 total records added\n')
-    self.assertEqual(
-        self.core_instance.ListRecords(),
+    for record in self.core_instance.ListRecords():
+        self.assertTrue(record in
         [{u'serial_number': 10, u'refresh_seconds': 10800, 'target': u'@',
           u'name_server': u'ns.university.edu.', u'retry_seconds': 3600,
           'ttl': 86400, u'minimum_seconds': 86400, 'record_type': u'soa',

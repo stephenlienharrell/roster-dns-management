@@ -135,6 +135,7 @@ class TestXMLServerClient(unittest.TestCase):
 
     self.daemon_thread = DaemonThread(self.config_instance, self.port,
                                       self.daemon_instance)
+    self.daemon_thread.daemon = True
     self.daemon_thread.start()
     time.sleep(1)
     ## Will create a core_instance in core_store
@@ -259,6 +260,7 @@ class TestXMLServerClient(unittest.TestCase):
       new_client_thread = ClientRecordModifyThread(
           USERNAME, '192.168.0.%s' % current_number,
           'host%s' % current_number, self.credential, self)
+      new_client_thread.daemon = True
       new_client_thread.start()
       client_threads.append(new_client_thread)
 
@@ -294,6 +296,7 @@ class TestXMLServerClient(unittest.TestCase):
                 user_number, record_number),
             'host%s-%s' % (user_number, record_number),
             cred_dict['user%s' % user_number], self)
+        new_client_thread.daemon = True
         new_client_thread.start()
         client_threads.append(new_client_thread)
       data_exporter.db_instance.StartTransaction()

@@ -113,6 +113,7 @@ class Testdnsrmhost(unittest.TestCase):
     self.port = PickUnusedPort()
     self.server_name = 'https://%s:%s' % (HOST, self.port)
     self.daemon_thread = DaemonThread(self.config_instance, self.port)
+    self.daemon_thread.daemon = True
     self.daemon_thread.start()
     self.core_instance = roster_core.Core(USERNAME, self.config_instance)
     self.core_helper_instance = roster_core.CoreHelpers(self.core_instance)

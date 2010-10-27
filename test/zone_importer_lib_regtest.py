@@ -230,7 +230,8 @@ class TestZoneImport(unittest.TestCase):
         zone_name=u'8.0.e.f.f.3.ip6.arpa'),
         {u'8.0.e.f.f.3.ip6.arpa': 
             u'3ffe:0800:0000:0000:0000:0000:0000:0000/24'})
-    self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
+    for record in self.core_instance.ListRecords(record_type=u'ptr'):
+        self.assertTrue(record in
                      [{'target':
                        u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0.0',
                        'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any',

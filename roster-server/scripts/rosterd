@@ -165,8 +165,11 @@ def main(args):
       if( os.getuid() == 0 ):
         pw = pwd.getpwnam(username)
         os.setuid(pw.pw_uid)
-      ServerThread(config_instance, options.key_file, options.cert_file,
-                   options.host, options.port,options.unit_test).start()
+      server = ServerThread(config_instance, options.key_file,
+                            options.cert_file, options.host,
+                            options.port,options.unit_test)
+      server.daemon = True
+      server.start()
     else:
       print 'ERROR: Could not access lock file "%s". Do you have permission?' % (
           options.lock_file)

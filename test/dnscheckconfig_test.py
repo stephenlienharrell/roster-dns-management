@@ -43,6 +43,7 @@ __version__ = '#TRUNK#'
 import os
 import sys
 import shutil
+import subprocess
 import unittest
 import tarfile
 import StringIO
@@ -119,6 +120,8 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.backup_dir)
     if( os.path.exists(self.root_config_dir) ):
       shutil.rmtree(self.root_config_dir)
+    if( os.path.exists('temp_dir') ):
+      shutil.rmtree('temp_dir')
 
   def testCheckConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
@@ -140,8 +143,8 @@ class TestCheckConfig(unittest.TestCase):
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = os.popen3('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
-        KEY_FILE, EXEC))[2]
+    output = subprocess.Popen(('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
+        KEY_FILE, EXEC)).split(), stderr=subprocess.PIPE).stderr
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
 
@@ -177,7 +180,9 @@ class TestCheckConfig(unittest.TestCase):
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aa 192.168.1.104')
     output = os.popen('python %s --config-file %s --' % (
         EXEC, CONFIG_FILE))
-    self.assertEqual(output.read(),
+    # Replacement below to accomodate for later bind versions
+    self.assertEqual(output.read().replace(
+        'zone sub.university.edu/IN: not loaded due to errors.\n', ''),
         "ERROR: temp_dir/set1_servers/named/test_view/sub.university.edu.db"
         ":16: unknown RR type 'aa'\n"
         "zone sub.university.edu/IN: loading from master file "
@@ -197,7 +202,9 @@ class TestCheckConfig(unittest.TestCase):
         ' 811 10800', ' 10800')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    self.assertEqual(output.read(),
+    # Replacement below to accomodate for later bind versions
+    self.assertEqual(output.read().replace(
+        'zone sub.university.edu/IN: not loaded due to errors.\n', ''),
         'ERROR: dns_rdata_fromtext: '
         'temp_dir/set1_servers/named/test_view/sub.university.edu.db:3: '
         'near eol: unexpected end of input\n'

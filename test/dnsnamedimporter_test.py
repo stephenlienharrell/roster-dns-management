@@ -143,7 +143,8 @@ class TestDnsNamedImport(unittest.TestCase):
                                'zone_options': u'masters { 192.168.1.3; };',
                                'zone_origin': u'0.0.127.in-addr.arpa.'}}})
 
-    self.assertEqual(self.core_instance.ListRecords(),
+    for record in self.core_instance.ListRecords():
+        self.assertTrue( record in
         [{u'admin_email': u'hostmaster.ns.university.edu.',
           u'expiry_seconds': 3600000,
           'last_user': u'sharrell',
