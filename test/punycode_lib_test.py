@@ -46,26 +46,26 @@ class TestPunycodeLibModule(unittest.TestCase):
     file = codecs.open('test_data/snowman',mode='r',encoding='utf-8')
     unicode = file.read().replace('\n','')
     self.assertEqual(unicode, u'\u2603\u2190\u2191.sn')
-    punycode = punycode_lib.uni2puny(unicode)
+    punycode = punycode_lib.Uni2Puny(unicode)
     self.assertEqual(punycode, 'xn--35gc625a.sn')
-    unicode = punycode_lib.puny2uni(punycode)
+    unicode = punycode_lib.Puny2Uni(punycode)
     self.assertEqual(unicode, u'\u2603\u2190\u2191.sn')
     ascii = 'sub.ascii.com.'
-    punycode = punycode_lib.uni2puny(ascii)
+    punycode = punycode_lib.Uni2Puny(ascii)
     self.assertEqual(punycode, ascii)
-    ascii = punycode_lib.puny2uni(punycode)
+    ascii = punycode_lib.Puny2Uni(punycode)
     self.assertEqual(ascii, punycode)
 
   def testUni2Puny(self):
     file = codecs.open('test_data/snowman',mode='r',encoding='utf-8')
     unicode = file.read().replace('\n','')
     self.assertEqual(unicode, u'\u2603\u2190\u2191.sn')
-    punycode = punycode_lib.uni2puny(unicode)
+    punycode = punycode_lib.Uni2Puny(unicode)
     self.assertEqual(punycode, 'xn--35gc625a.sn')
 
   def testPuny2Uni(self):
     punycode = 'xn--35gc625a.sn'
-    unicode = punycode_lib.puny2uni(punycode)
+    unicode = punycode_lib.Puny2Uni(punycode)
     self.assertEqual(unicode, u'\u2603\u2190\u2191.sn')
 
 if( __name__ == '__main__' ):
