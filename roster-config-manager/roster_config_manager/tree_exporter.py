@@ -45,6 +45,7 @@ import os
 import StringIO
 import shutil
 import tarfile
+import punycode_lib
 
 from roster_core import audit_log
 from roster_core import config
@@ -428,6 +429,8 @@ class BindTreeExport(object):
 
         'w')
     try:
+      for audit_index, audit_entry in enumerate(audit_log_replay_dump):
+        audit_log_replay_dump[audit_index] = audit_entry.encode('utf-8')
       audit_log_replay_dump_file.writelines(audit_log_replay_dump)
     finally:
       audit_log_replay_dump_file.close()
@@ -435,6 +438,8 @@ class BindTreeExport(object):
     full_dump_file = bz2.BZ2File('%s/full_database_dump-%s.bz2' % 
                                  (self.backup_dir, log_id), 'w')
     try:
+      for full_dump_index, full_dump_entry in enumerate(full_database_dump):
+        full_database_dump[full_dump_index] = full_dump_entry.encode('utf-8')
       full_dump_file.writelines(full_database_dump)
     finally:
       full_dump_file.close()
@@ -853,11 +858,24 @@ class BindTreeExport(object):
                       cooked_data[dns_server_set_name]['views'][view_name][
                           'zones'][zone_name]['records'] = []
 
+                  for record in sorted_records[(
+                      zone_name, view_dependency_name)].values():
+                    try:
+                      record['target'] = punycode_lib.Uni2Puny(record['target'])
+                    except (KeyError):
+                      pass
+                    try:
+                      record['assignment_host'] = punycode_lib.Uni2Puny(
+                          record['assignment_host'])
+                    except (KeyError):
+                      pass
                   cooked_data[dns_server_set_name]['views'][view_name][
                       'zones'][zone_name]['records'].extend(sorted_records[(
                           zone_name, view_dependency_name)].values())
+
                   cooked_data[dns_server_set_name]['views'][view_name][
-                      'zones'][zone_name]['zone_origin'] = zone['zone_origin']
+                      'zones'][zone_name]['zone_origin'] = punycode_lib.Uni2Puny(
+                          zone['zone_origin'])
 
                   cooked_data[dns_server_set_name]['views'][view_name][
                       'zones'][zone_name]['zone_options'] = zone['zone_options']

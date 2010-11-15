@@ -40,6 +40,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import codecs
 import os
 import shutil
 import sys
@@ -989,7 +990,9 @@ class TestTreeExporter(unittest.TestCase):
     # Make computer 1 'ptr' record for 'external' view
     records_dict['records_id'] = None
     records_dict['record_type'] = u'ptr'
-    records_dict['record_target'] = u'1'
+    file = codecs.open('test_data/snowman',encoding='utf-8',mode='r')
+    records_dict['record_target'] = file.read().replace('\n','')
+    file.close()
     records_dict['record_ttl'] = 3600
     records_dict['record_zone_name'] = u'4.3.2.1.in-addr.arpa'
     records_dict['record_view_dependency'] = u'external_dep'
@@ -1235,7 +1238,7 @@ class TestTreeExporter(unittest.TestCase):
                                'zone_name': u'4.3.2.1.in-addr.arpa',
                                u'admin_email': u'admin@university.edu.',
                                u'expiry_seconds': 5},
-                           15: {'target': u'1', 'ttl': 3600,
+                           15: {'target': u'\u2603\u2190\u2191.sn', 'ttl': 3600,
                                 'record_type': u'ptr',
                                 'view_name': u'external',
                                 'last_user': u'sharrell',
@@ -1703,7 +1706,7 @@ class TestTreeExporter(unittest.TestCase):
                                     'zone_name':u'4.3.2.1.in-addr.arpa',
                                     u'admin_email':u'admin@university.edu.',
                                     u'expiry_seconds':5},
-                                {'target':u'1',
+                                {'target':u'xn--35gc625a.sn',
                                  'ttl':3600,
                                  'record_type':u'ptr',
                                  'view_name':u'external',
@@ -1793,7 +1796,7 @@ class TestTreeExporter(unittest.TestCase):
                         {u'assignment_host': u'computer1',
                          'last_user': u'sharrell',
                          'record_type': u'ptr',
-                         'target': u'1',
+                         'target': u'xn--35gc625a.sn',
                          'ttl': 3600,
                          'view_name': u'external',
                          'zone_name': u'4.3.2.1.in-addr.arpa'}],
@@ -2377,7 +2380,7 @@ class TestTreeExporter(unittest.TestCase):
                      '$ORIGIN 4.3.2.1.in-addr.arpa.\n'
                      '4.3.2.1.in-addr.arpa. 3600 in soa ns1.university.edu. '
                      'admin@university.edu. 20091224 5 5 5 5\n'
-                     '1 3600 in ptr computer1\n')
+                     'xn--35gc625a.sn 3600 in ptr computer1\n')
     handle.close()
     handle = open(
         '%s/external_dns_servers/named/external/university.edu.db' %
@@ -2474,7 +2477,7 @@ class TestTreeExporter(unittest.TestCase):
         '$ORIGIN 4.3.2.1.in-addr.arpa.\n'
         '4.3.2.1.in-addr.arpa. 3600 in soa ns1.university.edu. '
         'admin@university.edu. 20091224 5 5 5 5\n'
-        '1 3600 in ptr computer1\n')
+        'xn--35gc625a.sn 3600 in ptr computer1\n')
     handle.close()
     handle = open(
         '%s/internal_dns_servers/named/external/university.edu.db' %

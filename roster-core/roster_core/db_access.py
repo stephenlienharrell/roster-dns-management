@@ -790,7 +790,7 @@ class dbAccess(object):
         for k,v in row.iteritems():
           row_dict[k] = self.connection.literal(v)
           if( isinstance(row_dict[k], str) ):
-            row_dict[k] = unicode(row_dict[k])
+            row_dict[k] = unicode(row_dict[k],'utf-8')
             
 
         table_data[table_name]['rows'].append(row_dict)
