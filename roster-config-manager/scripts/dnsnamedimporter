@@ -45,6 +45,104 @@ import roster_core
 from roster_config_manager import zone_importer_lib
 from roster_config_manager import named_importer_lib
 
+def MakeAcl(acl, named_data, core_instance):
+  """Makes acls from acls list in importer
+
+  Inputs:
+    aclslist: list of acls from importer
+  """
+  for ip in named_data['acls'][acl]:
+    core_instance.MakeACL(unicode(acl), unicode(ip), 1)
+
+def MakeView(view, options_dict, named_data, core_instance):
+  """Makes view
+
+  Inputs:
+    view: view name
+    options_dict: dictionary of view options
+    named_data: named_data dict from named importer
+    core_instance: core instance pointer
+  """
+  if( named_data['views'][view]['options'] ):
+    view_options = options_dict['views'][view]
+  else:
+    view_options = None
+
+  try:
+    core_instance.MakeView(unicode(view), view_options=unicode(view_options))
+  except IntegrityError, e:
+    if( 'Duplicate' not in str(e) ):
+      raise
+
+def MakeZone(zone, view, options_dict, named_data, core_instance):
+  """Makes zone
+  
+  Inputs:
+    zone: zone name
+    view: view name
+    options_dict: dictionary of zone options
+    named_data: named_data dict from named importer
+    core_instance: core instance pointer
+
+  Outputs:
+    string: string of possibly modified zone name
+  """
+  if( zone == '.' ):
+    zone_name = 'cache'
+  else:
+    zone_name = zone
+  if( named_data['views'][view]['zones'][zone]['options'] ):
+    zone_options = unicode(options_dict['zones'][zone])
+  else:
+    zone_options = None
+    
+  try:
+    core_instance.MakeZone(
+        unicode(zone_name),
+        unicode(named_data['views'][view]['zones'][zone]['type']),
+        u'%s.' % zone.rstrip('.'), view_name=unicode(view),
+        zone_options=zone_options)
+  except IntegrityError, e:
+    if( 'Duplicate' not in str(e) ):
+      raise
+  return zone_name
+
+def ImportZone(zone, zone_name, view, named_data):
+  """Imports records from zone
+
+  Inputs:
+    zone: real zone name
+    zone_name: zone name from MakeZone
+    view: view name
+    named_data: named_data dict from named importer
+
+  Outputs:
+    int: integer of number of records added
+  """
+  if( options.use_specific_view ):
+    records_view = options.view
+  else:
+    records_view = u'any'
+
+  if( named_data['views'][view]['zones'][zone]['file'].endswith('named.ca') ):
+    return 0
+  if( named_data['views'][view]['zones'][zone]['type'] == 'slave' ):
+    return 0
+
+  try:
+    importer = zone_importer_lib.ZoneImport(
+        named_data['views'][view]['zones'][zone]['file'],
+        unicode(options.config_file), unicode(options.user), unicode(view),
+        unicode(zone_name), records_view=unicode(records_view))
+  except Exception, e:
+    print "Error processing %s: %s %s" % (
+        named_data['views'][view]['zones'][zone]['file'], e.__class__,
+        str(e))
+    sys.exit(0)
+    raise
+
+  return importer.MakeRecordsFromZone()
+
 
 def main(args):
   """Collects command line arguments. Imports named files.
@@ -102,70 +200,14 @@ def main(args):
       unicode(named_importer_lib.DumpNamedHeader(named_data)))
 
   options_dict = named_importer_lib.MakeZoneViewOptions(named_data)
-
   total_record_count = 0
-
   for acl in named_data['acls']:
-    for ip in named_data['acls'][acl]:
-      core_instance.MakeACL(unicode(acl), unicode(ip), 1)
+    MakeAcl(acl, named_data, core_instance)
   for view in named_data['views']:
-    if( named_data['views'][view]['options'] ):
-      view_options = options_dict['views'][view]
-    else:
-      view_options = None
-
-    try:
-      core_instance.MakeView(unicode(view), view_options=unicode(view_options))
-    except IntegrityError, e:
-      if( 'Duplicate' not in str(e) ):
-        raise
-
+    MakeView(view, options_dict, named_data, core_instance)
     for zone in named_data['views'][view]['zones']:
-      if( zone == '.' ):
-        zone_name = 'cache'
-      else:
-        zone_name = zone
-      if( named_data['views'][view]['zones'][zone]['options'] ):
-        zone_options = unicode(options_dict['zones'][zone])
-      else:
-        zone_options = None
-        
-      try:
-        core_instance.MakeZone(
-            unicode(zone_name),
-            unicode(named_data['views'][view]['zones'][zone]['type']),
-            u'%s.' % zone.rstrip('.'), view_name=unicode(view),
-            zone_options=zone_options)
-      except IntegrityError, e:
-        if( 'Duplicate' not in str(e) ):
-          raise
-
-      if( options.use_specific_view ):
-        records_view = options.view
-      else:
-        records_view = u'any'
-
-      if( named_data['views'][view]['zones'][zone]['file'].endswith('named.ca') ):
-        continue
-      if( named_data['views'][view]['zones'][zone]['type'] == 'slave' ):
-        continue
-
-      try:
-        importer = zone_importer_lib.ZoneImport(
-            named_data['views'][view]['zones'][zone]['file'],
-            unicode(options.config_file), unicode(options.user), unicode(view),
-            unicode(zone_name), records_view=unicode(records_view))
-      except Exception, e:
-        raise
-        print "Error processing %s: %s %s" % (
-            named_data['views'][view]['zones'][zone]['file'], e.__class__,
-            str(e))
-        sys.exit(0)
-
-      record_count = importer.MakeRecordsFromZone()
-      #print '%s records loaded from zone %s' % (record_count, options.file)
-
-      total_record_count += record_count
+      zone_name = MakeZone(zone, view, options_dict, named_data, core_instance)
+      total_record_count += ImportZone(zone, zone_name, view, named_data)
 
     print '%s total records added' % total_record_count
                        
