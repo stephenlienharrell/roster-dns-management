@@ -52,7 +52,11 @@ def MakeAcl(acl, named_data, core_instance):
     aclslist: list of acls from importer
   """
   for ip in named_data['acls'][acl]:
-    core_instance.MakeACL(unicode(acl), unicode(ip), 1)
+    try:
+      core_instance.MakeACL(unicode(acl), unicode(ip), 1)
+    except IntegrityError, e:
+      if( 'Duplicate' not in str(e) ):
+        raise
 
 def MakeView(view, options_dict, named_data, core_instance):
   """Makes view
@@ -74,7 +78,7 @@ def MakeView(view, options_dict, named_data, core_instance):
     if( 'Duplicate' not in str(e) ):
       raise
 
-def MakeZone(zone, view, options_dict, named_data, core_instance):
+def MakeZone(zone, zone_dict, view, options_dict, core_instance):
   """Makes zone
   
   Inputs:
@@ -91,7 +95,7 @@ def MakeZone(zone, view, options_dict, named_data, core_instance):
     zone_name = 'cache'
   else:
     zone_name = zone
-  if( named_data['views'][view]['zones'][zone]['options'] ):
+  if( zone_dict['options'] ):
     zone_options = unicode(options_dict['zones'][zone])
   else:
     zone_options = None
@@ -99,7 +103,7 @@ def MakeZone(zone, view, options_dict, named_data, core_instance):
   try:
     core_instance.MakeZone(
         unicode(zone_name),
-        unicode(named_data['views'][view]['zones'][zone]['type']),
+        unicode(zone_dict['type']),
         u'%s.' % zone.rstrip('.'), view_name=unicode(view),
         zone_options=zone_options)
   except IntegrityError, e:
@@ -169,6 +173,8 @@ def main(args):
   parser.add_option('-e', '--dns-server-set', action='store',
                     dest='dns_server_set',
                     help='String of dns server set.')
+  parser.add_option('-v', '--view', action='store', dest='view', default=None,
+                    help='View to put orphan zones or forced records.')
   parser.add_option('--use-specific-view', action='store_true',
                     dest='use_specific_view',
                     help='Records will be put in the any view unless this '
@@ -201,15 +207,18 @@ def main(args):
 
   options_dict = named_importer_lib.MakeZoneViewOptions(named_data)
   total_record_count = 0
+  if( options.view ):
+    named_importer_lib.MergeOrphanZones(named_data, options.view)
   for acl in named_data['acls']:
     MakeAcl(acl, named_data, core_instance)
   for view in named_data['views']:
     MakeView(view, options_dict, named_data, core_instance)
     for zone in named_data['views'][view]['zones']:
-      zone_name = MakeZone(zone, view, options_dict, named_data, core_instance)
+      zone_name = MakeZone(zone, named_data['views'][view]['zones'][zone],
+                           view, options_dict, core_instance)
       total_record_count += ImportZone(zone, zone_name, view, named_data)
 
-    print '%s total records added' % total_record_count
+  print '%s total records added' % total_record_count
                        
 
 if __name__ == "__main__":
