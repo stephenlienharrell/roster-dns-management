@@ -28,15 +28,52 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Toplevel RosterServer API.  This presents entities to external consumers."""
+
+"""Test PAM module."""
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
 
 
-from server import Server
-import general_ldap
-import auth_pam
+import getpass
 
+import unittest
 
-__all__ = ['Server', 'general_ldap', 'auth_pam']
+import fakepam
+import roster_core
+import roster_server
+from roster_server import auth_pam
 
+CONFIG_FILE = 'test_data/roster.conf'
 
-# vi: set ai aw sw=2:
+class TestPAMModule(unittest.TestCase):
+  def setUp(self):
+    pass
+  def tearDown(self):
+    pass
+  def testPAMModule(self):
+    pam_instance = auth_pam.AuthenticationMethod(
+        module=fakepam)
+    self.assertTrue(pam_instance.Authenticate(
+        username=u'jcollins', password=u'test'))
+    self.assertFalse(pam_instance.Authenticate(
+        username=u'jcollins', password=u'wrongpass'))
+    self.assertFalse(pam_instance.Authenticate(
+        username=u'wronguser', password=u'wrongpass'))
+    self.assertFalse(pam_instance.Authenticate(
+        username=u'wronguser', password=u'test'))
+
+  ## This tests the login user and password against PAM.
+  ## This is commented out because it requires the user to
+  ## interactively enter their login name and password during
+  ## a unittest.
+  ## def testPAMAuth(self):
+  ##  username = getpass.getpass('Enter your login username: ')
+  ##  password = getpass.getpass('Enter your login password: ')
+  ##  AuthModule = auth_pam.AuthenticationMethod()
+  ##  self.assertTrue(AuthModule.Authenticate(
+  ##    username, password))
+
+if( __name__ == '__main__' ):
+  unittest.main()

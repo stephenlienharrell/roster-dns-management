@@ -28,15 +28,17 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Toplevel RosterServer API.  This presents entities to external consumers."""
+"""Fake pam library with limited functionality"""
+
+__copyright__ = 'Copyright (C) 2010, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
 
 
-from server import Server
-import general_ldap
-import auth_pam
+import roster_core
 
-
-__all__ = ['Server', 'general_ldap', 'auth_pam']
-
-
-# vi: set ai aw sw=2:
+def authenticate(username=None, password=None, service=None):
+  if( username == 'jcollins' and password == 'test' ):
+    return True
+  else:
+    return False

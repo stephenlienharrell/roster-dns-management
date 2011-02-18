@@ -67,7 +67,7 @@ setup(name='RosterServer',
                    'Programming Language :: Python :: 2.5',
                    'Topic :: Internet :: Name Service (DNS)'],
       install_requires = ['python-ldap>=2.2.0', 'pyOpenSSL>=0.9',
-                          'pam>=0.1.4',
+                          'pam==0.1.4',
                           'RosterCore>=%s' % current_version],
       scripts = ['scripts/rosterd'],
      )
