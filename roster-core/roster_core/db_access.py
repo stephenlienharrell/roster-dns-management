@@ -86,6 +86,9 @@ import errors
 import helpers_lib
 
 
+DEBUG = True
+
+
 class TransactionError(errors.DbAccessError):
   pass
 
@@ -149,6 +152,20 @@ class dbAccess(object):
     if( self.connection is not None ):
       self.connection.close()
     self.connection = None
+
+
+  def cursor_execute(self, execution_string, values={}):
+    """This function allows for the capture of every mysql command that
+       is run in this class. 
+
+    Inputs:
+      execution_string: mysql command string
+      values: dictionary of values for mysql command
+    """
+    if( DEBUG == True ):
+      print execution_string % values
+    self.cursor.execute(execution_string, values)
+    
     
   def StartTransaction(self):
     """Starts a transaction.
@@ -198,7 +215,7 @@ class dbAccess(object):
     while( db_lock_locked ):
       time.sleep(while_sleep)
       try:
-        self.cursor.execute('SELECT `locked`, `lock_last_updated`, '
+        self.cursor_execute('SELECT `locked`, `lock_last_updated`, '
                             'NOW() as `now` from `locks` WHERE '
                             '`lock_name`="db_lock_lock"')
         rows = self.cursor.fetchall()
@@ -265,10 +282,10 @@ class dbAccess(object):
     """
     if( self.locked_db is True ):
       raise TransactionError('Must unlock tables before re-locking them')
-    self.cursor.execute('UPDATE `locks` SET `locked`=1 WHERE '
+    self.cursor_execute('UPDATE `locks` SET `locked`=1 WHERE '
                         '`lock_name`="db_lock_lock"')
     time.sleep(self.big_lock_wait)
-    self.cursor.execute(
+    self.cursor_execute(
         'LOCK TABLES %s READ' % ' READ, '.join(self.ListTableNames()))
     self.locked_db = True
 
@@ -280,8 +297,8 @@ class dbAccess(object):
     """
     if( self.locked_db is False ):
       raise TransactionError('Must lock tables before unlocking them')
-    self.cursor.execute('UNLOCK TABLES')
-    self.cursor.execute('UPDATE `locks` SET `locked`=0 WHERE '
+    self.cursor_execute('UNLOCK TABLES')
+    self.cursor_execute('UPDATE `locks` SET `locked`=0 WHERE '
                         '`lock_name`="db_lock_lock"')
     self.locked_db = False
 
@@ -294,6 +311,8 @@ class dbAccess(object):
     """
     cursor = self.connection.cursor()
     try:
+      if( DEBUG == True ):
+        print 'SELECT reserved_word FROM reserved_words'
       cursor.execute('SELECT reserved_word FROM reserved_words')
       rows = cursor.fetchall()
     finally:
@@ -334,7 +353,7 @@ class dbAccess(object):
     query = 'INSERT INTO %s (%s) VALUES (%s)' % (table_name, 
                                                  ','.join(column_names),
                                                  ','.join(column_assignments))
-    self.cursor.execute(query, row_dict)
+    self.cursor_execute(query, row_dict)
     return self.cursor.lastrowid
 
   def TableRowCount(self, table_name):
@@ -356,7 +375,7 @@ class dbAccess(object):
     if( not self.transaction_init ):
       raise TransactionError('Must run StartTansaction before getting row '
                              'count.')
-    self.cursor.execute('SELECT COUNT(*) FROM %s' % table_name)
+    self.cursor_execute('SELECT COUNT(*) FROM %s' % table_name)
     row_count = self.cursor.fetchone()
     return row_count['COUNT(*)']
 
@@ -387,7 +406,7 @@ class dbAccess(object):
       where_list.append('%s=%s%s%s' % (k, '%(', k, ')s'))
 
     query = 'DELETE FROM %s WHERE %s' % (table_name, ' AND '.join(where_list))
-    self.cursor.execute(query, row_dict)
+    self.cursor_execute(query, row_dict)
     return self.cursor.rowcount
 
   def UpdateRow(self, table_name, search_row_dict, update_row_dict):
@@ -433,7 +452,7 @@ class dbAccess(object):
 
     query = 'UPDATE %s SET %s WHERE %s' % (table_name, ','.join(query_updates),
                                            ' AND '.join(query_searches))
-    self.cursor.execute(query, combined_dict)
+    self.cursor_execute(query, combined_dict)
     return self.cursor.rowcount
 
   def ListRow(self, *args, **kwargs):
@@ -531,7 +550,7 @@ class dbAccess(object):
     query_where = []
     if( len(tables) > 1 ):
       if( not self.foreign_keys ):
-        self.cursor.execute('SELECT table_name, column_name, '
+        self.cursor_execute('SELECT table_name, column_name, '
                             'referenced_table_name, referenced_column_name '
                             'FROM information_schema.key_column_usage WHERE '
                             'referenced_table_name IS NOT NULL AND '
@@ -573,7 +592,7 @@ class dbAccess(object):
                                       ','.join(table_names),
                                       query_end)
 
-    self.cursor.execute(query, search_dict)
+    self.cursor_execute(query, search_dict)
     return self.cursor.fetchall()
 
   def GetEmptyRowDict(self, table_name):
@@ -702,7 +721,7 @@ class dbAccess(object):
       List: List of tables
     """
     query = 'SHOW TABLES'
-    self.cursor.execute(query)
+    self.cursor_execute(query)
     tables = self.cursor.fetchall()
     table_list = []
     for table_dict in tables:
@@ -716,7 +735,7 @@ class dbAccess(object):
     Outputs:
       datetime: current time in the database
     """
-    self.cursor.execute('SELECT NOW()')
+    self.cursor_execute('SELECT NOW()')
     return self.cursor.fetchone()['NOW()']
 
   def CreateRosterDatabase(self, schema=None):
@@ -752,7 +771,7 @@ class dbAccess(object):
     for line in execute_lines:
       self.StartTransaction()
       try:
-        self.cursor.execute(line)
+        self.cursor_execute(line)
       finally:
         self.EndTransaction()
 
@@ -767,20 +786,20 @@ class dbAccess(object):
                   table as values.
     """
     table_data = {}
-    self.cursor.execute('SHOW TABLES')
+    self.cursor_execute('SHOW TABLES')
     table_names = self.cursor.fetchall()
-    self.cursor.execute('SET OPTION SQL_QUOTE_SHOW_CREATE=1')
+    self.cursor_execute('SET OPTION SQL_QUOTE_SHOW_CREATE=1')
     for table_name in table_names:
       table_name = table_name.values()[0]
       table_data[table_name] = {}
-      self.cursor.execute('SHOW CREATE TABLE %s' % table_name)
+      self.cursor_execute('SHOW CREATE TABLE %s' % table_name)
       table_data[table_name]['schema'] = self.cursor.fetchone()['Create Table']
-      self.cursor.execute('DESCRIBE %s' % table_name)
+      self.cursor_execute('DESCRIBE %s' % table_name)
       table_data[table_name]['columns'] = []
       table_descriptions = self.cursor.fetchall()
       for table_description in table_descriptions:
         table_data[table_name]['columns'].append(table_description['Field'])
-      self.cursor.execute('SELECT %s FROM %s' % 
+      self.cursor_execute('SELECT %s FROM %s' % 
                           (','.join(table_data[table_name]['columns']),
                            table_name))
       table_rows = self.cursor.fetchall()
@@ -863,7 +882,7 @@ class dbAccess(object):
                                   'reverse_range_permissions',
                                   reverse_range_permissions_dict))
       if( not db_data ):
-        self.cursor.execute('SELECT access_level FROM users '
+        self.cursor_execute('SELECT access_level FROM users '
                             'WHERE user_name="%s"' % user)
         db_data.extend(self.cursor.fetchall())
 
