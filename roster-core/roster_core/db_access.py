@@ -86,7 +86,7 @@ import errors
 import helpers_lib
 
 
-DEBUG = True
+DEBUG = False
 
 
 class TransactionError(errors.DbAccessError):
