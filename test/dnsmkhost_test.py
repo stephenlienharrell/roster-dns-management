@@ -137,7 +137,7 @@ class TestDnsMkHost(unittest.TestCase):
                                 u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view2')
     self.core_instance.MakeZone(u'ipv6zone', u'master',
-                                u'ipv6.net.',
+                                u'ip6.arpa.',
                                 view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'soa', u'soa1', u'forward_zone',
@@ -292,23 +292,23 @@ class TestDnsMkHost(unittest.TestCase):
 
     test_ipv6_addr = '3ffe:0800::0567'
     output = os.popen('python %s -i 3ffe:0800::0567 -t '
-                      'machine1 -z ipv6zone -v test_view -s %s -u %s '
+                      'machine1 -z forward_zone -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (EXEC, self.server_name,
                                                   USERNAME, PASSWORD,
                                                   USER_CONFIG))
     self.assertEqual(
         output.read(),
-        'ADDED AAAA: machine1 zone_name: ipv6zone view_name: '
+        'ADDED AAAA: machine1 zone_name: forward_zone view_name: '
         'test_view ttl: 3600\n'
         '    assignment_ip: 3ffe:0800:0000:0000:0000:0000:0000:0567\n'
         'ADDED PTR: 7.6.5.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.8.0.e.'
         'f.f.3.ip6.arpa. zone_name: ipv6zone view_name: test_view ttl: 3600\n'
-        '    assignment_host: machine1.ipv6.net.\n')
+        '    assignment_host: machine1.university.edu.\n')
     output.close()
     self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
         [{'target': u'machine1', 'ttl': 3600, 'record_type': u'aaaa',
           'view_name': u'test_view', 'last_user': u'sharrell',
-          'zone_name': u'ipv6zone',
+          'zone_name': u'forward_zone',
           u'assignment_ip': u'3ffe:0800:0000:0000:0000:0000:0000:0567'}])
 
   def testErrors(self):
