@@ -141,6 +141,9 @@ def main(args):
   parser.add_option('--named-dir', action='store', dest='named_dir',
                     help='Directory where named files will live.',
                     default='/etc/named')
+  parser.add_option('--server-port', action='store', dest='port',
+                    help='Port server will start with.',
+                    default='8000')
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -226,6 +229,7 @@ def main(args):
   config_parser.set('exporter', 'named_dir', options.named_dir)
 
   config_parser.add_section('server')
+  config_parser.set('server', 'port', options.port)
   config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
   config_parser.set('server', 'core_die_time', options.core_die_time)
   config_parser.set('server', 'run_as_username', options.run_as_username)
