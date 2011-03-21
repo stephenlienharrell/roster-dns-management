@@ -70,8 +70,7 @@ class ChangesNotFoundError(Error):
 
 class BindTreeExport(object):
   """This class exports zones"""
-  def __init__(self, config_file_name, directory=None, dnssec=None,
-               kskfile=None, zskfile=None):
+  def __init__(self, config_file_name, directory=None):
     """Sets self.db_instance
 
     Inputs:
@@ -91,88 +90,6 @@ class BindTreeExport(object):
     self.backup_dir = config_instance.config_file['exporter']['backup_dir']
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
-    if( dnssec is None ):
-      self.dnssec = config_instance.config_file['dnssec']['dnssec']
-    else:
-      self.dnssec = dnssec
-    self.dnssec_signzone_exec = config_instance.config_file[
-        'dnssec']['dnssec_signzone_exec']
-    self.dnssec_keygen_exec = config_instance.config_file[
-        'dnssec']['dnssec_keygen_exec']
-    self.random = config_instance.config_file['dnssec']['random']
-    self.encryption_algorithm = config_instance.config_file[
-        'dnssec']['encryption']
-    self.kskfile = kskfile
-    self.zskfile = zskfile
-    self.temp_zone_file = config_instance.config_file[
-        'dnssec']['temp_zone_file']
-
-  def MakeKey(self, zone_name, ksk=False):
-    """Makes a zsk or ksk
-
-    Inputs:
-      ksk: boolean of whether or not to make a ksk key
-    Outputs:
-      str: key file name
-    """
-    command_array = [self.dnssec_keygen_exec]
-    if( self.random ):
-      command_array.append('-r %s' % self.random)
-    if( ksk ):
-      command_array.append('-f KSK -b 4096')
-    else:
-      command_array.append('-b 1024')
-    command_array.append('-a %s' % self.encryption_algorithm)
-    command_array.append('-n ZONE %s' % zone_name)
-
-    key_handle = os.popen(' '.join(command_array))
-    key_file = key_handle.read().strip()
-    key_handle.close()
-
-    return '%s.key' % key_file
-
-  def SignZone(self, zone_file_string, zone_name):
-    """Makes a zone file string into a signed zone
-
-    Inputs:
-      zone_file_string: string of zone file
-
-    Outputs:
-      str: string of signed zone file
-    """
-    closed = False
-    if( not self.kskfile ):
-      kskfile = self.MakeKey(zone_name, ksk=True)
-    else:
-      kskfile = self.kskfile
-    if( not self.zskfile ):
-      zskfile = self.MakeKey(zone_name)
-    else:
-      zskfile = self.zskfile
-    ksk_string = open(kskfile).read()
-    zsk_string = open(zskfile).read()
-
-    zone_file_string = '%s%s%s' % (zone_file_string, ksk_string, zsk_string)
-    try:
-      temp_handle = open(self.temp_zone_file, 'w')
-      temp_handle.writelines(zone_file_string)
-      temp_handle.close()
-      closed = True
-      sign_zone_string = '%s -o %s -N INCREMENT -k %s %s %s' % (
-          self.dnssec_signzone_exec, zone_name, kskfile,
-          self.temp_zone_file, zskfile)
-      output = os.popen3(sign_zone_string.split())
-      new_zone_file = output[1].read()
-      err = output[2].read()
-      new_zone_file_contents = open(new_zone_file.strip()).read()
-      return new_zone_file_contents
-    except:
-      raise
-    finally:
-      if( not closed ):
-        temp_handle.close()
-      if( os.path.exists(self.temp_zone_file) ):
-        os.remove(self.temp_zone_file)
 
   def NamedHeaderChangeDirectory(self, named_conf_header, new_directory):
     """Adds/Changes directory in named.conf header
@@ -386,20 +303,13 @@ class BindTreeExport(object):
           for zone in cooked_data[dns_server_set]['views'][view]['zones']:
             if( view not in zone_view_assignments[zone] ):
               continue
-            if( self.dnssec ):
-              zone_file = '%s/%s/%s.db.signed' % (
-                  dns_server_set_directory, view, zone)
-            else:
-              zone_file = '%s/%s/%s.db' % (dns_server_set_directory, view, zone)
+            zone_file = '%s/%s/%s.db' % (dns_server_set_directory, view, zone)
             zone_file_string = zone_exporter_lib.MakeZoneString(
                 cooked_data[dns_server_set]['views'][view]['zones'][zone][
                     'records'],
                 cooked_data[dns_server_set]['views'][view]['zones'][zone][
                     'zone_origin'],
                 record_argument_definitions, zone, view)
-
-            if( self.dnssec ):
-              zone_file_string = self.SignZone(zone_file_string, zone)
 
             self.AddToTarFile(tar_file, zone_file, zone_file_string)
         named_conf_file = '%s/named.conf' % named_directory.rstrip('/')
@@ -592,12 +502,8 @@ class BindTreeExport(object):
                   'zone_origin'].rstrip('.')))
           named_conf_lines.append('\t\ttype %s;' % cooked_data[
               dns_server_set]['views'][view_name]['zones'][zone]['zone_type'])
-          if( self.dnssec ):
-            named_conf_lines.append('\t\tfile "%s/named/%s/%s.db.signed";' % (
-                self.named_dir.rstrip('/'), view_name, zone))
-          else:
-            named_conf_lines.append('\t\tfile "%s/named/%s/%s.db";' % (
-                self.named_dir.rstrip('/'), view_name, zone))
+          named_conf_lines.append('\t\tfile "%s/named/%s/%s.db";' % (
+              self.named_dir.rstrip('/'), view_name, zone))
           zone_options = cooked_data[dns_server_set]['views'][view_name][
               'zones'][zone]['zone_options'].replace('\n', '\n\t\t')
           named_conf_lines.append('\t\t%s' % zone_options.rsplit('\n\t\t', 1)[0])
