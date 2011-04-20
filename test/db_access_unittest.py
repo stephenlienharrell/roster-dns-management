@@ -56,8 +56,67 @@ from roster_core import helpers_lib
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
+SSL_CONFIG_FILE = 'test_data/roster.conf.ssl' # Example in test_data
 DATA_FILE = 'test_data/test_data.sql'
 
+
+"""
+This test tests for SSL and mysql. If SSL is not enabled in the file
+test_data/roster.conf.ssl and SSL has not been set up with mysql the test
+will fail. To properly test an SSL connection mysql must require it. Otherwise
+the test will still pass if enabled in the config file but the connection will
+not be secure. To enable SSL in mysql these steps must be taken:
+
+Make sure your mysql has SSL support. This can be done by running:
+
+$ mysql --ssl --help | grep '^ssl '
+
+ and it should say something like 'ssl TRUE'.
+
+First you need to generate the SSL keys. The directory of these files is
+sensitive with systems running apparmor. Most systems will use /etc/mysql but
+your system may be different.
+
+$ cd /etc/mysql
+
+1. Generate CA
+$ openssl genrsa 2048 > ca-key.pem
+$ openssl req -new -x509 -nodes -days 9000 -key ca-key.pem > ca-cert.pem
+ 
+2. Generate Server Cert
+$ openssl req -newkey rsa:2048 -days 9000 -nodes -keyout server-key.pem >\
+  server-req.pem
+$ openssl x509 -req -in server-req.pem -days 9000  -CA ca-cert.pem -CAkey\
+  ca-key.pem -set_serial 01 > server-cert.pem
+ 
+3. Generate Client Cert
+$ openssl req -newkey rsa:2048 -days 9000 -nodes -keyout client-key.pem >\
+  client-req.pem
+$ openssl x509 -req -in client-req.pem -days 9000 -CA ca-cert.pem -CAkey\
+  ca-key.pem -set_serial 01 > client-cert.pem
+ 
+ 
+Finally Configure the MySQL Server to use SSL Encryption
+
+Open the my.cnf file. Find the ssl block in the mysqld section. my.cnf is
+usually in /etc/mysql. Edit like so:
+[mysqld]
+ssl-ca=/etc/mysql/ca-cert.pem
+ssl-cert=/etc/mysql/server-cert.pem
+ssl-key=/etc/mysql/server-key.pem
+
+
+Create a user that requires SSL to connect with, such as 'rosterssl'.
+$ mysql -u root -p
+mysql> GRANT SELECT, INSERT, UPDATE, DELETE on rosterdb.* to\
+       'rosterssl'@'localhost' IDENTIFIED BY 'somepassword' REQUIRE SSL;
+mysql> FLUSH PRIVILEGES;
+
+SSL should be ready to test.
+"""
+
+class SSLTestError(Exception):
+  pass
 
 class DbAccessThread(threading.Thread):
   def __init__(self, db_instance, test_instance, num1, num2):
@@ -150,6 +209,40 @@ class TestdbAccess(unittest.TestCase):
                      [])
 
   def testGetUserAuthorizationInfo(self):
+    self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'notindb'), {})
+
+    self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'jcollins'),
+        {'user_access_level': 32,
+         'user_name': 'jcollins',
+         'forward_zones': [],
+         'groups': [],
+         'reverse_ranges': []})
+
+    self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'shuey'),
+        {'user_access_level': 64,
+         'user_name': 'shuey',
+         'forward_zones': [
+             {'zone_name': 'cs.university.edu', 'access_right': 'rw'},
+             {'zone_name': 'eas.university.edu', 'access_right': 'r'},
+             {'zone_name': 'bio.university.edu', 'access_right': 'rw'}],
+         'groups': ['cs', 'bio'],
+         'reverse_ranges': [
+             {'cidr_block': '192.168.0.0/24',
+              'access_right': 'rw'},
+             {'cidr_block': '192.168.0.0/24',
+              'access_right': 'r'},
+             {'cidr_block': '192.168.1.0/24',
+              'access_right': 'rw'}]})
+
+  def testGetUserAuthorizationInfoSSL(self):
+    self.db_instance.close()
+    del self.config_instance
+    del self.db_instance
+    self.config_instance = roster_core.Config(file_name=SSL_CONFIG_FILE)
+    self.db_instance = self.config_instance.GetDb()
+    if( not self.config_instance.config_file['database']['ssl'] ):
+      raise SSLTestError(
+          "SSL not enabled in config file. Enable to allow for testing.")
     self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'notindb'), {})
 
     self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'jcollins'),

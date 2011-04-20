@@ -91,11 +91,13 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
     if( os.path.exists(self.cfg_exporter['backup_dir']) ):
       shutil.rmtree(self.cfg_exporter['backup_dir'])
 
-  def testDBBootstrapExtraParam(self):
+  def testDBBootstrapExtraParamSSL(self):
     command = subprocess.Popen(
         '%s --infinite-renew-time %s --core-die-time %s '
         '--get-credentials-wait-increment %s --credential-expiry-time %s '
-        '--big-lock-timeout %s ' % (
+        '--big-lock-timeout %s --db-ssl --db-ssl-cert cert '
+        '--db-ssl-key key --db-ssl-ca ca --db-ssl-ca-path capath '
+        '--db-ssl-cipher cipher' % (
             self.base_command,
             90210, 22221, 13, 26, 9001),
         shell=True,
@@ -113,7 +115,41 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
     self.assertEquals(config_server['core_die_time'], 22221)
     self.assertEquals(config_server['get_credentials_wait_increment'], 13)
     self.assertEquals(config_credentials['exp_time'], 26)
-    self.assertEquals(config_database['big_lock_timeout'], 9001)
+    self.assertEquals(config_database['ssl'], True)
+    self.assertEquals(config_database['ssl_cert'], 'cert')
+    self.assertEquals(config_database['ssl_key'], 'key')
+    self.assertEquals(config_database['ssl_ca'], 'ca')
+    self.assertEquals(config_database['ssl_capath'], 'capath')
+    self.assertEquals(config_database['ssl_cipher'], 'cipher')
+
+  def testDBBootstrapExtraParam(self):
+    command = subprocess.Popen(
+        '%s --infinite-renew-time %s --core-die-time %s '
+        '--get-credentials-wait-increment %s --credential-expiry-time %s '
+        '--big-lock-timeout %s' % (
+            self.base_command,
+            90210, 22221, 13, 26, 9001),
+        shell=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE)
+    ## Check base_communicate in setUp if module selected is wrong
+    command.communicate(self.base_communicate)
+
+    config = roster_core.Config(file_name='%s/config.conf' %
+        self.cfg_exporter['backup_dir'])
+    config_server = config.config_file['server']
+    config_credentials = config.config_file['credentials']
+    config_database = config.config_file['database']
+    self.assertEquals(config_server['inf_renew_time'], 90210)
+    self.assertEquals(config_server['core_die_time'], 22221)
+    self.assertEquals(config_server['get_credentials_wait_increment'], 13)
+    self.assertEquals(config_credentials['exp_time'], 26)
+    self.assertEquals(config_database['ssl'], False)
+    self.assertEquals(config_database['ssl_cert'], '')
+    self.assertEquals(config_database['ssl_key'], '')
+    self.assertEquals(config_database['ssl_ca'], '')
+    self.assertEquals(config_database['ssl_capath'], '')
+    self.assertEquals(config_database['ssl_cipher'], '')
 
   def testDBBootstrapUsername(self):
     command = subprocess.Popen('python %s -c %s/config.conf -u %s -U %s '
@@ -213,10 +249,16 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
         self.cfg_exporter['backup_dir'])
     config_database = config.config_file['database']
     config_credentials = config.config_file['credentials']
-    config_fakeldap = config.config_file['general_ldap']
     config_server = config.config_file['server']
     self.assertEqual(config_database['server'], self.cfg_database['server'])
-    self.assertEqual(config_fakeldap['binddn'], self.cfg_fakeldap['binddn'])
+    self.assertEqual(config_database['ssl_cert'], self.cfg_database['ssl_cert'])
+    self.assertEqual(config_database['ssl'], self.cfg_database['ssl'])
+    self.assertEqual(config_database['ssl_ca'], self.cfg_database['ssl_ca'])
+    self.assertEqual(config_database['ssl_capath'],
+                     self.cfg_database['ssl_capath'])
+    self.assertEqual(config_database['ssl_key'], self.cfg_database['ssl_key'])
+    self.assertEqual(config_database['ssl_cipher'],
+                     self.cfg_database['ssl_cipher'])
     self.assertEqual(config_server['ssl_cert_file'],
         self.cfg_server['ssl_cert_file'])
 

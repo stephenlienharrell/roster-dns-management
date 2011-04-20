@@ -71,7 +71,10 @@ class Config(object):
     file_schema = {'database': {'server': 'str', 'login': 'str',
                                 'passwd': 'str', 'database': 'str',
                                 'big_lock_timeout': 'int',
-                                'big_lock_wait': 'int'},
+                                'big_lock_wait': 'int', 'ssl': 'boolean',
+                                'ssl_cert': 'str', 'ssl_key': 'str',
+                                'ssl_ca': 'str', 'ssl_capath': 'str',
+                                'ssl_cipher': 'str'},
                    'server': {'inf_renew_time': 'int', 'core_die_time': 'int',
                               'get_credentials_wait_increment': 'int',
                               'run_as_username': 'str',
@@ -129,12 +132,26 @@ class Config(object):
     Outputs:
       dbAccess instance
     """
-    return db_access.dbAccess(self.config_file['database']['server'],
-                              self.config_file['database']['login'],
-                              self.config_file['database']['passwd'],
-                              self.config_file['database']['database'],
-                              self.config_file['database']['big_lock_timeout'],
-                              self.config_file['database']['big_lock_wait'])
-
+    if( self.config_file['database']['ssl'] ):
+      return db_access.dbAccess(
+          self.config_file['database']['server'],
+          self.config_file['database']['login'],
+          self.config_file['database']['passwd'],
+          self.config_file['database']['database'],
+          self.config_file['database']['big_lock_timeout'],
+          self.config_file['database']['big_lock_wait'],
+          ssl=True, ssl_ca=self.config_file['database']['ssl_ca'],
+          ssl_cert=self.config_file['database']['ssl_cert'],
+          ssl_key=self.config_file['database']['ssl_key'],
+          ssl_capath=self.config_file['database']['ssl_capath'],
+          ssl_cipher=self.config_file['database']['ssl_cipher'])
+    else:
+      return db_access.dbAccess(
+        self.config_file['database']['server'],
+        self.config_file['database']['login'],
+        self.config_file['database']['passwd'],
+        self.config_file['database']['database'],
+        self.config_file['database']['big_lock_timeout'],
+        self.config_file['database']['big_lock_wait'])
 
 # vi: set ai aw sw=2:

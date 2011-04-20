@@ -111,7 +111,8 @@ class dbAccess(object):
    """
 
   def __init__(self, db_host, db_user, db_passwd, db_name, big_lock_timeout,
-               big_lock_wait, thread_safe=True):
+               big_lock_wait, thread_safe=True, ssl=False, ssl_ca=None,
+               ssl_cert=None, ssl_key=None, ssl_capath=None, ssl_cipher=None):
     """Instantiates the db_access class.
 
     Inputs:
@@ -131,6 +132,12 @@ class dbAccess(object):
     self.db_name = db_name
     self.big_lock_timeout = big_lock_timeout
     self.big_lock_wait = big_lock_wait
+    self.ssl = ssl
+    self.ssl_settings = {'ca': ssl_ca, 'cert': ssl_cert, 'key': ssl_key}
+    if( ssl_capath ):
+      self.ssl_settings['capath'] = ssl_capath
+    if( ssl_cipher ):
+      self.ssl_settings['cipher'] = ssl_cipher
     self.transaction_init = False
     self.connection = None
     self.cursor = None
@@ -205,9 +212,15 @@ class dbAccess(object):
         self.connection = None
 
     if( self.connection is None ):
-      self.connection = MySQLdb.connect(host=self.db_host, user=self.db_user,
-                                        passwd=self.db_passwd, db=self.db_name,
-                                        use_unicode=True, charset='utf8')
+      if( self.ssl ):
+          self.connection = MySQLdb.connect(
+              host=self.db_host, user=self.db_user, passwd=self.db_passwd,
+              db=self.db_name, use_unicode=True, charset='utf8',
+              ssl=self.ssl_settings)
+      else:
+          self.connection = MySQLdb.connect(
+              host=self.db_host, user=self.db_user, passwd=self.db_passwd,
+              db=self.db_name, use_unicode=True, charset='utf8')
       self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
 
     while_sleep = 0
