@@ -205,6 +205,45 @@ class CoreHelpers(object):
     self.core_instance.RemoveRecord(u'ptr', target, zone_name,
                                     record_args_dict, view_name, ttl)
 
+  def ListAvailableIpsInCIDR(self, cidr_block, num_ips=1, view_name=None,
+                           zone_name=None):
+    """Finds first available ips. Only lists as many IPs as are available.
+    Returns empty list if no IPs are available in given cidr block and a
+    truncated list if only a portion of IPs are available.
+
+    Inputs:
+      cidr_block: string of ipv4 or ipv6 cidr block
+
+    Outputs:
+      list: list of strings of ip addresses
+    """
+    reserved_ipv6 = []
+    for cidr in constants.RESERVED_IPV6:
+      reserved_ipv6.append(IPy.IP(cidr))
+    for res in reserved_ipv6:
+      if( IPy.IP(cidr_block) in res ):
+        return []
+    records = self.ListRecordsByCIDRBlock(cidr_block, view_name=view_name,
+                                          zone_name=zone_name)
+    taken_ips = []
+    avail_ips = []
+    for view in records:
+      for ip in records[view]:
+        taken_ips.append(ip)
+    try:
+      cidr_block_ipy = IPy.IP(cidr_block)
+    except ValueError:
+      raise errors.CoreError('%s is not a valid cidr block' % cidr_block)
+    ips = list(cidr_block_ipy)
+    for ip in ips[1:-1]:
+      if( ip.iptype() == 'RESERVED' ):
+        continue
+      if( len(avail_ips) >= num_ips ):
+        break
+      if( ip.strFullsize() not in taken_ips ):
+        avail_ips.append(ip.strFullsize())
+    return avail_ips
+
   def ListRecordsByCIDRBlock(self, cidr_block, view_name=None, zone_name=None):
     """Lists records in user given cidr block.
 

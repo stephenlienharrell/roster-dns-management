@@ -223,6 +223,32 @@ class TestCoreHelpers(unittest.TestCase):
                    u'zone_origin': u'university.edu.',
                    u'zone': u'forward_zone'}]}})
 
+  def testListAvailableIpsInCIDR(self):
+    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
+                                                      u'192.168.1.0/24')
+    self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
+        '192.168.1.4/30', num_ips=3), ['192.168.1.6'])
+    self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
+        '192.168.0.0/29', num_ips=4), ['192.168.0.2', '192.168.0.3',
+                                       '192.168.0.4', '192.168.0.5'])
+    self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
+        '240.0.0.0/24', num_ips=10), [])
+    #self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
+    #    '4::/64', num_ips=10), ['4::1', '4::2', '4::3', '4::4', '4::5', '4::6',
+    #                            '4::7', '4::8', '4::9', '4::a'])
+    self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
+        '2001:0400::/123', num_ips=10),
+        ['2001:0400:0000:0000:0000:0000:0000:0001',
+         '2001:0400:0000:0000:0000:0000:0000:0002',
+         '2001:0400:0000:0000:0000:0000:0000:0003',
+         '2001:0400:0000:0000:0000:0000:0000:0004',
+         '2001:0400:0000:0000:0000:0000:0000:0005',
+         '2001:0400:0000:0000:0000:0000:0000:0006',
+         '2001:0400:0000:0000:0000:0000:0000:0007',
+         '2001:0400:0000:0000:0000:0000:0000:0008',
+         '2001:0400:0000:0000:0000:0000:0000:0009',
+         '2001:0400:0000:0000:0000:0000:0000:000a'])
+
   def testUnReverseIP(self):
     self.assertEqual(self.core_helper_instance.UnReverseIP(
         'b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1.0.0.0.0.0.0.0.1.2.3.4.'

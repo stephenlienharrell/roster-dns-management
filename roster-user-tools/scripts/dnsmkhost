@@ -59,7 +59,7 @@ def main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  command = 'host'
+  command = None
   if( args and not args[0].startswith('-') ):
     command = args.pop(0)
   usage = ('\n'
@@ -68,7 +68,7 @@ def main(args):
            '\t%s --ip-address <ip-address> -t <target>\n'
            '\t-z <zone-name> [--ttl <ttl>] [-v <view-name>]\n' % tuple(
                [sys.argv[0] for x in range(1)]))
-  args_instance = Args(command, ['host'], args, usage)
+  args_instance = Args(command, ['findfirst', 'add'], args, usage)
   options = args_instance.options
 
   try:
@@ -77,6 +77,11 @@ def main(args):
     print 'ERROR: %s' % e
     sys.exit(1)
   cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
+
+  if( command == 'findfirst' ):
+    options.ip_address = roster_client_lib.RunFunction(
+        "ListAvailableIpsInCIDR", options.username, credfile=options.credfile,
+        server_name=options.server, args=[options.cidr_block])['core_return'][0]
 
   if( options.ip_address.find('.') != -1 ):
     version = 4

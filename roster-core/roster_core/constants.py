@@ -35,6 +35,11 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+# These are reserved ipv6 addresses.
+RESERVED_IPV6 = ('::', '::1/128', 'fe80::/10', 'ff01::1', 'ff02::1', 'ff01::2',
+                 'ff05::2')
+
+
 # This is the default TTL for all records inserted into the database.
 DEFAULT_TTL = 3600
 

@@ -293,7 +293,7 @@ class Host(core_flags.CoreFlags):
                              dest='ip_address', default=None,
                              help='Full IP address of machine.',
                              metavar='<ip-address>')
-      self.AddFlagRule('ip_address', required=not_list)
+      self.AddFlagRule('ip_address', required=not_list, command='add')
       self.parser.add_option('-t', '--target', action='store', dest='target',
                              help='String of machine host name. (Not FQDN)',
                              metavar='<target>', default=None)
@@ -302,11 +302,11 @@ class Host(core_flags.CoreFlags):
                              help='Time for host to live before being '
                              'refreshed.', metavar='<ttl>', default=DEFAULT_TTL)
       self.AddFlagRule('ttl', required=False)
-    else:
       self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
-                             help='Range of ip addresses (CIDR block)',
+                             help='Get target ip address from cidr block '
+                                  'automatically.',
                              metavar='<cidr-block>', default=None)
-      self.AddFlagRule('cidr_block')
+    self.AddFlagRule('cidr_block', required=True, command='findfirst')
     self.parser.add_option('-z', '--zone-name', action='store',
                            dest='zone_name', help='String of the zone name.',
                            metavar='<zone-name>', default=None)
@@ -321,7 +321,7 @@ class Host(core_flags.CoreFlags):
                                  'Example: "internal"'),
                            metavar='<view-name>',
                            default=default_view)
-    self.AddFlagRule('view_name', required=False, command='host')
+    self.AddFlagRule('view_name', required=False)
 
 
 class DnsServer(core_flags.CoreFlags):

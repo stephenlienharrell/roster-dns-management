@@ -228,22 +228,35 @@ class TestDnsMkHost(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testMakeHost(self):
+    self.maxDiff = None
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
-    output = os.popen('python %s -q -i 192.168.1.6 -z forward_zone -t '
+    output = os.popen('python %s add -q -i 192.168.1.6 -z forward_zone -t '
                       'machine1 -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     output.close()
-    output = os.popen('python %s -q -i 192.168.1.6 -z forward_zone -t '
+    output = os.popen('python %s add -q -i 192.168.1.6 -z forward_zone -t '
                       'www.machine1 -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     output.close()
-    output = os.popen('python %s -q -i 192.168.1.10 -z forward_zone -t '
+    output = os.popen('python %s add -q -i 192.168.1.10 -z forward_zone -t '
                       '@ -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    output.close()
+    output = os.popen('python %s findfirst -q --cidr-block 192.168.1.0/24 -z '
+                      'forward_zone -t machine2 -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    output.close()
+    output = os.popen('python %s findfirst -q --cidr-block 192.168.1.0/24 -z '
+                      'forward_zone -t machine3 -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -280,18 +293,34 @@ class TestDnsMkHost(unittest.TestCase):
          {'target': u'10', 'ttl': 3600, 'record_type': u'ptr',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'reverse_zone',
-          u'assignment_host': u'university.edu.'}])
+          u'assignment_host': u'university.edu.'},
+         {u'assignment_host': u'machine2.university.edu.',
+          'last_user': u'sharrell', 'record_type': u'ptr',
+          'target': u'1', 'ttl': 3600, 'view_name': u'test_view',
+          'zone_name': u'reverse_zone'},
+         {u'assignment_host': u'machine3.university.edu.',
+          'last_user': u'sharrell', 'record_type': u'ptr',
+          'target': u'2', 'ttl': 3600, 'view_name': u'test_view',
+          'zone_name': u'reverse_zone'}])
     self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
         [{'target': u'machine1', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.6'}])
+    self.assertEqual(self.core_instance.ListRecords(target=u'machine2'),
+        [{'target': u'machine2', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.1'}])
+    self.assertEqual(self.core_instance.ListRecords(target=u'machine3'),
+        [{'target': u'machine3', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.2'}])
 
   def testMakeIPV6(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6zone',
         u'3ffe:0800:0000:0000:0000:0000:0000:0000/24')
 
     test_ipv6_addr = '3ffe:0800::0567'
-    output = os.popen('python %s -i 3ffe:0800::0567 -t '
+    output = os.popen('python %s add -i 3ffe:0800::0567 -t '
                       'machine1 -z forward_zone -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (EXEC, self.server_name,
                                                   USERNAME, PASSWORD,
@@ -312,7 +341,7 @@ class TestDnsMkHost(unittest.TestCase):
           u'assignment_ip': u'3ffe:0800:0000:0000:0000:0000:0000:0567'}])
 
   def testErrors(self):
-    output = os.popen('python %s -t t -i 192168414b -z'
+    output = os.popen('python %s add -t t -i 192168414b -z'
                       'forward_zone -v test_view -s %s -u %s -p %s '
                       '--config-file %s' % (
                            EXEC, self.server_name, USERNAME, PASSWORD,
@@ -320,7 +349,8 @@ class TestDnsMkHost(unittest.TestCase):
     self.assertEqual(output.read(),
                      'CLIENT ERROR: Incorrectly formatted IP address.\n')
     output.close()
-    output = os.popen('python %s -i 192.168.1.4 -t machine1.university.edu. -z'
+    output = os.popen('python %s add -i 192.168.1.4 -t '
+                      'machine1.university.edu. -z'
                       'forward_zone -v test_view -s %s -u %s -p %s '
                       '--config-file %s' % (
                            EXEC, self.server_name, USERNAME, PASSWORD,
@@ -328,7 +358,7 @@ class TestDnsMkHost(unittest.TestCase):
     self.assertEqual(output.read(),
                      'CLIENT ERROR: Hostname cannot end with domain name.\n')
     output.close()
-    output = os.popen('python %s -i 192.168.1.6 -z forward_zone -t '
+    output = os.popen('python %s add -i 192.168.1.6 -z forward_zone -t '
                       'machine1 -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -336,14 +366,15 @@ class TestDnsMkHost(unittest.TestCase):
     self.assertEqual(output.read(),
                      'CLIENT ERROR: No reverse zone found for "192.168.1.6"\n')
     output.close()
-    output = os.popen('python %s -t t -z test_zone -s %s -u %s '
+    output = os.popen('python %s add -t t -z test_zone -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
                      'CLIENT ERROR: The -i/--ip-address flag is required.\n')
     output.close()
-    output = os.popen('python %s -s %s -u %s -i 192.168.0.1 -z reverse_zone '
+    output = os.popen('python %s add -s %s -u %s -i 192.168.0.1 -z '
+                      'reverse_zone '
                       '-v test_view -t machine1 '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
