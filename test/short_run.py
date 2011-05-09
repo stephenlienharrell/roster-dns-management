@@ -29,9 +29,13 @@ class ShortRun(object):
 
   def RunTests(self, window):
     unittests = glob.glob('*test.py')
+    try:
+      skiplist = open('skip', 'r').read().split()
+    except:
+      skiplist = []
 
     for i, unittest in enumerate(unittests):
-      if( unittest in sys.argv ):
+      if( unittest in sys.argv or unittest in skiplist ):
         continue # Blacklist
       timediff = datetime.datetime.now() - self.init_time
       self.stat_string = ('---------------------------\n'
@@ -39,7 +43,8 @@ class ShortRun(object):
                          'Time elapsed: %s\n'
                          'Failed tests: %s\n\n'
                          'Detailed errors will show after exiting.' % (
-          unittest, i + 1, len(unittests) - len(sys.argv), str(timediff),
+          unittest, i + 1, len(unittests) - len(sys.argv) - len(skiplist),
+          str(timediff),
           ', '.join(self.error_tests.keys())))
       window.clear()
       window.addstr('%s\n\n%s' % (self.current_string,
@@ -58,7 +63,8 @@ class ShortRun(object):
                          'Time elapsed: %s\n'
                          'Failed tests: %s\n\n'
                          'Detailed errors will show after exiting.' % (
-          unittest, i + 1, len(unittests) - len(sys.argv), str(timediff),
+          unittest, i + 1, len(unittests) - len(sys.argv) - len(skiplist),
+          str(timediff),
           ', '.join(self.error_tests.keys())))
       window.clear()
       window.addstr('%s\n\n%s' % (self.current_string,
@@ -74,6 +80,14 @@ class ShortRun(object):
     window.getch()
 
 if( __name__ == '__main__' ):
+  name = sys.argv.pop(0)
+  if( len(sys.argv) > 0 ):
+    if( sys.argv[0] == '--help' ):
+      sys.argv.pop(0)
+      print("To skip tests add the names of the tests to a file called 'skip' "
+            "in this directory. Also they can be appended as arguments to the "
+            "end of %s." % name)
+      exit(0)
   shortrun_instance = ShortRun()
   try:
     curses.wrapper(shortrun_instance.RunTests)
