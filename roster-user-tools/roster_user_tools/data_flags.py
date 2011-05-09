@@ -293,7 +293,10 @@ class Host(core_flags.CoreFlags):
                              dest='ip_address', default=None,
                              help='Full IP address of machine.',
                              metavar='<ip-address>')
-      self.AddFlagRule('ip_address', required=not_list, command='add')
+      if( self.action == 'Make' ):
+        self.AddFlagRule('ip_address', required=not_list, command='add')
+      else:
+        self.AddFlagRule('ip_address', required=not_list)
       self.parser.add_option('-t', '--target', action='store', dest='target',
                              help='String of machine host name. (Not FQDN)',
                              metavar='<target>', default=None)
@@ -302,11 +305,14 @@ class Host(core_flags.CoreFlags):
                              help='Time for host to live before being '
                              'refreshed.', metavar='<ttl>', default=DEFAULT_TTL)
       self.AddFlagRule('ttl', required=False)
-      self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
-                             help='Get target ip address from cidr block '
-                                  'automatically.',
-                             metavar='<cidr-block>', default=None)
-    self.AddFlagRule('cidr_block', required=True, command='findfirst')
+    self.parser.add_option('--cidr-block', action='store', dest='cidr_block',
+                           help='Get target ip address from cidr block '
+                                'automatically.',
+                           metavar='<cidr-block>', default=None)
+    if( self.action == 'Make' ):
+      self.AddFlagRule('cidr_block', required=True, command='findfirst')
+    else:
+      self.AddFlagRule('cidr_block', required=False)
     self.parser.add_option('-z', '--zone-name', action='store',
                            dest='zone_name', help='String of the zone name.',
                            metavar='<zone-name>', default=None)

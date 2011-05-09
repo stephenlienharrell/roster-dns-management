@@ -65,9 +65,13 @@ def main(args):
   usage = ('\n'
            '\n'
            'To make a host:\n'
-           '\t%s --ip-address <ip-address> -t <target>\n'
+           '\t%s add --ip-address <ip-address> -t <target>\n'
+           '\t-z <zone-name> [--ttl <ttl>] [-v <view-name>]\n'
+           '\n'
+           'To make a host with an automatically assigned ip address:\n'
+           '\t%s findfirst --cidr-block <cidr-block> -t <target>\n'
            '\t-z <zone-name> [--ttl <ttl>] [-v <view-name>]\n' % tuple(
-               [sys.argv[0] for x in range(1)]))
+               [sys.argv[0] for x in range(2)]))
   args_instance = Args(command, ['findfirst', 'add'], args, usage)
   options = args_instance.options
 
