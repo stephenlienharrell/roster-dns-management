@@ -76,7 +76,9 @@ class TestDataValidation(unittest.TestCase):
   def testisIPv6IPAddress(self):
     self.assertTrue(self.data_validation_instance.isIPv6IPAddress(
         '2001:0db8:0000:0000:0000:0000:1428:57ab'))
-    self.assertTrue(self.data_validation_instance.isIPv6IPAddress(
+    self.assertFalse(self.data_validation_instance.isIPv6IPAddress(
+        '2001:0db8:0000:0000:0000:0000:1428:57ab/64'))
+    self.assertFalse(self.data_validation_instance.isIPv6IPAddress(
         '2001:db8::1428:57ab'))
     self.assertFalse(self.data_validation_instance.isIPv6IPAddress(
         '2001:db8::1428:57ab/64'))

@@ -10,5 +10,5 @@ $TTL		86400
 	in	ns	ns2.university.edu.
 
 
-2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0.0	in	ptr	router.university.edu.
+2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0	in	ptr	router.university.edu.
 0.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0	in	ptr	desktop-1.university.edu.

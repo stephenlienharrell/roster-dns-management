@@ -230,9 +230,10 @@ class BindTreeExport(object):
             if( audit_rows ):
               audit_rows = self.db_instance.ListRow(
                   'audit_log', self.db_instance.GetEmptyRowDict('audit_log'),
-                  date_column='audit_log_timestamp',
-                  date_range=(audit_rows[-1]['audit_log_timestamp'],
-                              datetime.datetime.now()))
+                  column='audit_log_timestamp',
+                  range_values=(audit_rows[-1]['audit_log_timestamp'],
+                              datetime.datetime.now()),
+                  is_date=True)
               for row in audit_rows:
                 if( row['action'] != u'ExportAllBindTrees' ):
                   break

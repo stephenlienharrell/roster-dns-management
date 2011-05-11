@@ -49,6 +49,12 @@ import IPy
 class RecordsBatchError(errors.CoreError):
   pass
 
+class IPIndexError(errors.CoreError):
+  pass
+
+class InvalidInput(errors.CoreError):
+  pass
+
 class CoreHelpers(object):
   """Library of helper functions that extend the core functions."""
   def __init__(self, core_instance):
@@ -235,7 +241,7 @@ class CoreHelpers(object):
     # Count number of characters in zone origin, add one to count the extra
     # period and remove that number of characters from the target.
     zone_origin_length = len(zone_origin) + 1
-    short_target = long_target[:-zone_origin_length:]
+    short_target = long_target[:-zone_origin_length]
 
     return (short_target, zone_assignment)
 
@@ -312,133 +318,159 @@ class CoreHelpers(object):
     return avail_ips
 
   def ListRecordsByCIDRBlock(self, cidr_block, view_name=None, zone_name=None):
-    """Lists records in user given cidr block.
+    """Lists records in a given cidr block.
 
     Inputs:
       cidr_block: string of ipv4 or ipv6 cidr block
+      view_name: string of the view
+      zone_name: string of the zone
 
     Outputs:
-      dict: dictionary keyed by ip address example:
-            {u'192.168.1.7': {u'a': False, u'host': u'host5.',
-                              u'ptr': True, u'zone': u'test_zone',
-                              u'view': u'test_view2'},
-             u'192.168.1.5': {u'a': True, u'host': u'host3.',
-             u'ptr': True, u'zone': u'test_zone', u'view': u'test_view2'}}
+      dict: A dictionary Keyed by view, keyed by IP, listed by record.
+            example:
+                {u'test_view':
+                    {u'192.168.1.8':
+                        [{u'forward': True,
+                          u'host': u'host6.university.edu',
+                          u'zone': u'forward_zone',
+                          u'zone_origin': u'university.edu.'},
+                         {u'forward': False,
+                          u'host': u'host6.university.edu',
+                          u'zone': u'reverse_zone',
+                          u'zone_origin': u'1.168.192.in-addr.arpa.'}]}}
     """
-    user_cidr = IPy.IP(cidr_block)
-    record_type = u'a'
-    if( user_cidr.version() == 6 ):
-      record_type = u'aaaa'
-    zones = self.core_instance.ListZones()
-
-    ptr_record_list = []
-    fwd_record_list = []
-    zone_list = []
-
-    ptr_dict = self.db_instance.GetEmptyRowDict('records')
-    ptr_dict['record_type'] = u'ptr'
-    ptr_args_dict = self.db_instance.GetEmptyRowDict(
-        'record_arguments_records_assignments')
-
-    zone_dict = self.db_instance.GetEmptyRowDict(
-        'reverse_range_zone_assignments')
-
-    fwd_dict = self.db_instance.GetEmptyRowDict('records')
-    fwd_dict['record_type'] = record_type
-    if( view_name is not None and view_name.endswith('_dep')
-        or view_name == u'any' ):
-      fwd_dict['record_view_dependency'] = view_name
-      ptr_dict['record_view_dependency'] = view_name
-    elif( view_name is not None ):
-      fwd_dict['record_view_dependency'] = '%s_dep' % view_name
-      ptr_dict['record_view_dependency'] = '%s_dep' % view_name
-    fwd_args_dict = self.db_instance.GetEmptyRowDict(
-        'record_arguments_records_assignments')
-    fwd_args_dict['record_arguments_records_assignments_argument_name'] = (
-        u'assignment_ip')
-    self.db_instance.StartTransaction()
-    try:
-      reverse_range_zone_assignments_db = (
-          self.db_instance.ListRow(
-              'reverse_range_zone_assignments', zone_dict))
-      for reverse_range_zone_assignment in reverse_range_zone_assignments_db:
-        db_zone = reverse_range_zone_assignment[
-            'reverse_range_zone_assignments_zone_name']
-        db_cidr = IPy.IP(reverse_range_zone_assignment[
-            'reverse_range_zone_assignments_cidr_block'])
-        if( user_cidr in db_cidr ):
-          zone_list = [db_zone]
-          break
-        if( db_cidr in user_cidr ):
-          zone_list.append(db_zone)
-      for zone in zone_list:
-        ptr_dict['record_zone_name'] = zone
-        ptr_record_list.extend(self.db_instance.ListRow(
-            'records', ptr_dict, 'record_arguments_records_assignments',
-            ptr_args_dict))
-      num_records = self.db_instance.TableRowCount('records')
-      ratio = num_records / float(user_cidr.len())
-      if( ratio > constants.RECORD_RATIO ):
-        for ip_address in user_cidr:
-          fwd_args_dict['argument_value'] = unicode(ip_address.strFullsize())
-          fwd_record_list.extend(self.db_instance.ListRow(
-              'records', fwd_dict, 'record_arguments_records_assignments',
-              fwd_args_dict))
+    record_list = {}
+    if( cidr_block.find('/') != -1 ):
+      cidr_ip = IPy.IP(cidr_block.split('/')[0])
+      cidr_size = int(cidr_block.split('/')[1])
+    else:
+      cidr_ip = IPy.IP(cidr_block)
+      if( cidr_ip.version() == 4 ):
+        cidr_size = 32
+      elif( cidr_ip.version() == 6 ):
+        cidr_size = 128
       else:
-        fwd_record_list = self.db_instance.ListRow('records',
-            fwd_dict, 'record_arguments_records_assignments', fwd_args_dict)
-    finally:
-      self.db_instance.EndTransaction()
-    records_dict = {}
-    orig_view = view_name
-    for record in ptr_record_list:
-      view_name = orig_view
-      record_zone_name = record['record_zone_name']
-      db_view_name = record['record_view_dependency'].rsplit('_dep', 1)[0]
-      if( db_view_name != view_name and (db_view_name != u'any' and view_name is not None) ):
-        continue
-      if( zone_name and record_zone_name != zone_name ):
-        continue
-      if( view_name is None ):
-        view_name = db_view_name
-      if( db_view_name not in zones[record_zone_name]  ):
-        raise errors.CoreError('No zone view combination found for '
-                               '"%s" zone and "%s" view.' % (
-                                   record_zone_name, db_view_name))
-      zone_origin = zones[record_zone_name][db_view_name]['zone_origin']
-      reverse_ip_address = '%s.%s' % (record['record_target'], zone_origin)
-      ip_address = self.UnReverseIP(reverse_ip_address)
-      if( IPy.IP(ip_address) in user_cidr ):
-        if( not db_view_name in records_dict ):
-          records_dict[db_view_name] = {}
-        if( not ip_address in records_dict[db_view_name] ):
-          records_dict[db_view_name][ip_address] = []
-        records_dict[db_view_name][ip_address].append({
-            u'forward': False, u'host': record['argument_value'].rstrip('.'),
-            u'zone': record['record_zone_name'], 'zone_origin': zone_origin})
-    for record in fwd_record_list:
-      view_name = orig_view
-      ip_address = record['argument_value']
-      record_zone_name = record['record_zone_name']
-      db_view_name = record['record_view_dependency'].rsplit('_dep', 1)[0]
-      if( db_view_name != view_name and (db_view_name != u'any' and view_name is not None) ):
-        continue
-      if( zone_name and record_zone_name != zone_name ):
-        continue
-      if( view_name is None ):
-        view_name = db_view_name
-      zone_origin = zones[record_zone_name][db_view_name]['zone_origin']
-      if( IPy.IP(ip_address) in user_cidr ):
-        if( not db_view_name in records_dict ):
-          records_dict[db_view_name] = {}
-        if( not ip_address in records_dict[db_view_name] ):
-           records_dict[db_view_name][ip_address] = []
-        records_dict[db_view_name][ip_address].append({
-            u'forward': True, u'host': '%s.%s' % (
-                record['record_target'], zone_origin.rstrip('.')),
-            u'zone': record['record_zone_name'],
-            u'zone_origin': zone_origin})
-    return records_dict
+        raise InvalidInput(
+            'The CIDR block specified does not contain a valid IP: %s' % (
+                cidr_block))
+
+    records_dict = self.db_instance.GetEmptyRowDict('records')
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_dict = self.db_instance.GetEmptyRowDict('zones')
+    record_arguments_records_assignments_dict = (
+        self.db_instance.GetEmptyRowDict(
+            'record_arguments_records_assignments'))
+
+    if( view_name is not None and
+        view_name.endswith('_dep') or view_name == u'any' ):
+      records_dict['record_view_dependency'] = view_name
+    elif( view_name is not None ):
+      records_dict['record_view_dependency'] = '%s_dep' % view_name
+
+      
+    zone_dict['zone_name'] = zone_name
+    
+    if( cidr_ip.version() == 4 ):
+      decimal_ip = int( cidr_ip.strDec() )
+      decimal_ip_lower = (
+          (decimal_ip >> (32 - cidr_size) ) << (32 - cidr_size))
+      decimal_ip_upper = ( pow(2, 32 - cidr_size) - 1 ) | decimal_ip
+      self.db_instance.StartTransaction()
+      ip_index_dict = self.db_instance.GetEmptyRowDict('ipv4_index')
+      try:
+        record_list = self.db_instance.ListRow(
+            'ipv4_index', ip_index_dict,
+            'records', records_dict,
+            'zones', zone_dict,
+            'zone_view_assignments', zone_view_assignments_dict,
+            'record_arguments_records_assignments', 
+            record_arguments_records_assignments_dict,
+            column='ipv4_dec_address',
+            range_values=(decimal_ip_lower, decimal_ip_upper))
+      finally:
+        self.db_instance.EndTransaction()
+
+    elif( cidr_ip.version() == 6 ):
+      ip_index_dict = self.db_instance.GetEmptyRowDict('ipv6_index')
+      if( cidr_size >= 64 ):
+        ip_index_dict[u'ipv6_dec_upper'] = int(cidr_ip.strHex()[:-16], 0)
+        decimal_ip_lower = int('0x%s' % cidr_ip.strHex()[18:], 0)
+        decimal_ip_lower_lower = (
+            (decimal_ip_lower >> (128 - cidr_size)) <<
+            (128 - cidr_size))
+        decimal_ip_lower_upper = (
+            (pow(2,128 - cidr_size) - 1 ) | decimal_ip_lower)
+        column = 'ipv6_dec_lower'
+        range_values = (decimal_ip_lower_lower, decimal_ip_lower_upper)
+      elif( cidr_size < 64 ):
+        decimal_ip_upper = int(cidr_ip.strHex()[:-16], 0)
+        decimal_ip_upper_lower = (
+            (decimal_ip_upper >> (64 - cidr_size)) << (64 - cidr_size))
+        decimal_ip_upper_upper = (
+            (pow(2,64 - cidr_size) - 1 ) | decimal_ip_upper)
+        column='ipv6_dec_upper'
+        range_values = (decimal_ip_upper_lower, decimal_ip_upper_upper)
+      self.db_instance.StartTransaction()
+      try:
+        record_list = self.db_instance.ListRow(
+            'ipv6_index', ip_index_dict,
+            'records', records_dict,
+            'zones', zone_dict,
+            'zone_view_assignments', zone_view_assignments_dict,
+            'record_arguments_records_assignments', 
+            record_arguments_records_assignments_dict,
+            column=column,
+            range_values=range_values)
+      finally:
+        self.db_instance.EndTransaction()
+     
+    ## Parse returned list
+    parsed_record_dict = {}
+    for index, record_entry in enumerate(record_list):
+      if( record_entry[u'record_type'] not in
+          constants.RECORD_TYPES_INDEXED_BY_IP ):
+        raise IPIndexError('Record type not indexable by IP: %s' % record_entry)
+      if( record_entry[u'record_view_dependency'].endswith('_dep') ):
+        record_view = record_entry[u'record_view_dependency'][:-4]
+      else:
+        record_view = record_entry[u'record_view_dependency']
+      if( record_view not in parsed_record_dict ):
+        parsed_record_dict[record_view] = {}
+      
+      if( u'ipv4_dec_address' in record_entry ):
+        record_ip = u'%s' % (
+            IPy.IP(record_entry[u'ipv4_dec_address']).strNormal(1))
+        if( record_ip not in parsed_record_dict[record_view] ):
+          parsed_record_dict[record_view][record_ip] = []
+      elif( u'ipv6_dec_upper' in record_entry ):
+        decimal_ip = (
+            (record_entry[u'ipv6_dec_upper'] << 64) +
+            (record_entry[u'ipv6_dec_lower']) )
+        record_ip = u'%s' % IPy.IP(decimal_ip).strFullsize(0)
+        if( record_ip not in parsed_record_dict[record_view] ):
+          parsed_record_dict[record_view][record_ip] = []
+      else:
+        raise IPIndexError(
+            'Record type unknown. Missing ipv4 or ipv6 dec index: %s' % (
+                record_entry))
+      
+      record_item = {}
+      record_item[u'zone_origin'] = record_entry[u'zone_origin']
+      record_item[u'zone'] = record_entry[u'zone_name']
+      if( record_entry[u'record_type'] == u'a' or 
+          record_entry[u'record_type'] == u'aaaa' ):
+        record_item[u'forward'] = True
+        record_item[u'host'] = '%s.%s' % (
+            record_entry[u'record_target'],
+            record_entry[u'zone_origin'][:-1])
+        parsed_record_dict[record_view][record_ip].append( record_item )
+      elif( record_entry[u'record_type'] == u'ptr' ):
+        record_item[u'forward'] = False
+        record_item[u'host'] = record_entry[u'argument_value'][:-1]
+        parsed_record_dict[record_view][record_ip].insert(0, record_item )
+    
+    return parsed_record_dict
 
   def ListNamedConfGlobalOptionsClient(self, option_id=None,
                                        dns_server_set=None, timestamp=None):
@@ -720,7 +752,11 @@ class CoreHelpers(object):
                                      record_argument_assignments_dict)
             log_dict['add'].append(record)
             row_count += 1
-
+          self.core_instance._AddRecordToIpIndex(
+              records_dict['record_type'], records_dict['record_zone_name'],
+              records_dict['record_view_dependency'],
+              record_id, records_dict['record_target'],
+              record['record_arguments'])
         changed_view_dep = set(changed_view_dep)
         for view_dep_pair in changed_view_dep:
           self.core_instance._IncrementSoa(*view_dep_pair)

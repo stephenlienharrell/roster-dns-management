@@ -67,6 +67,9 @@ ACCESS_RIGHTS = ['rw', 'r']
 # it is important not to overwrite these tables when doing a partial replay
 TABLES_NOT_AUDIT_LOGGED = ['audit_log', 'locks']
 
+# This is a list of record types that can be indexed by IP address.
+RECORD_TYPES_INDEXED_BY_IP = ['ptr', 'a', 'aaaa']
+
 # The SUPPORTED_METHODS hash contains a hash for every supported method.
 # 'check' indicates whether the target zone/IP range should be checked.
 # 'write' indicates whether the method requires write access.
@@ -517,6 +520,16 @@ TABLES = {
                           'success': 'IntBool',
                           'audit_log_timestamp': 'DateTime'},
     'locks':
-        {'lock_name': 'UnicodeString', 'locked': 'IntBool'}}
+        {'lock_name': 'UnicodeString', 'locked': 'IntBool'},
+
+    'ipv4_index':
+        {'ipv4_dec_address': 'UnsignedInt',
+         'ipv4_index_record_id': 'UnsignedInt'},
+
+    'ipv6_index':
+        {'ipv6_dec_upper': 'UnsignedInt',
+         'ipv6_dec_lower': 'UnsignedInt',
+         'ipv6_index_record_id': 'UnsignedInt'}}
+
 
 # vi: set ai aw sw=2:

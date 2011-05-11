@@ -309,23 +309,23 @@ class TestdbAccess(unittest.TestCase):
     search_dict = self.db_instance.GetEmptyRowDict('audit_log')
     simple_date = datetime.datetime(2001,1,1,1)
     self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
-                      'audit_log', search_dict,
-                      date_column='audit_log_timestamp')
+                      'audit_log', search_dict, is_date=True,
+                      column='audit_log_timestamp')
     self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
-                      'audit_log', search_dict,
-                      date_range='audit_log_timestamp')
+                      'audit_log', search_dict, is_date=True,
+                      range_values='audit_log_timestamp')
     self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
-                      'audit_log', search_dict, date_column='action',
-                      date_range=(simple_date, simple_date))
+                      'audit_log', search_dict, column='action', is_date=True,
+                      range_values=(simple_date, simple_date))
     self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
-                      'audit_log', search_dict, date_column='not_there',
-                      date_range=(simple_date, simple_date))
+                      'audit_log', search_dict, column='not_there', is_date=True,
+                      range_values_values=(simple_date, simple_date))
     self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
-                      'audit_log', search_dict, date_column='not_there',
-                      date_range=('bleh', simple_date))
+                      'audit_log', search_dict, column='not_there', is_date=True,
+                      range_values=('bleh', simple_date))
     self.assertEquals(self.db_instance.ListRow(
-        'audit_log', search_dict, date_column='audit_log_timestamp',
-        date_range=(datetime.datetime(2001, 1, 1, 2),
+        'audit_log', search_dict, column='audit_log_timestamp', is_date=True,
+        range_values=(datetime.datetime(2001, 1, 1, 2),
                     datetime.datetime(2001, 1, 1, 3))),
         ({'action': u'DoThis',
           'audit_log_timestamp': datetime.datetime(2001, 1, 1, 2, 0),
@@ -338,9 +338,9 @@ class TestdbAccess(unittest.TestCase):
 
     search_dict['data'] = cPickle.dumps('I did it')
     self.assertEquals(self.db_instance.ListRow(
-        'audit_log', search_dict, date_column='audit_log_timestamp',
-        date_range=(datetime.datetime(2001, 1, 1, 2),
-                    datetime.datetime(2001, 1, 1, 3))),
+        'audit_log', search_dict, column='audit_log_timestamp',
+        range_values=(datetime.datetime(2001, 1, 1, 2),
+                    datetime.datetime(2001, 1, 1, 3)), is_date=True),
         ({'action': u'DoThis',
           'audit_log_timestamp': datetime.datetime(2001, 1, 1, 2, 0),
           'data': u"S'I did it'\np1\n.", 'audit_log_user_name': u'sharrell',
@@ -507,7 +507,8 @@ class TestdbAccess(unittest.TestCase):
       [u'acl_ranges', u'acls', u'audit_log', u'credentials', u'data_types',
        u'dns_server_set_assignments', u'dns_server_set_view_assignments',
        u'dns_server_sets', u'dns_servers', u'forward_zone_permissions',
-       u'groups', u'locks', u'named_conf_global_options', u'record_arguments',
+       u'groups', u'ipv4_index', u'ipv6_index', u'locks',
+       u'named_conf_global_options', u'record_arguments',
        u'record_arguments_records_assignments', u'record_types', u'records',
        u'reserved_words', u'reverse_range_permissions',
        u'reverse_range_zone_assignments', u'user_group_assignments', u'users',

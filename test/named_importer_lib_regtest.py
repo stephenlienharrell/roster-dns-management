@@ -211,62 +211,66 @@ class TestNamedImport(unittest.TestCase):
                       'allow-query': {'any': True}, 'max-cache-size': '512M'}})
 
   def testMakeNamedDict(self):
-    self.assertEqual(named_importer_lib.MakeNamedDict(self.named_file),
-        {'acls': {'admin': ['192.168.1.2/32', '192.168.1.4/32',
-                            '192.168.0.0/16'],
-                  'control-hosts': ['127.0.0.1/32', '192.168.1.3/32']},
-         'options': {'include': '"/etc/rndc.key"',
-                     'logging': {'category "update-security"':
-                         {'"security"': True},
-                         'category "queries"': {'"query_logging"': True},
-                         'channel "query_logging"':
-                             {'syslog': 'local5', 'severity': 'info'},
-                         'category "client"': {'"null"': True},
-                         'channel "security"':
-                             {'file "/var/log/named-security.'
-                              'log" versions 10 size 10m': True,
-                              'print-time yes': True,
-                              'print-time': 'yes'}},
-                     'options': {'directory': '"/var/domain"',
-                                 'recursion': 'yes',
-                                 'allow-query': {'any': True},
-                                 'max-cache-size': '512M'},
-                     'controls': {'keys': {'rndc-key': True},
-                                  'inet * allow': {'control-hosts': True}}},
-         'views':
-             {'authorized': {'zones':
-                 {'university.edu':
-                     {'type': 'slave',
-                      'options': {'masters': {'192.168.11.37': True},
-                                  'check-names': 'ignore'},
-                      'file': 'test_data/university.db.bak'},
-                  'smtp.university.edu':
-                     {'type': 'master',
-                      'options': {'masters': {'192.168.11.37': True}},
-                      'file': 'test_data/test_zone.db'},
-                  '.':
-                     {'type': 'hint', 'options': {}, 'file': 'named.ca'}},
-                 'options': {'allow-recursion': {'network-authorized': True},
-                             'recursion': 'yes',
-                             'match-clients': {'network-authorized': True},
-                             'allow-query-cache': {'network-authorized': True},
-                             'additional-from-cache': 'yes',
-                             'additional-from-auth': 'yes'}},
-              'unauthorized': {'zones':
-                 {'0.0.127.in-addr.arpa':
-                     {'type': 'slave',
-                      'options': {'masters': {'192.168.1.3': True}},
-                      'file': 'test_data/university.rev.bak'},
-                  '1.210.128.in-addr.arpa':
-                     {'type': 'master',
-                      'options': {'allow-query':
-                          {'network-unauthorized': True}},
-                      'file': 'test_data/test_reverse_zone.db'},
-                  '.':
-                     {'type': 'hint', 'options': {}, 'file': 'named.ca'}},
-              'options': {'recursion': 'no', 'additional-from-cache': 'no',
-                          'match-clients': {'network-unauthorized': True},
-                          'additional-from-auth': 'no'}}}})
+    returned_dict = named_importer_lib.MakeNamedDict(self.named_file)
+    self.assertEqual(len(returned_dict), 4)
+    self.assertEqual(len(returned_dict['acls']), 2)
+    self.assertEqual(len(returned_dict['options']), 4)
+    self.assertEqual(returned_dict['acls'],
+        {'admin': ['192.168.1.2/32', '192.168.1.4/32', '192.168.0.0/16'],
+         'control-hosts': ['127.0.0.1/32','192.168.1.3/32']})
+    self.assertEqual(returned_dict['options'],
+        {'include': '"/etc/rndc.key"',
+        'logging': {'category "update-security"':
+            {'"security"': True},
+            'category "queries"': {'"query_logging"': True},
+            'channel "query_logging"':
+                {'syslog': 'local5', 'severity': 'info'},
+            'category "client"': {'"null"': True},
+            'channel "security"':
+                {'file "/var/log/named-security.'
+                'log" versions 10 size 10m': True,
+                'print-time yes': True,
+                'print-time': 'yes'}},
+        'options': {'directory': '"/var/domain"',
+                    'recursion': 'yes',
+                    'allow-query': {'any': True},
+                    'max-cache-size': '512M'},
+        'controls': {'keys': {'rndc-key': True},
+                    'inet * allow': {'control-hosts': True}}})
+    self.assertEqual(returned_dict['views'],
+        {'authorized': {'zones':
+            {'university.edu':
+                {'type': 'slave',
+                'options': {'masters': {'192.168.11.37': True},
+                            'check-names': 'ignore'},
+                'file': 'test_data/university.db.bak'},
+            'smtp.university.edu':
+                {'type': 'master',
+                'options': {'masters': {'192.168.11.37': True}},
+                'file': 'test_data/test_zone.db'},
+            '.':
+                {'type': 'hint', 'options': {}, 'file': 'named.ca'}},
+            'options': {'allow-recursion': {'network-authorized': True},
+                        'recursion': 'yes',
+                        'match-clients': {'network-authorized': True},
+                        'allow-query-cache': {'network-authorized': True},
+                        'additional-from-cache': 'yes',
+                        'additional-from-auth': 'yes'}},
+        'unauthorized': {'zones':
+            {'0.0.127.in-addr.arpa':
+                {'type': 'slave',
+                'options': {'masters': {'192.168.1.3': True}},
+                'file': 'test_data/university.rev.bak'},
+            '1.210.128.in-addr.arpa':
+                {'type': 'master',
+                'options': {'allow-query':
+                    {'network-unauthorized': True}},
+                'file': 'test_data/test_reverse_zone.db'},
+            '.':
+                {'type': 'hint', 'options': {}, 'file': 'named.ca'}},
+        'options': {'recursion': 'no', 'additional-from-cache': 'no',
+                    'match-clients': {'network-unauthorized': True},
+                    'additional-from-auth': 'no'}}})
 
   def testMakeZoneViewOptions(self):
     self.assertEqual(named_importer_lib.MakeZoneViewOptions(

@@ -292,7 +292,8 @@ class TestAuditLog(unittest.TestCase):
     view_name = u'any'
     self.assertEqual(self.core_instance.ListRecords(), [])
     self.core_instance.MakeZone(u'test_zone', u'master', u'oldfqdn.')
-    self.core_instance.MakeReverseRangeZoneAssignment(u'test_zone',
+    self.core_instance.MakeZone(u'test_reverse_zone', u'master', u'1.168.192.in-addr.arpa.')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'test_reverse_zone',
                                                       u'192.168.1/24')
     web_lib.PushChanges(add_dict, remove_dict, error_ips, html_page,
                           self.core_instance, self.helper_instance, view_name)
@@ -300,9 +301,9 @@ class TestAuditLog(unittest.TestCase):
         [{'target': u'newhost', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'any', 'last_user': u'sharrell',
           'zone_name': u'test_zone', u'assignment_ip': u'192.168.1.1'},
-         {'target': u'1.1.168.192.in-a', 'ttl': 3600, 'record_type': u'ptr',
+         {'target': u'1', 'ttl': 3600, 'record_type': u'ptr',
           'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'test_zone', u'assignment_host': u'newhost.oldfqdn.'}])
+          'zone_name': u'test_reverse_zone', u'assignment_host': u'newhost.oldfqdn.'}])
 
   def testPrintAllRecordsPage(self):
     view_name = u'any'

@@ -234,7 +234,7 @@ class TestDnsZoneImport(unittest.TestCase):
          {'target': u'@', u'name_server': u'ns2.university.edu.', 'ttl': 86400,
           'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell',
           'zone_name': u'8.0.e.f.f.3.ip6.arpa'},
-         {'target': u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0.0',
+         {'target': u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0',
           'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any',
           'last_user': u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa',
           u'assignment_host': u'router.university.edu.'},

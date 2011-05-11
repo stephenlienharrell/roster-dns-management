@@ -237,48 +237,87 @@ class Testdnsrmhost(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testRemoveHost(self):
-    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
-        u'192.168.0/24', view_name=u'test_view'),
-        {u'test_view': {u'192.168.0.8':
-            [{u'forward': False, u'host': u'host6.university.edu',
-              'zone_origin': u'0.168.192.in-addr.arpa.',
-              u'zone': u'reverse_zone'},
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'192.168.0/24', view_name=u'test_view')
+    self.assertEqual(len(returned_dict), 1)
+    self.assertEqual(len(returned_dict[u'test_view']), 5)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.9']),2)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.8']),2)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.10']),1)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.5']),2)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.1']),1)
+    self.assertTrue(
+        {u'forward': False, u'host': u'host6.university.edu',
+          u'zone_origin': u'0.168.192.in-addr.arpa.',
+          u'zone': u'reverse_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.8'])
+    self.assertTrue(
         {u'forward': True, u'host': u'host6.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.1': [{u'forward': True, u'host': u'host1.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.9': [{u'forward': False, u'host': u'university.edu',
-         'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'},
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.8'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host1.university.edu',
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.1'])
+    self.assertTrue(
+        {u'forward': False, u'host': u'university.edu',
+          u'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.9'])
+    self.assertTrue(
         {u'forward': True, u'host': u'@.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.10': [{u'forward': True, u'host': u'host4.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.5': [{u'forward': False, u'host': u'host3.university.edu',
-         'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'},
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.9'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host4.university.edu',
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.10'])
+    self.assertTrue(
+       {u'forward': False, u'host': u'host3.university.edu',
+          u'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.5'])
+    self.assertTrue(
         {u'forward': True, u'host': u'host3.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.5'])
     output = os.popen('python %s -q -i 192.168.0.5 -t host3 '
                       '-z forward_zone -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     output.close()
-    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
-        u'192.168.0/24', view_name=u'test_view'),
-        {u'test_view': {u'192.168.0.8':
-            [{u'forward': False, u'host': u'host6.university.edu',
-              'zone_origin': u'0.168.192.in-addr.arpa.',
-              u'zone': u'reverse_zone'},
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'192.168.0/24', view_name=u'test_view')
+    self.assertEqual(len(returned_dict),1)
+    self.assertEqual(len(returned_dict[u'test_view']),4)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.8']),2)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.1']),1)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.9']),2)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.10']),1)
+    self.assertTrue(
+        {u'forward': False, u'host': u'host6.university.edu',
+          u'zone_origin': u'0.168.192.in-addr.arpa.',
+          u'zone': u'reverse_zone'} in
+    returned_dict[u'test_view'][u'192.168.0.8'])
+    self.assertTrue(
         {u'forward': True, u'host': u'host6.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.1': [{u'forward': True, u'host': u'host1.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.9': [{u'forward': False, u'host': u'university.edu',
-         'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'},
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+    returned_dict[u'test_view'][u'192.168.0.8'])
+    self.assertTrue(
+         {u'forward': True, u'host': u'host1.university.edu',
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+    returned_dict[u'test_view'][u'192.168.0.1'])
+    self.assertTrue(
+         {u'forward': False, u'host': u'university.edu',
+          u'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'} in
+    returned_dict[u'test_view'][u'192.168.0.9'])
+    self.assertTrue(
         {u'forward': True, u'host': u'@.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.10': [{u'forward': True, u'host': u'host4.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+    returned_dict[u'test_view'][u'192.168.0.9'])
+    self.assertTrue(
+         {u'forward': True, u'host': u'host4.university.edu',
+          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+         returned_dict[u'test_view'][u'192.168.0.10'])
     output = os.popen('python %s -q -i 192.168.0.9 -t @ '
                       '-z forward_zone -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
@@ -286,18 +325,30 @@ class Testdnsrmhost(unittest.TestCase):
                           USERNAME, PASSWORD, USER_CONFIG))
     output.close()
 
-    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
-        u'192.168.0/24', view_name=u'test_view'),
-        {u'test_view': {u'192.168.0.8':
-            [{u'forward': False, u'host': u'host6.university.edu',
-              'zone_origin': u'0.168.192.in-addr.arpa.',
-              u'zone': u'reverse_zone'},
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'192.168.0/24', view_name=u'test_view')
+    self.assertEqual(len(returned_dict),1)
+    self.assertEqual(len(returned_dict[u'test_view']),3)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.8']),2)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.1']),1)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.10']),1)
+    self.assertTrue(
+        {u'forward': False, u'host': u'host6.university.edu',
+          u'zone_origin': u'0.168.192.in-addr.arpa.',
+          u'zone': u'reverse_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.8'])
+    self.assertTrue(
         {u'forward': True, u'host': u'host6.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.1': [{u'forward': True, u'host': u'host1.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}],
-         u'192.168.0.10': [{u'forward': True, u'host': u'host4.university.edu',
-         u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
+            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.8'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host1.university.edu',
+              u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.1'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host4.university.edu',
+            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.0.10'])
 
   def testRemoveIPV6(self):
     self.core_instance.MakeZone(u'ipv6_zone', u'master',

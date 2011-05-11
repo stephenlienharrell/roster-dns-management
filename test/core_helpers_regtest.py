@@ -130,6 +130,15 @@ class TestCoreHelpers(unittest.TestCase):
     self.core_instance.MakeRecord(
         u'aaaa', u'host2', u'ipv6zone', {u'assignment_ip':
             u'4321:0000:0001:0002:0003:0004:0567:89ab'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'host2', u'ipv6zone', {u'assignment_ip':
+            u'4321:0000:0001:0002:0003:0004:0567:89ac'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'host2', u'ipv6zone', {u'assignment_ip':
+            u'4321:0001:0001:0002:0003:0004:0567:89ab'}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'aaaa', u'host2', u'ipv6zone', {u'assignment_ip':
+            u'4321:0001:0001:0002:0003:0004:0567:89ac'}, view_name=u'test_view')
     self.core_instance.MakeRecord(u'a', u'host1', u'forward_zone',
                                   {u'assignment_ip': u'192.168.0.1'},
                                   view_name=u'test_view')
@@ -265,40 +274,123 @@ class TestCoreHelpers(unittest.TestCase):
             [{u'forward': False, u'host': u'host5.university.edu',
               u'zone_origin': u'1.168.192.in-addr.arpa.',
               u'zone': u'reverse_zone'}]}})
-    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
-      u'192.168.1.8', view_name=u'test_view'),
-      {u'test_view': {u'192.168.1.8':
-          [{u'forward': False, u'host': u'host6.university.edu',
+
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'4321:0000:0001:0002:0003:0004:0567:89ab', view_name=u'test_view')
+    self.assertEqual(len(returned_dict), 1)
+    self.assertEqual(len(returned_dict[u'test_view']), 1)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab']), 1)
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab'])
+
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+      u'192.168.1.8', view_name=u'test_view')
+    self.assertEqual(len(returned_dict), 1)
+    self.assertEqual(len(returned_dict[u'test_view']), 1)
+    self.assertEqual(len(returned_dict[u'test_view'][u'192.168.1.8']), 2)
+    self.assertTrue(
+        {u'forward': False, u'host': u'host6.university.edu',
             u'zone_origin': u'1.168.192.in-addr.arpa.',
-            u'zone': u'reverse_zone'},
-           {u'forward': True, u'host': u'host6.university.edu',
-            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
-    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
-      u'4321:0000:0001:0002:0003:0004:0567:89ab', view_name=u'test_view'),
-      {u'test_view': {u'4321:0000:0001:0002:0003:0004:0567:89ab':
-          [{u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'}]}})
+            u'zone': u'reverse_zone'} in
+        returned_dict[u'test_view'][u'192.168.1.8'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host6.university.edu',
+            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        returned_dict[u'test_view'][u'192.168.1.8'])
 
   def testListRecordsByCIDRBlock(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
 
-    self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
-        u'192.168.1.4/30'),
-        {u'test_view2':
-            {u'192.168.1.7':
-                 [{u'forward': False, u'host': u'host5.university.edu',
-                   u'zone_origin': u'1.168.192.in-addr.arpa.',
-                   u'zone': u'reverse_zone'}],
-             u'192.168.1.5':
-                 [{u'forward': False, u'host': u'host3.university.edu',
-                   u'zone_origin': u'1.168.192.in-addr.arpa.',
-                   u'zone': u'reverse_zone'}]},
-         u'test_view3':
-            {u'192.168.1.5':
-                 [{u'forward': True, u'host': u'host3.university.edu',
-                   u'zone_origin': u'university.edu.',
-                   u'zone': u'forward_zone'}]}})
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'192.168.1.4/30')
+    self.assertTrue(len(returned_dict), 2)
+    self.assertTrue(len(returned_dict[u'test_view2']), 2)
+    self.assertTrue(len(returned_dict[u'test_view3']), 1)
+    self.assertTrue(len(returned_dict[u'test_view2'][u'192.168.1.7']), 1)
+    self.assertTrue(len(returned_dict[u'test_view2'][u'192.168.1.5']), 1)
+    self.assertTrue(len(returned_dict[u'test_view3'][u'192.168.1.5']), 1)
+    self.assertTrue(
+        {u'forward': False, u'host': u'host5.university.edu',
+            u'zone_origin': u'1.168.192.in-addr.arpa.',
+            u'zone': u'reverse_zone'} in
+        returned_dict[u'test_view2'][u'192.168.1.7'])
+    self.assertTrue(
+        {u'forward': False, u'host': u'host3.university.edu',
+            u'zone_origin': u'1.168.192.in-addr.arpa.',
+            u'zone': u'reverse_zone'} in
+        returned_dict[u'test_view2'][u'192.168.1.5'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host3.university.edu',
+            u'zone_origin': u'university.edu.',
+            u'zone': u'forward_zone'} in
+        returned_dict[u'test_view3'][u'192.168.1.5'])
+
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'4321:0000:0001:0002:0003:0004:0567:89ab/120', view_name=u'test_view')
+    self.assertEqual(len(returned_dict), 1)
+    self.assertEqual(len(returned_dict[u'test_view']), 2)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab']), 1)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ac']), 1)
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ac'])
+
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'4321:0001:0001:0002:0003:0004:0567:89ab/32', view_name=u'test_view')
+    self.assertEqual(len(returned_dict), 1)
+    self.assertEqual(len(returned_dict[u'test_view']), 2)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ab']), 1)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac']), 1)
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ab'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac'])
+
+    returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
+        u'4321:0000:0001:0002:0003:0004:0567:89ab/0', view_name=u'test_view')
+    self.assertEqual(len(returned_dict), 1)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab']), 1)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ac']), 1)
+    self.assertEqual(len(returned_dict[u'test_view']), 4)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ab']), 1)
+    self.assertEqual(len(
+        returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac']), 1)
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ac'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ab'])
+    self.assertTrue(
+        {u'forward': True, u'host': u'host2.ipv6.net',
+            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac'])
 
   def testListAvailableIpsInCIDR(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',

@@ -38,6 +38,8 @@ __version__ = '#TRUNK#'
 import datetime
 import uuid
 
+import IPy
+
 import audit_log
 import constants
 import errors
@@ -2184,6 +2186,10 @@ class Core(object):
                  view_name=None, ttl=None):
     """Makes a record.
 
+    Please check core_helpers for functions to make certain records that
+    need help before using this directly. For instance MakePTRRecord and
+    MakeAAAARecord.
+
     Raises:
       CoreError  Raised for any internal problems.
 
@@ -2214,7 +2220,6 @@ class Core(object):
     self.user_instance.Authorize(function_name, {'target': target,
                                                  'zone_name': zone_name,
                                                  'view_name': view_name})
-
     if( ttl is None ):
       ttl = constants.DEFAULT_TTL
 
@@ -2276,6 +2281,9 @@ class Core(object):
              'argument_value': unicode(record_args_dict[k])}
           self.db_instance.MakeRow('record_arguments_records_assignments',
                                    record_argument_assignments_dict)
+        if( record_type in constants.RECORD_TYPES_INDEXED_BY_IP ):
+          self._AddRecordToIpIndex(record_type, zone_name, view_name,
+                                   record_id, target, record_args_dict)
         self._IncrementSoa(view_name, zone_name)
       except:
         self.db_instance.EndTransaction(rollback=True)
@@ -2976,6 +2984,49 @@ class Core(object):
             soa_arguments_dict)
     return row_count
 
+  def _AddRecordToIpIndex(self, record_type, zone_name, view_name, record_id,
+                          target, record_args_dict):
+    """Add record to the ipv4 or ipv6 index.
+
+    Inputs:
+      record_type: string of type of record
+      zone_name: string of zone name
+      view_name: string of view_name
+      record_id: int of id for record
+      target: string of the target of the record
+      record_args_dict: dictionary of args for the record
+    """
+    ip = ''
+    if( record_type == 'ptr' ):
+      origin = self.db_instance.GetZoneOrigin(zone_name, view_name)
+      ip = helpers_lib.UnReverseIP('%s.%s' % (target, origin))
+      if( self.db_instance.data_validation_instance is None ):
+        self.db_instance.InitDataValidation()
+      if( self.db_instance.data_validation_instance.isIPv4IPAddress(ip) ):
+        record_type = 'a'
+      elif( self.db_instance.data_validation_instance.isIPv6IPAddress(ip) ):
+        record_type = 'aaaa'
+
+    if( record_type == 'a' ):
+      if( not ip ):
+        ip = record_args_dict['assignment_ip']
+      decimal_ip = int(IPy.IP(ip).strDec())
+      ipv4_index_dict = {'ipv4_dec_address': decimal_ip,
+                         'ipv4_index_record_id': record_id}
+      self.db_instance.MakeRow('ipv4_index', ipv4_index_dict)
+
+    if( record_type == 'aaaa' ):
+      if( not ip ):
+        ip = record_args_dict['assignment_ip']
+      ip_obj = IPy.IP(ip)
+      decimal_ip_lower = int('0x%s' % ip_obj.strHex()[18:], 0)
+      decimal_ip_upper = int(ip_obj.strHex()[:-16], 0)
+      ipv6_index_dict = {'ipv6_dec_upper': decimal_ip_upper,
+                         'ipv6_dec_lower': decimal_ip_lower,
+                         'ipv6_index_record_id': record_id}
+      self.db_instance.MakeRow('ipv6_index', ipv6_index_dict)
+
+
   def _MakeCredential(self, credential, user_name, last_used=None,
                       infinite_cred=False):
     """Create a credential.
@@ -3228,8 +3279,9 @@ class Core(object):
     try:
       if( begin_timestamp and end_timestamp ):
         audit_log = self.db_instance.ListRow(
-            'audit_log', audit_dict, date_column='audit_log_timestamp',
-            date_range=(begin_timestamp, end_timestamp))
+            'audit_log', audit_dict, column='audit_log_timestamp',
+            is_date=True,
+            range_values=(begin_timestamp, end_timestamp))
       else:
         audit_log = self.db_instance.ListRow('audit_log', audit_dict)
     finally:

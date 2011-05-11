@@ -124,6 +124,8 @@ SCHEMA_FILE = """# Copyright (c) 2009, Purdue University
 
 ########### These are commands prepare the database for our tables ###########
 
+DROP TABLE IF EXISTS `ipv6_index`;
+DROP TABLE IF EXISTS `ipv4_index`;
 DROP TABLE IF EXISTS `audit_log`;
 DROP TABLE IF EXISTS `reserved_words`;
 DROP TABLE IF EXISTS `named_conf_global_options`;
@@ -643,6 +645,33 @@ CREATE TABLE `audit_log` (
 
   CONSTRAINT `user_name_3` FOREIGN KEY (`audit_log_user_name`)
     REFERENCES `users` (`user_name`) ON UPDATE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `ipv4_index` (
+  `ipv4_index_id` mediumint unsigned NOT NULL auto_increment,
+  `ipv4_dec_address` int unsigned NOT NULL,
+  `ipv4_index_record_id` mediumint unsigned NOT NULL UNIQUE,
+
+  PRIMARY KEY (`ipv4_index_id`),
+  INDEX `ipv4_address` (`ipv4_dec_address`),
+
+  CONSTRAINT `ipv4_index_record_id_1` FOREIGN KEY (`ipv4_index_record_id`)
+    REFERENCES `records` (`records_id`) ON DELETE CASCADE ON UPDATE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `ipv6_index` (
+  `ipv6_index_id` mediumint unsigned NOT NULL auto_increment,
+  `ipv6_dec_upper` bigint unsigned NOT NULL,
+  `ipv6_dec_lower` bigint unsigned NOT NULL,
+  `ipv6_index_record_id` mediumint unsigned NOT NULL UNIQUE,
+
+  PRIMARY KEY (`ipv6_index_id`),
+  INDEX `ipv6_address` (`ipv6_dec_upper`, `ipv6_dec_lower`),
+
+  CONSTRAINT `ipv6_index_record_id_1` FOREIGN KEY (`ipv6_index_record_id`)
+    REFERENCES `records` (`records_id`) ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

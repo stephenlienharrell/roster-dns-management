@@ -149,7 +149,7 @@ class DataValidation(object):
 
 
   def isIPv6IPAddress(self, ip_address):
-    """Checks that a string is an ipv6 IP Address.
+    """Checks that a string is a fully enumerated ipv6 IP Address.
   
     Inputs:
       ip_address: string of ipv6 ip address
@@ -163,6 +163,8 @@ class DataValidation(object):
     try:
       ip = IPy.IP(ip_address)
     except ValueError:
+      return False
+    if( not ip.strFullsize() == ip_address ):
       return False
     if( not str(ip.netmask()) == 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff' or
         not ip.version() == 6 ):
