@@ -79,6 +79,73 @@ class CoreHelpers(object):
   def ExpandIPV6(self, ip_address):
     return helpers_lib.ExpandIPV6(ip_address)
 
+  def GetAssociatedCNAMEs(self, hostname, view_name, zone_name,
+                          recursive=False):
+    """Lists cname's by assignment hostname.
+
+    Inputs:
+      hostname: string of hostname
+      view_name: string of view name
+      zone_name: string of zone name
+
+    Outputs:
+      list: list of found cname dictionaries
+    """
+    record_arguments_record_assignments_dict = (
+        self.db_instance.GetEmptyRowDict(
+            'record_arguments_records_assignments'))
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_view_assignments_dict['zone_view_assignments_zone_name'] = unicode(
+         zone_name)
+    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
+         unicode('%s_dep' % view_name))
+
+    record_arguments_record_assignments_dict[
+        'record_arguments_records_assignments_type'] = u'cname'
+    record_arguments_record_assignments_dict[
+        'argument_value'] = hostname
+    records_dict = self.db_instance.GetEmptyRowDict(
+        'records')
+    records_dict['record_type'] = u'cname'
+    records_dict['record_view_dependency'] = '%s_dep' % view_name
+    records_dict['record_zone_name'] = zone_name
+    self.db_instance.StartTransaction()
+    try:
+      found_records = self.db_instance.ListRow(
+          'records', records_dict,
+          'record_arguments_records_assignments',
+          record_arguments_record_assignments_dict,
+          'zone_view_assignments', zone_view_assignments_dict)
+    finally:
+      self.db_instance.EndTransaction()
+    cnames = []
+    for record in found_records:
+      new_record = {}
+      new_record['record_type'] = record[
+          'record_arguments_records_assignments_type']
+      new_record['zone_name'] = record['record_zone_name']
+      new_record['target'] = record['record_target']
+      new_record['ttl'] = record['record_ttl']
+      new_record['view_name'] = record[
+          'record_view_dependency'].rsplit('_dep')[0]
+      new_record['assignment_host'] = record['argument_value']
+      new_record['last_user'] = record['record_last_user']
+      new_record['zone_origin'] = record['zone_origin']
+      cnames.append(new_record)
+
+    if( not recursive ):
+      return cnames
+    new_cnames = []
+    for record in cnames:
+      new_cnames.extend(self.GetAssociatedCNAMEs(
+          '%s.%s' % (record['target'], record['zone_origin']),
+          record['view_name'], record['zone_name'], recursive=recursive))
+    cnames.extend(new_cnames)
+    del new_cnames
+    del found_records
+    return cnames
+
   def ListLatestNamedConfig(self, dns_server_set):
     """Lists the latest named config string given dns server set
 

@@ -174,6 +174,83 @@ class TestCoreHelpers(unittest.TestCase):
                                       u'host5.university.edu.'},
                                   view_name=u'test_view2')
 
+  def testGetAssociatedCNAMEs(self):
+    self.core_instance.MakeRecord(
+        u'cname', u'cname_host2', u'forward_zone',
+        {u'assignment_host': u'host2.university.edu.'},
+        view_name=u'test_view3')
+    self.core_instance.MakeRecord(
+        u'cname', u'cname2_host2', u'forward_zone',
+        {u'assignment_host': u'host2.university.edu.'},
+        view_name=u'test_view3')
+    self.core_instance.MakeRecord(
+        u'cname', u'fry0', u'forward_zone',
+        {u'assignment_host': u'host1.university.edu.'},
+        view_name=u'test_view3')
+    self.core_instance.MakeRecord(
+        u'cname', u'bender', u'forward_zone',
+        {u'assignment_host': u'host6.university.edu.'},
+        view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'cname', u'bender2', u'forward_zone',
+        {u'assignment_host': u'bender.university.edu.'},
+        view_name=u'test_view')
+    self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
+        u'host2.university.edu.', u'test_view3', u'forward_zone'),
+        [{'target': u'cname_host2', 'ttl': 3600, 'record_type': u'cname',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          'assignment_host': u'host2.university.edu.',
+          'zone_origin': u'university.edu.'},
+         {'target': u'cname2_host2', 'ttl': 3600, 'record_type': u'cname',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          'assignment_host': u'host2.university.edu.',
+          'zone_origin': u'university.edu.'}])
+    self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
+        u'host6.university.edu.', u'test_view3', u'forward_zone'),
+        [])
+    self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
+        u'unknownhost.university.edu.', u'test_view3', u'forward_zone'),
+        [])
+    self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
+        u'host6.university.edu.', u'test_view', u'forward_zone'),
+        [{'target': u'bender', 'ttl': 3600, 'record_type': u'cname',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          'assignment_host': u'host6.university.edu.',
+          'zone_origin': u'university.edu.'}])
+    self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
+        u'host6.university.edu.', u'test_view', u'forward_zone',
+        recursive=True),
+        [{'target': u'bender', 'ttl': 3600, 'record_type': u'cname',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          'assignment_host': u'host6.university.edu.',
+          'zone_origin': u'university.edu.'},
+         {'target': u'bender2', 'ttl': 3600, 'record_type': u'cname',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone',
+          'assignment_host': u'bender.university.edu.',
+          'zone_origin': u'university.edu.'}])
+    # 100 CNAMEs pointing to the same host
+    for i in range(100):
+      self.core_instance.MakeRecord(
+          u'cname', u'loop%d' % i, u'forward_zone',
+          {u'assignment_host': u'host6.university.edu.'},
+          view_name=u'test_view')
+    self.assertEqual(len(self.core_helper_instance.GetAssociatedCNAMEs(
+        u'host6.university.edu.', u'test_view', u'forward_zone')), 101)
+    # 100 CNAMEs recursively pointing to each other pointing to one host
+    for i in range(100):
+      self.core_instance.MakeRecord(
+          u'cname', u'fry%d' % (i + 1), u'forward_zone',
+          {u'assignment_host': u'fry%d.university.edu.' % i},
+          view_name=u'test_view3')
+    self.assertEqual(len(self.core_helper_instance.GetAssociatedCNAMEs(
+        u'host1.university.edu.', u'test_view3', u'forward_zone',
+        recursive=True)), 101)
+
   def testListRecordByIPAddress(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
