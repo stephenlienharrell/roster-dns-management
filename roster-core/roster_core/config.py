@@ -78,7 +78,7 @@ class Config(object):
                    'server': {'inf_renew_time': 'int', 'core_die_time': 'int',
                               'get_credentials_wait_increment': 'int',
                               'run_as_username': 'str',
-                              'port': 'int',
+                              'port': 'int', 'host': 'str',
                               'server_killswitch': 'boolean',
                               'lock_file': 'str', 'ssl_key_file': 'str',
                               'server_log_file': 'str', 'ssl_cert_file': 'str'},

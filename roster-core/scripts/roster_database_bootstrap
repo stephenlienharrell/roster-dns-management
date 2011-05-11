@@ -159,6 +159,9 @@ def main(args):
   parser.add_option('--server-port', action='store', dest='port',
                     help='Port server will start with.',
                     default='8000')
+  parser.add_option('--server-host', action='store', dest='host',
+                    help='Host server will start with.',
+                    default='localhost')
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -251,6 +254,7 @@ def main(args):
 
   config_parser.add_section('server')
   config_parser.set('server', 'port', options.port)
+  config_parser.set('server', 'host', options.host)
   config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
   config_parser.set('server', 'core_die_time', options.core_die_time)
   config_parser.set('server', 'run_as_username', options.run_as_username)

@@ -95,6 +95,8 @@ class Server(object):
     self.inf_renew_time = inf_renew_time
     self.port = self.config_instance.config_file['server'][
         'port']
+    self.server_name = self.config_instance.config_file['server'][
+        'host']
     self.core_store_cleanup_running = False
     if( inf_renew_time is None ):
       self.inf_renew_time = self.config_instance.config_file['server'][
@@ -341,7 +343,7 @@ class Server(object):
       return True
     return False
 
-  def Serve(self, server_name=u'localhost', port=None):
+  def Serve(self, server_name=None, port=None):
     """Main server function
 
     Inputs:
@@ -350,6 +352,8 @@ class Server(object):
     """
     if( not port ):
       port = self.port
+    if( not server_name ):
+      server_name = self.server_name
     if( self.server_killswitch ):
       raise ServerError('"server_killswitch" must be set to "off" in "%s" '
                         'to allow the XML-RPC server to run.' % (

@@ -103,10 +103,10 @@ def main(args):
                     default='/etc/roster/roster_server.conf')
   parser.add_option('-H', '--host', dest='host', metavar='<host>',
                     help='Hostname of server to be created.',
-                    default=u'localhost')
+                    default=None)
   parser.add_option('-p', '--port', dest='port', metavar='<port>',
                     help='Port of server to be created.',
-                    default=u'8000')
+                    default=None)
   parser.add_option('--unit-test', dest='unit_test',
                     help='Run as unit-test..',
                     default=False, action='store_true')
@@ -144,6 +144,15 @@ def main(args):
 
   if( options.lock_file is None ):
     options.lock_file = config_instance.config_file['server']['lock_file']
+
+  if( not options.port and not config_instance.config_file['server']['port'] ):
+    options.port = u'8000'
+  elif( not options.port ):
+    options.port = config_instance.config_file['server']['port']
+  if( not options.host and not config_instance.config_file['server']['host'] ):
+    options.host = u'localhost'
+  elif( not options.host ):
+    options.host = config_instance.config_file['server']['host']
 
   if( options.stop ):
     if( os.path.exists(options.lock_file) ):
