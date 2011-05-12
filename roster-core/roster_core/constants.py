@@ -37,7 +37,8 @@ __version__ = '#TRUNK#'
 
 # These are reserved ipv6 addresses.
 RESERVED_IPV6 = ('::', '::1/128', 'fe80::/10', 'ff01::1', 'ff02::1', 'ff01::2',
-                 'ff05::2')
+                 'ff05::2', '3fff::/16', '2000::/16', '::/8')
+RESERVED_IPV4 = ('223/8', '224/3')
 
 
 # This is the default TTL for all records inserted into the database.

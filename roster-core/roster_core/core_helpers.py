@@ -290,12 +290,20 @@ class CoreHelpers(object):
     Outputs:
       list: list of strings of ip addresses
     """
-    reserved_ipv6 = []
-    for cidr in constants.RESERVED_IPV6:
-      reserved_ipv6.append(IPy.IP(cidr))
-    for res in reserved_ipv6:
-      if( IPy.IP(cidr_block) in res ):
-        return []
+    try:
+      cidr_block_ipy = IPy.IP(cidr_block)
+    except ValueError:
+      raise errors.CoreError('%s is not a valid cidr block' % cidr_block)
+    reserved_ips = []
+    if( cidr_block_ipy.version() == 6 ):
+      reserved = constants.RESERVED_IPV6
+    elif( cidr_block_ipy.version() == 4 ):
+      reserved = constants.RESERVED_IPV4
+    for cidr in reserved:
+      reserved_ips.append(IPy.IP(cidr))
+    for reserved_ip in reserved_ips:
+      if( IPy.IP(cidr_block) in reserved_ip ):
+        raise errors.CoreError('%s is in a reserved IP space' % cidr_block)
     records = self.ListRecordsByCIDRBlock(cidr_block, view_name=view_name,
                                           zone_name=zone_name)
     taken_ips = []
@@ -303,18 +311,13 @@ class CoreHelpers(object):
     for view in records:
       for ip in records[view]:
         taken_ips.append(ip)
-    try:
-      cidr_block_ipy = IPy.IP(cidr_block)
-    except ValueError:
-      raise errors.CoreError('%s is not a valid cidr block' % cidr_block)
-    ips = list(cidr_block_ipy)
-    for ip in ips[1:-1]:
-      if( ip.iptype() == 'RESERVED' ):
-        continue
+    count = 0L;
+    while( count < (cidr_block_ipy.len() - 1) ):
+      count += 1L
       if( len(avail_ips) >= num_ips ):
         break
-      if( ip.strFullsize() not in taken_ips ):
-        avail_ips.append(ip.strFullsize())
+      if( cidr_block_ipy[count].strFullsize() not in taken_ips ):
+        avail_ips.append(cidr_block_ipy[count].strFullsize())
     return avail_ips
 
   def ListRecordsByCIDRBlock(self, cidr_block, view_name=None, zone_name=None):

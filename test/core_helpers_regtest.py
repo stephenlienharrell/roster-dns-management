@@ -416,11 +416,24 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
         '192.168.0.0/29', num_ips=4), ['192.168.0.2', '192.168.0.3',
                                        '192.168.0.4', '192.168.0.5'])
+    self.assertRaises(roster_core.CoreError,
+         self.core_helper_instance.ListAvailableIpsInCIDR,
+        '240.0.0.0/24', num_ips=10)
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
-        '240.0.0.0/24', num_ips=10), [])
-    #self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
-    #    '4::/64', num_ips=10), ['4::1', '4::2', '4::3', '4::4', '4::5', '4::6',
-    #                            '4::7', '4::8', '4::9', '4::a'])
+        '2001:0400::/64', num_ips=10),
+        ['2001:0400:0000:0000:0000:0000:0000:0001',
+         '2001:0400:0000:0000:0000:0000:0000:0002',
+         '2001:0400:0000:0000:0000:0000:0000:0003',
+         '2001:0400:0000:0000:0000:0000:0000:0004',
+         '2001:0400:0000:0000:0000:0000:0000:0005',
+         '2001:0400:0000:0000:0000:0000:0000:0006',
+         '2001:0400:0000:0000:0000:0000:0000:0007',
+         '2001:0400:0000:0000:0000:0000:0000:0008',
+         '2001:0400:0000:0000:0000:0000:0000:0009',
+         '2001:0400:0000:0000:0000:0000:0000:000a'])
+    self.assertRaises(roster_core.CoreError,
+         self.core_helper_instance.ListAvailableIpsInCIDR,
+        '4::/64', num_ips=10)
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
         '2001:0400::/123', num_ips=10),
         ['2001:0400:0000:0000:0000:0000:0000:0001',
