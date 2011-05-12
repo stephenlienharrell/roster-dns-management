@@ -340,6 +340,13 @@ class CoreHelpers(object):
                           u'zone_origin': u'1.168.192.in-addr.arpa.'}]}}
     """
     record_list = {}
+    try:
+      IPy.IP(cidr_block)
+    except ValueError:
+      raise InvalidInput(
+          'The CIDR block specified does not contain a valid IP: %s' % (
+              cidr_block))
+    cidr_block = IPy.IP(cidr_block).strFullsize(1)
     if( cidr_block.find('/') != -1 ):
       cidr_ip = IPy.IP(cidr_block.split('/')[0])
       cidr_size = int(cidr_block.split('/')[1])
@@ -367,7 +374,6 @@ class CoreHelpers(object):
       records_dict['record_view_dependency'] = view_name
     elif( view_name is not None ):
       records_dict['record_view_dependency'] = '%s_dep' % view_name
-
       
     zone_dict['zone_name'] = zone_name
     
@@ -390,12 +396,14 @@ class CoreHelpers(object):
             range_values=(decimal_ip_lower, decimal_ip_upper))
       finally:
         self.db_instance.EndTransaction()
-
     elif( cidr_ip.version() == 6 ):
       ip_index_dict = self.db_instance.GetEmptyRowDict('ipv6_index')
       if( cidr_size >= 64 ):
-        ip_index_dict[u'ipv6_dec_upper'] = int(cidr_ip.strHex()[:-16], 0)
-        decimal_ip_lower = int('0x%s' % cidr_ip.strHex()[18:], 0)
+        try:
+          ip_index_dict[u'ipv6_dec_upper'] = int(cidr_ip.strHex(0)[:-16], 0)
+        except ValueError:
+          ip_index_dict[u'ipv6_dec_upper'] = 0
+        decimal_ip_lower = int('0x%s' % cidr_ip.strHex(0)[18:], 0)
         decimal_ip_lower_lower = (
             (decimal_ip_lower >> (128 - cidr_size)) <<
             (128 - cidr_size))
@@ -404,7 +412,10 @@ class CoreHelpers(object):
         column = 'ipv6_dec_lower'
         range_values = (decimal_ip_lower_lower, decimal_ip_lower_upper)
       elif( cidr_size < 64 ):
-        decimal_ip_upper = int(cidr_ip.strHex()[:-16], 0)
+        try:
+          decimal_ip_upper = int(cidr_ip.strHex()[:-16], 0)
+        except ValueError:
+          decimal_ip_upper = 0
         decimal_ip_upper_lower = (
             (decimal_ip_upper >> (64 - cidr_size)) << (64 - cidr_size))
         decimal_ip_upper_upper = (
@@ -437,7 +448,6 @@ class CoreHelpers(object):
         record_view = record_entry[u'record_view_dependency']
       if( record_view not in parsed_record_dict ):
         parsed_record_dict[record_view] = {}
-      
       if( u'ipv4_dec_address' in record_entry ):
         record_ip = u'%s' % (
             IPy.IP(record_entry[u'ipv4_dec_address']).strNormal(1))
@@ -454,7 +464,6 @@ class CoreHelpers(object):
         raise IPIndexError(
             'Record type unknown. Missing ipv4 or ipv6 dec index: %s' % (
                 record_entry))
-      
       record_item = {}
       record_item[u'zone_origin'] = record_entry[u'zone_origin']
       record_item[u'zone'] = record_entry[u'zone_name']

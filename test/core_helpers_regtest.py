@@ -53,7 +53,6 @@ CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 
-
 class TestCoreHelpers(unittest.TestCase):
 
   def setUp(self):
@@ -330,7 +329,7 @@ class TestCoreHelpers(unittest.TestCase):
         returned_dict[u'test_view3'][u'192.168.1.5'])
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
-        u'4321:0000:0001:0002:0003:0004:0567:89ab/120', view_name=u'test_view')
+        u'4321:0000:0001:0002:0003:0004:0567:8900/120', view_name=u'test_view')
     self.assertEqual(len(returned_dict), 1)
     self.assertEqual(len(returned_dict[u'test_view']), 2)
     self.assertEqual(len(
@@ -347,7 +346,7 @@ class TestCoreHelpers(unittest.TestCase):
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ac'])
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
-        u'4321:0001:0001:0002:0003:0004:0567:89ab/32', view_name=u'test_view')
+        u'4321:0001:0000:0000:0000:0000:0000:0000/32', view_name=u'test_view')
     self.assertEqual(len(returned_dict), 1)
     self.assertEqual(len(returned_dict[u'test_view']), 2)
     self.assertEqual(len(
@@ -364,7 +363,7 @@ class TestCoreHelpers(unittest.TestCase):
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac'])
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
-        u'4321:0000:0001:0002:0003:0004:0567:89ab/0', view_name=u'test_view')
+        u'::/0', view_name=u'test_view')
     self.assertEqual(len(returned_dict), 1)
     self.assertEqual(len(
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab']), 1)
@@ -391,6 +390,23 @@ class TestCoreHelpers(unittest.TestCase):
         {u'forward': True, u'host': u'host2.ipv6.net',
             u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac'])
+
+    self.assertRaises(roster_core.core_helpers.InvalidInput,
+        self.core_helper_instance.ListRecordsByCIDRBlock, 'invalid ip')
+    self.assertRaises(roster_core.core_helpers.InvalidInput,
+        self.core_helper_instance.ListRecordsByCIDRBlock, '12345::/112')
+    self.assertRaises(roster_core.core_helpers.InvalidInput,
+        self.core_helper_instance.ListRecordsByCIDRBlock, '192.168.0.256')
+    self.assertRaises(roster_core.core_helpers.InvalidInput,
+        self.core_helper_instance.ListRecordsByCIDRBlock, '192.168.0.1/33')
+    self.assertRaises(roster_core.core_helpers.InvalidInput,
+        self.core_helper_instance.ListRecordsByCIDRBlock, '4321:1:2:3:4:567:89ac/129')
+    self.assertRaises(roster_core.core_helpers.InvalidInput,
+        self.core_helper_instance.ListRecordsByCIDRBlock, '4321:1:2:3:4:567:89ac/112')
+    self.assertRaises(roster_core.core_helpers.InvalidInput,
+        self.core_helper_instance.ListRecordsByCIDRBlock, '0.0.0.0/-1')
+    self.assertRaises(roster_core.core_helpers.InvalidInput,
+        self.core_helper_instance.ListRecordsByCIDRBlock, '')
 
   def testListAvailableIpsInCIDR(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
