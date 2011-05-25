@@ -71,6 +71,9 @@ TABLES_NOT_AUDIT_LOGGED = ['audit_log', 'locks']
 # This is a list of record types that can be indexed by IP address.
 RECORD_TYPES_INDEXED_BY_IP = ['ptr', 'a', 'aaaa']
 
+# This is the default config file location for roster server
+SERVER_CONFIG_FILE_LOCATION = '/etc/roster/roster_server.conf'
+
 # The SUPPORTED_METHODS hash contains a hash for every supported method.
 # 'check' indicates whether the target zone/IP range should be checked.
 # 'write' indicates whether the method requires write access.
