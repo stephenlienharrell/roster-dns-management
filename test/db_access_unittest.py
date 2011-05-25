@@ -53,6 +53,7 @@ import roster_core
 from roster_core import data_validation
 from roster_core import db_access
 from roster_core import helpers_lib
+from roster_core import errors
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -182,30 +183,29 @@ class TestdbAccess(unittest.TestCase):
 
   def testTransactions(self):
     self.db_instance.thread_safe = False
-    self.assertRaises(db_access.TransactionError,
-                      self.db_instance.EndTransaction)
+    self.assertRaises(errors.TransactionError, self.db_instance.EndTransaction)
     self.db_instance.StartTransaction()
-    self.assertRaises(db_access.TransactionError,
+    self.assertRaises(errors.TransactionError,
                       self.db_instance.StartTransaction)
     self.db_instance.EndTransaction()
 
   def testDbLocking(self):
     self.db_instance.StartTransaction()
-    self.assertRaises(db_access.TransactionError, self.db_instance.UnlockDb)
+    self.assertRaises(errors.TransactionError, self.db_instance.UnlockDb)
     self.db_instance.LockDb()
     users_dict = self.db_instance.GetEmptyRowDict('users')
     users_dict['user_name'] = u'test'
     users_dict['access_level'] = 32
     self.assertRaises(MySQLdb.OperationalError, self.db_instance.MakeRow,
                       'users', users_dict)
-    self.assertRaises(db_access.TransactionError, self.db_instance.LockDb)
+    self.assertRaises(errors.TransactionError, self.db_instance.LockDb)
     self.db_instance.UnlockDb()
     self.db_instance.MakeRow('users', users_dict)
     self.db_instance.EndTransaction()
 
   def testInitDataValidation(self):
     self.db_instance.InitDataValidation()
-    self.assertEqual(self.db_instance.data_validation_instance.reserved_words, 
+    self.assertEqual(self.db_instance.data_validation_instance.reserved_words,
                      [])
 
   def testGetUserAuthorizationInfo(self):
@@ -269,26 +269,25 @@ class TestdbAccess(unittest.TestCase):
               'access_right': 'rw'}]})
 
   def testRowFuncs(self):
-    self.assertRaises(db_access.InvalidInputError,
-                      self.db_instance.MakeRow, 'notinlist', {})
-    self.assertRaises(db_access.TransactionError,
-                      self.db_instance.MakeRow, 'acls', {})
-    self.assertRaises(db_access.InvalidInputError,
-                      self.db_instance.RemoveRow, 'notinlist', {})
-    self.assertRaises(db_access.TransactionError,
-                      self.db_instance.RemoveRow, 'acls', {})
-    self.assertRaises(db_access.TransactionError,
-                      self.db_instance.ListRow, 'acls', {})
+    self.assertRaises(errors.InvalidInputError, self.db_instance.MakeRow,
+                      'notinlist', {})
+    self.assertRaises(errors.TransactionError, self.db_instance.MakeRow,
+                      'acls', {})
+    self.assertRaises(errors.InvalidInputError, self.db_instance.RemoveRow,
+                      'notinlist', {})
+    self.assertRaises(errors.TransactionError, self.db_instance.RemoveRow,
+                      'acls', {})
+    self.assertRaises(errors.TransactionError, self.db_instance.ListRow,
+                      'acls', {})
 
     self.db_instance.StartTransaction()
-    self.assertRaises(db_access.InvalidInputError,
-                      self.db_instance.ListRow, 'notinlist', {})
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+                      'notinlist', {})
 
-    self.assertRaises(db_access.InvalidInputError,
-                      self.db_instance.ListRow)
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow)
 
-    self.assertRaises(db_access.InvalidInputError,
-                      self.db_instance.ListRow, 'onearg')
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+                      'onearg')
 
     audit_log_dict = {'audit_log_id': None,
                       'audit_log_user_name': u'sharrell',
@@ -308,20 +307,22 @@ class TestdbAccess(unittest.TestCase):
 
     search_dict = self.db_instance.GetEmptyRowDict('audit_log')
     simple_date = datetime.datetime(2001,1,1,1)
-    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
                       'audit_log', search_dict, is_date=True,
                       column='audit_log_timestamp')
-    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
                       'audit_log', search_dict, is_date=True,
                       range_values='audit_log_timestamp')
-    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
                       'audit_log', search_dict, column='action', is_date=True,
                       range_values=(simple_date, simple_date))
-    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
-                      'audit_log', search_dict, column='not_there', is_date=True,
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+                      'audit_log', search_dict, column='not_there',
+                      is_date=True,
                       range_values_values=(simple_date, simple_date))
-    self.assertRaises(db_access.InvalidInputError, self.db_instance.ListRow,
-                      'audit_log', search_dict, column='not_there', is_date=True,
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+                      'audit_log', search_dict, column='not_there',
+                      is_date=True,
                       range_values=('bleh', simple_date))
     self.assertEquals(self.db_instance.ListRow(
         'audit_log', search_dict, column='audit_log_timestamp', is_date=True,
@@ -348,12 +349,10 @@ class TestdbAccess(unittest.TestCase):
 
     search_dict = self.db_instance.GetEmptyRowDict('acls')
     second_search_dict = self.db_instance.GetEmptyRowDict('users')
-    self.assertRaises(db_access.InvalidInputError,
-                      self.db_instance.ListRow, 'acls', search_dict,
-                      invalid_kwarg=True)
-    self.assertRaises(db_access.InvalidInputError,
-                      self.db_instance.ListRow, 'acls', search_dict,
-                      'users', second_search_dict)
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+                      'acls', search_dict, invalid_kwarg=True)
+    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+                      'acls', search_dict, 'users', second_search_dict)
 
     search_dict['acl_name'] = u'test'
     self.assertEquals((), self.db_instance.ListRow('acls', search_dict))
@@ -441,16 +440,16 @@ class TestdbAccess(unittest.TestCase):
     self.assertEquals(self.db_instance.GetRecordArgsDict(u'mx'),
                       {u'priority': u'UnsignedInt',
                        u'mail_server': u'Hostname'})
-    self.assertRaises(db_access.InvalidInputError,
+    self.assertRaises(errors.InvalidInputError,
                       self.db_instance.GetRecordArgsDict, u'not_a_record_type')
 
   def testValidateRecordArgsDict(self):
     record_args_dict = self.db_instance.GetEmptyRecordArgsDict(u'mx')
-    self.assertRaises(db_access.UnexpectedDataError, 
+    self.assertRaises(errors.UnexpectedDataError,
                       self.db_instance.ValidateRecordArgsDict, u'mx',
                       record_args_dict)
     record_args_dict.pop('priority')
-    self.assertRaises(db_access.InvalidInputError, 
+    self.assertRaises(errors.InvalidInputError,
                       self.db_instance.ValidateRecordArgsDict, u'mx',
                       record_args_dict)
     record_args_dict = {'priority': 10,

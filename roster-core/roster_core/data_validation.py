@@ -47,22 +47,6 @@ import errors
 import helpers_lib
 
 
-class UnexpectedDataError(errors.DbAccessError):
-  pass
-
-
-class InvalidInputError(errors.DbAccessError):
-  pass
-
-
-class MissingDataTypeError(errors.DbAccessError):
-  pass
-
-
-class ReservedWordError(errors.DbAccessError):
-  pass
-
-
 class DataValidation(object):
 
   def __init__(self, reserved_words):
@@ -82,8 +66,8 @@ class DataValidation(object):
 
     for word in self.reserved_words:
       if( u_string.lower().find(word.lower()) != -1 ):
-        raise ReservedWordError('Reserved word %s found, unable to complete '
-                                'request' % word)
+        raise errors.ReservedWordError('Reserved word %s found, unable '
+                                       'to complete request' % word)
 
     return True
 
@@ -290,28 +274,29 @@ class DataValidation(object):
 
     for k in main_dict.iterkeys():
       if( k not in row_dict ):
-        raise InvalidInputError('Missing key %s in dictionary' % k)
+        raise errors.InvalidInputError('Missing key %s in dictionary' % k)
 
     for k, v in row_dict.iteritems():
       if( k not in main_dict ):
-        raise InvalidInputError('Dictionary has extra key that is not used: %s'
-                              % k)
+        raise errors.InvalidInputError('Dictionary has extra key that is not '
+                                       'used: %s' % k)
 
       if( not 'is%s' % main_dict[k] in dir(self) ):
-          raise MissingDataTypeError('No function to check data type: %s' %
-                                   main_dict[k])
+          raise errors.MissingDataTypeError('No function to check data '
+                                            'type: %s' % main_dict[k])
 
       if( not getattr(self, 'is%s' % main_dict[k])(v) ):
         if( (not none_ok and not k.endswith('_id')) or 
             (none_ok and v is not None) ):
-          raise UnexpectedDataError('Invalid data type %s for %s: %s' % (
+          raise errors.UnexpectedDataError('Invalid data type %s for %s: %s' % (
               main_dict[k], k, v))
 
     if( none_ok and not all_none_ok ):
       for value in row_dict.values():
         if( value is not None ):
           return
-      raise UnexpectedDataError('Need to fill out at least one value in dict')
+      raise errors.UnexpectedDataError('Need to fill out at least one value '
+                                       'in dict')
           
 
 # vi: set ai aw sw=2:

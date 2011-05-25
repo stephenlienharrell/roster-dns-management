@@ -46,15 +46,6 @@ import math
 
 import IPy
 
-class RecordsBatchError(errors.CoreError):
-  pass
-
-class IPIndexError(errors.CoreError):
-  pass
-
-class InvalidInput(errors.CoreError):
-  pass
-
 class CoreHelpers(object):
   """Library of helper functions that extend the core functions."""
   def __init__(self, core_instance):
@@ -346,9 +337,9 @@ class CoreHelpers(object):
     try:
       IPy.IP(cidr_block)
     except ValueError:
-      raise InvalidInput(
+      raise errors.InvalidInputError(
           'The CIDR block specified does not contain a valid IP: %s' % (
-              cidr_block))
+          cidr_block))
     cidr_block = IPy.IP(cidr_block).strFullsize(1)
     if( cidr_block.find('/') != -1 ):
       cidr_ip = IPy.IP(cidr_block.split('/')[0])
@@ -360,9 +351,9 @@ class CoreHelpers(object):
       elif( cidr_ip.version() == 6 ):
         cidr_size = 128
       else:
-        raise InvalidInput(
+        raise errors.InvalidInputError(
             'The CIDR block specified does not contain a valid IP: %s' % (
-                cidr_block))
+            cidr_block))
 
     records_dict = self.db_instance.GetEmptyRowDict('records')
     zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
@@ -444,7 +435,8 @@ class CoreHelpers(object):
     for index, record_entry in enumerate(record_list):
       if( record_entry[u'record_type'] not in
           constants.RECORD_TYPES_INDEXED_BY_IP ):
-        raise IPIndexError('Record type not indexable by IP: %s' % record_entry)
+        raise errors.IPIndexError('Record type not indexable by '
+                                  'IP: %s' % record_entry)
       if( record_entry[u'record_view_dependency'].endswith('_dep') ):
         record_view = record_entry[u'record_view_dependency'][:-4]
       else:
@@ -464,9 +456,9 @@ class CoreHelpers(object):
         if( record_ip not in parsed_record_dict[record_view] ):
           parsed_record_dict[record_view][record_ip] = []
       else:
-        raise IPIndexError(
+        raise errors.IPIndexError(
             'Record type unknown. Missing ipv4 or ipv6 dec index: %s' % (
-                record_entry))
+            record_entry))
       record_item = {}
       record_item[u'zone_origin'] = record_entry[u'zone_origin']
       record_item[u'zone'] = record_entry[u'zone_name']
@@ -679,7 +671,7 @@ class CoreHelpers(object):
             new_records = self.db_instance.ListRow('records', records_dict)
             rows_deleted = self.db_instance.RemoveRow('records', new_records[0])
             if( not rows_deleted ):
-              raise RecordsBatchError(
+              raise errors.RecordsBatchError(
                   '%s: Record not found' % record['record_target'])
             log_dict['delete'].append(record)
             row_count += 1
@@ -719,14 +711,14 @@ class CoreHelpers(object):
           if( record['record_type'] == 'cname' ):
             all_records = self.db_instance.ListRow('records', records_dict)
             if( len(all_records) > 0 ):
-              raise RecordsBatchError(
+              raise errors.RecordsBatchError(
                   'Record already exists with target %s.' % (
-                      record['record_target']))
+                  record['record_target']))
           records_dict['record_type'] = u'cname'
           cname_records = self.db_instance.ListRow('records', records_dict)
           if( len(cname_records) > 0 ):
-            raise RecordsBatchError('CNAME already exists with target %s.' % (
-                record['record_target']))
+            raise errors.RecordsBatchError('CNAME already exists with target '
+                                           '%s.' % (record['record_target']))
 
           record_args_assignment_dict = self.db_instance.GetEmptyRowDict(
               'record_arguments_records_assignments')
@@ -748,7 +740,7 @@ class CoreHelpers(object):
               if( record['record_arguments'][arg] != current_record[arg] ):
                 break
             else:
-              raise RecordsBatchError('Duplicate record found')
+              raise errors.RecordsBatchError('Duplicate record found')
 
 
           records_dict['record_type'] = record['record_type']

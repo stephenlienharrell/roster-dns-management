@@ -49,6 +49,7 @@ import os
 import roster_core
 from roster_core import data_validation
 from roster_core import core
+from roster_core import errors
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -120,8 +121,7 @@ class TestCore(unittest.TestCase):
         'user'],u'sharrell')
     self.assertEqual(credential_list['547ac10b-58aa-4372-a567-0e02b2c3d479'][
         'infinite_cred'],0)
-    self.assertRaises(roster_core.errors.CoreError,
-                      self.core_instance._RemoveCredential)
+    self.assertRaises(errors.CoreError, self.core_instance._RemoveCredential)
 
     credential_list = self.core_instance.ListCredentials()
     self.assertEqual(len(credential_list), 1)
@@ -387,7 +387,7 @@ class TestCore(unittest.TestCase):
                   'zone_origin': u'test_zone.'},
          u'test_view': {'zone_type': u'slave', 'zone_options': u'',
                         'zone_origin': u'test_zone.'}}})
-    self.assertRaises(roster_core.errors.CoreError, self.core_instance.MakeZone,
+    self.assertRaises(errors.CoreError, self.core_instance.MakeZone,
                       u'test_zone', u'wrongtype', u'test_zone.')
 
   def testReverseRangeZoneAssignmentMakeRemoveListUpdateRemove(self):
@@ -491,11 +491,11 @@ class TestCore(unittest.TestCase):
                                   {u'priority': 20,
                                    u'mail_server': u'smtp-2.university.edu.'},
                                   ttl=10)
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
-                u'mx', u'university_edu', u'university.edu',
-                {u'priority': 20,
-                 u'mail_server': u'smtp-2.university.edu.'},
-                ttl=10)
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
+                      u'mx', u'university_edu', u'university.edu',
+                      {u'priority': 20,
+                       u'mail_server': u'smtp-2.university.edu.'},
+                      ttl=10)
     self.assertEquals(self.core_instance.ListRecords(),
                       [{u'serial_number': 4, u'refresh_seconds': 5,
                         u'target': u'soa1',
@@ -557,10 +557,9 @@ class TestCore(unittest.TestCase):
                        u'mail_server': u'smtp.university.edu.'}])
     self.core_instance.MakeReservedWord(u'reserved')
     temp_core_instance = roster_core.Core(u'sharrell', self.config_instance)
-    self.assertRaises(data_validation.ReservedWordError,
-        temp_core_instance.MakeRecord,
-        u'a', u'thisisreserved5', u'university.edu',
-        {u'assignment_ip': u'192.168.0.55'}, ttl=10)
+    self.assertRaises(errors.ReservedWordError, temp_core_instance.MakeRecord,
+                      u'a', u'thisisreserved5', u'university.edu',
+                      {u'assignment_ip': u'192.168.0.55'}, ttl=10)
 
     self.core_instance.MakeRecord(u'a', u'computer5',
                                   u'university.edu',
@@ -571,7 +570,7 @@ class TestCore(unittest.TestCase):
                       'record_type': u'a', 'view_name': u'any',
                       'last_user': u'sharrell', 'zone_name': u'university.edu',
                       u'assignment_ip': u'192.168.0.55'}])
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
                       u'cname', u'computer5', u'university.edu',
                       {u'assignment_host': u'c5.university.edu.'}, ttl=10)
     self.assertEqual(self.core_instance.ListRecords(record_type=u'cname'),[])
@@ -580,25 +579,25 @@ class TestCore(unittest.TestCase):
                                   {u'assignment_host':
                                    u'computer6.university.edu.'},
                                   ttl=10)
-    self.assertRaises(core.RecordError, self.core_instance.UpdateRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.UpdateRecord,
                       u'cname', 'c6', 'university.edu',
                       {u'assignment_host': None}, update_target=u'computer5')
-    self.assertRaises(core.RecordError, self.core_instance.UpdateRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.UpdateRecord,
                       u'cname', 'c6', 'university.edu',
                       {u'assignment_host': None}, update_target=u'computer5.')
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
                       u'a', u'computer5.net.', u'university.edu',
                       {u'assignment_ip': u'10.0.1.1'}, ttl=10)
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
                       u'soa', u'computer5.net.', u'university.edu',
                       {u'assignment_ip': u'10.0.1.1'}, ttl=10)
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
                       u'soa', u'university_edu', u'university.edu',
                       {u'name_server': u'test.', u'admin_email': u'test.',
                        u'serial_number': 2, u'refresh_seconds': 4,
                        u'retry_seconds': 4, u'expiry_seconds': 4,
                        u'minimum_seconds': 4}, ttl=10, view_name=u'any')
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
                       u'soa', u'university_edu', u'university.edu',
                       {u'name_server': u'test.', u'admin_email': u'test.',
                        u'serial_number': 2, u'refresh_seconds': 4,
@@ -614,12 +613,13 @@ class TestCore(unittest.TestCase):
                                   {u'priority': 20,
                                    u'mail_server': u'smtp-1.university.edu.'},
                                   ttl=10)
-    self.assertRaises(core.RecordError, self.core_instance.UpdateRecord,
-                u'mx', u'university_edu', u'university.edu',
-                {u'priority': 20,
-                 u'mail_server': u'smtp-1.university.edu.'},
-                search_ttl=10, update_record_args_dict={
-                    u'priority': 20, u'mail_server': u'smtp-2.university.edu.'})
+    self.assertRaises(errors.RecordError, self.core_instance.UpdateRecord,
+                      u'mx', u'university_edu', u'university.edu',
+                      {u'priority': 20,
+                       u'mail_server': u'smtp-1.university.edu.'},
+                      search_ttl=10, update_record_args_dict={
+                      u'priority': 20,
+                      u'mail_server': u'smtp-2.university.edu.'})
     self.assertEqual(self.core_instance.ListRecords(record_type=u'mx',
                                                     target=u'university_edu'),
                      [{'target': u'university_edu', 'ttl': 10, u'priority': 20,
@@ -647,26 +647,26 @@ class TestCore(unittest.TestCase):
         u'aaaa', u'host1', u'ipv6_zone',
         {u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'},
         view_name=u'test_view')
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
         u'aaaa', u'host1', u'ipv6_zone',
         {u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
         view_name=u'test_view')
-    self.assertRaises(core.RecordError, self.core_instance.UpdateRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.UpdateRecord,
         u'aaaa', u'host1', 'ipv6_zone',
         {u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'},
         search_view_name=u'test_view', update_record_args_dict={
             u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'})
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
         u'cname', u'university_edu', u'university.edu',
         {u'assignment_host': u'somehost.'})
-    self.assertRaises(core.RecordError, self.core_instance.MakeRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.MakeRecord,
                       u'a', u'c.6', u'university.edu',
                       {u'assignment_ip': u'10.0.1.1'}, ttl=10)
-    self.assertRaises(core.RecordError, self.core_instance.UpdateRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.UpdateRecord,
                       u'cname', 'c6', 'university.edu',
                       {u'assignment_host': None},
                       update_target=u'university_edu')
-    self.assertRaises(core.RecordError, self.core_instance.UpdateRecord,
+    self.assertRaises(errors.RecordError, self.core_instance.UpdateRecord,
                       u'a', 'computer5', 'university.edu',
                       {u'assignment_ip': u'192.168.0.55'},
                       update_target=u'c.6')

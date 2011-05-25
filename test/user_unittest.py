@@ -46,6 +46,7 @@ import roster_core
 from roster_core import audit_log
 from roster_core import db_access
 from roster_core import user
+from roster_core import errors
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -73,7 +74,7 @@ class TestUser(unittest.TestCase):
 
   def testInit(self):
     user.User(u'jcollins', self.db_instance, self.log_instance)
-    self.assertRaises(user.UserError, user.User, u'not_valid_user',
+    self.assertRaises(errors.UserError, user.User, u'not_valid_user',
                       self.db_instance, self.log_instance)
 
   def testAuthorize(self):
@@ -127,44 +128,43 @@ class TestUser(unittest.TestCase):
     user_instance.Authorize(u'MakeRecord', good_record_data)
                                            
     self.core_instance.SetMaintenanceFlag(True)
-    self.assertRaises(user.MaintenanceError, user_instance.Authorize,
+    self.assertRaises(errors.MaintenanceError, user_instance.Authorize,
                       u'MakeRecord', good_record_data)
     self.core_instance.SetMaintenanceFlag(False)
 
     # test missing record_data on certain methods, and make sure it passes 
     # on the others
     user_instance.Authorize(u'MakeRecord', good_record_data)
-    self.assertRaises(user.UserError, user_instance.Authorize,
-                      u'MakeRecord')
+    self.assertRaises(errors.UserError, user_instance.Authorize, u'MakeRecord')
 
     # test record_data dict to make sure all the keys and data are there
     user_instance.Authorize(u'MakeRecord', good_record_data)
     good_record_data['target'] = None
-    self.assertRaises(user.UserError, user_instance.Authorize,
-                      u'MakeRecord', good_record_data)
+    self.assertRaises(errors.UserError, user_instance.Authorize, u'MakeRecord',
+                      good_record_data)
     good_record_data['target'] = u'good'
     user_instance.Authorize(u'MakeRecord', good_record_data)
     del good_record_data['zone_name']
-    self.assertRaises(user.UserError, user_instance.Authorize,
-                      u'MakeRecord', good_record_data)
+    self.assertRaises(errors.UserError, user_instance.Authorize, u'MakeRecord',
+                      good_record_data)
     good_record_data['zone_name'] = u'cs.university.edu'
 
     # test no forward zone found
     user_instance.Authorize(u'MakeRecord', good_record_data)
-    self.assertRaises(user.AuthError, user_instance.Authorize, u'MakeRecord',
+    self.assertRaises(errors.AuthError, user_instance.Authorize, u'MakeRecord',
                       no_forward_record_data)
 
     # test no reverse range found
     user_instance.Authorize(u'MakeRecord', good_reverse_record_data)
-    self.assertRaises(user.AuthError, user_instance.Authorize, u'MakeRecord',
+    self.assertRaises(errors.AuthError, user_instance.Authorize, u'MakeRecord',
                       no_reverse_record_data)
     user_instance.Authorize(u'MakeRecord', good_10_reverse_record_data)
-    self.assertRaises(user.AuthError, user_instance.Authorize, u'MakeRecord',
+    self.assertRaises(errors.AuthError, user_instance.Authorize, u'MakeRecord',
                       no_10_reverse_record_data)
 
     # test no method found
     user_instance.Authorize(u'MakeRecord', good_reverse_record_data)
-    self.assertRaises(user.AuthError, user_instance.Authorize, u'FakeRecord',
+    self.assertRaises(errors.AuthError, user_instance.Authorize, u'FakeRecord',
                       good_reverse_record_data)
 
 

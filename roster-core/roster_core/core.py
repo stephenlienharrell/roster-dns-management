@@ -47,10 +47,6 @@ import helpers_lib
 import user
 
 
-class RecordError(errors.CoreError):
-  pass
-
-
 class Core(object):
   """Backend Roster interface.
 
@@ -2163,7 +2159,8 @@ class Core(object):
 
     if( record_args_dict ):
       if( record_type is None ):
-        raise RecordError('Must specify record_type with record_args_dict')
+        raise errors.RecordError('Must specify record_type with '
+                                 'record_args_dict')
       self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict,
                                               none_ok=True)
     else:
@@ -2207,12 +2204,13 @@ class Core(object):
     """
     if( record_type != u'ptr' ):
       if( target.endswith('.') ):
-        raise RecordError('"." not allowed as terminator in non-ptr target.')
+        raise errors.RecordError('"." not allowed as terminator in '
+                                 'non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
     if( view_name is None or view_name == u'any'):
       if( record_type == u'soa' ):
-        raise RecordError('An SOA cannot be made in the "any" view.')
+        raise errors.RecordError('An SOA cannot be made in the "any" view.')
       view_name = u'any'
     else:
       view_name = '%s_dep' % view_name
@@ -2243,12 +2241,14 @@ class Core(object):
         if( record_type == 'cname' ):
           all_records = self.db_instance.ListRow('records', records_dict)
           if( len(all_records) > 0 ):
-            raise RecordError('Record already exists with target %s.' % target)
+            raise errors.RecordError('Record already exists with '
+                                     'target %s.' % target)
         records_dict['record_type'] = u'cname'
         cname_records = self.db_instance.ListRow(
             'records', records_dict)
         if( len(cname_records) > 0 ):
-          raise RecordError('CNAME already exists with target %s.' % target)
+          raise errors.RecordError('CNAME already exists with '
+                                   'target %s.' % target)
 
         records_dict['record_type'] = search_type
         raw_records = self.db_instance.ListRow(
@@ -2269,7 +2269,7 @@ class Core(object):
             if( record_args_dict[arg] != record[arg] ):
               break
           else:
-            raise RecordError('Duplicate record found')
+            raise errors.RecordError('Duplicate record found')
 
         records_dict['record_type'] = record_type
         record_id = self.db_instance.MakeRow('records', records_dict)
@@ -2319,7 +2319,8 @@ class Core(object):
     """
     if( search_record_type != u'ptr' ):
       if( update_target is not None and update_target.endswith('.') ):
-        raise RecordError('"." not allowed as terminator in non-ptr target.')
+        raise errors.RecordError('"." not allowed as terminator in '
+                                 'non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     if( search_view_name is None ):
       search_view_name = u'any'
@@ -2416,15 +2417,14 @@ class Core(object):
           all_records = self.db_instance.ListRow('records',
                                                  update_records_dict)
           if( len(all_records) > 0 ):
-            raise RecordError(
-                'Record already exists with target %s.' % (
-                    update_target))
+            raise errors.RecordError('Record already exists with target %s.' % (
+                                     update_target))
         update_records_dict['record_type'] = u'cname'
         cname_records = self.db_instance.ListRow('records',
                                                  update_records_dict)
         if( len(cname_records) > 0 ):
-          raise RecordError('CNAME already exists with target %s.' % (
-              update_target))
+          raise errors.RecordError('CNAME already exists with target %s.' % (
+                                   update_target))
 
         update_records_dict['record_type'] = search_record_type
         raw_records = self.db_instance.ListRow(
@@ -2444,7 +2444,7 @@ class Core(object):
             if( update_record_args_dict[arg] != record[arg] ):
               break
           else:
-            raise RecordError('Duplicate record found')
+            raise errors.RecordError('Duplicate record found')
 
         if( update_target is not None and update_target != search_target and
             (search_record_type == 'a' or search_record_type == 'cname') ):
@@ -2472,7 +2472,7 @@ class Core(object):
           if( record_id_dict[record_id] == len(search_args_list) ):
             final_id.append(record_id)
         if( len(final_id) == 0 ):
-          raise RecordError('No records found.')
+          raise errors.RecordError('No records found.')
         elif( len(final_id) == 1 ):
           search_records_dict['records_id'] = final_id[0]
           new_records = self.db_instance.ListRow('records',
@@ -2489,8 +2489,8 @@ class Core(object):
                     'record_arguments_records_assignments',
                     search_args, update_args)
         else:
-          raise RecordError('Multiple records found for used search '
-                            'terms.')
+          raise errors.RecordError('Multiple records found for used search '
+                                   'terms.')
         if( update_view_name is None ):
           update_view_name = search_view_name
         if( update_zone_name is None ):

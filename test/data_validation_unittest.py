@@ -40,6 +40,7 @@ import unittest
 
 from roster_core import data_validation
 from roster_core import helpers_lib
+from roster_core import errors
 
 
 class TestDataValidation(unittest.TestCase):
@@ -54,12 +55,12 @@ class TestDataValidation(unittest.TestCase):
         u'unicode_string'))
     self.assertFalse(self.data_validation_instance.isUnicodeString(
         'not_unicode_string'))
-    self.assertRaises(data_validation.ReservedWordError, 
+    self.assertRaises(errors.ReservedWordError, 
         self.data_validation_instance.isUnicodeString, u'blue')
-    self.assertRaises(data_validation.ReservedWordError, 
+    self.assertRaises(errors.ReservedWordError, 
         self.data_validation_instance.isUnicodeString,
         u'thisincludesthewordblueandotherwordstoo')
-    self.assertRaises(data_validation.ReservedWordError, 
+    self.assertRaises(errors.ReservedWordError, 
         self.data_validation_instance.isUnicodeString,
         u'thisincludesthewordBluEeandotherwordstoo')
 
@@ -132,13 +133,13 @@ class TestDataValidation(unittest.TestCase):
   def testValidateAclsDict(self):
     acl_ranges_dict = {'acl_range_allowed': None,
                        'acl_range_cidr_block': None}
-    self.assertRaises(data_validation.InvalidInputError,
+    self.assertRaises(errors.InvalidInputError,
                       self.data_validation_instance.ValidateRowDict,
                       'acl_ranges', acl_ranges_dict)
 
     acl_ranges_dict['acl_ranges_acl_name'] = None
 
-    self.assertRaises(data_validation.UnexpectedDataError,
+    self.assertRaises(errors.UnexpectedDataError,
                       self.data_validation_instance.ValidateRowDict,
                       'acl_ranges', acl_ranges_dict, True)
 
@@ -146,13 +147,13 @@ class TestDataValidation(unittest.TestCase):
                                                   none_ok=True,
                                                   all_none_ok=True)
 
-    self.assertRaises(data_validation.UnexpectedDataError,
+    self.assertRaises(errors.UnexpectedDataError,
                       self.data_validation_instance.ValidateRowDict,
                       'acl_ranges', acl_ranges_dict, False)
 
     acl_ranges_dict['acl_range_cidr_block'] = '192.168.0.1'
 
-    self.assertRaises(data_validation.UnexpectedDataError,
+    self.assertRaises(errors.UnexpectedDataError,
                       self.data_validation_instance.ValidateRowDict,
                       'acl_ranges', acl_ranges_dict, False)
     self.data_validation_instance.ValidateRowDict('acl_ranges',
@@ -162,7 +163,7 @@ class TestDataValidation(unittest.TestCase):
 
     acl_ranges_dict['acl_ranges_acl_name'] = u'name'
 
-    self.assertRaises(data_validation.UnexpectedDataError,
+    self.assertRaises(errors.UnexpectedDataError,
                       self.data_validation_instance.ValidateRowDict,
                       'acl_ranges',
                       acl_ranges_dict, False)
@@ -172,7 +173,7 @@ class TestDataValidation(unittest.TestCase):
     acl_ranges_dict['acl_range_allowed'] = 1
     acl_ranges_dict['acl_range_cidr_block'] = None
 
-    self.assertRaises(data_validation.UnexpectedDataError,
+    self.assertRaises(errors.UnexpectedDataError,
                       self.data_validation_instance.ValidateRowDict,
                       'acl_ranges', acl_ranges_dict, False)
     self.data_validation_instance.ValidateRowDict('acl_ranges', acl_ranges_dict,

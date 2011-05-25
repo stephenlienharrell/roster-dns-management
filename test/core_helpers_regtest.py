@@ -47,6 +47,7 @@ import unittest
 import os
 
 import roster_core
+from roster_core import errors
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -391,21 +392,21 @@ class TestCoreHelpers(unittest.TestCase):
             u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac'])
 
-    self.assertRaises(roster_core.core_helpers.InvalidInput,
+    self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, 'invalid ip')
-    self.assertRaises(roster_core.core_helpers.InvalidInput,
+    self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, '12345::/112')
-    self.assertRaises(roster_core.core_helpers.InvalidInput,
+    self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, '192.168.0.256')
-    self.assertRaises(roster_core.core_helpers.InvalidInput,
+    self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, '192.168.0.1/33')
-    self.assertRaises(roster_core.core_helpers.InvalidInput,
+    self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, '4321:1:2:3:4:567:89ac/129')
-    self.assertRaises(roster_core.core_helpers.InvalidInput,
+    self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, '4321:1:2:3:4:567:89ac/112')
-    self.assertRaises(roster_core.core_helpers.InvalidInput,
+    self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, '0.0.0.0/-1')
-    self.assertRaises(roster_core.core_helpers.InvalidInput,
+    self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, '')
 
   def testListAvailableIpsInCIDR(self):
@@ -416,7 +417,7 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
         '192.168.0.0/29', num_ips=4), ['192.168.0.2', '192.168.0.3',
                                        '192.168.0.4', '192.168.0.5'])
-    self.assertRaises(roster_core.CoreError,
+    self.assertRaises(errors.CoreError,
          self.core_helper_instance.ListAvailableIpsInCIDR,
         '240.0.0.0/24', num_ips=10)
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
@@ -431,7 +432,7 @@ class TestCoreHelpers(unittest.TestCase):
          '2001:0400:0000:0000:0000:0000:0000:0008',
          '2001:0400:0000:0000:0000:0000:0000:0009',
          '2001:0400:0000:0000:0000:0000:0000:000a'])
-    self.assertRaises(roster_core.CoreError,
+    self.assertRaises(errors.CoreError,
          self.core_helper_instance.ListAvailableIpsInCIDR,
         '4::/64', num_ips=10)
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
@@ -575,16 +576,14 @@ class TestCoreHelpers(unittest.TestCase):
         [{'target': u'blah', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone', u'assignment_ip': u'192.168.0.88'}])
-    self.assertRaises(
-        roster_core.core_helpers.RecordsBatchError,
+    self.assertRaises(errors.RecordsBatchError,
         self.core_helper_instance.ProcessRecordsBatch, add_records=[{
             'record_target': u'blah', 'ttl': 3600, 'record_type': u'a',
             'view_name': u'test_view',
             'last_user': u'sharrell',
             'record_zone_name': u'forward_zone',
             'record_arguments': {u'assignment_ip': u'192.168.0.88'}}])
-    self.assertRaises(
-        roster_core.core_helpers.RecordsBatchError,
+    self.assertRaises(errors.RecordsBatchError,
         self.core_helper_instance.ProcessRecordsBatch, add_records=[
             {'record_type': u'aaaa', 'record_target': u'host2',
              'record_zone_name': u'ipv6zone',
@@ -594,15 +593,13 @@ class TestCoreHelpers(unittest.TestCase):
     self.core_instance.MakeRecord(
         u'cname', u'university_edu', u'forward_zone',
         {u'assignment_host': u'blah.university.edu.'}, view_name=u'test_view')
-    self.assertRaises(
-        roster_core.core_helpers.RecordsBatchError,
+    self.assertRaises(errors.RecordsBatchError,
         self.core_helper_instance.ProcessRecordsBatch, add_records=[
           {'record_type': u'a', 'record_target': u'university_edu',
             'record_zone_name': u'forward_zone',
             'record_arguments': {u'assignment_ip': u'192.168.1.1'},
           'view_name': u'test_view'}])
-    self.assertRaises(
-        roster_core.core_helpers.RecordsBatchError,
+    self.assertRaises(errors.RecordsBatchError,
         self.core_helper_instance.ProcessRecordsBatch, add_records=[
             {'record_type': u'cname', 'record_target': u'blah',
              'record_zone_name': u'forward_zone',

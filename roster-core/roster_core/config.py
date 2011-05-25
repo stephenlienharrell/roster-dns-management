@@ -40,10 +40,6 @@ import errors
 import db_access
 
 
-class ConfigError(errors.CoreError):
-  pass
-
-
 class Config(object):
   """Abstracts a config file for Roster Core and Server"""
   def __init__(self, file_name='/etc/roster_server.conf'):
@@ -65,7 +61,7 @@ class Config(object):
     self.config_file = {}
     self.config_file_path = file_name
     if( a == [] ):
-      raise ConfigError('Could not read the file %s' % file_name)
+      raise errors.ConfigError('Could not read the file %s' % file_name)
 
     # Supported data types: str, int, boolean, float
     file_schema = {'database': {'server': 'str', 'login': 'str',
@@ -95,13 +91,13 @@ class Config(object):
         file_variables = cp.options(section)
         for variable in file_variables:
           if( variable not in variables ):
-            raise ConfigError('Variable "%s" in "%s" is not used' % (
-                variable, file_name))
+            raise errors.ConfigError('Variable "%s" in "%s" is not used' % (
+                                     variable, file_name))
         for variable in variables:
           if( variable not in file_variables ):
-            raise ConfigError('Variable "%s" is missing in config file: "%s", '
-                              'in the "%s" section.' % (variable,
-                                                        file_name, section))
+            raise errors.ConfigError('Variable "%s" is missing in config file: '
+                                     '"%s", in the "%s" section.' % ( 
+                                     variable, file_name, section))
           if( variables[variable] is 'str' ):
             self.config_file[section][variable] = (
                 cp.get(section, variable))
@@ -114,8 +110,8 @@ class Config(object):
           elif( variables[variable] is 'float' ):
             self.config_file[section][variable] = cp.getfloat(section, variable)
           else:
-            raise ConfigError('DataType "%s" is not supported' % (
-                variables[variable]))
+            raise errors.ConfigError('DataType "%s" is not supported' % (
+                                     variables[variable]))
 
     if( 'authentication_method' in self.config_file['credentials'] ):
       authentication_method = self.config_file['credentials'][

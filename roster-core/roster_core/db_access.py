@@ -89,22 +89,6 @@ import helpers_lib
 DEBUG = False
 
 
-class TransactionError(errors.DbAccessError):
-  pass
-
-
-class UnexpectedDataError(data_validation.UnexpectedDataError):
-  pass
-
-
-class InvalidInputError(data_validation.InvalidInputError):
-  pass
-
-
-class MissingDataTypeError(data_validation.MissingDataTypeError):
-  pass
-
-
 class dbAccess(object):
   """This class provides the primary interface for connecting and interacting
    with the roster database.
@@ -202,8 +186,9 @@ class dbAccess(object):
 
     else:
       if( self.transaction_init ):
-        raise TransactionError('Cannot start new transaction last transaction '
-                               'not committed or rolled-back.')
+        raise errors.TransactionError('Cannot start new transaction last '
+                                      'transaction not committed or '
+                                      'rolled-back.')
 
     if( self.connection is not None ):
       try:
@@ -259,8 +244,8 @@ class dbAccess(object):
     """
     if( not self.thread_safe ):
       if( not self.transaction_init ):
-        raise TransactionError('Must run StartTansaction before '
-                               'EndTransaction.')
+        raise errors.TransactionError('Must run StartTansaction before '
+                                      'EndTransaction.')
 
     try:
       self.cursor.close()
@@ -294,7 +279,7 @@ class dbAccess(object):
     valid.
     """
     if( self.locked_db is True ):
-      raise TransactionError('Must unlock tables before re-locking them')
+      raise errors.TransactionError('Must unlock tables before re-locking them')
     self.cursor_execute('UPDATE `locks` SET `locked`=1 WHERE '
                         '`lock_name`="db_lock_lock"')
     time.sleep(self.big_lock_wait)
@@ -309,7 +294,7 @@ class dbAccess(object):
     valid. It also expects all tables to be locked.
     """
     if( self.locked_db is False ):
-      raise TransactionError('Must lock tables before unlocking them')
+      raise errors.TransactionError('Must lock tables before unlocking them')
     self.cursor_execute('UNLOCK TABLES')
     self.cursor_execute('UPDATE `locks` SET `locked`=0 WHERE '
                         '`lock_name`="db_lock_lock"')
@@ -350,9 +335,10 @@ class dbAccess(object):
       int: last insert id
     """
     if( not table_name in helpers_lib.GetValidTables() ):
-      raise InvalidInputError('Table name not valid: %s' % table_name)
+      raise errors.InvalidInputError('Table name not valid: %s' % table_name)
     if( not self.transaction_init ):
-      raise TransactionError('Must run StartTansaction before inserting.')
+      raise errors.TransactionError('Must run StartTansaction before '
+                                    'inserting.')
     if( self.data_validation_instance is None ):
       self.InitDataValidation()
     self.data_validation_instance.ValidateRowDict(table_name, row_dict) 
@@ -384,10 +370,10 @@ class dbAccess(object):
     """
 
     if( not table_name in helpers_lib.GetValidTables() ):
-      raise InvalidInputError('Table name not valid: %s' % table_name)
+      raise errors.InvalidInputError('Table name not valid: %s' % table_name)
     if( not self.transaction_init ):
-      raise TransactionError('Must run StartTansaction before getting row '
-                             'count.')
+      raise errors.TransactionError('Must run StartTansaction before getting '
+                                    'row count.')
     self.cursor_execute('SELECT COUNT(*) FROM %s' % table_name)
     row_count = self.cursor.fetchone()
     return row_count['COUNT(*)']
@@ -407,9 +393,9 @@ class dbAccess(object):
       int: number of rows affected
     """
     if( not table_name in helpers_lib.GetValidTables() ):
-      raise InvalidInputError('Table name not valid: %s' % table_name)
+      raise errors.InvalidInputError('Table name not valid: %s' % table_name)
     if( not self.transaction_init ):
-      raise TransactionError('Must run StartTansaction before deleting.')
+      raise errors.TransactionError('Must run StartTansaction before deleting.')
     if( self.data_validation_instance is None ):
       self.InitDataValidation()
     self.data_validation_instance.ValidateRowDict(table_name, row_dict) 
@@ -440,9 +426,9 @@ class dbAccess(object):
       int: number of rows affected
     """
     if( not table_name in helpers_lib.GetValidTables() ):
-      raise InvalidInputError('Table name not valid: %s' % table_name)
+      raise errors.InvalidInputError('Table name not valid: %s' % table_name)
     if( not self.transaction_init ):
-      raise TransactionError('Must run StartTansaction before deleting.')
+      raise errors.TransactionError('Must run StartTansaction before deleting.')
     if( self.data_validation_instance is None ):
       self.InitDataValidation()
     self.data_validation_instance.ValidateRowDict(table_name, search_row_dict,
@@ -501,7 +487,8 @@ class dbAccess(object):
                    'user_group_assignments_user_name: 'sharrell'})
     """
     if( not self.transaction_init ):
-      raise TransactionError('Must run StartTansaction before getting data.')
+      raise errors.TransactionError('Must run StartTansaction before getting '
+                                    'data.')
     if( self.data_validation_instance is None ):
       self.InitDataValidation()
 
@@ -526,27 +513,28 @@ class dbAccess(object):
         is_date = kwargs['is_date']
         del kwargs['is_date']
       if( column is None and is_date is not None ):
-        raise InvalidInputError('If is_date is specified you must '
-                                'specify column and range')
+        raise errors.InvalidInputError('If is_date is specified you must '
+                                       'specify column and range')
       if( bool(column) ^ bool(range_values) ):
-        raise InvalidInputError('If column or range is specified '
-                                'both are needed')
+        raise errors.InvalidInputError('If column or range is specified '
+                                       'both are needed')
       if( kwargs ):
-        raise InvalidInputError('Found unknown option(s): %s' % kwargs.keys())
+        raise errors.InvalidInputError('Found unknown option(s): '
+                                       '%s' % kwargs.keys())
 
     if( not args ):
-      raise InvalidInputError('No args given, must at least have on pair of '
-                              'table name and row dict')
+      raise errors.InvalidInputError('No args given, must at least have on '
+                                     'pair of table name and row dict')
     if( len(args) % 2 ):
-      raise InvalidInputError('Number of unnamed args is not even. Args '
-                              'should be entered in pairs of table name and '
-                              'row dict.')
+      raise errors.InvalidInputError('Number of unnamed args is not even. Args '
+                                     'should be entered in pairs of table name '
+                                     'and row dict.')
     count = 0
     for arg in args:
       count += 1
       if( count % 2 ):
         if( not arg in valid_tables ):
-          raise InvalidInputError('Table name not valid: %s' % arg)
+          raise errors.InvalidInputError('Table name not valid: %s' % arg)
         current_table_name = arg
       else:
         # do checking in validate row dict to check if it is a dict
@@ -558,22 +546,22 @@ class dbAccess(object):
 
     if( range_values ):
       if( column not in args[1] ):
-        raise InvalidInputError('Column %s not found in row'
-                                'dictionary: %s' % (column, args[1]))
+        raise errors.InvalidInputError('Column %s not found in row'
+                                       'dictionary: %s' % (column, args[1]))
 
       if( is_date ):
         if( constants.TABLES[args[0]][column] != 'DateTime' ):
-          raise InvalidInputError('column: %s in table %s is not a'
-                                  'DateTime type' % (column, args[0]))
+          raise errors.InvalidInputError('column: %s in table %s is not a'
+                                         'DateTime type' % (column, args[0]))
         for date in range_values:
           if( not self.data_validation_instance.isDateTime(date) ):
-            raise InvalidInputError('Date: %s from range is not a valid '
-                                    'datetime object' % date)
+            raise errors.InvalidInputError('Date: %s from range is not a valid '
+                                           'datetime object' % date)
       else:
         for value in range_values:
           if( not self.data_validation_instance.isUnsignedInt(value) ):
-            raise InvalidInputError('Range must be int if is_date '
-                                    'is not set')
+            raise errors.InvalidInputError('Range must be int if is_date '
+                                           'is not set')
     query_where = []
     if( len(tables) > 1 ):
       if( not self.foreign_keys ):
@@ -592,8 +580,8 @@ class dbAccess(object):
                              '%(referenced_table_name)s.'
                              '%(referenced_column_name)s)' % key)
       if( not query_where ):
-        raise InvalidInputError('Multiple tables were passed in but no joins '
-                                'were found')
+        raise errors.InvalidInputError('Multiple tables were passed in but no '
+                                       'joins were found')
     column_names = []
     search_dict = {}
     for table_name, row_dict in tables.iteritems():
@@ -641,7 +629,7 @@ class dbAccess(object):
     """
     row_dict = helpers_lib.GetRowDict(table_name)
     if( not row_dict ):
-      raise InvalidInputError('Table name not valid: %s' % table_name)
+      raise errors.InvalidInputError('Table name not valid: %s' % table_name)
     for k in row_dict.iterkeys():
       row_dict[k] = None
     return row_dict
@@ -680,7 +668,7 @@ class dbAccess(object):
 
     record_arguments_dict = {}
     if( not record_arguments ):
-      raise InvalidInputError('Unknown record type: %s' % record_type)
+      raise errors.InvalidInputError('Unknown record type: %s' % record_type)
     for record_argument in record_arguments:
       record_arguments_dict[record_argument['argument_name']] = (
           record_argument['argument_data_type'])
@@ -721,8 +709,9 @@ class dbAccess(object):
     """
     record_type_dict = self.GetRecordArgsDict(record_type)
     if( not set(record_type_dict.keys()) == set(record_args_dict.keys()) ):
-      raise InvalidInputError('dict for record type %s should have these '
-                              'keys: %s' % (record_type, record_type_dict))
+      raise errors.InvalidInputError('dict for record type %s should have '
+                                     'these keys: %s' % (record_type,
+                                     record_type_dict))
     if( self.data_validation_instance is None ):
       self.InitDataValidation()
     
@@ -730,17 +719,17 @@ class dbAccess(object):
     for record_arg_name in record_args_dict.keys():
       if( not 'is%s' % record_type_dict[record_arg_name] in
           data_validation_methods ):
-        raise MissingDataTypeError('No function to check data type %s' %
-                                   record_type_dict[record_arg_name])
+        raise errors.MissingDataTypeError('No function to check data type %s' %
+                                          record_type_dict[record_arg_name])
       if( none_ok and record_args_dict[record_arg_name] is None ):
         continue
 
       if( not getattr(self.data_validation_instance, 'is%s' %
           record_type_dict[record_arg_name])(
               record_args_dict[record_arg_name]) ):
-        raise UnexpectedDataError('Invalid data type %s: %s' %
-                                  (record_type_dict[record_arg_name],
-                                   record_args_dict[record_arg_name]))
+        raise errors.UnexpectedDataError('Invalid data type %s: %s' % (
+                                         record_type_dict[record_arg_name],
+                                         record_args_dict[record_arg_name]))
   def ListTableNames(self):
     """Lists all tables in the database.
 
@@ -949,9 +938,9 @@ class dbAccess(object):
               {'cidr_block': row['reverse_range_permissions_cidr_block'],
                'access_right': row['reverse_range_permissions_access_right']})
       else:
-        raise UnexpectedDataError('Row did not contain '
-                                  'reverse_range_permissions_access_right or '
-                                  'forward_zone_permissions_access_right.')
+        raise errors.UnexpectedDataError(
+            'Row did not contain reverse_range_permissions_access_right or '
+            'forward_zone_permissions_access_right.')
     return auth_info_dict
 
   def GetZoneOrigin(self, zone_name, view_name):

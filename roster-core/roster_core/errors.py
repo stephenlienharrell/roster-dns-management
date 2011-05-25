@@ -38,7 +38,46 @@ __version__ = '#TRUNK#'
 class CoreError(Exception):
   pass
 
+class AuthError(CoreError):
+  pass
+
+class ConfigError(CoreError):
+  pass
+
 class DbAccessError(CoreError):
+  pass
+
+class InvalidInputError(CoreError):
+  pass
+
+class InvalidInputError(DbAccessError):
+  pass
+
+class IPIndexError(CoreError):
+  pass
+
+class MaintenanceError(CoreError):
+  pass
+
+class MissingDataTypeError(DbAccessError):
+  pass
+
+class ReservedWordError(DbAccessError):
+  pass
+
+class RecordError(CoreError):
+  pass
+
+class RecordsBatchError(CoreError):
+  pass
+
+class TransactionError(DbAccessError):
+  pass
+
+class UnexpectedDataError(DbAccessError):
+  pass
+
+class UserError(CoreError):
   pass
 
 
