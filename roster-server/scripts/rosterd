@@ -100,7 +100,7 @@ def main(args):
                     default=0)
   parser.add_option('--config-file', dest='config_file', metavar='<file>',
                     help='Use <file> as a config file, rather than default',
-                    default='/etc/roster/roster_server.conf')
+                    default=roster_core.SERVER_CONFIG_FILE_LOCATION)
   parser.add_option('-H', '--host', dest='host', metavar='<host>',
                     help='Hostname of server to be created.',
                     default=None)

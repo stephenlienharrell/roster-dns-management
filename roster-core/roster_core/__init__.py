@@ -36,6 +36,7 @@ __version__ = '#TRUNK#'
 
 
 from config import Config
+import constants
 import core
 from core import Core
 import core_helpers
@@ -44,8 +45,11 @@ from errors import CoreError
 import embedded_files
 
 
+SERVER_CONFIG_FILE_LOCATION = constants.SERVER_CONFIG_FILE_LOCATION
+
+
 __all__ = ['CoreError', 'core', 'Core', 'core_helpers', 'CoreHelpers',
-           'Config', 'embedded_files']
+           'Config', 'embedded_files', 'SERVER_CONFIG_FILE_LOCATION']
 
 
 # vi: set ai aw sw=2:
