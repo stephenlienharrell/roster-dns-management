@@ -95,7 +95,7 @@ class CoreFlags:
     self.parser.add_option(
         '-c', '--cred-file', action='store', dest='credfile',
         help='Location of credential file.', metavar='<cred-file>',
-        default=None)
+        default=cli_common_lib.DEFAULT_CRED_FILE)
     self.SetAllFlagRule('credfile', required=False)
     self.parser.add_option(
         '--config-file', action='store', dest='config_file',

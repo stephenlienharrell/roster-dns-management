@@ -46,6 +46,10 @@ class ArgumentError(Exception):
 class HostsError(Exception):
   pass
 
+
+DEFAULT_CRED_FILE = '~/.dnscred'
+
+
 class CliCommonLib:
   """Command line common library"""
   def __init__(self, options):
@@ -90,7 +94,7 @@ class CliCommonLib:
             raise ArgumentError('A server must be specified.')
         if( hasattr(self.options, 'credfile') ):
           if( not self.options.credfile ):
-            self.options.credfile = os.path.expanduser('~/.dnscred')
+            self.options.credfile = os.path.expanduser(DEFAULT_CRED_FILE)
     roster_client_lib.CheckCredentials(
         self.options.username, self.options.credfile, self.options.server,
         password=self.options.password)
