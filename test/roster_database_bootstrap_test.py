@@ -228,8 +228,19 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
         stdout=subprocess.PIPE)
     ## Check base_communicate in setUp if module selected is wrong
     stdout_value = command.communicate(self.base_communicate)[0]
-    self.assertNotEqual(repr(stdout_value).find('ERROR: An ssl cert file MUST be '
-        'specified with --ssl-cert.'), -1)
+    self.assertNotEqual(repr(stdout_value).find('ERROR: An ssl cert file MUST '
+        'be specified with --ssl-cert.'), -1)
+
+  def testDBBootstrapUseConfigFile(self):
+    pre_test_config_file_string = open(CONFIG_FILE, 'r').read()
+    command = subprocess.Popen('python %s -c %s/roster.conf -U %s --force' % (
+        EXEC, u'test_data', u'new_user'), shell=True, stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE)
+    stdout_value = command.communicate('Y')
+    self.assertEqual(stdout_value, ('Config file test_data/roster.conf exists, '
+                                    'use it? (Y/n): ', None))
+    post_test_config_file_string = open(CONFIG_FILE, 'r').read()
+    self.assertEqual(pre_test_config_file_string, post_test_config_file_string)
 
   def testDBBootstrapDefault(self):
     command = subprocess.Popen(

@@ -183,6 +183,28 @@ def main(args):
                '-d/--database': options.database,
                '-n/--hostname': options.hostname}
 
+  # START CONFIG
+  write_config = False
+  config_parser = ConfigParser.SafeConfigParser()
+  if( os.path.exists(options.config_file) ):
+    response = raw_input('Config file %s exists, use it? (Y/n): ' %
+                         options.config_file)
+    if( response.lower() in ['n', 'no'] ):
+      write_config = True
+  else:
+    write_config = True
+
+  if( not write_config ):
+    config_parser.readfp(open(options.config_file))
+    if( args_dict['-u/--user-name'] is None ):
+      args_dict['-u/--user-name'] = config_parser.get('database', 'login')
+    if( args_dict['-d/--database'] is None ):
+      args_dict['-d/--database'] = config_parser.get('database', 'database')
+    if( args_dict['-n/--hostname'] is None ):
+      args_dict['-n/--hostname'] = config_parser.get('server', 'host')
+    if( not options.password ):
+      options.password = config_parser.get('database', 'passwd')
+
   error = False
   for arg in args_dict:
     if( args_dict[arg] is None ):
@@ -192,14 +214,6 @@ def main(args):
     parser.print_help()
     sys.exit(1)
 
-  # START CONFIG
-  write_config = False
-  if( os.path.exists(options.config_file) ):
-    response = raw_input('Config file %s exists, use it? (Y/n): ')
-    if( response.lower() in ['n', 'no'] ):
-      write_config = True
-  else:
-    write_config = True
   if( not options.password ):
     options.password = getpass.getpass(
         'Enter database password for %s: ' % options.user_name)
@@ -212,82 +226,83 @@ def main(args):
     if( 'AuthenticationMethod' in dir(module_object) ):
       module_list.append(module)
 
-  for module in module_list:
-    print "%s. %s" % (module_list.index(module) + 1, module)
-  module = raw_input('Select an authentication module (1 - %s) '
-                     'above: ' % len(module_list))
-  module = int(module) - 1
+  if( write_config ):
+    for module in module_list:
+      print "%s. %s" % (module_list.index(module) + 1, module)
+    module = raw_input('Select an authentication module (1 - %s) '
+                       'above: ' % len(module_list))
+    module = int(module) - 1
 
-  authentication_module = getattr(roster_server, module_list[module])
-  authentication_module_instance = authentication_module.AuthenticationMethod()
+    authentication_module = getattr(roster_server, module_list[module])
+    authentication_module_instance = authentication_module.AuthenticationMethod()
 
-  if( not options.ssl_cert ):
-    print 'ERROR: An ssl cert file MUST be specified with --ssl-cert.'
-    sys.exit(1)
-  if( not options.ssl_key ):
-    print 'ERROR: An ssl key file MUST be specified with --ssl-key.'
-    sys.exit(1)
+    if( not options.ssl_cert ):
+      print 'ERROR: An ssl cert file MUST be specified with --ssl-cert.'
+      sys.exit(1)
+    if( not options.ssl_key ):
+      print 'ERROR: An ssl key file MUST be specified with --ssl-key.'
+      sys.exit(1)
 
-  directory = '/'.join(options.config_file.split('/')[:-1])
-  if( not os.path.exists(directory) ):
-    os.makedirs(directory)
+    directory = '/'.join(options.config_file.split('/')[:-1])
+    if( not os.path.exists(directory) ):
+      os.makedirs(directory)
 
-  config_parser = ConfigParser.SafeConfigParser()
-  config_parser.add_section('database')
-  config_parser.set('database', 'server', options.hostname)
-  config_parser.set('database', 'login', options.user_name)
-  config_parser.set('database', 'database', options.database)
-  config_parser.set('database', 'passwd', options.password)
-  config_parser.set('database', 'big_lock_timeout', options.big_lock_timeout)
-  config_parser.set('database', 'big_lock_wait', options.big_lock_wait)
-  config_parser.set('database', 'ssl', 'on' if options.db_ssl else 'off')
-  config_parser.set('database', 'ssl_cert', options.db_ssl_cert)
-  config_parser.set('database', 'ssl_key', options.db_ssl_key)
-  config_parser.set('database', 'ssl_ca', options.db_ssl_ca)
-  config_parser.set('database', 'ssl_capath', options.db_ssl_ca_path)
-  config_parser.set('database', 'ssl_cipher', options.db_ssl_cipher)
+    config_parser.add_section('database')
+    config_parser.set('database', 'server', options.hostname)
+    config_parser.set('database', 'login', options.user_name)
+    config_parser.set('database', 'database', options.database)
+    config_parser.set('database', 'passwd', options.password)
+    config_parser.set('database', 'big_lock_timeout', options.big_lock_timeout)
+    config_parser.set('database', 'big_lock_wait', options.big_lock_wait)
+    config_parser.set('database', 'ssl', 'on' if options.db_ssl else 'off')
+    config_parser.set('database', 'ssl_cert', options.db_ssl_cert)
+    config_parser.set('database', 'ssl_key', options.db_ssl_key)
+    config_parser.set('database', 'ssl_ca', options.db_ssl_ca)
+    config_parser.set('database', 'ssl_capath', options.db_ssl_ca_path)
+    config_parser.set('database', 'ssl_cipher', options.db_ssl_cipher)
 
-  config_parser.add_section('exporter')
-  config_parser.set('exporter', 'backup_dir', options.backup_dir)
-  config_parser.set('exporter', 'root_config_dir', options.root_config_dir)
-  config_parser.set('exporter', 'named_dir', options.named_dir)
+    config_parser.add_section('exporter')
+    config_parser.set('exporter', 'backup_dir', options.backup_dir)
+    config_parser.set('exporter', 'root_config_dir', options.root_config_dir)
+    config_parser.set('exporter', 'named_dir', options.named_dir)
 
-  config_parser.add_section('server')
-  config_parser.set('server', 'port', options.port)
-  config_parser.set('server', 'host', options.host)
-  config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
-  config_parser.set('server', 'core_die_time', options.core_die_time)
-  config_parser.set('server', 'run_as_username', options.run_as_username)
-  config_parser.set('server', 'lock_file', options.lock_file)
-  config_parser.set('server', 'ssl_cert_file', options.ssl_cert)
-  config_parser.set('server', 'ssl_key_file', options.ssl_key)
-  config_parser.set('server', 'server_log_file', options.server_log_file)
-  config_parser.set('server', 'get_credentials_wait_increment',
-                    options.get_credentials_wait_increment)
-  config_parser.set('server', 'server_killswitch', 'on')
+    config_parser.add_section('server')
+    config_parser.set('server', 'port', options.port)
+    config_parser.set('server', 'host', options.host)
+    config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
+    config_parser.set('server', 'core_die_time', options.core_die_time)
+    config_parser.set('server', 'run_as_username', options.run_as_username)
+    config_parser.set('server', 'lock_file', options.lock_file)
+    config_parser.set('server', 'ssl_cert_file', options.ssl_cert)
+    config_parser.set('server', 'ssl_key_file', options.ssl_key)
+    config_parser.set('server', 'server_log_file', options.server_log_file)
+    config_parser.set('server', 'get_credentials_wait_increment',
+                      options.get_credentials_wait_increment)
+    config_parser.set('server', 'server_killswitch', 'on')
 
-  config_parser.add_section('credentials')
-  config_parser.set('credentials', 'authentication_method', module_list[module])
-  config_parser.set('credentials', 'exp_time', options.credential_expiry_time)
-  config_parser_file = open(options.config_file, 'wb')
+    config_parser.add_section('credentials')
+    config_parser.set('credentials', 'authentication_method',
+                      module_list[module])
+    config_parser.set('credentials', 'exp_time', options.credential_expiry_time)
+    config_parser_file = open(options.config_file, 'wb')
 
-  config_parser.add_section(module_list[module])
-  for variable in authentication_module_instance.requires:
-    if( authentication_module_instance.requires[variable]['default'] is None ):
-      if( authentication_module_instance.requires[variable]['optional'] ):
-        value = raw_input('Enter \'%s\' for \'%s\' (Enter for None): ' % (
-            variable, module_list[module]))
+    config_parser.add_section(module_list[module])
+    for variable in authentication_module_instance.requires:
+      if( authentication_module_instance.requires[variable]['default'] is None ):
+        if( authentication_module_instance.requires[variable]['optional'] ):
+          value = raw_input('Enter \'%s\' for \'%s\' (Enter for None): ' % (
+              variable, module_list[module]))
+        else:
+          value = raw_input('Enter \'%s\' for \'%s\': ' % (
+              variable, module_list[module]))
       else:
-        value = raw_input('Enter \'%s\' for \'%s\': ' % (
-            variable, module_list[module]))
-    else:
-      value = authentication_module_instance.requires[variable]['default']
-    config_parser.set(module_list[module], variable, value)
+        value = authentication_module_instance.requires[variable]['default']
+      config_parser.set(module_list[module], variable, value)
 
-  try:
-    config_parser.write(config_parser_file)
-  finally:
-    config_parser_file.close()
+    try:
+      config_parser.write(config_parser_file)
+    finally:
+      config_parser_file.close()
 
   # END CONFIG
   config_instance = roster_core.Config(options.config_file)
