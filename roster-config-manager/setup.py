@@ -42,7 +42,7 @@ except ImportError:
 
 current_version = __version__
 if( __version__.startswith('#') ):
-    current_version = '0.1'
+  current_version = '1000'
 
 setup(name='RosterConfigManager',
       version=current_version,

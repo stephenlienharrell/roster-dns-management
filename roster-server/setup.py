@@ -36,6 +36,7 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
+
 try:
   from setuptools import setup
 except ImportError:
@@ -43,7 +44,8 @@ except ImportError:
 
 current_version = __version__
 if( __version__.startswith('#') ):
-  current_version = '0.1'
+  current_version = '1000'
+
 setup(name='RosterServer',
       version=current_version,
       description='RosterServer is a XML/RPC Server for Roster.',
