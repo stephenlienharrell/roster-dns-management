@@ -44,11 +44,13 @@ import sys
 
 from roster_user_tools import data_flags
 from roster_user_tools import action_flags
+from roster_user_tools import cli_common_lib
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
+DNS_CRED_FILE = cli_common_lib.DEFAULT_CRED_FILE
 USERNAME = u'sharrell'
 
 
@@ -99,7 +101,7 @@ class TestCoreHelpers(unittest.TestCase):
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'username': 'sharrell', 'deny': None, 'config_file': None,
-         'credfile': None, 'no_header': False, 'server': None,
+         'credfile': DNS_CRED_FILE, 'no_header': False, 'server': None,
          'credstring': None, 'allow': None, 'cidr_block': None,
          'password': None, 'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
@@ -123,7 +125,7 @@ class TestCoreHelpers(unittest.TestCase):
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'username': u'sharrell', 'deny': None, 'config_file': None,
-         'credfile': None, 'quiet': False, 'server': None,
+         'credfile': DNS_CRED_FILE, 'quiet': False, 'server': None,
          'credstring': None, 'allow': None, 'cidr_block': None,
          'password': None, 'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
@@ -147,9 +149,9 @@ class TestCoreHelpers(unittest.TestCase):
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
         {'username': u'sharrell', 'deny': None, 'config_file': None,
-          'credfile': None, 'quiet': False, 'force': False, 'server': None,
-         'credstring': None, 'allow': None, 'cidr_block': None,
-         'password': None, 'acl': None})
+          'credfile': DNS_CRED_FILE, 'quiet': False, 'force': False,
+          'server': None, 'credstring': None, 'allow': None,
+          'cidr_block': None, 'password': None, 'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
@@ -177,11 +179,11 @@ class TestCoreHelpers(unittest.TestCase):
          'hardware': None, 'credstring': None, 'ttl': 3600, 'zone_name': None,
          'port': None, 'expiry_seconds': None, 'priority': None,
          'retry_seconds': None, 'serial_number': None, 'assignment_host': None,
-         'username': u'sharrell', 'credfile': None, 'config_file': None,
-         'name_server': None, 'quoted_text': None, 'password': None,
-         'target': None, 'os': None, 'no_header': False, 'server': None,
-         'view_name': None, 'mail_server': None, 'admin_email': None,
-         'assignment_ip': None})
+         'username': u'sharrell', 'credfile': DNS_CRED_FILE,
+         'config_file': None, 'name_server': None, 'quoted_text': None,
+         'password': None, 'target': None, 'os': None, 'no_header': False,
+         'server': None, 'view_name': None, 'mail_server': None,
+         'admin_email': None, 'assignment_ip': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
@@ -212,11 +214,11 @@ class TestCoreHelpers(unittest.TestCase):
          'hardware': None, 'credstring': None, 'ttl': 3600, 'zone_name': None,
          'port': None, 'expiry_seconds': None, 'priority': None,
          'retry_seconds': None, 'serial_number': None, 'assignment_host': None,
-         'username': u'sharrell', 'credfile': None, 'config_file': None,
-         'name_server': None, 'quoted_text': None, 'password': None,
-         'target': None, 'os': None, 'quiet': False, 'server': None,
-         'view_name': 'any', 'mail_server': None, 'admin_email': None,
-         'assignment_ip': None})
+         'username': u'sharrell', 'credfile': DNS_CRED_FILE,
+         'config_file': None, 'name_server': None, 'quoted_text': None,
+         'password': None, 'target': None, 'os': None, 'quiet': False,
+         'server': None, 'view_name': 'any', 'mail_server': None,
+         'admin_email': None, 'assignment_ip': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
@@ -247,11 +249,11 @@ class TestCoreHelpers(unittest.TestCase):
          'hardware': None, 'credstring': None, 'refresh_seconds': None,
          'ttl': 3600, 'zone_name': None, 'port': None, 'expiry_seconds': None,
          'priority': None, 'retry_seconds': None, 'serial_number': None,
-         'assignment_host': None, 'username': u'sharrell', 'credfile': None,
-         'config_file': None, 'name_server': None, 'quoted_text': None,
-         'password': None, 'target': None, 'os': None, 'quiet': False,
-         'server': None, 'view_name': None, 'mail_server': None,
-         'admin_email': None, 'assignment_ip': None})
+         'assignment_host': None, 'username': u'sharrell',
+         'credfile': DNS_CRED_FILE, 'config_file': None, 'name_server': None,
+         'quoted_text': None, 'password': None, 'target': None, 'os': None,
+         'quiet': False, 'server': None, 'view_name': None,
+         'mail_server': None, 'admin_email': None, 'assignment_ip': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
