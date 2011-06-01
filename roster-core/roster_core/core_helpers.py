@@ -354,7 +354,6 @@ class CoreHelpers(object):
         raise errors.InvalidInputError(
             'The CIDR block specified does not contain a valid IP: %s' % (
             cidr_block))
-
     records_dict = self.db_instance.GetEmptyRowDict('records')
     zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
         'zone_view_assignments')
@@ -363,7 +362,7 @@ class CoreHelpers(object):
         self.db_instance.GetEmptyRowDict(
             'record_arguments_records_assignments'))
 
-    if( view_name is not None and
+    if( view_name is not None and 
         view_name.endswith('_dep') or view_name == u'any' ):
       records_dict['record_view_dependency'] = view_name
     elif( view_name is not None ):
@@ -460,20 +459,35 @@ class CoreHelpers(object):
             'Record type unknown. Missing ipv4 or ipv6 dec index: %s' % (
             record_entry))
       record_item = {}
+      record_item['records_id'] = record_entry['records_id']
+      record_item['record_type'] = record_entry['record_type']
+      record_item['record_target'] = record_entry['record_target']
+      record_item['record_ttl'] = record_entry['record_ttl']
+      record_item['record_zone_name'] = record_entry['record_zone_name']
       record_item[u'zone_origin'] = record_entry[u'zone_origin']
-      record_item[u'zone'] = record_entry[u'zone_name']
+      record_item['record_view_dependency'] = record_entry['record_view_dependency']
+      #record_item['record_last_updated'] = record_entry['record_last_updated']
+      record_item['record_last_user'] = record_entry['record_last_user']
+      if record_entry[u'record_view_dependency'].endswith('_dep'):
+        record_item[u'view_name'] = record_entry[u'record_view_dependency'][:-4]
+      else:
+        record_item[u'view_name'] = record_entry[u'record_view_dependency']
       if( record_entry[u'record_type'] == u'a' or 
           record_entry[u'record_type'] == u'aaaa' ):
         record_item[u'forward'] = True
         record_item[u'host'] = '%s.%s' % (
             record_entry[u'record_target'],
             record_entry[u'zone_origin'][:-1])
+        record_item[u'record_args_dict'] = {
+            'assignment_ip': record_entry['argument_value']}
         parsed_record_dict[record_view][record_ip].append( record_item )
       elif( record_entry[u'record_type'] == u'ptr' ):
         record_item[u'forward'] = False
         record_item[u'host'] = record_entry[u'argument_value'][:-1]
+        assignment_ip = helpers_lib.UnReverseIP(
+            '%s.%s' % (record_entry['record_target'],record_entry['zone_origin']))
+        record_item[u'record_args_dict'] = {'assignment_ip': assignment_ip}
         parsed_record_dict[record_view][record_ip].insert(0, record_item )
-    
     return parsed_record_dict
 
   def ListNamedConfGlobalOptionsClient(self, option_id=None,
@@ -595,9 +609,13 @@ class CoreHelpers(object):
 
     Inputs:
       delete_records: list of dictionaries of records
-                      ex: {'record_type': 'a', 'record_target': 'target',
-                           'view_name': 'view', 'zone_name': 'zone',
-                           'record_arguments': {'assignment_ip': '1.2.3.4'}}
+                      ex: {'record_ttl': 3600, 'record_type': u'a',
+                          'records_id': 10, 'record_target': u'host1',
+                          'record_zone_name': u'forward_zone',
+                          'record_last_user': u'sharrell',
+                          'record_view_dependency': u'test_view_dep'}
+                          {'record_type': 'ptr', 'record_target': 'target',
+                          'view_name': 'view', 'zone_name': 'zone'}
       add_records: list of dictionaries of records
 
     Outputs:
@@ -614,74 +632,43 @@ class CoreHelpers(object):
       try:
         # REMOVE RECORDS
         for record in delete_records:
-          records_dict = self.db_instance.GetEmptyRowDict('records')
-          records_dict['record_type'] = record['record_type']
-          records_dict['record_target'] = record['record_target']
-          records_dict['record_zone_name'] = record['record_zone_name']
-          view_name = record['view_name']
-          if( not record['view_name'].endswith('_dep') and record[
-                'view_name'] != u'any'):
-            view_name = '%s_dep' % record['view_name']
-          changed_view_dep.append((view_name, record['record_zone_name']))
-          records_dict['record_view_dependency'] = view_name
-          self.user_instance.Authorize('RemoveRecord',
-              record_data =
-                  {'target': record['record_target'],
-                   'zone_name': record['record_zone_name'],
-                   'view_name': records_dict['record_view_dependency']},
+          record_dict = self.db_instance.GetEmptyRowDict('records')
+          self.user_instance.Authorize('RemoveRecord', 
+              record_data = {
+                  'target': record['record_target'],
+                  'zone_name': record['record_zone_name'],
+                  'view_name': record_dict['record_view_dependency']},
               current_transaction=True)
-
-          if( 'record_ttl' in record ):
-            records_dict['record_ttl'] = record['record_ttl']
-          args_list = []
-          for argument in record['record_arguments']:
-            if( record['record_arguments'][argument] is None ):
-              raise errors.CoreErrore('%s: "%s" cannot be None' % (
-                  record['record_target'], argument))
-            args_list.append(
-                {u'record_arguments_records_assignments_argument_name':
-                     argument,
-                 u'record_arguments_records_assignments_type':
-                     record['record_type'],
-                 u'argument_value': record['record_arguments'][argument],
-                 u'record_arguments_records_assignments_record_id': None})
-          args_search_list = []
-          record_ids = []
-          final_id = []
-          record_id_dict = {}
-          for arg in args_list:
-            args_search_list.append(self.db_instance.ListRow(
-                'record_arguments_records_assignments', arg))
-          for index, record_args in enumerate(args_search_list):
-            record_ids.append([])
-            for args_dict in record_args:
-              record_ids[index].append(args_dict[
-                  u'record_arguments_records_assignments_record_id'])
-          for id_list in record_ids:
-            for search_id in id_list:
-              if( search_id in record_id_dict ):
-                record_id_dict[search_id] += 1
-              else:
-                record_id_dict[search_id] = 1
-          for record_id in record_id_dict:
-            if( record_id_dict[record_id] == len(args_list) ):
-              final_id.append(record_id)
-          if( len(final_id) == 1 ):
-            records_dict['records_id'] = final_id[0]
-            new_records = self.db_instance.ListRow('records', records_dict)
-            rows_deleted = self.db_instance.RemoveRow('records', new_records[0])
-            if( not rows_deleted ):
-              raise errors.RecordsBatchError(
-                  '%s: Record not found' % record['record_target'])
-            log_dict['delete'].append(record)
-            row_count += 1
+          record_dict['records_id'] = record['records_id']
+          record_dict['record_type'] = record['record_type']
+          record_dict['record_target'] = record['record_target']
+          record_dict['record_ttl'] = record['record_ttl']
+          if( record['record_view_dependency'].endswith('_dep') or 
+              record['record_view_dependency'] == u'any' ):
+            record_dict['record_view_dependency'] = record['record_view_dependency']
+          else:
+            record_dict['record_view_dependency'] = (
+                '%s_dep' % record['record_view_dependency'])
+          record_dict['record_zone_name'] = record['record_zone_name']
+          record_dict['record_last_user'] = record['record_last_user']
+          rows_deleted = self.db_instance.RemoveRow('records', record_dict)
+          log_dict['delete'].append(record)
+          row_count += 1
+          if( rows_deleted > 1 ):
+            raise errors.RecordsBatchError(
+                  'Record specification too broad, '
+                  'found %d matching records for %s.' % (
+                      rows_deleted, record_dict))
+          elif( rows_deleted == 0 ):
+            raise errors.RecordsBatchError(
+                  'No record found for :%s' % record_dict)
 
         # ADD RECORDS
         for record in add_records:
-          view_name = record['view_name']
-          if( not record['view_name'].endswith('_dep') and record[
-                'view_name'] != u'any'):
-            view_name = '%s_dep' % record['view_name']
+          view_name = record['record_view_dependency']
+          if( not record['record_view_dependency'].endswith('_dep') and record[
+                'record_view_dependency'] != u'any'):
+            view_name = '%s_dep' % record['record_view_dependency']
           self.user_instance.Authorize('MakeRecord', 
               record_data = {
                   'target': record['record_target'],
@@ -756,11 +743,13 @@ class CoreHelpers(object):
                                      record_argument_assignments_dict)
             log_dict['add'].append(record)
             row_count += 1
-          self.core_instance._AddRecordToIpIndex(
-              records_dict['record_type'], records_dict['record_zone_name'],
-              records_dict['record_view_dependency'],
-              record_id, records_dict['record_target'],
-              record['record_arguments'])
+          if( records_dict['record_type'] in
+              constants.RECORD_TYPES_INDEXED_BY_IP ):
+            self.core_instance._AddRecordToIpIndex(
+                records_dict['record_type'], records_dict['record_zone_name'],
+                records_dict['record_view_dependency'],
+                record_id, records_dict['record_target'],
+                record['record_arguments'])
         changed_view_dep = set(changed_view_dep)
         for view_dep_pair in changed_view_dep:
           self.core_instance._IncrementSoa(*view_dep_pair)

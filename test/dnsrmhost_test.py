@@ -247,37 +247,116 @@ class Testdnsrmhost(unittest.TestCase):
     self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.5']),2)
     self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.1']),1)
     self.assertTrue(
-        {u'forward': False, u'host': u'host6.university.edu',
-          u'zone_origin': u'0.168.192.in-addr.arpa.',
-          u'zone': u'reverse_zone'} in
+        { u'forward': False,
+          u'host': u'host6.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.8'},
+          'record_last_user': u'sharrell',
+          'record_target': u'8',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 14,
+          u'view_name': u'test_view',
+          u'zone_origin': u'0.168.192.in-addr.arpa.'} in
         returned_dict[u'test_view'][u'192.168.0.8'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host6.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host6.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.8'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host6',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 12,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.0.8'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host1.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host1.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.1'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host1',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 7,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.0.1'])
     self.assertTrue(
-        {u'forward': False, u'host': u'university.edu',
-          u'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'} in
+        { u'forward': False,
+          u'host': u'university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.9'},
+          'record_last_user': u'sharrell',
+          'record_target': u'9',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 15,
+          u'view_name': u'test_view',
+          u'zone_origin': u'0.168.192.in-addr.arpa.'} in
         returned_dict[u'test_view'][u'192.168.0.9'])
     self.assertTrue(
-        {u'forward': True, u'host': u'@.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'@.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.9'},
+          'record_last_user': u'sharrell',
+          'record_target': u'@',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 13,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.0.9'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host4.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host4.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.10'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host4',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 10,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.0.10'])
     self.assertTrue(
-       {u'forward': False, u'host': u'host3.university.edu',
-          u'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'} in
+        { u'forward': False,
+          u'host': u'host3.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.5'},
+          'record_last_user': u'sharrell',
+          'record_target': u'5',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 17,
+          u'view_name': u'test_view',
+          u'zone_origin': u'0.168.192.in-addr.arpa.'} in
         returned_dict[u'test_view'][u'192.168.0.5'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host3.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host3.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.5'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host3',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 9,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.0.5'])
     output = os.popen('python %s -q -i 192.168.0.5 -t host3 '
                       '-z forward_zone -v test_view -s %s -u %s '
@@ -294,30 +373,89 @@ class Testdnsrmhost(unittest.TestCase):
     self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.9']),2)
     self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.10']),1)
     self.assertTrue(
-        {u'forward': False, u'host': u'host6.university.edu',
-          u'zone_origin': u'0.168.192.in-addr.arpa.',
-          u'zone': u'reverse_zone'} in
-    returned_dict[u'test_view'][u'192.168.0.8'])
+        { u'forward': False,
+          u'host': u'host6.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.8'},
+          'record_last_user': u'sharrell',
+          'record_target': u'8',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 14,
+          u'view_name': u'test_view',
+          u'zone_origin': u'0.168.192.in-addr.arpa.'} in
+        returned_dict[u'test_view'][u'192.168.0.8'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host6.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
-    returned_dict[u'test_view'][u'192.168.0.8'])
+        { u'forward': True,
+          u'host': u'host6.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.8'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host6',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 12,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
+        returned_dict[u'test_view'][u'192.168.0.8'])
     self.assertTrue(
-         {u'forward': True, u'host': u'host1.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
-    returned_dict[u'test_view'][u'192.168.0.1'])
+        { u'forward': True,
+          u'host': u'host1.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.1'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host1',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 7,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
+        returned_dict[u'test_view'][u'192.168.0.1'])
     self.assertTrue(
-         {u'forward': False, u'host': u'university.edu',
-          u'zone_origin': u'0.168.192.in-addr.arpa.', u'zone': u'reverse_zone'} in
+        { u'forward': False,
+          u'host': u'university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.9'},
+          'record_last_user': u'sharrell',
+          'record_target': u'9',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 15,
+          u'view_name': u'test_view',
+          u'zone_origin': u'0.168.192.in-addr.arpa.'} in
+        returned_dict[u'test_view'][u'192.168.0.9'])
+    self.assertTrue(
+        { u'forward': True,
+          u'host': u'@.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.9'},
+          'record_last_user': u'sharrell',
+          'record_target': u'@',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 13,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
     returned_dict[u'test_view'][u'192.168.0.9'])
     self.assertTrue(
-        {u'forward': True, u'host': u'@.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
-    returned_dict[u'test_view'][u'192.168.0.9'])
-    self.assertTrue(
-         {u'forward': True, u'host': u'host4.university.edu',
-          u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
-         returned_dict[u'test_view'][u'192.168.0.10'])
+        { u'forward': True,
+          u'host': u'host4.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.10'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host4',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 10,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
+        returned_dict[u'test_view'][u'192.168.0.10'])
     output = os.popen('python %s -q -i 192.168.0.9 -t @ '
                       '-z forward_zone -v test_view -s %s -u %s '
                       '-p %s --config-file %s' % (
@@ -333,21 +471,60 @@ class Testdnsrmhost(unittest.TestCase):
     self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.1']),1)
     self.assertEqual(len(returned_dict[u'test_view'][u'192.168.0.10']),1)
     self.assertTrue(
-        {u'forward': False, u'host': u'host6.university.edu',
-          u'zone_origin': u'0.168.192.in-addr.arpa.',
-          u'zone': u'reverse_zone'} in
+        { u'forward': False,
+          u'host': u'host6.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.8'},
+          'record_last_user': u'sharrell',
+          'record_target': u'8',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 14,
+          u'view_name': u'test_view',
+          u'zone_origin': u'0.168.192.in-addr.arpa.'} in
         returned_dict[u'test_view'][u'192.168.0.8'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host6.university.edu',
-            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host6.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.8'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host6',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 12,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.0.8'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host1.university.edu',
-              u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host1.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.1'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host1',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 7,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.0.1'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host4.university.edu',
-            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host4.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.10'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host4',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 10,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.0.10'])
 
   def testRemoveIPV6(self):

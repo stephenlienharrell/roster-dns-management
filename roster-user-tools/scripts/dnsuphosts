@@ -373,6 +373,16 @@ def main(args):
           record_type = u'a'
         else:
           record_type = u'aaaa'
+        try:
+          for record_enum in enumerate(records_dictionary[options.view_name][host]):
+            if record_enum[1]['forward'] == True:
+              records_id = record_enum[1]['records_id']
+              record_ttl = record_enum[1]['record_ttl']
+              record_last_user = record_enum[1]['record_last_user']
+            elif record_enum[1]['forward'] == False:
+              ptr_id = record_enum[1]['records_id']
+        except KeyError:
+          pass
         if( record['host'] is None ):
           print 'Host: %s with ip address %s will be REMOVED' % (
               original_hosts_dict[host][0]['host'], host)
@@ -380,16 +390,22 @@ def main(args):
               'host'].split('%s.' % (original_hosts_dict[host][0][
                   'alias']), 1)[1]
           delete_list.append({'record_type': record_type,
+                              'records_id': records_id,
+                              'record_ttl': record_ttl,
+                              'record_last_user': record_last_user,
                               'record_target': original_hosts_dict[
                                   host][record_number]['alias'],
-                              'view_name': options.view_name,
+                              'record_view_dependency': options.view_name,
                               'record_zone_name': zone_origin_dict[zone_origin],
                               'record_arguments': {'assignment_ip': host}})
           delete_list.append({'record_type': u'ptr',
+                              'records_id': ptr_id,
+                              'record_ttl': record_ttl,
+                              'record_last_user': record_last_user,
                               'record_target': reverse_ip[:-len(zone_info[
                                   reverse_zone_name][options.view_name][
                                       'zone_origin']) - 1:],
-                              'view_name': options.view_name,
+                              'record_view_dependency': options.view_name,
                               'record_zone_name': reverse_zone_name,
                               'record_arguments': {'assignment_host':
                                   '%s.' % original_hosts_dict[
@@ -411,17 +427,23 @@ def main(args):
             except:
               print original_hosts_dict[host]
             delete_list.append({'record_type': record_type,
+                                'records_id': records_id,
+                                'record_ttl': record_ttl,
+                                'record_last_user': record_last_user,
                                 'record_target': original_hosts_dict[
                                     host][record_number]['alias'],
-                                'view_name': options.view_name,
+                                'record_view_dependency': options.view_name,
                                 'record_zone_name':
                                     zone_origin_dict[zone_origin],
                                 'record_arguments': {'assignment_ip': host}})
             delete_list.append({'record_type': u'ptr',
+                                'records_id': records_id,
+                                'record_ttl': record_ttl,
+                                'record_last_user': record_last_user,
                                 'record_target': reverse_ip[:-len(zone_info[
                                     reverse_zone_name][options.view_name][
                                         'zone_origin']) - 1:],
-                                'view_name': options.view_name,
+                                'record_view_dependency': options.view_name,
                                 'record_zone_name': reverse_zone_name,
                                 'record_arguments': {'assignment_host':
                                     '%s.' % original_hosts_dict[host][
@@ -451,7 +473,7 @@ def main(args):
               raise Exception('%s %s' % (record['host'], record['alias']))
           add_list.append({'record_type': record_type,
                            'record_target': record['alias'],
-                           'view_name': options.view_name,
+                           'record_view_dependency': options.view_name,
                            'record_zone_name': zone_origin_dict[zone_origin],
                            'record_arguments': {'assignment_ip': host}})
           if( not added_ptr ):
@@ -459,7 +481,7 @@ def main(args):
                              'record_target': reverse_ip[:-len(zone_info[
                                  reverse_zone_name][options.view_name][
                                      'zone_origin']) - 1:],
-                             'view_name': options.view_name,
+                             'record_view_dependency': options.view_name,
                              'record_zone_name': reverse_zone_name,
                              'record_arguments': {'assignment_host':
                                  '%s.' % record['host']}})

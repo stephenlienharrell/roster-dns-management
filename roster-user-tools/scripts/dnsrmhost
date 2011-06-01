@@ -105,7 +105,7 @@ def main(args):
   try:
     records_list = []
     for record in records_dict[options.view_name][options.ip_address]:
-      if( record['zone'] == options.zone_name ):
+      if( record['record_zone_name'] == options.zone_name ):
         records_list.append(record)
   except KeyError:
     cli_common_lib_instance.DnsError('Record not found.', 1)

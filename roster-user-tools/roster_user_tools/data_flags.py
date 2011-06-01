@@ -428,6 +428,34 @@ class Hosts(core_flags.CoreFlags):
     self.SetAllFlagRule('file', required=False)
 
 
+class MassAdd(core_flags.CoreFlags):
+  """Command line uphost flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('--commit', action='store_true', dest='commit',
+                           help='Commits changes of hosts file without '
+                                'confirmation.', default=False)
+    self.parser.add_option('--no-commit', action='store_true', dest='no_commit',
+                           help='Suppresses changes of hosts file.',
+                           default=False)
+    self.AddFlagRule(('no_commit', 'commit'), required=False,
+                     flag_type='independent_args')
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name', help='String of the zone name.',
+                           metavar='<zone-name>', default=None)
+    self.SetAllFlagRule('zone_name', required=True)
+    self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
+                           help=('String of the view name <view-name>. Example: '
+                                 '"internal"'), metavar='<view-name>',
+                           default='any')
+    self.SetAllFlagRule('view_name', required=True)
+
+    self.parser.add_option('-f', '--file', action='store', dest='file',
+                           help='File name of hosts file to write to database.',
+                           metavar='<file-name>', default='hosts_out')
+    self.SetAllFlagRule('file', required=True)
+
+
 class NamedGlobals(core_flags.CoreFlags):
   """Command line named global flags"""
   def SetDataFlags(self):

@@ -248,7 +248,7 @@ def PrintRecords(records_dictionary, ip_address_list=[], print_headers=True):
             if( record['forward'] ):
               direction = 'Forward'
             print_list.append([ip_address, direction, record['host'],
-                                    record['zone'], view])
+                                    record['record_zone_name'], view])
         else:
           print_list.append([ip_address, '--', '--', '--', '--'])
   return PrintColumns(print_list)

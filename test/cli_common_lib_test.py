@@ -149,17 +149,17 @@ class Testdnslshost(unittest.TestCase):
         'test_view': {'192.168.1.5': [
             {'forward': False, 'host': 'host3.university.edu',
              'zone_origin': '1.168.192.in-addr.arpa.',
-             'zone': 'reverse_zone'}]},
+             'record_zone_name': 'reverse_zone'}]},
         'any': {'192.168.1.5': [
             {'forward': True, 'host': 'host3.university.edu',
-             'zone_origin': 'university.edu.', 'zone': 'forward_zone'}],
+             'zone_origin': 'university.edu.', 'record_zone_name': 'forward_zone'}],
                 '192.168.1.6': [
             {'forward': True, 'host': 'host2.university.edu',
-             'zone_origin': 'university.edu.', 'zone': 'forward_zone'},
+             'zone_origin': 'university.edu.', 'record_zone_name': 'forward_zone'},
             {'forward': False, 'host': 'host2.university.edu',
-             'zone_origin': '168.192.in-addr.arpa.', 'zone': 'reverse_zone'},
+             'zone_origin': '168.192.in-addr.arpa.', 'record_zone_name': 'reverse_zone'},
             {'forward': True, 'host': 'www.host2.university.edu',
-             'zone_origin': 'university.edu.', 'zone': 'forward_zone'}]}}
+             'zone_origin': 'university.edu.', 'record_zone_name': 'forward_zone'}]}}
     options.server = self.server_name
     self.assertEqual(cli_common_lib.PrintRecords(records_dictionary,
                                                  print_headers=False),

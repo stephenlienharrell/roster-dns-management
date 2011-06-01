@@ -266,14 +266,33 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
       u'192.168.1.17', view_name=u'test_view3'),
       {u'test_view3': {u'192.168.1.17':
-          [{u'forward': True, u'host': u'host5.university.edu',
-            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'}]}})
+          [{'record_ttl': 3600,
+          'record_last_user': u'sharrell',
+          u'host': u'host5.university.edu',
+          u'forward': True,
+          'record_type': u'a',
+          u'view_name': u'test_view3',
+          'records_id': 14,
+          u'record_args_dict': {'assignment_ip': u'192.168.1.17'},
+          'record_target': u'host5',
+          'record_zone_name': u'forward_zone',
+          u'zone_origin': u'university.edu.',
+          'record_view_dependency': u'test_view3_dep'}]}})
     self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
         u'192.168.1.7', view_name=u'test_view2'),
         {u'test_view2': {u'192.168.1.7':
-            [{u'forward': False, u'host': u'host5.university.edu',
-              u'zone_origin': u'1.168.192.in-addr.arpa.',
-              u'zone': u'reverse_zone'}]}})
+            [{'record_ttl': 3600,
+            'record_last_user': u'sharrell',
+            u'host': u'host5.university.edu',
+            u'forward': False,
+            'record_type': u'ptr',
+            u'view_name': u'test_view2',
+            'records_id': 20,
+            u'record_args_dict': {'assignment_ip': u'192.168.1.7'},
+            'record_target': u'7',
+            'record_zone_name': u'reverse_zone',
+            u'zone_origin': u'1.168.192.in-addr.arpa.',
+            'record_view_dependency': u'test_view2_dep'}]}})
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
         u'4321:0000:0001:0002:0003:0004:0567:89ab', view_name=u'test_view')
@@ -282,8 +301,18 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(len(
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab']), 1)
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 6,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab'])
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
@@ -292,13 +321,32 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(len(returned_dict[u'test_view']), 1)
     self.assertEqual(len(returned_dict[u'test_view'][u'192.168.1.8']), 2)
     self.assertTrue(
-        {u'forward': False, u'host': u'host6.university.edu',
-            u'zone_origin': u'1.168.192.in-addr.arpa.',
-            u'zone': u'reverse_zone'} in
+        { u'forward': False,
+          u'host': u'host6.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.8'},
+          'record_last_user': u'sharrell',
+          'record_target': u'8',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 16,
+          u'view_name': u'test_view',
+          u'zone_origin': u'1.168.192.in-addr.arpa.'} in
         returned_dict[u'test_view'][u'192.168.1.8'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host6.university.edu',
-            u'zone_origin': u'university.edu.', u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host6.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.8'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host6',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 15,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view'][u'192.168.1.8'])
 
   def testListRecordsByCIDRBlock(self):
@@ -314,19 +362,46 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertTrue(len(returned_dict[u'test_view2'][u'192.168.1.5']), 1)
     self.assertTrue(len(returned_dict[u'test_view3'][u'192.168.1.5']), 1)
     self.assertTrue(
-        {u'forward': False, u'host': u'host5.university.edu',
-            u'zone_origin': u'1.168.192.in-addr.arpa.',
-            u'zone': u'reverse_zone'} in
+        { u'forward': False,
+          u'host': u'host5.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.7'},
+          'record_last_user': u'sharrell',
+          'record_target': u'7',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view2_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 20,
+          u'view_name': u'test_view2',
+          u'zone_origin': u'1.168.192.in-addr.arpa.'} in
         returned_dict[u'test_view2'][u'192.168.1.7'])
     self.assertTrue(
-        {u'forward': False, u'host': u'host3.university.edu',
-            u'zone_origin': u'1.168.192.in-addr.arpa.',
-            u'zone': u'reverse_zone'} in
+        { u'forward': False,
+          u'host': u'host3.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.5'},
+          'record_last_user': u'sharrell',
+          'record_target': u'5',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view2_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 18,
+          u'view_name': u'test_view2',
+          u'zone_origin': u'1.168.192.in-addr.arpa.'} in
         returned_dict[u'test_view2'][u'192.168.1.5'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host3.university.edu',
-            u'zone_origin': u'university.edu.',
-            u'zone': u'forward_zone'} in
+        { u'forward': True,
+          u'host': u'host3.university.edu',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.5'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host3',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view3_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 12,
+          u'view_name': u'test_view3',
+          u'zone_origin': u'university.edu.'} in
         returned_dict[u'test_view3'][u'192.168.1.5'])
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
@@ -338,12 +413,32 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(len(
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ac']), 1)
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 6,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 7,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ac'])
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
@@ -355,12 +450,32 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(len(
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac']), 1)
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0001:0001:0002:0003:0004:0567:89ab'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 8,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ab'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0001:0001:0002:0003:0004:0567:89ac'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 9,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac'])
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
@@ -376,20 +491,60 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(len(
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac']), 1)
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 6,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ab'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 7,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0000:0001:0002:0003:0004:0567:89ac'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0001:0001:0002:0003:0004:0567:89ab'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 8,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ab'])
     self.assertTrue(
-        {u'forward': True, u'host': u'host2.ipv6.net',
-            u'zone_origin': u'ipv6.net.', u'zone': u'ipv6zone'} in
+        { u'forward': True,
+          u'host': u'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': u'4321:0001:0001:0002:0003:0004:0567:89ac'},
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 9,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in
         returned_dict[u'test_view'][u'4321:0001:0001:0002:0003:0004:0567:89ac'])
 
     self.assertRaises(errors.InvalidInputError,
@@ -562,12 +717,12 @@ class TestCoreHelpers(unittest.TestCase):
           'zone_name': u'forward_zone', u'assignment_ip': u'192.168.0.1'}])
     self.assertEqual(
         self.core_helper_instance.ProcessRecordsBatch(delete_records=[{
-            'record_type': u'a', 'record_target': u'host1',
-            'record_zone_name': u'forward_zone', u'view_name': u'test_view',
-            'record_arguments': {u'assignment_ip': u'192.168.0.1'}}],
+            'record_type': u'a', u'record_target': u'host1', 'records_id': 10,
+            'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell',
+            u'record_view_dependency': u'test_view_dep', 'record_ttl': 3600}],
             add_records=[{'record_type': u'a', 'record_target': u'blah',
                           'record_zone_name': u'forward_zone',
-                          u'view_name': u'test_view', 'record_arguments':
+                          u'record_view_dependency': u'test_view', 'record_arguments':
                               {u'assignment_ip': u'192.168.0.88'}}]), 2)
     self.assertEqual(
         self.core_instance.ListRecords(record_type=u'a', target=u'host1'), [])
@@ -579,7 +734,7 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertRaises(errors.RecordsBatchError,
         self.core_helper_instance.ProcessRecordsBatch, add_records=[{
             'record_target': u'blah', 'ttl': 3600, 'record_type': u'a',
-            'view_name': u'test_view',
+            'record_view_dependency': u'test_view',
             'last_user': u'sharrell',
             'record_zone_name': u'forward_zone',
             'record_arguments': {u'assignment_ip': u'192.168.0.88'}}])
@@ -589,7 +744,7 @@ class TestCoreHelpers(unittest.TestCase):
              'record_zone_name': u'ipv6zone',
              'record_arguments': {u'assignment_ip':
                  u'4321:0000:0001:0002:0003:0004:0567:89ab'},
-             'view_name': u'test_view'}])
+             'record_view_dependency': u'test_view'}])
     self.core_instance.MakeRecord(
         u'cname', u'university_edu', u'forward_zone',
         {u'assignment_host': u'blah.university.edu.'}, view_name=u'test_view')
@@ -598,12 +753,12 @@ class TestCoreHelpers(unittest.TestCase):
           {'record_type': u'a', 'record_target': u'university_edu',
             'record_zone_name': u'forward_zone',
             'record_arguments': {u'assignment_ip': u'192.168.1.1'},
-          'view_name': u'test_view'}])
+          'record_view_dependency': u'test_view'}])
     self.assertRaises(errors.RecordsBatchError,
         self.core_helper_instance.ProcessRecordsBatch, add_records=[
             {'record_type': u'cname', 'record_target': u'blah',
              'record_zone_name': u'forward_zone',
-             u'view_name': u'test_view', 'record_arguments':
+             u'record_view_dependency': u'test_view', 'record_arguments':
                  {u'assignment_host': u'hostname.'}}])
 
 if( __name__ == '__main__' ):
