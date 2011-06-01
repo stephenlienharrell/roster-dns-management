@@ -233,8 +233,10 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
 
   def testDBBootstrapUseConfigFile(self):
     pre_test_config_file_string = open(CONFIG_FILE, 'r').read()
-    command = subprocess.Popen('python %s -c %s/roster.conf -U %s --force' % (
-        EXEC, u'test_data', u'new_user'), shell=True, stdin=subprocess.PIPE,
+    command = subprocess.Popen('python %s -c %s/roster.conf -U %s -i %s '
+        '--backup-dir %s --root-config-dir %s --run-as %d --force' % (EXEC,
+            u'test_data', u'new_user', u'./test_data/rosterd', u'./test_data',
+            u'./test_data', os.getuid()), shell=True, stdin=subprocess.PIPE,
         stdout=subprocess.PIPE)
     stdout_value = command.communicate('Y')
     self.assertEqual(stdout_value, ('Config file test_data/roster.conf exists, '
