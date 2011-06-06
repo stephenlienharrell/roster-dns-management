@@ -195,10 +195,7 @@ class Zone(core_flags.CoreFlags):
     """Sets flags for self.parser"""
     make = self.action == 'Make'
     # All flags
-    if( make ):
-      default_view = u'any'
-    else:
-      default_view = None
+    default_view = None
     self.parser.add_option('-v', '--view-name', action='store',
                            dest='view_name',
                            help='String of view name.', default=default_view)
@@ -577,7 +574,7 @@ class SetMaintenance(core_flags.CoreFlags):
                      flag_type='independent_args')
 
   def SetActionFlags(self):
-    """Method to set action variable since set maintenance has no action 
+    """Method to set action variable since set maintenance has no action
     class
     """
     self.action = 'SetMaintenance'
@@ -589,7 +586,7 @@ class Bootstrap(core_flags.CoreFlags):
     """Sets flags for self.parser"""
     pass
   def SetActionFlags(self):
-    """Method to set action variable since set maintenance has no action 
+    """Method to set action variable since set maintenance has no action
     class
     """
     self.action = 'Bootstrap'
