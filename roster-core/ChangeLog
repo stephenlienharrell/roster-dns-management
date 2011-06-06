@@ -1,4 +1,14 @@
 Current Release
+- Added create roster database function
+- Fixed database to use unicode
+- Added debugging to database module
+- Added mysql SSL support
+- Added ListAvailableIpsInCIDR core_helpers function
+- Created CNAME lookup function in core_helpers
+- Created IP Index for quick lookups and updated functions that could use it
+- fixed some defaulting/superfulous questions in roster_database_bootstrap
+- consolidated error classes in core
+- moved server port to config.py
 
 2010-07-21 release-0.14
 - Added exporter section to bootstrapper

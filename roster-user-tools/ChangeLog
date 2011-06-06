@@ -1,5 +1,9 @@
 Current Release
 - Added ability to pull config file from environ.
+- Added find first ip functionality in dnsaddhost
+- Set common default for credfile across user tools
+- New dnsmassadd tool that uses a hosts type file for input and clobers whatever
+is there
 
 2010-07-21 release-0.14
 - Updated all tools to use new flags class

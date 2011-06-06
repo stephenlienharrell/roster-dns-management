@@ -1,4 +1,6 @@
 Current Release
+- Added unicode support to tree_exporter using new punycode lib
+
 
 2010-07-21 release-0.14
 - Added username flag for dnszoneimporter
