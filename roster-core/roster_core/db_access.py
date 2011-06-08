@@ -193,6 +193,7 @@ class dbAccess(object):
     if( self.connection is not None ):
       try:
         self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+        self.cursor_execute('DO 0') # NOOP to test connection
       except MySQLdb.OperationalError:
         self.connection = None
 

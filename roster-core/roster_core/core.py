@@ -2468,13 +2468,21 @@ class Core(object):
               record_id_dict[search_id] += 1
             else:
               record_id_dict[search_id] = 1
+        existing_record_search_dict = search_records_dict
+        existing_record_search_dict['record_target'] = search_target
+        existing_records = self.db_instance.ListRow('records',
+                                                    existing_record_search_dict)
+        existing_ids = []
+        for record in existing_records:
+          existing_ids.append(record['records_id'])
         for record_id in record_id_dict:
           if( record_id_dict[record_id] == len(search_args_list) ):
             final_id.append(record_id)
-        if( len(final_id) == 0 ):
+        final_id_set = set(final_id).intersection(set(existing_ids))
+        if( len(final_id_set) == 0 ):
           raise errors.RecordError('No records found.')
-        elif( len(final_id) == 1 ):
-          search_records_dict['records_id'] = final_id[0]
+        elif( len(final_id_set) == 1 ):
+          search_records_dict['records_id'] = final_id_set.pop()
           new_records = self.db_instance.ListRow('records',
                                                  search_records_dict)
           row_count += self.db_instance.UpdateRow('records', new_records[0],

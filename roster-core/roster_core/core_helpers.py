@@ -76,6 +76,83 @@ class CoreHelpers(object):
   def ExpandIPV6(self, ip_address):
     return helpers_lib.ExpandIPV6(ip_address)
 
+  def GetViewsByUser(self, user):
+    """Lists view names available to given user
+
+    Inputs:
+        user: string of user name
+
+    Outputs:
+        list: list of view name strings
+    """
+    views = set([])
+    users_dict = self.db_instance.GetEmptyRowDict('users')
+    users_dict['user_name'] = user
+    user_group_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'user_group_assignments')
+    groups_dict = self.db_instance.GetEmptyRowDict('groups')
+    forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'forward_zone_permissions')
+    zones_dict = self.db_instance.GetEmptyRowDict('zones')
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    self.db_instance.StartTransaction()
+    try:
+      joined_list = self.db_instance.ListRow(
+          'users', users_dict, 'user_group_assignments',
+          user_group_assignments_dict,
+          'groups', groups_dict, 'forward_zone_permissions',
+          forward_zone_permissions_dict, 'zones', zones_dict,
+          'zone_view_assignments', zone_view_assignments_dict)
+    finally:
+      self.db_instance.EndTransaction()
+    for view_dict in joined_list:
+      views.add(view_dict['zone_view_assignments_view_dependency'].split(
+          '_dep')[0])
+    return views
+
+  def GetCIDRBlocksByView(self, view, user):
+    """Lists CIDR blocks available to given view
+
+    Inputs:
+        view: string of view name
+        user: string of user name
+
+    Outputs:
+        list: list of cidr block strings
+    """
+    cidrs = set([])
+    users_dict = self.db_instance.GetEmptyRowDict('users')
+    users_dict['user_name'] = user
+    views_dict = self.db_instance.GetEmptyRowDict('views')
+    views_dict['view_name'] = view
+
+    user_group_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'user_group_assignments')
+    groups_dict = self.db_instance.GetEmptyRowDict('groups')
+    reverse_range_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'reverse_range_permissions')
+    zones_dict = self.db_instance.GetEmptyRowDict('zones')
+    reverse_range_zone_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'reverse_range_zone_assignments')
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    self.db_instance.StartTransaction()
+    try:
+      joined_list = self.db_instance.ListRow(
+          'views', views_dict,
+          'users', users_dict, 'user_group_assignments',
+          user_group_assignments_dict,
+          'groups', groups_dict, 'reverse_range_permissions',
+          reverse_range_permissions_dict, 'zones', zones_dict,
+          'zone_view_assignments', zone_view_assignments_dict,
+          'reverse_range_zone_assignments', reverse_range_zone_assignments_dict)
+    finally:
+      self.db_instance.EndTransaction()
+    for cidr_dict in joined_list:
+      cidrs.add(cidr_dict['reverse_range_zone_assignments_cidr_block'])
+    return cidrs
+
   def GetAssociatedCNAMEs(self, hostname, view_name, zone_name,
                           recursive=False):
     """Lists cname's by assignment hostname.
@@ -478,10 +555,14 @@ class CoreHelpers(object):
         record_item[u'host'] = '%s.%s' % (
             record_entry[u'record_target'],
             record_entry[u'zone_origin'][:-1])
+        record_item[u'zone_origin'] = record_entry['zone_origin']
+        record_item[u'record_target'] = record_entry['record_target']
         record_item[u'record_args_dict'] = {
             'assignment_ip': record_entry['argument_value']}
         parsed_record_dict[record_view][record_ip].append( record_item )
       elif( record_entry[u'record_type'] == u'ptr' ):
+        record_item[u'zone_origin'] = record_entry['zone_origin']
+        record_item[u'record_target'] = record_entry['record_target']
         record_item[u'forward'] = False
         record_item[u'host'] = record_entry[u'argument_value'][:-1]
         assignment_ip = helpers_lib.UnReverseIP(
