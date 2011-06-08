@@ -1,5 +1,3 @@
-Current Release
-
 2011-06-08 release-0.15
 - Added unicode support to tree_exporter using new punycode lib
 

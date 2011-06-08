@@ -36,7 +36,7 @@ Most of code is from an example at: http://code.activestate.com/recipes/496786/
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.15'
 
 
 import BaseHTTPServer
