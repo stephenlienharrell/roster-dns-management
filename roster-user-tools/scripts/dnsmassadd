@@ -102,7 +102,7 @@ def main(args):
         server_name=options.server, args=[ip_address])['core_return']
     if( reverse_zone_name == None ):
       cli_common_lib_instance.DnsError(
-          'No reverse zone found for ip "%s"' % ip_address)
+          'No reverse zone found for ip "%s"' % ip_address, 1)
     zone_cidr = roster_client_lib.RunFunction(
         'ListReverseRangeZoneAssignments',
         options.username, credfile=options.credfile,
