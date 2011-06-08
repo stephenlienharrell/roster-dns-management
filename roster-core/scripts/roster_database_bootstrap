@@ -82,7 +82,7 @@ def main(args):
                     default='nobody')
   parser.add_option('--lock-file', action='store', dest='lock_file',
                     help='Location of roster server lock file.',
-                    default='/var/lock/rosterd')
+                    default='/var/lock/roster')
   parser.add_option('--infinite-renew-time', action='store',
                     dest='infinite_renew_time', metavar='<time>',
                     help='Time in seconds to renew infinite credentials.',
