@@ -275,7 +275,7 @@ class CliRecordLib:
       list or string depending on record type
     """
     search_target = options.target
-    if( record_type == u'ptr' ):
+    if( record_type == u'ptr' and search_target is not None ):
         search_target, options.zone_name = roster_client_lib.RunFunction(
             'GetPTRTarget', options.username, credfile=options.credfile,
             server_name=options.server,
