@@ -4,6 +4,7 @@ Current Release
 - Set common default for credfile across user tools
 - New dnsmassadd tool that uses a hosts type file for input and clobers whatever
 is there
+- Disallowed user to make a zone assigned to just the any view
 
 2010-07-21 release-0.14
 - Updated all tools to use new flags class

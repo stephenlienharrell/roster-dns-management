@@ -9,6 +9,8 @@ Current Release
 - fixed some defaulting/superfulous questions in roster_database_bootstrap
 - consolidated error classes in core
 - moved server port to config.py
+- Fixed a bug in UpdateRecord causing Multiple Record issues
+- Added 2 functions to core_helpers, GetViewsByUser and GetCIDRBlocksByView
 
 2010-07-21 release-0.14
 - Added exporter section to bootstrapper
