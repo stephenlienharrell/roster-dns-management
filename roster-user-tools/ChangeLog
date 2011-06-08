@@ -1,4 +1,6 @@
 Current Release
+
+2011-06-08 release-0.15
 - Added ability to pull config file from environ.
 - Added find first ip functionality in dnsaddhost
 - Set common default for credfile across user tools

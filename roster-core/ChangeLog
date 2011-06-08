@@ -1,4 +1,6 @@
 Current Release
+
+2011-06-08 release-0.15
 - Added create roster database function
 - Fixed database to use unicode
 - Added debugging to database module
