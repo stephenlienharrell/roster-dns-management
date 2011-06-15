@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -54,6 +54,9 @@ from roster_core import core
 from roster_core import errors
 from roster_core import helpers_lib
 from roster_config_manager import zone_exporter_lib
+
+
+core.CheckCoreVersionMatches(__version__)
 
 
 class Error(errors.CoreError):
@@ -96,7 +99,7 @@ class BindTreeExport(object):
 
     Inputs:
       namedconf: string of namedconf header
-    
+
     Outputs:
       string: string of namedconf header
     """
@@ -138,7 +141,7 @@ class BindTreeExport(object):
           if( line[char] == 'o' ):
             if( line[char:char + len('options')] == 'options' ):
               if( '{' not in line ):
-                temp = char 
+                temp = char
                 while( '{' not in namedconflines[temp] ):
                   temp += 1
                 else:
@@ -208,7 +211,7 @@ class BindTreeExport(object):
 
   def ExportAllBindTrees(self, force=False):
     """Exports bind trees to files
-    
+
     Inputs:
       force: boolean of if the export should continue if no changes are found
              in the database
@@ -278,7 +281,7 @@ class BindTreeExport(object):
             self.root_config_dir.rstrip('/'), dns_server_set)
         if( not os.path.exists(named_directory) ):
           os.makedirs(named_directory)
-        dns_server_set_directory = ('%s/%s_servers/named' % 
+        dns_server_set_directory = ('%s/%s_servers/named' %
                                    (self.root_config_dir.rstrip('/'),
                                     dns_server_set))
         if( not os.path.exists(dns_server_set_directory) ):
@@ -345,8 +348,8 @@ class BindTreeExport(object):
       audit_log_replay_dump_file.writelines(audit_log_replay_dump)
     finally:
       audit_log_replay_dump_file.close()
-                                          
-    full_dump_file = bz2.BZ2File('%s/full_database_dump-%s.bz2' % 
+
+    full_dump_file = bz2.BZ2File('%s/full_database_dump-%s.bz2' %
                                  (self.backup_dir, log_id), 'w')
     try:
       for full_dump_index, full_dump_entry in enumerate(full_database_dump):
@@ -359,7 +362,7 @@ class BindTreeExport(object):
       shutil.rmtree(self.root_config_dir)
 
   def CookRawDump(self, raw_dump):
-    """This takes raw data from the database and turns it into a 
+    """This takes raw data from the database and turns it into a
     mysqldump-like output.
 
     Inputs:
@@ -399,7 +402,7 @@ class BindTreeExport(object):
     audit_log_replay_dump.extend(header)
 
     for table_name, table_data in raw_dump.iteritems():
-      table_lines = [] 
+      table_lines = []
       table_lines.append('DROP TABLE IF EXISTS `%s`;\n' % table_name)
       table_lines.append(table_data['schema'])
       table_lines[-1] = '%s;' % table_lines[-1]
@@ -534,7 +537,7 @@ class BindTreeExport(object):
 
     Outputs:
       tuple of two dictionaries:
-        dictionary of raw data keyed by data name with values of dicts 
+        dictionary of raw data keyed by data name with values of dicts
             containing values of that type's attributes
         dictionary of the raw dump keyed by data name with values of
             dicts containing the db dump keyed by row, column, and schema
@@ -792,4 +795,3 @@ class BindTreeExport(object):
                           'zone_view_assignments_zone_type']
 
     return cooked_data
-

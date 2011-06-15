@@ -68,7 +68,8 @@ class CliCommonLib:
           self.options.server = self.config_file.get('user_tools', 'server')
       if( hasattr(self.options, 'credfile') ):
         if( not options.credfile ):
-          self.options.credfile = self.config_file.get('user_tools', 'cred_file')
+          self.options.credfile = self.config_file.get('user_tools',
+                                                       'cred_file')
     else:
       config_file = ''
       if( 'ROSTER_USER_CONFIG' in os.environ ):
@@ -95,6 +96,8 @@ class CliCommonLib:
         if( hasattr(self.options, 'credfile') ):
           if( not self.options.credfile ):
             self.options.credfile = os.path.expanduser(DEFAULT_CRED_FILE)
+
+    roster_client_lib.CheckServerVersionMatch(self.options.server)
     roster_client_lib.CheckCredentials(
         self.options.username, self.options.credfile, self.options.server,
         password=self.options.password)
@@ -148,7 +151,7 @@ def SortRecordsDict(records_dictionary, view_name):
     for record in records_dictionary[view_name][ip_address]:
       record['view'] = view_name
       if( ip_address not in sorted_records ):
-        sorted_records[ip_address] = {'forward': [], 'reverse': []} 
+        sorted_records[ip_address] = {'forward': [], 'reverse': []}
       if( record['forward'] ):
         sorted_records[ip_address]['forward'].append(record)
       else:

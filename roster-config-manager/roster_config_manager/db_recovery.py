@@ -43,6 +43,10 @@ import os
 import bz2
 import cPickle
 
+
+roster_core.core.CheckCoreVersionMatches(__version__)
+
+
 class Recover(object):
   """Roster Recovery
 
@@ -51,7 +55,7 @@ class Recover(object):
   """
   def __init__(self, username, config_instance):
     """Sets self.db_instance
-    
+
     Inputs:
       config_instance: instantiated config class object
     """
@@ -93,7 +97,7 @@ class Recover(object):
     audit_dict = self.db_instance.GetEmptyRowDict('audit_log')
     audit_dict['audit_log_id'] = audit_log_id
     self.db_instance.StartTransaction()
-    try: 
+    try:
       audit_log = self.db_instance.ListRow('audit_log', audit_dict)
     finally:
       self.db_instance.EndTransaction()

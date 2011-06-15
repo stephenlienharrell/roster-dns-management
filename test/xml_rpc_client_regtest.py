@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -68,7 +68,7 @@ class StdOutStream():
   """Std out redefined"""
   def __init__(self):
     """Appends stdout to stdout array
-    
+
        Inputs:
          text: String of stdout
     """
@@ -76,7 +76,7 @@ class StdOutStream():
 
   def write(self, text):
     """Appends stdout to stdout array
-    
+
     Inputs:
       text: String of stdout
     """
@@ -245,6 +245,28 @@ class TestXMLServerClient(unittest.TestCase):
             kwargs={'key_by_group': True}, server_name=self.server_name,
             password=PASSWORD)['core_return'], {'bio': ['sharrell', 'shuey'],
                                'cs': ['sharrell', 'shuey']})
+
+  def testServerVersionDiscrepancy(self):
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    roster_client_lib.CheckServerVersionMatch(self.server_name)
+    self.assertEqual(sys.stdout.flush(), '')
+    client_version_save = roster_client_lib.__version__
+    roster_client_lib.__version__ = 7357
+    self.assertRaises(SystemExit, roster_client_lib.CheckServerVersionMatch,
+                      self.server_name)
+    self.assertEqual(sys.stdout.flush(), 'user_tools version 7357 mismatch '
+                                         'with server version #TRUNK#\n')
+    roster_client_lib.__version__ = client_version_save
+
+    server_version_save = roster_server.server.__version__
+    roster_server.server.__version__ = 7357
+    self.assertRaises(SystemExit, roster_client_lib.CheckServerVersionMatch,
+                      self.server_name)
+    self.assertEqual(sys.stdout.flush(), 'user_tools version #TRUNK# mismatch '
+                                         'with server version 7357\n')
+    roster_server.server.__version__ = server_version_save
+    sys.stdout = oldstdout
 
   def testMultipleThreadedConnections(self):
     self.daemon_instance.core_die_time = 7200

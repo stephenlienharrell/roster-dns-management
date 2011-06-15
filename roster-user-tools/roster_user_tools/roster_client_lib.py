@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -198,7 +198,7 @@ def CheckCredentials(username, credfile, server, password=None):
   if( not credfile ):
     self.DnsError('No credential file specified.', 1)
   got_credential = None
-  count = 0 
+  count = 0
   while( count < 3 ):
     valid = IsAuthenticated(username, credfile, server_name=server)
     if( valid ):
@@ -215,7 +215,7 @@ def CheckCredentials(username, credfile, server, password=None):
       got_credential = GetCredentials(username, password, credfile, server)
     except InvalidCredentials:
       if( password is None ):
-        count = count + 1 
+        count = count + 1
       else:
         print 'ERROR: Incorrect username/password.'
         sys.exit(1)
@@ -224,3 +224,16 @@ def CheckCredentials(username, credfile, server, password=None):
     sys.exit(1)
 
   return got_credential
+
+def CheckServerVersionMatch(server_name):
+  """Does a version check between this client and server
+
+  Inputs:
+    server_name: string name of server to check
+  """
+  server = xmlrpclib.ServerProxy(server_name, allow_none=True)
+  server_version =  server.GetVersion()
+  if( server_version != __version__ ):
+    print ('user_tools version %s mismatch with server version %s' % (
+               __version__, server_version))
+    sys.exit(1)

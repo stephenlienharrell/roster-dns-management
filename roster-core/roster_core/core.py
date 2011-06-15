@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -2348,7 +2348,7 @@ class Core(object):
     search_records_dict['record_ttl'] = search_ttl
     search_args_list = []
 
-    self.db_instance.ValidateRecordArgsDict(search_record_type, 
+    self.db_instance.ValidateRecordArgsDict(search_record_type,
                                             search_record_args_dict,
                                             none_ok=True)
 
@@ -2371,7 +2371,7 @@ class Core(object):
     update_args_list = []
 
     if( update_record_args_dict ):
-      self.db_instance.ValidateRecordArgsDict(search_record_type, 
+      self.db_instance.ValidateRecordArgsDict(search_record_type,
                                               update_record_args_dict,
                                               none_ok=True)
 
@@ -2431,7 +2431,7 @@ class Core(object):
             'records', merged_records_dict,
             'record_arguments_records_assignments',
             record_args_assignment_dict)
-        
+
         current_records = (
             helpers_lib.GetRecordsFromRecordRowsAndArgumentRows(
                 raw_records, merged_record_args_dict))
@@ -2449,7 +2449,7 @@ class Core(object):
         if( update_target is not None and update_target != search_target and
             (search_record_type == 'a' or search_record_type == 'cname') ):
           current_records = self.db_instance.ListRow('records',
-                                                     update_records_dict)      
+                                                     update_records_dict)
         args_search_list = []
         record_ids = []
         final_id = []
@@ -2828,7 +2828,7 @@ class Core(object):
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-    
+
     reserved_word_dict = {'reserved_word': reserved_word}
     success = False
     try:
@@ -3131,7 +3131,7 @@ class Core(object):
       int: number of rows modified
     """
     search_credential_dict = self.db_instance.GetEmptyRowDict('credentials')
-    
+
     if ( credential is not None ):
       search_credential_dict['credential'] = credential
     else:
@@ -3210,7 +3210,7 @@ class Core(object):
         credential = unicode(uuid.uuid4())
         if( not self._ListCredentials(credential) ):
           break
-      # This will preserve the actual credential arg which is None in the 
+      # This will preserve the actual credential arg which is None in the
       # audit args, while letting the replay args keep the actual value
       current_args['replay_args'][1] = credential
 
@@ -3241,9 +3241,9 @@ class Core(object):
 
   def RemoveCredential(self, credential=None, user_name=None):
     """Removes a credential
-    
+
     This function will call _RemoveCredential after Authorize and then log it.
-  
+
     Inputs:
       credential: string of credential to remove
       user_name: string of user name who has a credential to remove
@@ -3277,7 +3277,7 @@ class Core(object):
              'audit_log_user_name': u'username'}
     """
     self.user_instance.Authorize('ListAuditLog')
-    if( (begin_timestamp or end_timestamp) and not 
+    if( (begin_timestamp or end_timestamp) and not
         (begin_timestamp or end_timestamp) ):
       raise errors.CoreError('Missing begin_timestamp or end_timestamp.')
     audit_dict = {'audit_log_id': None, 'audit_log_user_name': user_name,
@@ -3325,5 +3325,15 @@ class Core(object):
       return self.db_instance.CheckMaintenanceFlag()
     finally:
       self.db_instance.EndTransaction()
+
+def CheckCoreVersionMatches(version):
+  """Does a version check between core and calling module
+
+  Inputs:
+    version: version to check against core's version
+  """
+  if( version != __version__ ):
+    raise errors.VersionDiscrepancyError(
+        'version %s mismatch with core version %s' % (version, __version__))
 
 # vi: set ai aw sw=2:

@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -45,13 +45,16 @@ import IPy
 import roster_core
 
 
+roster_core.core.CheckCoreVersionMatches(__version__)
+
+
 class Error(Exception):
   pass
 
 
 class ZoneImport(object):
   """This class will only import one zone per init. It will load the zone
-  from a file using dns.zone and then use the core API to put it in 
+  from a file using dns.zone and then use the core API to put it in
   the database.
   """
   def __init__(self, zone_file_name, config_file_name, user_name, zone_view,
@@ -74,7 +77,7 @@ class ZoneImport(object):
 
   def ReverseZoneToCIDRBlock(self):
     """Creates CIDR block from reverse zone name.
-    
+
     Outputs:
       string of cidr block
     """
@@ -102,11 +105,11 @@ class ZoneImport(object):
         try:
           int(ip_part, 16)
         except ValueError:
-          raise Error('Invalid hexidecimal number in ipv6 origin: %s' % 
+          raise Error('Invalid hexidecimal number in ipv6 origin: %s' %
                       self.origin)
       # fill out the rest of the ipv6 address
       ip_parts.extend(['0' for x in range(32-ip_quartets)])
-       
+
       for x in range(1,8):
         # Put colons every 4 quartets
         ip_parts.insert((x*4)+(x-1), ':')
@@ -136,7 +139,7 @@ class ZoneImport(object):
 
   def MakeRecordsFromZone(self):
     """Makes records in the database from dns.zone class.
-    
+
     Outputs:
       int: Amount of records added to db.
     """
@@ -160,7 +163,7 @@ class ZoneImport(object):
 
           elif( record_object.rdtype == dns.rdatatype.AAAA ):
             record_type = u'aaaa'
-            record_args_dict = {u'assignment_ip': 
+            record_args_dict = {u'assignment_ip':
                                     unicode(IPy.IP(str(
                                         record_object)).strFullsize())}
 
@@ -196,7 +199,7 @@ class ZoneImport(object):
                                 u'weight': record_object.weight,
                                 u'port': record_object.port,
                                 u'assignment_host': assignment_host}
-                                       
+
           elif( record_object.rdtype == dns.rdatatype.SOA ):
             record_type = u'soa'
             name_server = self.FixHostname(unicode(record_object.mname))

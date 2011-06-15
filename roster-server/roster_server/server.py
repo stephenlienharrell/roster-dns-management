@@ -54,6 +54,9 @@ from ssl_xml_rpc_lib import SecureXMLRPCServer
 from ssl_xml_rpc_lib import SecureXMLRpcRequestHandler
 
 
+roster_core.core.CheckCoreVersionMatches(__version__)
+
+
 class ArgumentError(roster_core.CoreError):
   pass
 
@@ -343,6 +346,9 @@ class Server(object):
       return True
     return False
 
+  def GetVersion(self):
+    return __version__
+
   def Serve(self, server_name=None, port=None):
     """Main server function
 
@@ -364,6 +370,7 @@ class Server(object):
     self.server.register_function(self.CoreRun)
     self.server.register_function(self.GetCredentials)
     self.server.register_function(self.IsAuthenticated)
+    self.server.register_function(self.GetVersion)
     try:
       while 1:
         self.server.handle_request()
