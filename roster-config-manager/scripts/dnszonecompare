@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2011, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+# 
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
+ZONE COMPARE TOOL
+zonecmp.py is a tool to compare two similar zones on two nameservers.
+
+Usage: ./zonecmp.py <domain> <nameserver_1>[:port] <nameserver_2>[:port]
+
+Example ./zonecmp.py example.com ns.example.com:5333 ns2.example.com
+        will compare the example.com zone on both nameservers
+"""
+
+__copyright__ = 'Copyright (C) 2011, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+import sys
+import socket
+
+import dns.query
+import dns.zone
+from dns.exception import DNSException
+
+def ZoneAXFR(domain, ns, port):
+  print "\n----------------------------------------"
+  print "Trying a zone AXFR for %s from NS %s:%s" % (domain, ns, port)
+  print "----------------------------------------"
+  try:
+    zone = dns.zone.from_xfr(dns.query.xfr(where=ns, zone=domain, port=port))
+  except DNSException, e:
+    print "Zone AFXR failed."
+    sys.exit(1)
+  except socket.error, e:
+    print "Connection refused. Zone AFXR failed."
+    sys.exit(1)
+
+  for name, node in zone.nodes.items():
+    rdatasets = node.rdatasets
+    for rdataset in rdatasets:
+      print name, rdataset
+  return zone
+
+def main(args):
+  if (len(sys.argv) != 4):
+    print("To compare two zone files:")
+    print("Usage:%s <domain> <nameserver_1>[:port] <nameserver_2>[:port]" % (sys.argv[0]))
+    sys.exit(1)
+
+  domain = sys.argv[1]
+
+  if( sys.argv[2].find(':') != -1 ):
+    nameserver_1 = sys.argv[2].split(':')
+    nameserver_1[1] = int(nameserver_1[1])
+  else:
+    nameserver_1 = [sys.argv[2], 53]
+
+  if( sys.argv[3].find(':') != -1 ):
+    nameserver_2 = sys.argv[3].split(':')
+    nameserver_2[1] = int(nameserver_2[1])
+  else:
+    nameserver_2 = [sys.argv[3], 53]
+
+  zone1 = ZoneAXFR(domain, nameserver_1[0], nameserver_1[1])
+  zone2 = ZoneAXFR(domain, nameserver_2[0], nameserver_2[1])
+
+  ## COMPARE ZONES
+  zone1_set = set()
+  for name, node in zone1.nodes.items():
+    zone1_set.add(node.to_text(name))
+
+  zone2_set = set()
+  for name, node in zone2.nodes.items():
+    zone2_set.add(node.to_text(name))
+
+  change_set1 = zone1_set.difference(zone2_set)
+  change_set2 = zone2_set.difference(zone1_set)
+
+  ##PRINT DIFFERENCES
+  print "\n----------------------------------------"
+  print 'Records only in %s:%s' % (nameserver_1[0], nameserver_1[1])
+  print "----------------------------------------"
+  for item in change_set1:
+    print '%s' % item
+
+  print "\n----------------------------------------"
+  print 'Records only in %s:%s' % (nameserver_2[0], nameserver_2[1])
+  print "----------------------------------------"
+  for item in change_set2:
+    print '%s' % item
+
+if __name__ == "__main__":
+  main(sys.argv)
