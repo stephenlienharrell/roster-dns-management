@@ -56,6 +56,8 @@ CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TEMP_LOG = 'temp_log'
+SYSLOG = '/var/log/messages'
+##SYSLOG '/var/log/syslog'
 
 class TestAuditLog(unittest.TestCase):
 
@@ -89,7 +91,7 @@ class TestAuditLog(unittest.TestCase):
     current_time = time.time()
     unittest_string = 'unittest %s' % current_time
     self.audit_log_instance._LogToSyslog(unittest_string)
-    lines = open('/var/log/messages', 'r').readlines()
+    lines = open(SYSLOG, 'r').readlines()
     for line in lines:
       if( line.endswith('dnsManagement: %s' % unittest_string) != -1):
         break
@@ -100,7 +102,7 @@ class TestAuditLog(unittest.TestCase):
     self.audit_log_instance._LogToSyslog(unittest_string)
     unittest_string = unicodedata.normalize('NFKD', unittest_string).encode(
         'ASCII', 'replace')
-    lines = open('/var/log/messages', 'r').readlines()
+    lines = open(SYSLOG, 'r').readlines()
     for line in lines:
       if( line.endswith('dnsManagement: %s' % unittest_string) != -1):
         break
