@@ -195,7 +195,12 @@ class TestDnslszones(unittest.TestCase):
     command.close()
     command = os.popen('python %s forward -u %s -p %s --config-file %s -s %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
-    self.assertEqual(command.read(), 'CLIENT ERROR: No zones found.\n')
+    self.assertEqual(command.read(), 'No forward zone found.\n')
+    command.close()
+
+    command = os.popen('python %s reverse -u %s -p %s --config-file %s -s %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
+    self.assertEqual(command.read(), 'No reverse zone found.\n')
     command.close()
 
 if( __name__ == '__main__' ):

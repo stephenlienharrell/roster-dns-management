@@ -116,7 +116,8 @@ def main(args):
 
   if( command == 'reverse' ):
     if( not reverse_range_zone_assignments ):
-      cli_common_lib.DnsError('No zones found.', 1)
+      print("No reverse zone found.")
+      return
     for zone in reverse_range_zone_assignments:
       for view in zones[zone]:
         if( zones[zone][view]['zone_options'] == '' ):
@@ -129,7 +130,8 @@ def main(args):
 
   elif( command == 'forward' ):
     if( not zones ):
-      cli_common_lib.DnsError('No zones found.', 1)
+      print("No forward zone found.")
+      return
     for zone in zones:
       for view in zones[zone]:
         if( zone in reverse_range_zone_assignments ):
