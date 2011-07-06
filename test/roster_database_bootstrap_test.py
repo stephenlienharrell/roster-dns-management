@@ -244,13 +244,68 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
     post_test_config_file_string = open(CONFIG_FILE, 'r').read()
     self.assertEqual(pre_test_config_file_string, post_test_config_file_string)
 
+  def testDBBootstrapMissingConfigFileInfo(self):
+    missing_info_config = './test_data/missing_info_test.conf'
+    pre_test_config_file_string = open(CONFIG_FILE, 'r').read()
+    config_lines = pre_test_config_file_string.split('\n')
+    rewrite_config_file = open(missing_info_config, 'w')
+    for line in config_lines:
+      if( not 'host = ' in line ):
+        rewrite_config_file.write('%s\n' % line)
+    rewrite_config_file.close()
+    command = subprocess.Popen('python %s -c %s -U %s '
+        '-i %s --backup-dir %s --root-config-dir %s --run-as %d --force' % (
+            EXEC, missing_info_config, u'new_user', u'./test_data/rosterd',
+            u'./test_data', u'./test_data', os.getuid()), shell=True,
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    stdout_value = command.communicate('Y')
+    self.assertEqual(stdout_value, ('Config file '
+        './test_data/missing_info_test.conf exists, use it? (Y/n): Variable '
+        '\"host\" is missing in config file: '
+        '\"./test_data/missing_info_test.conf\", in the \"server\" section.\n',
+        None))
+    os.remove(missing_info_config)
+
+    rewrite_config_file = open(missing_info_config, 'w')
+    for line in config_lines:
+      if( not 'database = ' in line ):
+        rewrite_config_file.write('%s\n' % line)
+    rewrite_config_file.close()
+    command = subprocess.Popen('python %s -c %s -U %s '
+        '-i %s --backup-dir %s --root-config-dir %s --run-as %d --force' % (
+            EXEC, missing_info_config, u'new_user', u'./test_data/rosterd',
+            u'./test_data', u'./test_data', os.getuid()), shell=True,
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    stdout_value = command.communicate('Y')
+    self.assertEqual(stdout_value, ('Config file '
+        './test_data/missing_info_test.conf exists, use it? (Y/n): Variable '
+        '\"database\" is missing in config file: '
+        '\"./test_data/missing_info_test.conf\", in the \"database\" section.\n',
+        None))
+    os.remove(missing_info_config)
+
+  def testDBBootstrapInvalidUseConfigFileResponse(self):
+    pre_test_config_file_string = open(CONFIG_FILE, 'r').read()
+
+    command = subprocess.Popen('python %s -c %s/roster.conf -U %s -i %s '
+        '--backup-dir %s --root-config-dir %s --run-as %d --force' % (EXEC,
+            u'test_data', u'new_user', u'./test_data/rosterd', u'./test_data',
+            u'./test_data', os.getuid()), shell=True, stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE)
+    stdout_value = command.communicate('si\nyes')
+    self.assertEqual(stdout_value, ('Config file test_data/roster.conf exists, '
+        'use it? (Y/n): Please enter response as either \"yes\" or \"no\"\n'
+        'Config file test_data/roster.conf exists, use it? (Y/n): ', None))
+
+    post_test_config_file_string = open(CONFIG_FILE, 'r').read()
+    self.assertEqual(pre_test_config_file_string, post_test_config_file_string)
+
   def testDBBootstrapDefault(self):
     command = subprocess.Popen(
         self.base_command,
         shell=True,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE)
-    ## Check base_communicate in setUp if module selected is wrong
     command.communicate(self.base_communicate)
 
     if( not os.path.exists('%s/config.conf' % self.cfg_exporter['backup_dir']) ):

@@ -185,25 +185,37 @@ def main(args):
 
   # START CONFIG
   write_config = False
-  config_parser = ConfigParser.SafeConfigParser()
+  config_instance = None
   if( os.path.exists(options.config_file) ):
-    response = raw_input('Config file %s exists, use it? (Y/n): ' %
-                         options.config_file)
-    if( response.lower() in ['n', 'no'] ):
-      write_config = True
+    valid_response_given = False
+    while not valid_response_given:
+      response = raw_input('Config file %s exists, use it? (Y/n): ' %
+                           options.config_file)
+      if( response.lower() in ['n', 'no'] ):
+        valid_response_given = True
+        write_config = True
+      elif( response.lower() in ['y', 'yes'] ):
+        valid_response_given = True
+        try:
+          config_instance = roster_core.Config(options.config_file)
+        except roster_core.errors.ConfigError as error_info:
+          print error_info
+          sys.exit(1)
+      else:
+        print 'Please enter response as either \"yes\" or \"no\"'
   else:
     write_config = True
 
   if( not write_config ):
-    config_parser.readfp(open(options.config_file))
+    config_file_instance = config_instance.config_file
     if( args_dict['-u/--user-name'] is None ):
-      args_dict['-u/--user-name'] = config_parser.get('database', 'login')
+      args_dict['-u/--user-name'] = config_file_instance['database']['login']
     if( args_dict['-d/--database'] is None ):
-      args_dict['-d/--database'] = config_parser.get('database', 'database')
+      args_dict['-d/--database'] = config_file_instance['database']['database']
     if( args_dict['-n/--hostname'] is None ):
-      args_dict['-n/--hostname'] = config_parser.get('server', 'host')
+      args_dict['-n/--hostname'] = config_file_instance['server']['host']
     if( not options.password ):
-      options.password = config_parser.get('database', 'passwd')
+      options.password = config_file_instance['database']['passwd']
 
   error = False
   for arg in args_dict:
@@ -227,6 +239,7 @@ def main(args):
       module_list.append(module)
 
   if( write_config ):
+    config_parser = ConfigParser.SafeConfigParser()
     for module in module_list:
       print "%s. %s" % (module_list.index(module) + 1, module)
     module = raw_input('Select an authentication module (1 - %s) '
