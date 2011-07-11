@@ -1566,14 +1566,17 @@ class Core(object):
       try:
         zone_assignments_by_name = self.db_instance.ListRow(
             'zone_view_assignments', zone_view_assignments_dict)
-
         if( view_name is None or len(zone_assignments_by_name) <= 1 ):
           # Because of cascading deletes this should remove anything in the
           # zone_view_assignments table as well
           row_count += self.db_instance.RemoveRow('zones', zone_dict)
         else:
-          zone_view_assignments_dict[
-              'zone_view_assignments_view_dependency'] = '%s_dep' % view_name
+          if( view_name == 'any' ):
+            zone_view_assignments_dict[
+                'zone_view_assignments_view_dependency'] = view_name
+          else:
+            zone_view_assignments_dict[
+                'zone_view_assignments_view_dependency'] = '%s_dep' % view_name
           # Because zone_name/zone_view together are uniquely constrained in
           # this table no need to check if there are more than one.
           found_zone_assignment = self.db_instance.ListRow(

@@ -131,7 +131,7 @@ class Testdnsrmzone(unittest.TestCase):
     self.core_instance.MakeView(u'test_view2')
     self.core_instance.MakeView(u'test_view3')
     self.core_instance.MakeZone(u'test_zone', u'master', u'origin.',
-                                view_name=u'test_view', make_any=False)
+                                view_name=u'test_view', make_any=True)
     self.core_instance.MakeZone(u'test_zone', u'master', u'origin.',
                                 view_name=u'test_view2', make_any=False)
     self.core_instance.MakeZone(u'test_zone', u'master', u'origin.',
@@ -148,12 +148,34 @@ class Testdnsrmzone(unittest.TestCase):
         'REMOVED ZONE: zone_name: test_zone view_name: test_view\n')
     output.close()
     self.assertEqual(self.core_instance.ListZones(),
-         {u'test_zone':
-             {u'test_view2': {'zone_type': u'master', 'zone_options': u'',
-                              'zone_origin': u'origin.'},
-              u'test_view3': {'zone_type': u'master', 'zone_options': u'',
-                              'zone_origin': u'origin.'}}})
+        {u'test_zone':
+          {u'test_view2':
+            {'zone_type': u'master', 'zone_options': u'',
+                'zone_origin': u'origin.'},
+           u'any':
+            {'zone_type': u'master', 'zone_options': u'',
+            'zone_origin': u'origin.'},
+           u'test_view3':
+            {'zone_type': u'master', 'zone_options': u'',
+            'zone_origin': u'origin.'}}})
 
+    # Delete any view of zone
+    output = os.popen('python %s -z test_zone -v any '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'REMOVED ZONE: zone_name: test_zone view_name: any\n')
+    output.close()
+    self.assertEqual(self.core_instance.ListZones(), 
+        {u'test_zone':
+          {u'test_view2':
+            {'zone_type': u'master', 'zone_options': u'',
+                'zone_origin': u'origin.'},
+          u'test_view3':
+            {'zone_type': u'master', 'zone_options': u'',
+            'zone_origin': u'origin.'}}})
+    
     # Delete entire zone
     output = os.popen('python %s -z test_zone --force '
                       '-s %s -u %s -p %s --config-file %s' % (
