@@ -59,7 +59,7 @@ class User(object):
       db_instance:	dbAccess instance to use for user verification
 
     Raises:
-      UserError on non-existent user
+      InvalidInputError: No such user.
     """
     self.user_name = user_name
     self.db_instance = db_instance
@@ -70,7 +70,7 @@ class User(object):
     # pull a pile of authentication info from the database here
     self.user_perms = self.db_instance.GetUserAuthorizationInfo(user_name)
     if( not self.user_perms.has_key('user_name') ):
-      raise errors.UserError("No such user: %s" % user_name)
+      raise errors.InvalidInputError("No such user: %s" % user_name)
 
     # More DB crud
     self.groups = self.user_perms['groups']
@@ -95,8 +95,10 @@ class User(object):
                            transaction in the db_access class
 
     Raises:
-      UserError if no target is provided (and one is required)
-      AuthError on authorization failure
+      MaintenanceError: Roster is currently under maintenance.
+      MissingDataTypeError: No record data provided for access method.
+      MissingDataTypeError: Incomplete record data provided for access method.
+      AuthorizationError: Authorization failure.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     access_level = self.user_perms['user_access_level']
@@ -133,7 +135,7 @@ class User(object):
         # Secondary check - ensure the target is in a range delegated to
         # the user
         if( record_data is None ):
-          raise errors.UserError('No record data provided for access method '
+          raise errors.MissingDataTypeError('No record data provided for access method '
                                  '%s' % method)
         if( not record_data.has_key('zone_name') or
             record_data['zone_name'] is None or 
@@ -141,7 +143,7 @@ class User(object):
             record_data['view_name'] is None or
             not record_data.has_key('target') or 
             record_data['target'] is None ):
-          raise errors.UserError('Incomplete record data provided for access '
+          raise errors.MissingDataTypeError('Incomplete record data provided for access '
                                  'method %s' % method)
 
         for zone in self.forward_zones:
@@ -165,20 +167,20 @@ class User(object):
           # fail to find a matching IP range with appropriate perms
           self.log_instance.LogAction(self.user_name, function_name,
                                       current_args, False)
-          raise errors.AuthError(auth_fail_string)
+          raise errors.AuthorizationError(auth_fail_string)
 
         except ValueError:
           # fail to find a matching zone with appropriate perms
           self.log_instance.LogAction(self.user_name, function_name,
                                       current_args, False)
-          raise errors.AuthError(auth_fail_string)
+          raise errors.AuthorizationError(auth_fail_string)
       else:
         return
     else:
       # fail to find a matching method
       self.log_instance.LogAction(self.user_name, function_name,
                                   current_args, False)
-      raise errors.AuthError(auth_fail_string)
+      raise errors.AuthorizationError(auth_fail_string)
 
   def GetUserName(self):
     """Return user name for current session.

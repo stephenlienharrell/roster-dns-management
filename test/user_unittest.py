@@ -135,36 +135,36 @@ class TestUser(unittest.TestCase):
     # test missing record_data on certain methods, and make sure it passes 
     # on the others
     user_instance.Authorize(u'MakeRecord', good_record_data)
-    self.assertRaises(errors.UserError, user_instance.Authorize, u'MakeRecord')
+    self.assertRaises(errors.MissingDataTypeError, user_instance.Authorize, u'MakeRecord')
 
     # test record_data dict to make sure all the keys and data are there
     user_instance.Authorize(u'MakeRecord', good_record_data)
     good_record_data['target'] = None
-    self.assertRaises(errors.UserError, user_instance.Authorize, u'MakeRecord',
+    self.assertRaises(errors.MissingDataTypeError, user_instance.Authorize, u'MakeRecord',
                       good_record_data)
     good_record_data['target'] = u'good'
     user_instance.Authorize(u'MakeRecord', good_record_data)
     del good_record_data['zone_name']
-    self.assertRaises(errors.UserError, user_instance.Authorize, u'MakeRecord',
+    self.assertRaises(errors.MissingDataTypeError, user_instance.Authorize, u'MakeRecord',
                       good_record_data)
     good_record_data['zone_name'] = u'cs.university.edu'
 
     # test no forward zone found
     user_instance.Authorize(u'MakeRecord', good_record_data)
-    self.assertRaises(errors.AuthError, user_instance.Authorize, u'MakeRecord',
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize, u'MakeRecord',
                       no_forward_record_data)
 
     # test no reverse range found
     user_instance.Authorize(u'MakeRecord', good_reverse_record_data)
-    self.assertRaises(errors.AuthError, user_instance.Authorize, u'MakeRecord',
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize, u'MakeRecord',
                       no_reverse_record_data)
     user_instance.Authorize(u'MakeRecord', good_10_reverse_record_data)
-    self.assertRaises(errors.AuthError, user_instance.Authorize, u'MakeRecord',
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize, u'MakeRecord',
                       no_10_reverse_record_data)
 
     # test no method found
     user_instance.Authorize(u'MakeRecord', good_reverse_record_data)
-    self.assertRaises(errors.AuthError, user_instance.Authorize, u'FakeRecord',
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize, u'FakeRecord',
                       good_reverse_record_data)
 
 

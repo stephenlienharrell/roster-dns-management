@@ -54,7 +54,10 @@ class Config(object):
       db_passwd: password used to login to the database
 
     Raises:
-      ConfigError:	If file is missing, or if file is malformed or bad args.
+      ConfigError: Could not read the file.
+      ConfigError: Variable is not used
+      ConfigError: Datatype is not supported
+      ConfigError: Variable is missing in config file section
     """
     cp = ConfigParser.SafeConfigParser()
     a = cp.read(file_name)

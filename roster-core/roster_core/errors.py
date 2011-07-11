@@ -36,52 +36,64 @@ __version__ = '#TRUNK#'
 
 
 class CoreError(Exception):
+  """Error class that all Roster errors are 
+  sub-classed from
+  """
   pass
 
-class AuthError(CoreError):
+class InternalError(CoreError):
+  """Error class that all internal/code errors
+  sub-class from.
+  """
   pass
 
-class ConfigError(CoreError):
+class UserError(CoreError):
+  """Error class that all User errors
+  sub-class from.
+  """
   pass
 
-class DbAccessError(CoreError):
+class AuthenticationError(UserError):
   pass
 
-class InvalidInputError(CoreError):
+class AuthorizationError(UserError):
   pass
 
-class InvalidInputError(DbAccessError):
+class ConfigError(UserError):
   pass
 
-class IPIndexError(CoreError):
+class InvalidInputError(UserError):
   pass
 
-class MaintenanceError(CoreError):
+class ReservedWordError(UserError):
   pass
 
-class MissingDataTypeError(DbAccessError):
+class IPIndexError(InternalError):
   pass
 
-class ReservedWordError(DbAccessError):
+class MaintenanceError(InternalError):
   pass
 
-class RecordError(CoreError):
+class UnexpectedDataError(InternalError):
   pass
 
-class RecordsBatchError(CoreError):
+class RecordError(InternalError):
+  pass
+
+class RecordsBatchError(InternalError):
+  pass
+
+class FunctionError(InternalError):
+  pass
+
+class VersionDiscrepancyError(InternalError):
+  pass
+
+class DbAccessError(InternalError):
   pass
 
 class TransactionError(DbAccessError):
   pass
 
-class UnexpectedDataError(DbAccessError):
+class MissingDataTypeError(DbAccessError):
   pass
-
-class UserError(CoreError):
-  pass
-
-class VersionDiscrepancyError(CoreError):
-  pass
-
-
-# vi: set ai aw sw=2

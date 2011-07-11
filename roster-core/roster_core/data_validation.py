@@ -58,6 +58,9 @@ class DataValidation(object):
     Inputs:
       u_string: unicode string
     
+    Raises:
+      ReservedWordError: Reserved word found, unable to complete request.
+    
     Outputs:
       bool: bool if string or not
     """
@@ -265,8 +268,9 @@ class DataValidation(object):
       all_none_ok: bool of allowance of None as every value in the dict
 
     Raises:
-      InvalidInputError: Missing key in dictionary
-      MissingDataType: No Function to check data type
+      UnexpectedDataError: Missing key in dictionary
+      UnexpectedDataError: Dictionary has extra key that is not used.
+      FunctionError: No Function to check data type
       UnexpectedDataError: Invalid data type
       UnexpectedDataError: Need to fill out at least one value in dict
     """
@@ -274,15 +278,15 @@ class DataValidation(object):
 
     for k in main_dict.iterkeys():
       if( k not in row_dict ):
-        raise errors.InvalidInputError('Missing key %s in dictionary' % k)
+        raise errors.UnexpectedDataError('Missing key %s in dictionary' % k)
 
     for k, v in row_dict.iteritems():
       if( k not in main_dict ):
-        raise errors.InvalidInputError('Dictionary has extra key that is not '
+        raise errors.UnexpectedDataError('Dictionary has extra key that is not '
                                        'used: %s' % k)
 
       if( not 'is%s' % main_dict[k] in dir(self) ):
-          raise errors.MissingDataTypeError('No function to check data '
+          raise errors.FunctionError('No function to check data '
                                             'type: %s' % main_dict[k])
 
       if( not getattr(self, 'is%s' % main_dict[k])(v) ):
@@ -297,6 +301,3 @@ class DataValidation(object):
           return
       raise errors.UnexpectedDataError('Need to fill out at least one value '
                                        'in dict')
-          
-
-# vi: set ai aw sw=2:

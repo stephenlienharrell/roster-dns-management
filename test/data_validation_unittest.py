@@ -133,7 +133,7 @@ class TestDataValidation(unittest.TestCase):
   def testValidateAclsDict(self):
     acl_ranges_dict = {'acl_range_allowed': None,
                        'acl_range_cidr_block': None}
-    self.assertRaises(errors.InvalidInputError,
+    self.assertRaises(errors.UnexpectedDataError,
                       self.data_validation_instance.ValidateRowDict,
                       'acl_ranges', acl_ranges_dict)
 

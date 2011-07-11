@@ -57,7 +57,7 @@ SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TEMP_LOG = 'temp_log'
 SYSLOG = '/var/log/messages'
-##SYSLOG '/var/log/syslog'
+##SYSLOG = '/var/log/syslog'
 
 class TestAuditLog(unittest.TestCase):
 

@@ -278,6 +278,9 @@ class dbAccess(object):
 
     This function expects for self.db_instance.cursor to be instantiated and
     valid.
+
+    Raises: 
+      TransactionError: Must unlock tables before re-locking them.
     """
     if( self.locked_db is True ):
       raise errors.TransactionError('Must unlock tables before re-locking them')
@@ -293,6 +296,9 @@ class dbAccess(object):
 
     This function expects for self.db_instance.cursor to be instantiated and
     valid. It also expects all tables to be locked.
+
+    Raises:
+      TransactionError: Must lock tables before unlocking them.
     """
     if( self.locked_db is False ):
       raise errors.TransactionError('Must lock tables before unlocking them')
@@ -474,8 +480,19 @@ class dbAccess(object):
                              lock_rows=True)
 
     Raises:
-      InvalidInputError: Table name not valid
       TransactionError: Must run StartTansaction before inserting
+      UnexpectedDataError: If is_date is specified you must specify column and range
+      UnexpectedDataError: If column or range is specified both are needed
+      InvalidInputError: Found unknown option(s)
+      UnexpectedDataError: No args given, must at least have a pair of table name and row dict
+      UnexpectedDataError: Number of unnamed args is not even.
+          Args should be entered in pairs of table name and row dict.
+      InvalidInputError: Table name not valid
+      InvalidInputError: Column not found in row
+      UnexpectedDataError: Column in table is not a DateTime type
+      UnexpectedDataError: Date from range is not a valid datetime object
+      InvalidInputError: Range must be int if is_date is not set
+      InvalidInputError: Multiple tables were passed in but no joins were found
 
     Outputs:
       tuple of row dicts consisting of all the tables that were in the input.
@@ -514,20 +531,20 @@ class dbAccess(object):
         is_date = kwargs['is_date']
         del kwargs['is_date']
       if( column is None and is_date is not None ):
-        raise errors.InvalidInputError('If is_date is specified you must '
+        raise errors.UnexpectedDataError('If is_date is specified you must '
                                        'specify column and range')
       if( bool(column) ^ bool(range_values) ):
-        raise errors.InvalidInputError('If column or range is specified '
+        raise errors.UnexpectedDataError('If column or range is specified '
                                        'both are needed')
       if( kwargs ):
         raise errors.InvalidInputError('Found unknown option(s): '
                                        '%s' % kwargs.keys())
 
     if( not args ):
-      raise errors.InvalidInputError('No args given, must at least have on '
+      raise errors.UnexpectedDataError('No args given, must at least have a '
                                      'pair of table name and row dict')
     if( len(args) % 2 ):
-      raise errors.InvalidInputError('Number of unnamed args is not even. Args '
+      raise errors.UnexpectedDataError('Number of unnamed args is not even. Args '
                                      'should be entered in pairs of table name '
                                      'and row dict.')
     count = 0
@@ -552,11 +569,11 @@ class dbAccess(object):
 
       if( is_date ):
         if( constants.TABLES[args[0]][column] != 'DateTime' ):
-          raise errors.InvalidInputError('column: %s in table %s is not a'
+          raise errors.UnexpectedDataError('column: %s in table %s is not a'
                                          'DateTime type' % (column, args[0]))
         for date in range_values:
           if( not self.data_validation_instance.isDateTime(date) ):
-            raise errors.InvalidInputError('Date: %s from range is not a valid '
+            raise errors.UnexpectedDataError('Date: %s from range is not a valid '
                                            'datetime object' % date)
       else:
         for value in range_values:
@@ -651,6 +668,9 @@ class dbAccess(object):
 
     Inputs:
       record_type: string of record type
+    
+    Raises:
+      InvalidInputError: Unknown record type
 
     Outputs:
       dictionary: keyed by argument name with values of data type of that arg
@@ -706,6 +726,7 @@ class dbAccess(object):
 
     Raises:
       InvalidInputError: dict for record type should have these keys
+      FucntionError: No function to check data type
       UnexpectedDataError: Invalid data type
     """
     record_type_dict = self.GetRecordArgsDict(record_type)
@@ -720,7 +741,7 @@ class dbAccess(object):
     for record_arg_name in record_args_dict.keys():
       if( not 'is%s' % record_type_dict[record_arg_name] in
           data_validation_methods ):
-        raise errors.MissingDataTypeError('No function to check data type %s' %
+        raise errors.FucntionError('No function to check data type %s' %
                                           record_type_dict[record_arg_name])
       if( none_ok and record_args_dict[record_arg_name] is None ):
         continue

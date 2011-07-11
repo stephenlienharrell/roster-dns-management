@@ -77,9 +77,6 @@ class Core(object):
     Inputs:
       user_name: string of user name
       access_level: int from 0-255 as defined in user.py
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -108,9 +105,6 @@ class Core(object):
       user_name: string of user name
       access_level: int from 0-255 as defined in user.py
 
-    Raises:
-      CoreError  Raised for any internal problems.
-
     Output:
       dictionary: keyed by the user name with value of access_level.
         example: {'sharrell': 128,
@@ -136,9 +130,6 @@ class Core(object):
 
     Inputs:
       user_name: string of user name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -178,9 +169,6 @@ class Core(object):
       update_user_name: string of user name
       update_access_level: int from 0-255 as defined in user.py
 
-    Raises:
-      CoreError  Raised for any internal problems.
-
     Outputs:
       int: number of rows modified
     """
@@ -212,9 +200,6 @@ class Core(object):
   def ListGroups(self):
     """List all groups.
 
-    Raises:
-      CoreError  Raised for any internal problems.
-
     Outputs:
       list of groups
         example ['cs', 'bio']
@@ -238,9 +223,6 @@ class Core(object):
 
     Inputs:
       group_name: string of group name
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -267,9 +249,6 @@ class Core(object):
 
     Inputs:
       group_name: string of group name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -301,9 +280,6 @@ class Core(object):
     Inputs:
       search_group_name: string of group name
       update_group_name: string of group name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -339,9 +315,6 @@ class Core(object):
 
     Assignments can be given as a dictionary of users with lists of groups or
     as a dictionary of groups as a list of users.
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       dictionarie keyed by group or user with values of lists of groups or users
@@ -392,9 +365,6 @@ class Core(object):
     Inputs:
       group_name: string of group name
       user_name: string of user name
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -423,9 +393,6 @@ class Core(object):
     Inputs:
       group_name: string of group name
       user_name: string of user name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -461,9 +428,6 @@ class Core(object):
       cidr_block: string of valid CIDR block or IP address
       range_allowed: integer boolean of if the acl is allowing or disallowing
                      the ip range
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       dictionary: keyed by the acl name whos value is a list dictionaries with
@@ -506,9 +470,6 @@ class Core(object):
       cidr_block: string of valid CIDR block or IP address
       range_allowed: integer boolean of if the acl is allowing or disallowing
                      the ip range
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -538,9 +499,6 @@ class Core(object):
 
     Inputs:
       acl_name: string of acl name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -574,9 +532,6 @@ class Core(object):
       acl_name: string of acl name
       cidr_block: string of valid CIDR block or IP address
       range_allowed: Int bool of if range should be allowed or denied
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -612,9 +567,6 @@ class Core(object):
   def ListDnsServers(self, dns_server_name=None):
     """List dns servers.
 
-    Raises:
-      CoreError Raised for any internal problems.
-
     Outputs:
       int: number of rows modified
     """
@@ -639,8 +591,6 @@ class Core(object):
 
     Inputs:
       dns_server_name: string of the dns server name
-    Raises:
-      CoreError: Raised for any internal problems
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -699,9 +649,6 @@ class Core(object):
       search_dns_server_name: string of dns server name
       update_dns_server_name: new string of dns server name
 
-    Raises:
-      CoreError Raised for any internal problems.
-
     Outputs:
       int: number of rows modified
     """
@@ -734,9 +681,8 @@ class Core(object):
   def ListDnsServerSets(self, dns_server_set_name=None):
     """List all dns server sets
 
-
-    Raises:
-      CoreError  Raised for any internal problems.
+    Inputs:
+      dns_server_set_name: string of dns server set name
 
     Outputs:
        list of dns server sets
@@ -763,9 +709,6 @@ class Core(object):
 
     Inputs:
       dns_server_set_name: string of dns server set name
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -792,9 +735,6 @@ class Core(object):
 
     Inputs:
       dns_server_set_name: string of dns server set name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -828,9 +768,6 @@ class Core(object):
     Inputs:
       search_dns_server_set_name: string of dns_server_set name
       update_dns_server_set_name: string of dns_server_set name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -873,9 +810,6 @@ class Core(object):
       dns_server_name: string of dns server name
       dns_server_set_name: string of dns server set name
 
-    Raises:
-      CoreError: Raised for internal problems.
-
     Outputs:
       dictionary keyed by server sets.
     """
@@ -911,9 +845,6 @@ class Core(object):
     Inputs:
       dns_server_name: string of dns server name
       dns_server_set_name: string of dns server set name
-
-    Raises:
-      CoreError: Raised for internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -945,9 +876,6 @@ class Core(object):
     Inputs:
       dns_server_name: string of dns server name
       dns_server_set_name: string of dns server set name
-
-    Raises:
-      CoreError: Raised for internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -981,9 +909,6 @@ class Core(object):
 
     Assignments can be given as a dictionary of dns server names with lists of
     view names or as a dictionary of view names with lists of dns server names.
-
-    Raises:
-      CoreError Raised for any internal problems.
 
     Outputs:
       Dictionary keyed by view name or dns server set name with values of
@@ -1040,9 +965,6 @@ class Core(object):
     Inputs:
       view_name: string of the view name
       dns_server_set_name: string of the dns server set name
-
-    Raises:
-      CoreError: Raised for any internal problems
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1075,9 +997,6 @@ class Core(object):
       view_name: string of view name
       dns_server_set_name: string of dns server set name
 
-    Raises:
-      CoreError: Raised for any internal problems.
-
     Outputs:
       int: number of rows modified
     """
@@ -1108,9 +1027,6 @@ class Core(object):
 
   def ListViews(self, view_name=None):
     """Lists all views.
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       dictionary: dict keyed by view name with a value of the view args.
@@ -1144,9 +1060,6 @@ class Core(object):
       view_options: string of view options, defaults to empty string.
         for information on valid view options read:
           http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#view_statement_grammar
-
-    Raises:
-      DnsCoreMgmtError  Raises on authorization or DB issues
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1194,7 +1107,7 @@ class Core(object):
       view_name: string of view name
 
     Raises:
-      DnsCoreMgmtError  Raises on authorization or DB issues
+      InvalidInputError: Cannot remove view any
 
     Outputs:
       int: number of rows modified
@@ -1203,7 +1116,7 @@ class Core(object):
     self.user_instance.Authorize(function_name)
 
     if( view_name == u'any' ):
-      raise errors.CoreError('Cannot remove view any')
+      raise errors.InvalidInputError('Cannot remove view any')
     search_view_dict = self.db_instance.GetEmptyRowDict('views')
     search_view_dict['view_name'] = view_name
     view_dep_dict = {'view_dependency': '%s_dep' % view_name}
@@ -1245,13 +1158,13 @@ class Core(object):
           http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#view_statement_grammar
 
     Raises:
-      DnsCoreMgmtError  Raises on authorization or DB issues
+      InvalidInputError: Cannot update view any.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     if( search_view_name == u'any' ):
-      raise errors.CoreError('Cannot update view any')
+      raise errors.InvalidInputError('Cannot update view any')
     search_view_dict = self.db_instance.GetEmptyRowDict('views')
     search_view_dict['view_name'] = search_view_name
     search_view_dep_dict = {'view_dependency': '%s_dep' % search_view_name}
@@ -1286,9 +1199,6 @@ class Core(object):
     Inputs:
       view_superset: string of view name
       view_subset: string of view name
-
-    Raises:
-      DnsCoreMgmtError  Raises on authorization or DB issues
 
     Outputs:
       dictionary keyed by view supersets with values lists of view subsets
@@ -1352,9 +1262,6 @@ class Core(object):
     Inputs:
       view_superset: string of view name
       view_subset: string of view name
-
-    Raises:
-      DnsCoreMgmtError  Raises on authorization or DB issues
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1386,9 +1293,6 @@ class Core(object):
     Inputs:
       view_superset: string of view name
       view_subset: string of view name
-
-    Raises:
-      DnsCoreMgmtError  Raises on authorization or DB issues
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1419,9 +1323,6 @@ class Core(object):
     Inputs:
       view_name: string of view name
       acl_name: string of acl name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       list: list contains dictionaries of assignments
@@ -1456,9 +1357,6 @@ class Core(object):
     Inputs:
       view_name: string of view name
       acl_name: string of acl name
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1486,9 +1384,6 @@ class Core(object):
     Inputs:
       view_name: string of view name
       acl_name: string of acl name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -1524,9 +1419,6 @@ class Core(object):
       zone_type: string of zone type
       zone_origin: string of zone origin. ex dept.univiersity.edu.
       view_name: string of view name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       Dictionary of dictionaries. The parent dictionary is keyed by zone name,
@@ -1599,7 +1491,7 @@ class Core(object):
       make_any: regardless of view name, make any as well(default to True)
 
     Raises:
-      CoreError  Raised for any internal problems.
+      UnexpectedDataError: Invalid zone type.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1628,7 +1520,7 @@ class Core(object):
       self.db_instance.StartTransaction()
       try:
         if( not self.db_instance.ListRow('zone_types', zone_type_dict) ):
-          raise errors.CoreError('Invalid zone type.')
+          raise errors.UnexpectedDataError('Invalid zone type.')
         if( not self.db_instance.ListRow('zones', zone_dict) ):
           self.db_instance.MakeRow('zones', zone_dict)
         self.db_instance.MakeRow('zone_view_assignments',
@@ -1655,9 +1547,6 @@ class Core(object):
     Inputs:
       zone_name: string of zone name
       view_name: string of view name
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows affected
@@ -1717,9 +1606,6 @@ class Core(object):
                            valid zone options can be found here:
                              http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#zone_statement_grammar
 
-    Raises:
-      CoreError  Raised for any internal problems.
-
     Outputs:
       int: number of rows affected
     """
@@ -1774,9 +1660,6 @@ class Core(object):
       zone_name: string of zone name
       cidr_block: string of cidr block
 
-    Raises:
-      CoreError  Raised for any internal problems.
-
     Outputs:
       dictionary: keyed by zone_name with values of cidr blocks
         example: {'10.in-addr.arpa': '10/8',
@@ -1806,9 +1689,6 @@ class Core(object):
     Inputs:
       zone_name: string of zone name
       cidr_block: string of cidr block
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1837,9 +1717,6 @@ class Core(object):
     Inputs:
       zone_name: string of zone name
       cidr_block: string of cidr block
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows affected
@@ -1873,9 +1750,6 @@ class Core(object):
       zone_name: string of zone name
       group_name: string of group name
       access_right: string of access rights defined as constants.ACCESS_RIGHTS
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       dictionary keyed by group name with values of lists of dictionaries
@@ -1920,9 +1794,6 @@ class Core(object):
       zone_name: string of zone name
       group_name: string of group name
       access_right: string of access rights defined as constants.ACCESS_RIGHTS
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1952,9 +1823,6 @@ class Core(object):
       zone_name: string of zone name
       group_name: string of group name
       access_right: string of access rights defined as constants.ACCESS_RIGHTS
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows affected
@@ -1990,9 +1858,6 @@ class Core(object):
       cidr_block: string of cidr block
       group_name: string of group name
       access_right: string of access rights defined as constants.ACCESS_RIGHTS
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       dictionary keyed by group name with values of lists of dictionaries
@@ -2037,9 +1902,6 @@ class Core(object):
       cidr_block: string of cidr block
       group_name: string of group name
       access_right: string of access rights defined as constants.ACCESS_RIGHTS
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -2069,9 +1931,6 @@ class Core(object):
       cidr_block: string of cidr block
       group_name: string of group name
       access_right: string of access rights defined as constants.ACCESS_RIGHTS
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows affected
@@ -2126,6 +1985,9 @@ class Core(object):
                         GetEmptyRecordArgsDict function in this class
                         (example: {u'priority': 10,
                                    u'mail_server': 'mail.sub.university.edu.'})
+    
+    Raises:
+      UnexpectedDataError: Must specify record_type with record_args_dict.
 
     Outputs:
       list of record dictionaries
@@ -2159,7 +2021,7 @@ class Core(object):
 
     if( record_args_dict ):
       if( record_type is None ):
-        raise errors.RecordError('Must specify record_type with '
+        raise errors.UnexpectedDataError('Must specify record_type with '
                                  'record_args_dict')
       self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict,
                                               none_ok=True)
@@ -2188,7 +2050,11 @@ class Core(object):
     MakeAAAARecord.
 
     Raises:
-      CoreError  Raised for any internal problems.
+      InvalidInputError: "." not allowed as terminator in non-ptr target.
+      InvalidInputError: An SOA cannot be made in the "any" view.
+      InvalidInputError: CNAME already exists.
+      InvalidInputError: Record already exists.
+      InvalidInputError: Duplicate record found.
 
     Inputs:
       record_type: string of record type (example: u'mx')
@@ -2204,13 +2070,13 @@ class Core(object):
     """
     if( record_type != u'ptr' ):
       if( target.endswith('.') ):
-        raise errors.RecordError('"." not allowed as terminator in '
+        raise errors.InvalidInputError('"." not allowed as terminator in '
                                  'non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
     if( view_name is None or view_name == u'any'):
       if( record_type == u'soa' ):
-        raise errors.RecordError('An SOA cannot be made in the "any" view.')
+        raise errors.InvalidInputError('An SOA cannot be made in the "any" view.')
       view_name = u'any'
     else:
       view_name = '%s_dep' % view_name
@@ -2241,13 +2107,13 @@ class Core(object):
         if( record_type == 'cname' ):
           all_records = self.db_instance.ListRow('records', records_dict)
           if( len(all_records) > 0 ):
-            raise errors.RecordError('Record already exists with '
+            raise errors.InvalidInputError('Record already exists with '
                                      'target %s.' % target)
         records_dict['record_type'] = u'cname'
         cname_records = self.db_instance.ListRow(
             'records', records_dict)
         if( len(cname_records) > 0 ):
-          raise errors.RecordError('CNAME already exists with '
+          raise errors.InvalidInputError('CNAME already exists with '
                                    'target %s.' % target)
 
         records_dict['record_type'] = search_type
@@ -2269,7 +2135,7 @@ class Core(object):
             if( record_args_dict[arg] != record[arg] ):
               break
           else:
-            raise errors.RecordError('Duplicate record found')
+            raise errors.InvalidInputError('Duplicate record found')
 
         records_dict['record_type'] = record_type
         record_id = self.db_instance.MakeRow('records', records_dict)
@@ -2315,11 +2181,16 @@ class Core(object):
       update_ttl: time to live
 
     Raises:
-      CoreError Raised for any internal problems.
+      InvalidInputError: "." not allowed as terminator in non-ptr target.
+      InvalidInputError: Record already exists.
+      InvalidInputError: CNAME already exists.
+      InvalidInputError: Duplicate record found.
+      InvalidInputError: No records found.
+      InvalidInputError: Multiple records found for used search terms.
     """
     if( search_record_type != u'ptr' ):
       if( update_target is not None and update_target.endswith('.') ):
-        raise errors.RecordError('"." not allowed as terminator in '
+        raise errors.InvalidInputError('"." not allowed as terminator in '
                                  'non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     if( search_view_name is None ):
@@ -2417,13 +2288,13 @@ class Core(object):
           all_records = self.db_instance.ListRow('records',
                                                  update_records_dict)
           if( len(all_records) > 0 ):
-            raise errors.RecordError('Record already exists with target %s.' % (
+            raise errors.InvalidInputError('Record already exists with target %s.' % (
                                      update_target))
         update_records_dict['record_type'] = u'cname'
         cname_records = self.db_instance.ListRow('records',
                                                  update_records_dict)
         if( len(cname_records) > 0 ):
-          raise errors.RecordError('CNAME already exists with target %s.' % (
+          raise errors.InvalidInputError('CNAME already exists with target %s.' % (
                                    update_target))
 
         update_records_dict['record_type'] = search_record_type
@@ -2444,7 +2315,7 @@ class Core(object):
             if( update_record_args_dict[arg] != record[arg] ):
               break
           else:
-            raise errors.RecordError('Duplicate record found')
+            raise errors.InvalidInputError('Duplicate record found')
 
         if( update_target is not None and update_target != search_target and
             (search_record_type == 'a' or search_record_type == 'cname') ):
@@ -2480,7 +2351,7 @@ class Core(object):
             final_id.append(record_id)
         final_id_set = set(final_id).intersection(set(existing_ids))
         if( len(final_id_set) == 0 ):
-          raise errors.RecordError('No records found.')
+          raise errors.InvalidInputError('No records found.')
         elif( len(final_id_set) == 1 ):
           search_records_dict['records_id'] = final_id_set.pop()
           new_records = self.db_instance.ListRow('records',
@@ -2497,7 +2368,7 @@ class Core(object):
                     'record_arguments_records_assignments',
                     search_args, update_args)
         else:
-          raise errors.RecordError('Multiple records found for used search '
+          raise errors.InvalidInputError('Multiple records found for used search '
                                    'terms.')
         if( update_view_name is None ):
           update_view_name = search_view_name
@@ -2526,7 +2397,9 @@ class Core(object):
       ttl: time to live
 
     Raises:
-      CoreError Raised for any internal problems.
+      InvalidInputError: No records found.
+                         Multiple records found for used search terms.
+      RecordError: Could not remove record for an unknown reason.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
 
@@ -2582,7 +2455,7 @@ class Core(object):
               if( record['records_id'] == record_id ):
                 final_id.append(record_id)
         if( len(final_id) == 0 ):
-          raise errors.CoreError('No records found.')
+          raise errors.InvalidInputError('No records found.')
         elif( len(final_id) == 1 ):
           records_dict['records_id'] = final_id[0]
           for record in new_records:
@@ -2590,10 +2463,10 @@ class Core(object):
               self.db_instance.RemoveRow('records', record)
               break
           else:
-            raise errors.CoreError('Could not remove record with ID "%s" '
-                                   'for an unknown reason.' % filal_id[0])
+            raise errors.RecordError('Could not remove record with ID "%s" '
+                                   'for an unknown reason.' % final_id[0])
         else:
-          raise errors.CoreError('Multiple records found for used search '
+          raise errors.InvalidInputError('Multiple records found for used search '
                                  'terms.')
         missing_ok = False
         if( record_type == u'soa' ):
@@ -2682,9 +2555,6 @@ class Core(object):
 
     Inputs:
       zone_type: string of zone type
-
-    Raises:
-      CoreError: Raised for any internal problems
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -2709,9 +2579,6 @@ class Core(object):
 
     Inputs:
       zone_type: string of zone type
-
-    Raises:
-      CoreError: Raised for any internal problems
 
     Outputs:
       int: number of rows affected
@@ -2750,9 +2617,6 @@ class Core(object):
       option_id: integer of named conf global option id
       dns_server_set: string of the dns server set name
       timestamp: datetime object of timestamp to search
-
-    Raises:
-      CoreError: Raised for any internal problems
     """
     self.user_instance.Authorize('ListNamedConfGlobalOptions')
     named_conf_global_options_dict = self.db_instance.GetEmptyRowDict(
@@ -2785,9 +2649,6 @@ class Core(object):
     Inputs:
       dns_server_set: string of name of dns server set
       options: string of named conf file
-
-    Raises:
-      CoreError: Raised for any internal problems
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -2822,9 +2683,6 @@ class Core(object):
 
     Inputs:
       reserved_word: string of reserved word
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -2846,9 +2704,6 @@ class Core(object):
 
   def ListReservedWords(self):
     """Lists reserved words.
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Output:
       list: list of reserved words
@@ -2874,9 +2729,6 @@ class Core(object):
 
     Inputs:
       reserved_word: string of reserved word
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -2917,7 +2769,8 @@ class Core(object):
       missing_ok: boolean of whether or not missing SOA records are allowed
 
     Raises:
-      CoreError: raised for having multiple SOA records
+      InvalidInputError: Multiple SOA records found..
+      RecordError: No SOA record found for zone.
 
     Outputs:
       int: number of rows modified
@@ -2961,12 +2814,12 @@ class Core(object):
       soa_records_list = self.db_instance.ListRow('records', soa_dict)
 
       if( len(soa_records_list) > 1 ):
-        raise errors.CoreError('Multiple SOA records found.')
+        raise errors.InvalidInputError('Multiple SOA records found.')
 
       if( len(soa_records_list) == 0 ):
         if( not missing_ok ):
           pass
-          raise errors.CoreError('No SOA record found for zone "%s" view "%s".' % (
+          raise errors.RecordError('No SOA record found for zone "%s" view "%s".' % (
               zone_name, view_name))
       else:
         soa_records_list = soa_records_list[0]
@@ -3044,9 +2897,6 @@ class Core(object):
       credential: a 36 character uuid string
       infinite_cred: bool of infinite time to live
       last_used: datetime of access
-
-    Raises:
-      CoreError  Raised for any internal problems.
     """
     if( last_used is None ):
       last_used = datetime.datetime.now()
@@ -3073,9 +2923,6 @@ class Core(object):
       user_name: string of user name
       infinite_cred: boolean of infinite time to live
       key_by_user: boolean to key by user rather than credential
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Output:
       dictionary: keyed_by_user=False, a dictionary keyed
@@ -3125,7 +2972,7 @@ class Core(object):
       user_name: string of user name
 
     Raises:
-      CoreError  Raised for any internal problems.
+      UnexpectedDataError: Must specify at least one of the two possible arguments.
 
     Outputs:
       int: number of rows modified
@@ -3136,7 +2983,7 @@ class Core(object):
       search_credential_dict['credential'] = credential
     else:
       if( user_name is None ):
-        raise errors.CoreError('Must specify at least one of the two '
+        raise errors.UnexpectedDataError('Must specify at least one of the two '
                                'possible arguments')
       search_credential_dict['credential_user_name'] = user_name
     row_count = 0
@@ -3165,9 +3012,6 @@ class Core(object):
       search_credential: uuid string of credential
       search_user_name: string of user name
       update_credential: uuid string of credential
-
-    Raises:
-      CoreError  Raised for any internal problems.
 
     Outputs:
       int: number of rows modified
@@ -3269,6 +3113,9 @@ class Core(object):
       success: intbool of success
       begin_timestamp: datetime object of beginning timestamp
       end_timestamp: datetime object of ending timestamp
+    
+    Raises:
+      UnexpectedDataError: Missing begin_timestamp or end_timestamp.
 
     Outputs:
       dict: Dictionary of audit log
@@ -3279,7 +3126,7 @@ class Core(object):
     self.user_instance.Authorize('ListAuditLog')
     if( (begin_timestamp or end_timestamp) and not
         (begin_timestamp or end_timestamp) ):
-      raise errors.CoreError('Missing begin_timestamp or end_timestamp.')
+      raise errors.UnexpectedDataError('Missing begin_timestamp or end_timestamp.')
     audit_dict = {'audit_log_id': None, 'audit_log_user_name': user_name,
                   'action': action, 'data': None, 'success': success,
                   'audit_log_timestamp': None}
@@ -3331,9 +3178,10 @@ def CheckCoreVersionMatches(version):
 
   Inputs:
     version: version to check against core's version
+  
+  Raises:
+    VersionDiscrepancyError: version mismatch with core version.
   """
   if( version != __version__ ):
     raise errors.VersionDiscrepancyError(
         'version %s mismatch with core version %s' % (version, __version__))
-
-# vi: set ai aw sw=2:

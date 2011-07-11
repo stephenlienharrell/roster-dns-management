@@ -251,17 +251,21 @@ class CoreHelpers(object):
     Inputs:
       option_id: the id of config to replicate
       dns_server_set: string of dns server set name
+    
+    Raises:
+      InvalidInputError: DNS server set does not contain id.
+      UnexpectedDataError: Multiple configurations found.
     """
     named_config = self.core_instance.ListNamedConfGlobalOptions(
         dns_server_set=dns_server_set, option_id=option_id)
     if( len(named_config) == 0 ):
-      raise errors.CoreError('DNS server set "%s" does not contain id "%s"' % (
+      raise errors.InvalidInputError('DNS server set "%s" does not contain id "%s"' % (
           dns_server_set, option_id))
     elif( len(named_config) == 1 ):
       self.core_instance.MakeNamedConfGlobalOption(
           dns_server_set, named_config[0]['options'])
     else:
-      raise errors.CoreError('Multiple configurations found.')
+      raise errors.UnexpectedDataError('Multiple configurations found.')
 
   def MakeAAAARecord(self, target, zone_name, record_args_dict,
                      view_name=None, ttl=None):
@@ -285,7 +289,9 @@ class CoreHelpers(object):
     Inputs:
       long_target: String of long PTR target
       view_name: String of view name
-
+    
+    Raises:
+      InvalidInputError: No suitable reverse range zone assignments found.
     Ouptuts:
       string: String of short PTR target
     """
@@ -302,7 +308,7 @@ class CoreHelpers(object):
             reverse_range_zone_assignments[zone_assignment]) ):
           break
     else:
-      raise errors.CoreError(
+      raise errors.InvalidInputError(
           'No suitable reverse range zone assignments found.')
     zone_detail = self.core_instance.ListZones(view_name=view_name)
     zone_origin = zone_detail[zone_assignment][view_name]['zone_origin']
@@ -354,14 +360,17 @@ class CoreHelpers(object):
 
     Inputs:
       cidr_block: string of ipv4 or ipv6 cidr block
-
+    
+    Raises:
+      InvalidInputError: IP is in a reserved IP space.
+      InvalidInputError: Not a valid cidr block
     Outputs:
       list: list of strings of ip addresses
     """
     try:
       cidr_block_ipy = IPy.IP(cidr_block)
     except ValueError:
-      raise errors.CoreError('%s is not a valid cidr block' % cidr_block)
+      raise errors.InvalidInputError('%s is not a valid cidr block' % cidr_block)
     reserved_ips = []
     if( cidr_block_ipy.version() == 6 ):
       reserved = constants.RESERVED_IPV6
@@ -371,7 +380,7 @@ class CoreHelpers(object):
       reserved_ips.append(IPy.IP(cidr))
     for reserved_ip in reserved_ips:
       if( IPy.IP(cidr_block) in reserved_ip ):
-        raise errors.CoreError('%s is in a reserved IP space' % cidr_block)
+        raise errors.InvalidInputError('%s is in a reserved IP space' % cidr_block)
     records = self.ListRecordsByCIDRBlock(cidr_block, view_name=view_name,
                                           zone_name=zone_name)
     taken_ips = []
@@ -395,6 +404,11 @@ class CoreHelpers(object):
       cidr_block: string of ipv4 or ipv6 cidr block
       view_name: string of the view
       zone_name: string of the zone
+    
+    Raise:
+      InvalidInputError: The CIDR block specified does not contain a valid IP
+      IPIndexError: Record type not indexable by IP
+      IPIndexError: Record type unknown. Missing ipv4 or ipv6 dec index
 
     Outputs:
       dict: A dictionary Keyed by view, keyed by IP, listed by record.
@@ -614,6 +628,9 @@ class CoreHelpers(object):
       hostname: string of hostname
       view_name: string of view name
       zone_name: string of zone name
+    
+    Raises:
+      UnexpectedDataError: Incorrect number of records found
 
     Outputs:
       int: number of rows modified
@@ -650,7 +667,7 @@ class CoreHelpers(object):
           found_records_dict = self.db_instance.ListRow(
               'records', records_dict)
           if( len(found_records_dict) != 1 ):
-            raise errors.CoreError('Incorrect number of records found!')
+            raise errors.UnexpectedDataError('Incorrect number of records found!')
           try:
             self.core_instance.user_instance.Authorize(
                 'RemoveRecord',
@@ -659,7 +676,7 @@ class CoreHelpers(object):
                       'zone_name': records_dict['record_zone_name'],
                       'view_name': records_dict['record_view_dependency']},
                 current_transaction=True)
-          except user.AuthError:
+          except user.AuthenticationError:
             continue
           row_count += self.db_instance.RemoveRow(
               'records', found_records_dict[0])
@@ -698,6 +715,13 @@ class CoreHelpers(object):
                           {'record_type': 'ptr', 'record_target': 'target',
                           'view_name': 'view', 'zone_name': 'zone'}
       add_records: list of dictionaries of records
+    
+    Raises: 
+      RecordsBatchError: Record specification too broad
+      RecordsBatchError: No record found
+      RecordsBatchError: Record already exists
+      RecordsBatchError: CNAME already exists
+      RecordsBatchError: Duplicate record found
 
     Outputs:
       int: row count

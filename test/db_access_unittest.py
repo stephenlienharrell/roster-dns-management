@@ -284,9 +284,9 @@ class TestdbAccess(unittest.TestCase):
     self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
                       'notinlist', {})
 
-    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow)
+    self.assertRaises(errors.UnexpectedDataError, self.db_instance.ListRow)
 
-    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+    self.assertRaises(errors.UnexpectedDataError, self.db_instance.ListRow,
                       'onearg')
 
     audit_log_dict = {'audit_log_id': None,
@@ -307,16 +307,16 @@ class TestdbAccess(unittest.TestCase):
 
     search_dict = self.db_instance.GetEmptyRowDict('audit_log')
     simple_date = datetime.datetime(2001,1,1,1)
-    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+    self.assertRaises(errors.UnexpectedDataError, self.db_instance.ListRow,
                       'audit_log', search_dict, is_date=True,
                       column='audit_log_timestamp')
-    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+    self.assertRaises(errors.UnexpectedDataError, self.db_instance.ListRow,
                       'audit_log', search_dict, is_date=True,
                       range_values='audit_log_timestamp')
-    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+    self.assertRaises(errors.UnexpectedDataError, self.db_instance.ListRow,
                       'audit_log', search_dict, column='action', is_date=True,
                       range_values=(simple_date, simple_date))
-    self.assertRaises(errors.InvalidInputError, self.db_instance.ListRow,
+    self.assertRaises(errors.UnexpectedDataError, self.db_instance.ListRow,
                       'audit_log', search_dict, column='not_there',
                       is_date=True,
                       range_values_values=(simple_date, simple_date))
