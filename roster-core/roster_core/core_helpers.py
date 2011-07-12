@@ -85,34 +85,42 @@ class CoreHelpers(object):
     Outputs:
         list: list of view name strings
     """
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
     views = set([])
-    users_dict = self.db_instance.GetEmptyRowDict('users')
-    users_dict['user_name'] = user
-    user_group_assignments_dict = self.db_instance.GetEmptyRowDict(
-        'user_group_assignments')
-    groups_dict = self.db_instance.GetEmptyRowDict('groups')
-    forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
-        'forward_zone_permissions')
-    zones_dict = self.db_instance.GetEmptyRowDict('zones')
-    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
-        'zone_view_assignments')
-    self.db_instance.StartTransaction()
+    success = False
     try:
-      joined_list = self.db_instance.ListRow(
-          'users', users_dict, 'user_group_assignments',
-          user_group_assignments_dict,
-          'groups', groups_dict, 'forward_zone_permissions',
-          forward_zone_permissions_dict, 'zones', zones_dict,
-          'zone_view_assignments', zone_view_assignments_dict)
+      users_dict = self.db_instance.GetEmptyRowDict('users')
+      users_dict['user_name'] = user
+      user_group_assignments_dict = self.db_instance.GetEmptyRowDict(
+          'user_group_assignments')
+      groups_dict = self.db_instance.GetEmptyRowDict('groups')
+      forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
+          'forward_zone_permissions')
+      zones_dict = self.db_instance.GetEmptyRowDict('zones')
+      zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+          'zone_view_assignments')
+      self.db_instance.StartTransaction()
+      try:
+        joined_list = self.db_instance.ListRow(
+            'users', users_dict, 'user_group_assignments',
+            user_group_assignments_dict,
+            'groups', groups_dict, 'forward_zone_permissions',
+            forward_zone_permissions_dict, 'zones', zones_dict,
+            'zone_view_assignments', zone_view_assignments_dict)
+      finally:
+        self.db_instance.EndTransaction()
+      for view_dict in joined_list:
+        views.add(view_dict['zone_view_assignments_view_dependency'].split(
+            '_dep')[0])
+      success = True
     finally:
-      self.db_instance.EndTransaction()
-    for view_dict in joined_list:
-      views.add(view_dict['zone_view_assignments_view_dependency'].split(
-          '_dep')[0])
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
     return views
 
   def GetCIDRBlocksByView(self, view, user):
-    """Lists CIDR blocks available to given view
+    """Lists CIDR blocks available to a user in a given view
 
     Inputs:
         view: string of view name
@@ -121,6 +129,7 @@ class CoreHelpers(object):
     Outputs:
         list: list of cidr block strings
     """
+    self.user_instance.Authorize('GetCIDRBlocksByView')
     cidrs = set([])
     users_dict = self.db_instance.GetEmptyRowDict('users')
     users_dict['user_name'] = user
@@ -151,6 +160,7 @@ class CoreHelpers(object):
       self.db_instance.EndTransaction()
     for cidr_dict in joined_list:
       cidrs.add(cidr_dict['reverse_range_zone_assignments_cidr_block'])
+
     return cidrs
 
   def GetAssociatedCNAMEs(self, hostname, view_name, zone_name,
@@ -165,6 +175,7 @@ class CoreHelpers(object):
     Outputs:
       list: list of found cname dictionaries
     """
+    self.user_instance.Authorize('GetAssociatedCNAMEs')
     record_arguments_record_assignments_dict = (
         self.db_instance.GetEmptyRowDict(
             'record_arguments_records_assignments'))
@@ -218,6 +229,7 @@ class CoreHelpers(object):
     cnames.extend(new_cnames)
     del new_cnames
     del found_records
+
     return cnames
 
   def ListLatestNamedConfig(self, dns_server_set):
@@ -395,6 +407,7 @@ class CoreHelpers(object):
         break
       if( cidr_block_ipy[count].strFullsize() not in taken_ips ):
         avail_ips.append(cidr_block_ipy[count].strFullsize())
+
     return avail_ips
 
   def ListRecordsByCIDRBlock(self, cidr_block, view_name=None, zone_name=None):
@@ -424,6 +437,7 @@ class CoreHelpers(object):
                           u'zone': u'reverse_zone',
                           u'zone_origin': u'1.168.192.in-addr.arpa.'}]}}
     """
+    self.user_instance.Authorize('ListRecordsByCIDRBlock')
     record_list = {}
     try:
       IPy.IP(cidr_block)
@@ -453,14 +467,14 @@ class CoreHelpers(object):
         self.db_instance.GetEmptyRowDict(
             'record_arguments_records_assignments'))
 
-    if( view_name is not None and 
+    if( view_name is not None and
         view_name.endswith('_dep') or view_name == u'any' ):
       records_dict['record_view_dependency'] = view_name
     elif( view_name is not None ):
       records_dict['record_view_dependency'] = '%s_dep' % view_name
-      
+
     zone_dict['zone_name'] = zone_name
-    
+
     if( cidr_ip.version() == 4 ):
       decimal_ip = int( cidr_ip.strDec() )
       decimal_ip_lower = (
@@ -513,13 +527,13 @@ class CoreHelpers(object):
             'records', records_dict,
             'zones', zone_dict,
             'zone_view_assignments', zone_view_assignments_dict,
-            'record_arguments_records_assignments', 
+            'record_arguments_records_assignments',
             record_arguments_records_assignments_dict,
             column=column,
             range_values=range_values)
       finally:
         self.db_instance.EndTransaction()
-     
+
     ## Parse returned list
     parsed_record_dict = {}
     for index, record_entry in enumerate(record_list):
@@ -563,7 +577,7 @@ class CoreHelpers(object):
         record_item[u'view_name'] = record_entry[u'record_view_dependency'][:-4]
       else:
         record_item[u'view_name'] = record_entry[u'record_view_dependency']
-      if( record_entry[u'record_type'] == u'a' or 
+      if( record_entry[u'record_type'] == u'a' or
           record_entry[u'record_type'] == u'aaaa' ):
         record_item[u'forward'] = True
         record_item[u'host'] = '%s.%s' % (
@@ -583,6 +597,7 @@ class CoreHelpers(object):
             '%s.%s' % (record_entry['record_target'],record_entry['zone_origin']))
         record_item[u'record_args_dict'] = {'assignment_ip': assignment_ip}
         parsed_record_dict[record_view][record_ip].insert(0, record_item )
+
     return parsed_record_dict
 
   def ListNamedConfGlobalOptionsClient(self, option_id=None,
@@ -598,8 +613,17 @@ class CoreHelpers(object):
     Outputs:
       list: list of dictionarires from ListNamedConfGlobalOptions
     """
-    return self.core_instance.ListNamedConfGlobalOptions(
-        option_id, dns_server_set, timestamp)
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    success = False
+    named_conf_global_options = None
+    try:
+      named_conf_global_options = self.core_instance.ListNamedConfGlobalOptions(
+          option_id, dns_server_set, timestamp)
+      success = True
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
+    return named_conf_global_options
 
   def ListZoneByIPAddress(self, ip_address):
     """Lists zone name given ip_address
@@ -636,7 +660,8 @@ class CoreHelpers(object):
       int: number of rows modified
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
-
+    self.user_instance.Authorize(function_name)
+    row_count = 0
     record_arguments_record_assignments_dict = (
         self.db_instance.GetEmptyRowDict(
             'record_arguments_records_assignments'))
@@ -661,7 +686,6 @@ class CoreHelpers(object):
           remove_record_dict[record_argument[
               'record_arguments_records_assignments_record_id']] = {
                   'assignment_host': record_argument['argument_value']}
-        row_count = 0
         for record_id in remove_record_dict:
           records_dict['records_id'] = record_id
           found_records_dict = self.db_instance.ListRow(
@@ -670,7 +694,7 @@ class CoreHelpers(object):
             raise errors.UnexpectedDataError('Incorrect number of records found!')
           try:
             self.core_instance.user_instance.Authorize(
-                'RemoveRecord',
+                function_name,
                  record_data=
                      {'target': records_dict['record_target'],
                       'zone_name': records_dict['record_zone_name'],
@@ -696,7 +720,8 @@ class CoreHelpers(object):
           log_list.append('%s:' % record)
           log_list.append(remove_record_dict[record_id][record])
       if( log_list ):
-        remove_record_string = ' '.join(log_list)
+         remove_record_string = ' '.join(log_list)
+      success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
@@ -727,7 +752,6 @@ class CoreHelpers(object):
       int: row count
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
-
     log_dict = {'delete': [], 'add': []}
     row_count = 0
     changed_view_dep = []
@@ -738,7 +762,7 @@ class CoreHelpers(object):
         # REMOVE RECORDS
         for record in delete_records:
           record_dict = self.db_instance.GetEmptyRowDict('records')
-          self.user_instance.Authorize('RemoveRecord', 
+          self.user_instance.Authorize('ProcessRecordsBatch',
               record_data = {
                   'target': record['record_target'],
                   'zone_name': record['record_zone_name'],
@@ -748,7 +772,7 @@ class CoreHelpers(object):
           record_dict['record_type'] = record['record_type']
           record_dict['record_target'] = record['record_target']
           record_dict['record_ttl'] = record['record_ttl']
-          if( record['record_view_dependency'].endswith('_dep') or 
+          if( record['record_view_dependency'].endswith('_dep') or
               record['record_view_dependency'] == u'any' ):
             record_dict['record_view_dependency'] = record['record_view_dependency']
           else:
@@ -774,7 +798,7 @@ class CoreHelpers(object):
           if( not record['record_view_dependency'].endswith('_dep') and record[
                 'record_view_dependency'] != u'any'):
             view_name = '%s_dep' % record['record_view_dependency']
-          self.user_instance.Authorize('MakeRecord', 
+          self.user_instance.Authorize('ProcessRecordsBatch',
               record_data = {
                   'target': record['record_target'],
                   'zone_name': record['record_zone_name'],

@@ -79,11 +79,12 @@ SERVER_CONFIG_FILE_LOCATION = '/etc/roster/roster_server.conf'
 # 'write' indicates whether the method requires write access.
 # 'access_level' is the minimum user access level required to use this method.
 SUPPORTED_METHODS = {
-    'noop':         {'check': False,
-                     'write': False,
-                     'access_level': ACCESS_LEVELS['noop']},
-
     'ListRecords':  {'check': True,
+                     'write': False,
+                     'access_level': ACCESS_LEVELS['user']},
+
+    'ListRecordsByCIDRBlock':
+                    {'check': True,
                      'write': False,
                      'access_level': ACCESS_LEVELS['user']},
 
@@ -115,6 +116,11 @@ SUPPORTED_METHODS = {
     'ListViews':    {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['domain_admin']},
+
+    'GetViewsByUser':
+                    {'check': False,
+                     'write': False,
+                     'access_level': ACCESS_LEVELS['user']},
 
     'MakeView':     {'check': False,
                      'write': True,
@@ -213,6 +219,16 @@ SUPPORTED_METHODS = {
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
 
+    'GetAssociatedCNAMEs':
+                    {'check': False,
+                     'write': False,
+                     'access_level': ACCESS_LEVELS['user']},
+
+    'RemoveCNamesByAssignmentHost':
+                    {'check': False,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['user']},
+
     'ListACLs':     {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['domain_admin']},
@@ -289,6 +305,16 @@ SUPPORTED_METHODS = {
                     {'check': False,
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
+
+    'GetCIDRBlocksByView':
+                    {'check': False,
+                     'write': False,
+                     'access_level': ACCESS_LEVELS['user']},
+
+    'ProcessRecordsBatch':
+                    {'check': True,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['user']},
 
     'ListZones':    {'check': False,
                      'write': False,
@@ -382,30 +408,31 @@ SUPPORTED_METHODS = {
                     {'check': False,
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
+
     'ListAuditLog':
                     {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['dns_admin']},
+
     'ListCredentials':
                     {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['dns_admin']},
+
     'MakeInfiniteCredential':
                     {'check': False,
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
+
     'RemoveCredential':
                     {'check': False,
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
+
     'SetMaintenanceFlag':
                     {'check': False,
                      'write': True,
-                     'access_level': ACCESS_LEVELS['dns_admin']},
-    'CheckMaintenanceFlag':
-                    {'check': False,
-                     'write': False,
-                     'access_level': ACCESS_LEVELS['user']}}
+                     'access_level': ACCESS_LEVELS['dns_admin']}}
 
 
 
