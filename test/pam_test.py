@@ -56,24 +56,24 @@ class TestPAMModule(unittest.TestCase):
     pam_instance = auth_pam.AuthenticationMethod(
         module=fakepam)
     self.assertTrue(pam_instance.Authenticate(
-        username=u'jcollins', password=u'test'))
+        user_name=u'jcollins', password=u'test'))
     self.assertFalse(pam_instance.Authenticate(
-        username=u'jcollins', password=u'wrongpass'))
+        user_name=u'jcollins', password=u'wrongpass'))
     self.assertFalse(pam_instance.Authenticate(
-        username=u'wronguser', password=u'wrongpass'))
+        user_name=u'wronguser', password=u'wrongpass'))
     self.assertFalse(pam_instance.Authenticate(
-        username=u'wronguser', password=u'test'))
+        user_name=u'wronguser', password=u'test'))
 
   ## This tests the login user and password against PAM.
   ## This is commented out because it requires the user to
   ## interactively enter their login name and password during
   ## a unittest.
   ## def testPAMAuth(self):
-  ##  username = getpass.getpass('Enter your login username: ')
+  ##  user_name = getpass.getpass('Enter your login username: ')
   ##  password = getpass.getpass('Enter your login password: ')
   ##  AuthModule = auth_pam.AuthenticationMethod()
   ##  self.assertTrue(AuthModule.Authenticate(
-  ##    username, password))
+  ##    user_name, password))
 
 if( __name__ == '__main__' ):
   unittest.main()

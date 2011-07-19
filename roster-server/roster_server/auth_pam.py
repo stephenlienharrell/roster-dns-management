@@ -45,13 +45,10 @@ class PAMInputError(Exception):
 class AuthenticationMethod:
   """PAM authentication method,"""
   def __init__(self, module=pam):
-    self.requires ={'username': {'type': 'str', 'default': None,
-                                 'optional': False},
-                    'password': {'type': 'str', 'default': None,
-                                 'optional': False}}
+    self.requires = {}
     self.module = module
 
-  def Authenticate(self, username=None, password=None):
+  def Authenticate(self, user_name=None, password=None):
     """Check, using PAM, if the user_name and password provided match.
     Inputs:
       user_name: string of user name.
@@ -60,8 +57,8 @@ class AuthenticationMethod:
     Outputs:
       boolean: authentication success
     """
-    if ((not username) or (not password)):
+    if ((not user_name) or (not password)):
       authenticated = False
     else:
-      authenticated = self.module.authenticate(username, password, 'passwd')
+      authenticated = self.module.authenticate(user_name, password, 'passwd')
     return authenticated
