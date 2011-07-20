@@ -65,8 +65,15 @@ def main(args):
   args_instance = Args(command, ['bootstrap'], args, usage, bootstrapper=True)
   options = args_instance.options
 
+  missing_required = False
   if( options.server is None ):
-    print 'Server MUST be specified with --server to write the config file.'
+    print ('ERROR: Server MUST be specified with --server to write the config '
+           'file')
+    missing_required = True
+  if( options.config_file is None ):
+    print 'ERROR: Config file MUST be specified with --config-file'
+    missing_required = True
+  if( missing_required ):
     sys.exit(1)
 
   config_file_object = ConfigParser.SafeConfigParser()

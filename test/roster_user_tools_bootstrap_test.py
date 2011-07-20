@@ -36,6 +36,7 @@ __version__ = '#TRUNK#'
 
 
 import os
+import subprocess
 import sys
 import unittest
 
@@ -59,6 +60,34 @@ class TestBootstrapper(unittest.TestCase):
     config_file.close()
 
     os.remove(USER_CONFIG)
+
+  def testBootstrapperMissingConfigFileArgument(self):
+    command = subprocess.Popen('python %s -s https://localhost:8000 '
+                               '-c ~/.dnscred' % (EXEC), shell=True,
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
+    stdout = command.communicate()[0]
+    self.assertEqual(stdout, 'ERROR: Config file MUST be specified with '
+                             '--config-file\n')
+
+  def testBootstrapperMissingServerArgument(self):
+    command = subprocess.Popen('python %s -c ~/.dnscred --config-file %s' % (
+                                   EXEC, USER_CONFIG), shell=True,
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
+    stdout = command.communicate()[0]
+    self.assertEqual(stdout, 'ERROR: Server MUST be specified with --server to '
+                             'write the config file\n')
+
+  def testBootstrapperMissingServerAndConfigFileArgument(self):
+    command = subprocess.Popen('python %s -c ~/.dnscred' % (
+                                   EXEC), shell=True,
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE)
+    stdout = command.communicate()[0]
+    self.assertEqual(stdout, 'ERROR: Server MUST be specified with --server to '
+                             'write the config file\nERROR: Config file MUST '
+                             'be specified with --config-file\n')
 
 if( __name__ == '__main__' ):
       unittest.main()
