@@ -190,8 +190,9 @@ class TestRosterd(unittest.TestCase):
     server.join()
     os.system('chmod 700 %s' % CONFIG_FILE)
     self.assertEqual(server.getOutput(),
-                     'ERROR: Roster will not start with a world writable '
-                     'config file. Please change the permissions of '
+                     'ERROR: Roster will not start if the config file is world '
+                     'readable, world executable, or world writable. '
+                     'Please change the permissions of '
                      '"%s"\n' % CONFIG_FILE)
 
 if( __name__ == '__main__' ):
