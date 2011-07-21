@@ -138,7 +138,8 @@ def main(args):
   if( len(perms) != 4 ):
     print 'WARNING: Could not determine config file permissions.'
   if( perms[3] != '0' ):
-    print ('ERROR: Roster will not start with a world writable config file. '
+    print ('ERROR: Roster will not start if the config file is world '
+           'readable, world executable, or world writable. '
            'Please change the permissions of "%s"' % options.config_file)
     sys.exit(1)
 
