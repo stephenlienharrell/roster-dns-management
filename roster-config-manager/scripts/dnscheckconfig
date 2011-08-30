@@ -47,9 +47,9 @@ from optparse import OptionParser
 
 
 def ChangeNamedDirectory(file_name, directory):
-  file = open(file_name, 'r')
-  file_contents = file.readlines()
-  file.close()
+  file_handle = open(file_name, 'r')
+  file_contents = file_handle.readlines()
+  file_handle.close()
   for i, line in enumerate(file_contents):
     if( line.strip().startswith('directory') ):
       if( len(line.split('"')) == 3 ):
@@ -57,10 +57,10 @@ def ChangeNamedDirectory(file_name, directory):
         old_directory = linearray[1]
         linearray[1] = directory
         file_contents[i] = '"'.join(linearray)
-        file = open(file_name, 'w')
-        file.writelines(''.join(file_contents).replace(old_directory,
+        file_handle = open(file_name, 'w')
+        file_handle.writelines(''.join(file_contents).replace(old_directory,
                                                        directory))
-        file.close()
+        file_handle.close()
         break
   else:
     print 'ERROR: Could not find any valid directory statements in %s.' % (
@@ -195,7 +195,7 @@ def main(args):
     ChangeNamedDirectory(current_file, options.output_directory)
     handle = os.popen('%s %s' % (options.named_checkconf, current_file))
     checknamed_text = handle.read()
-    return_val = handle.close()
+    return_value = handle.close()
     if( checknamed_text == '' ):
       if( options.verbose ):
         print 'Finished - %s' % current_file
@@ -219,7 +219,7 @@ def main(args):
     handle = os.popen('%s %s %s' % (options.named_checkzone, origin,
                                     current_file))
     checkzone_text = handle.read()
-    return_val = handle.close()
+    return_value = handle.close()
     if( checkzone_text.split('\n')[1] == 'OK' ):
       if( options.verbose ):
         print 'Finished - %s' % current_file

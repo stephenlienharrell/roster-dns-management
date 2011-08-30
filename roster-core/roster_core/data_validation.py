@@ -276,24 +276,24 @@ class DataValidation(object):
     """
     main_dict = helpers_lib.GetRowDict(table_name)
 
-    for k in main_dict.iterkeys():
-      if( k not in row_dict ):
-        raise errors.UnexpectedDataError('Missing key %s in dictionary' % k)
+    for key in main_dict.iterkeys():
+      if( key not in row_dict ):
+        raise errors.UnexpectedDataError('Missing key %s in dictionary' % key)
 
-    for k, v in row_dict.iteritems():
-      if( k not in main_dict ):
+    for key, value in row_dict.iteritems():
+      if( key not in main_dict ):
         raise errors.UnexpectedDataError('Dictionary has extra key that is not '
-                                       'used: %s' % k)
+                                       'used: %s' % key)
 
-      if( not 'is%s' % main_dict[k] in dir(self) ):
-          raise errors.FunctionError('No function to check data '
-                                            'type: %s' % main_dict[k])
+      if( not 'is%s' % main_dict[key] in dir(self) ):
+        raise errors.FunctionError('No function to check data '
+                                          'type: %s' % main_dict[key])
 
-      if( not getattr(self, 'is%s' % main_dict[k])(v) ):
-        if( (not none_ok and not k.endswith('_id')) or 
-            (none_ok and v is not None) ):
+      if( not getattr(self, 'is%s' % main_dict[key])(value) ):
+        if( (not none_ok and not key.endswith('_id')) or 
+            (none_ok and value is not None) ):
           raise errors.UnexpectedDataError('Invalid data type %s for %s: %s' % (
-              main_dict[k], k, v))
+              main_dict[key], key, value))
 
     if( none_ok and not all_none_ok ):
       for value in row_dict.values():

@@ -134,8 +134,8 @@ def ReverseIP(ip_address):
   if( ip_object.version() == 4 ):
     ip_parts = reverse_ip_string.split('.')
     if( '-' in ip_parts[0] ):
-      range = ip_parts.pop(0).split('-')
-      num_ips = int(range[1]) - int(range[0]) + 1
+      ip_range = ip_parts.pop(0).split('-')
+      num_ips = int(ip_range[1]) - int(ip_range[0]) + 1
       netmask = int(32 - (math.log(num_ips) / math.log(2)))
       last_octet = ip_parts.pop(0)
       reverse_ip_string = '.'.join(ip_parts)

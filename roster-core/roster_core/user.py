@@ -101,7 +101,6 @@ class User(object):
       AuthorizationError: Authorization failure.
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
-    access_level = self.user_perms['user_access_level']
 
     if( not current_transaction ):
       self.db_instance.StartTransaction()
@@ -135,16 +134,18 @@ class User(object):
         # Secondary check - ensure the target is in a range delegated to
         # the user
         if( record_data is None ):
-          raise errors.MissingDataTypeError('No record data provided for access method '
-                                 '%s' % method)
+          raise errors.MissingDataTypeError(
+              'No record data provided for access method '
+              '%s' % method)
         if( not record_data.has_key('zone_name') or
             record_data['zone_name'] is None or 
             not record_data.has_key('view_name') or
             record_data['view_name'] is None or
             not record_data.has_key('target') or 
             record_data['target'] is None ):
-          raise errors.MissingDataTypeError('Incomplete record data provided for access '
-                                 'method %s' % method)
+          raise errors.MissingDataTypeError(
+              'Incomplete record data provided for access '
+              'method %s' % method)
 
         for zone in self.forward_zones:
           if( record_data['zone_name'] == zone['zone_name'] ):
@@ -152,7 +153,6 @@ class User(object):
         # Can't find it in forward zones, maybe it's a reverse, lets try to
         # construct an ip address
        
-        
         ip_address = helpers_lib.UnReverseIP('%s.%s' % (
           record_data['target'][::-1], self.zone_origin_cache[
                 record_data['zone_name']]))

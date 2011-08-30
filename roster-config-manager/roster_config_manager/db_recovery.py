@@ -38,7 +38,6 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 import roster_core
-import tarfile
 import os
 import bz2
 import cPickle
@@ -71,8 +70,6 @@ class Recover(object):
       audit_log_id: integer of audit log id
     """
     backup_dir = self.config_instance.config_file['exporter']['backup_dir']
-    root_config_dir = self.config_instance.config_file[
-        'exporter']['root_config_dir']
 
     full_dump_file = bz2.BZ2File('%s/audit_log_replay_dump-%s.bz2' %
                                  (backup_dir, audit_log_id))
@@ -126,14 +123,13 @@ class Recover(object):
       audit_log_id: integer of audit_log_id
     """
     backup_dir = self.config_instance.config_file['exporter']['backup_dir']
-    root_config_dir = self.config_instance.config_file[
-        'exporter']['root_config_dir']
     file_list = os.listdir(backup_dir)
     db_dumps = []
 
     for fname in file_list:
       if( fname.startswith('audit_log_replay_dump-') ):
         db_dumps.append(int(fname.split('-')[1].split('.')[0]))
+    audit_id = 0
     for audit_id in reversed(sorted(db_dumps)):
       if( audit_id < audit_log_id ):
         break

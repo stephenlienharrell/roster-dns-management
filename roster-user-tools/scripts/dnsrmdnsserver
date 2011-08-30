@@ -36,11 +36,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
 import sys
-import getpass
-
-from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -71,15 +67,15 @@ def main(args):
            '\n'
            'To remove a dns server set assignment:\n'
            '\t%s assignment -d <dns-server> -e <dns-server-set>\n' % tuple(
-               [sys.argv[0] for x in range(3)]))
+               [sys.argv[0] for _ in range(3)]))
   args_instance = Args(command, ['dns_server', 'dns_server_set', 'assignment'],
                        args, usage)
   options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    print 'ERROR: %s' % e
+  except cli_common_lib.ArgumentError, error:
+    print 'ERROR: %s' % error
     sys.exit(1)
 
   if( command == 'assignment' ):

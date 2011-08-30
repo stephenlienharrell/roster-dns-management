@@ -106,9 +106,9 @@ def main(args):
                     help='(dnsconfigsync)Destination directory on dns servers.',
                     metavar='<destination-directory>',
                     default=None)
-  parser.add_option('-u','--user-name', action='store', dest='user_name',
-                    help='(dnsconfigsync)Rsync username.', metavar='<user-name>',
-                    default=None)
+  parser.add_option('-u', '--user-name', action='store', dest='user_name',
+                    help='(dnsconfigsync)Rsync username.',
+                    metavar='<user-name>', default=None)
   parser.add_option('--rsync-port', action='store', dest='rsync_port',
                     help='(dnsconfigsync)Rsync port number.', metavar='<port>',
                     default=None)
@@ -223,4 +223,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+  main(sys.argv[1:])

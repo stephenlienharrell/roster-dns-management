@@ -36,11 +36,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
 import sys
-import getpass
-
-from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -68,13 +64,12 @@ def main(args):
            'All arguments are required except for either '
            '--allow or --deny.\n' % sys.argv[0])
   args_instance = Args(command, ['remove'], args, usage)
-  parser = args_instance.parser
   options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    print 'ERROR: %s' % e
+  except cli_common_lib.ArgumentError, error:
+    print 'ERROR: %s' % error
     sys.exit(1)
 
   if( options.acl and not options.allow and not options.deny

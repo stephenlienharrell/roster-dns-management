@@ -130,12 +130,12 @@ class CoreFlags:
     ## Find irrelevant flags
     for used_flag in used_flags:
       found = False
-      for type in self.functions_dict[self.command]:
-        if( type in ['dependent_args', 'independent_args'] ):
-          for group in self.functions_dict[self.command][type]:
+      for flag_type in self.functions_dict[self.command]:
+        if( flag_type in ['dependent_args', 'independent_args'] ):
+          for group in self.functions_dict[self.command][flag_type]:
             if( used_flag in group ):
               found = True
-        if( used_flag in self.functions_dict[self.command][type] ):
+        if( used_flag in self.functions_dict[self.command][flag_type] ):
           found = True
       if( not found ):
         cli_common_lib.DnsError(

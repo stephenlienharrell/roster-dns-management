@@ -98,7 +98,7 @@ class AuthenticationMethod(object):
     try:
       ldap_server.simple_bind_s(binddn, password)
       authenticated = True
-    except self.ldap_module.LDAPError, e:
+    except self.ldap_module.LDAPError:
       authenticated = False
     finally:
       ldap_server.unbind_s()

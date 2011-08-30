@@ -36,9 +36,6 @@ __license__ = 'BSD'
 __version__ = "#TRUNK#"
 
 
-import codecs
-import string
-
 def Uni2Puny(unicode_string=None):
   """Converts a unicode domain into a punycoded domain.
 

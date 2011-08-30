@@ -36,11 +36,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
 import sys
-import getpass
-
-from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -65,15 +61,15 @@ def main(args):
            '\n'
            'To make a reserved word:\n'
            '\t%s -w <reserved-word>\n' % tuple(
-             [sys.argv[0] for x in range(1)]))
+             [sys.argv[0] for _ in range(1)]))
   args_instance = Args(command, ['make'], args, usage)
   options = args_instance.options
   parser = args_instance.parser
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    print 'ERROR: %s' % e
+  except cli_common_lib.ArgumentError, error:
+    print 'ERROR: %s' % error
     sys.exit(1)
 
   if( not options.word and len(parser.largs) == 1):
@@ -89,4 +85,4 @@ def main(args):
     print 'ADDED RESERVED_WORD: %s' % options.word
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+  main(sys.argv[1:])

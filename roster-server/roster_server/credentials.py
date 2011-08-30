@@ -40,7 +40,6 @@ __version__ = '#TRUNK#'
 import datetime
 import inspect
 import uuid
-import os
 import sys
 
 
@@ -64,7 +63,7 @@ class CredCache(object):
     Inputs:
       config_instance: instance of Config
       inf_renew_time: the that each credential is renewed (seconds)
-       unit_test: boolean indicating a unit-test is being run.
+      unit_test: boolean indicating a unit-test is being run.
     """
     self.config_instance = config_instance
     self.exp_time = self.config_instance.config_file['credentials']['exp_time']
@@ -103,15 +102,15 @@ class CredCache(object):
     if( authenticate_module_args[0] == 'self' ):
       authenticate_module_args.pop(0)
     for authenticate_module_arg in authenticate_module_args:
-       if( authenticate_module_arg == 'user_name' or
-           authenticate_module_arg == 'password' ):
-         continue
-       if( authenticate_module_arg not in self.config_instance.config_file[
-               self.authentication_method] ):
-         raise ConfigError(
-             'Could not find "%s" value in "%s" in the "%s" section.' % (
-                 authenticate_module_arg, self.config_instance.config_file_path,
-                 self.authentication_method))
+      if( authenticate_module_arg == 'user_name' or
+          authenticate_module_arg == 'password' ):
+        continue
+      if( authenticate_module_arg not in self.config_instance.config_file[
+          self.authentication_method] ):
+        raise ConfigError(
+            'Could not find "%s" value in "%s" in the "%s" section.' % (
+                authenticate_module_arg, self.config_instance.config_file_path,
+                self.authentication_method))
     kwargs_dict = {}
     for authenticate_module_arg in authenticate_module_args:
       if( authenticate_module_arg == 'user_name' ):

@@ -38,8 +38,6 @@ __version__ = '#TRUNK#'
 
 import sys
 import os
-import MySQLdb
-import MySQLdb.cursors
 from optparse import OptionParser
 import ConfigParser
 import getpass
@@ -148,7 +146,7 @@ def main(args):
   parser.add_option('--run-as', action='store', dest='run_as',
                     help='Run as uid', type='int',
                     default=0)
-  parser.add_option('-p','--db-password', action='store', dest='password',
+  parser.add_option('-p', '--db-password', action='store', dest='password',
                     help='Password for the database user. Do not use this '
                     'flag unless you need to. If not used a password prompt '
                     'will be presented.',
@@ -247,7 +245,8 @@ def main(args):
     module = int(module) - 1
 
     authentication_module = getattr(roster_server, module_list[module])
-    authentication_module_instance = authentication_module.AuthenticationMethod()
+    authentication_module_instance = (
+        authentication_module.AuthenticationMethod())
 
     if( not options.ssl_cert ):
       print 'ERROR: An ssl cert file MUST be specified with --ssl-cert.'
@@ -301,7 +300,8 @@ def main(args):
 
     config_parser.add_section(module_list[module])
     for variable in authentication_module_instance.requires:
-      if( authentication_module_instance.requires[variable]['default'] is None ):
+      if( authentication_module_instance.requires[
+          variable]['default'] is None ):
         if( authentication_module_instance.requires[variable]['optional'] ):
           value = raw_input('Enter \'%s\' for \'%s\' (Enter for None): ' % (
               variable, module_list[module]))

@@ -36,11 +36,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
 import sys
-import getpass
-
-from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -79,15 +75,16 @@ def main(args):
            'To remove a reverse range permission:\n'
            '\t%s reverse -z <zone-name> -b <cidr-block> -g <group>\n'
            '\t--access-right <access-right>\n' % tuple(
-                   [sys.argv[0] for x in range(5)]))
+                   [sys.argv[0] for _ in range(5)]))
   args_instance = Args(command,
       ['user', 'group', 'assignment', 'forward', 'reverse'], args, usage)
   options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    cli_common_lib.DnsError(str(e), 1)
+  except cli_common_lib.ArgumentError, error:
+    print 'ERROR: %s' % error
+    sys.exit(1)
 
   if( options.zone_name ):
     zones = roster_client_lib.RunFunction(u'ListZones', options.username,
@@ -146,7 +143,8 @@ def main(args):
       cli_common_lib.DnsError('Username does not exist.', 1)
 
     roster_client_lib.RunFunction(
-        u'RemoveUserGroupAssignment', options.username, credfile=options.credfile,
+        u'RemoveUserGroupAssignment', options.username,
+        credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
         args=[options.new_user, options.group])
     if( not options.quiet ):
@@ -196,4 +194,4 @@ def main(args):
     cli_common_lib.DnsError(
         'Command %s exists, but codepath doesn\'t.' % command, 1)
 if __name__ == "__main__":
-    main(sys.argv[1:])
+  main(sys.argv[1:])

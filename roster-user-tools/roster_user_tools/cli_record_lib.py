@@ -36,7 +36,6 @@ __version__ = '#TRUNK#'
 
 
 import os
-import xmlrpclib
 
 import roster_client_lib
 
@@ -276,10 +275,10 @@ class CliRecordLib:
     """
     search_target = options.target
     if( record_type == u'ptr' and search_target is not None ):
-        search_target, options.zone_name = roster_client_lib.RunFunction(
-            'GetPTRTarget', options.username, credfile=options.credfile,
-            server_name=options.server,
-            args=[options.target, options.view_name])['core_return']
+      search_target, options.zone_name = roster_client_lib.RunFunction(
+          'GetPTRTarget', options.username, credfile=options.credfile,
+          server_name=options.server,
+          args=[options.target, options.view_name])['core_return']
     elif( record_type == u'aaaa' ):
       if( record_args_dict['assignment_ip'] is not None ):
         expanded_ip = roster_client_lib.RunFunction(

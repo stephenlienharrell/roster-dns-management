@@ -36,11 +36,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
 import sys
-import getpass
-
-from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -71,18 +67,18 @@ def main(args):
            '\t%s reverse -z <zone-name> -v <view-name> -t <type>\n'
            '\t(--origin <origin> | --cidr-block <cidr-block>)\n'
            '\t[-o <options>]\n' % (
-               tuple([sys.argv[0] for x in range(2)])))
+               tuple([sys.argv[0] for _ in range(2)])))
   args_instance = Args(command, ['forward', 'reverse'], args, usage)
   options = args_instance.options
 
   try:
-    cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    print 'ERROR: %s' % e
+    cli_common_lib.CliCommonLib(options)
+  except cli_common_lib.ArgumentError, error:
+    print 'ERROR: %s' % error
     sys.exit(1)
 
   if( options.view_name == 'any' ):
-      cli_common_lib.DnsError('Cannot make view "any"', 1)
+    cli_common_lib.DnsError('Cannot make view "any"', 1)
 
   if( options.origin and not options.origin.endswith('.') ):
     cli_common_lib.DnsError('Zone origin must terminate with "."', 1)
@@ -112,17 +108,19 @@ def main(args):
           credstring=options.credstring, args=[options.origin],
           server_name=options.server)['core_return']
 
-    zones = roster_client_lib.RunFunction(
+    roster_client_lib.RunFunction(
         u'MakeZone', options.username, credfile=options.credfile,
         credstring=options.credstring,
         args=[options.zone_name, options.type, options.origin],
-        kwargs={u'view_name': options.view_name, u'zone_options': options.options,
+        kwargs={u'view_name': options.view_name,
+                u'zone_options': options.options,
                 u'make_any': options.dont_make_any},
-        server_name=options.server)['core_return']
+        server_name=options.server)
     if( not options.quiet ):
       print ('ADDED REVERSE ZONE: zone_name: %s zone_type: %s '
              'zone_origin: %s zone_options: %s view_name: %s' % (
-                 options.zone_name, options.type, options.origin, options.options,
+                 options.zone_name, options.type,
+                 options.origin, options.options,
                  options.view_name))
     if( len(reverse_range_zone_assignments) == 0 ):
       roster_client_lib.RunFunction(
@@ -136,17 +134,19 @@ def main(args):
                  options.zone_name, options.cidr_block))
 
   elif( command == 'forward' ):
-    zones = roster_client_lib.RunFunction(
+    roster_client_lib.RunFunction(
         u'MakeZone', options.username, credfile=options.credfile,
         credstring=options.credstring,
         args=[options.zone_name, options.type, options.origin],
-        kwargs={u'view_name': options.view_name, u'zone_options': options.options,
+        kwargs={u'view_name': options.view_name,
+                u'zone_options': options.options,
                 u'make_any': options.dont_make_any},
-        server_name=options.server)['core_return']
+        server_name=options.server)
     if( not options.quiet ):
       print ('ADDED FORWARD ZONE: zone_name: %s zone_type: %s '
              'zone_origin: %s zone_options: %s view_name: %s' % (
-                 options.zone_name, options.type, options.origin, options.options,
+                 options.zone_name, options.type,
+                 options.origin, options.options,
                  options.view_name))
   else:
     cli_common_lib.DnsError(

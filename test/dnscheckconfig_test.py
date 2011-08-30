@@ -55,7 +55,7 @@ CONFIG_FILE = 'test_data/roster.conf'
 EXEC = '../roster-config-manager/scripts/dnscheckconfig'
 ZONE_IMPORTER_EXEC='../roster-config-manager/scripts/dnszoneimporter'
 KEY_FILE = 'test_data/rndc.key'
-USERNAME = 'sharrell'
+USERNAME = u'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 
@@ -98,7 +98,7 @@ class TestCheckConfig(unittest.TestCase):
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
-    self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
+    self.core_instance = roster_core.Core(USERNAME, self.config_instance)
 
     db_instance.CreateRosterDatabase()
 

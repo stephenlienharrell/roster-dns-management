@@ -66,7 +66,7 @@ class FunctionError(roster_core.CoreError):
 class ServerError(roster_core.CoreError):
   pass
 
-class ThreadedXMLRPCServer(SocketServer.ThreadingMixIn,SecureXMLRPCServer):
+class ThreadedXMLRPCServer(SocketServer.ThreadingMixIn, SecureXMLRPCServer):
   pass
 
 class Server(object):
@@ -206,6 +206,7 @@ class Server(object):
     Outputs:
       instance: instance of dnsmgmtcore
     """
+    core_instance_dict = {}
     for core_instance_dict in self.core_store:
       if( core_instance_dict['user_name'] == user_name ):
         break
@@ -220,7 +221,7 @@ class Server(object):
 
     return core_instance_dict['core_instance']
 
-  def CoreRun(self, function, user_name, credfile, args=[], kwargs={}):
+  def CoreRun(self, function, user_name, credfile, args = None, kwargs = None):
     """Runs a function in core_instance with arbitrary parameters
 
     Inputs:
@@ -235,6 +236,10 @@ class Server(object):
                              'new_credential': u'
                                  be4d4ecf-d670-44a0-b957-770e118e2755'}
     """
+    if args is None:
+      args = []
+    if kwargs is None:
+      kwargs = {}
     uuid_string = None
     credfile = unicode(credfile)
     user_name = unicode(user_name)
@@ -280,9 +285,9 @@ class Server(object):
           core_return = run_func(*args, **kwargs)
         else:
           raise ArgumentError('Arguments do not match.')
-      except Exception, e:
+      except Exception, error:
         uuid_string = self.LogException(function, args, kwargs, user_name)
-        return {'log_uuid_string': uuid_string, 'error': str(e),
+        return {'log_uuid_string': uuid_string, 'error': str(error),
                 'core_return': None, 'new_credential': None}
       core_return = {'core_return': core_return, 'new_credential': cred_status,
                      'log_uuid_string': uuid_string, 'error': None}
@@ -314,10 +319,10 @@ class Server(object):
             user_name] + self.get_credentials_wait_increment
       elif( self.get_credentials_wait.has_key(user_name) ):
         self.get_credentials_wait.pop(user_name)
-    except Exception, e:
+    except Exception, error:
       uuid_string = self.LogException(
           'GetCredentials', [user_name, '<password>'], {}, user_name)
-      return {'log_uuid_string': uuid_string, 'error': str(e),
+      return {'log_uuid_string': uuid_string, 'error': str(error),
               'core_return': None, 'new_credential': None}
 
     return cred_string
@@ -337,10 +342,10 @@ class Server(object):
       core_instance = self.GetCoreInstance(user_name)
       valid = self.cred_cache_instance.CheckCredential(
           credstring, user_name, core_instance)
-    except Exception, e:
+    except Exception, error:
       uuid_string = self.LogException(
           'IsAuthenticated', [user_name, '<credstring>'], {}, user_name)
-      return {'log_uuid_string': uuid_string, 'error': str(e),
+      return {'log_uuid_string': uuid_string, 'error': str(error),
               'core_return': None, 'new_credential': None}
     if( valid == '' ):
       return True

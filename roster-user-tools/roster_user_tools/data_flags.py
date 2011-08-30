@@ -163,7 +163,8 @@ class Record(core_flags.CoreFlags):
                            metavar='<hostname>')
     self.AddFlagRule('mail_server', command='mx', required=not_list)
 
-    self.parser.add_option('-z', '--zone-name', action='store', dest='zone_name',
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name',
                            help=('String of the <zone-name>. Example: '
                                  '"sub.university.edu"'), metavar='<zone-name>',
                            default=None)
@@ -182,12 +183,12 @@ class Record(core_flags.CoreFlags):
     default_view = None
     if( self.action == 'Make' ):
       default_view = u'any'
-    self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name',
                            help='String of view name.', metavar='<view-name>',
                            default=default_view)
     self.SetAllFlagRule('view_name', required=self.action == 'Remove')
     self.AddFlagRule('view_name', required=self.action == 'Make', command='soa')
-
 
 class Zone(core_flags.CoreFlags):
   """Command line zone flags"""
@@ -413,7 +414,8 @@ class Hosts(core_flags.CoreFlags):
                            dest='zone_name', help='String of the zone name.',
                            metavar='<zone-name>', default=None)
     self.SetAllFlagRule('zone_name', required=False)
-    self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name',
                            help=('String of the view name <view-name>. Example: '
                                  '"internal"'), metavar='<view-name>',
                            default='any')
@@ -441,8 +443,10 @@ class MassAdd(core_flags.CoreFlags):
                            dest='zone_name', help='String of the zone name.',
                            metavar='<zone-name>', default=None)
     self.SetAllFlagRule('zone_name', required=True)
-    self.parser.add_option('-v', '--view-name', action='store', dest='view_name',
-                           help=('String of the view name <view-name>. Example: '
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name',
+                           help=('String of the view name <view-name>. '
+                                 'Example: '
                                  '"internal"'), metavar='<view-name>',
                            default='any')
     self.SetAllFlagRule('view_name', required=True)
@@ -466,13 +470,15 @@ class NamedGlobals(core_flags.CoreFlags):
     self.AddFlagRule('dns_server_set', required=True, command='list')
     self.AddFlagRule('dns_server_set', required=True, command='revert')
     self.AddFlagRule('dns_server_set', required=True, command='edit')
-    self.parser.add_option('-i', '--option-id', action='store', dest='option_id',
+    self.parser.add_option('-i', '--option-id', action='store',
+                           dest='option_id',
                            help='Integer of option id.', metavar='<option-id>',
                            default=None)
     self.AddFlagRule('option_id', required=False, command='list')
     self.AddFlagRule('option_id', required=False, command='dump')
     self.AddFlagRule('option_id', required=True, command='revert')
-    self.parser.add_option('-t', '--timestamp', action='store', dest='timestamp',
+    self.parser.add_option('-t', '--timestamp', action='store',
+                           dest='timestamp',
                            help='String of timestamp in YYYY/MM/DD/HH/MM/SS '
                                 'format.', metavar='<timestamp>', default=None)
     self.AddFlagRule('timestamp', required=False, command='list')
@@ -500,7 +506,8 @@ class Credential(core_flags.CoreFlags):
   """Command line credential flags"""
   def SetDataFlags(self):
     """Sets flags for self.parser"""
-    self.parser.add_option('-U', '--user-credential', action='store', dest='user_credential',
+    self.parser.add_option('-U', '--user-credential', action='store',
+                      dest='user_credential',
                       help='Username to apply credential to.',
                       metavar='<user-credential>', default=None)
     self.AddFlagRule('user_credential', command='make_infinite')

@@ -39,8 +39,6 @@ __version__ = '#TRUNK#'
 
 
 import dns.zone
-import dns.rdatatype
-from dns.exception import DNSException
 import IPy
 import roster_core
 
@@ -110,7 +108,7 @@ class ZoneImport(object):
       # fill out the rest of the ipv6 address
       ip_parts.extend(['0' for x in range(32-ip_quartets)])
 
-      for x in range(1,8):
+      for x in range(1, 8):
         # Put colons every 4 quartets
         ip_parts.insert((x*4)+(x-1), ':')
       cidr_block = ''.join(ip_parts)
@@ -118,7 +116,7 @@ class ZoneImport(object):
       cidr_block = '%s/%s' % (cidr_block, ip_quartets * 4)
 
     else:
-        raise Error('%s is not a reverse zone.' % self.zone_name)
+      raise Error('%s is not a reverse zone.' % self.zone_name)
 
     return cidr_block
 

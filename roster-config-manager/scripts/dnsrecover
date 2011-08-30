@@ -57,7 +57,7 @@ def main(args):
            '\n'
            'To recover a single audit step:\n'
            '\t%s -i <id> --single\n' % tuple(
-             [sys.argv[0] for x in range(2)]))
+             [sys.argv[0] for _ in range(2)]))
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
@@ -97,4 +97,4 @@ def main(args):
     recovery_instance.RunAuditRange(options.id)
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+  main(sys.argv[1:])

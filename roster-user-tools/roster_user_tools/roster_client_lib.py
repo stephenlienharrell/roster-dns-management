@@ -65,6 +65,10 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
   Outputs:
     return from function in core
   """
+  # if args is None:
+  #   args = []
+  # if kwargs is None:
+  #   kwargs = {}
   if( credfile is None ):
     credfile = os.path.expanduser('~/.dnscred')
   else:
@@ -100,12 +104,12 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
                                core_return['log_uuid_string'], 1)
 
   if( core_return == 'ERROR: Invalid Credentials' ):
-      if( not CheckCredentials(user_name, credfile, server_name,
+    if( not CheckCredentials(user_name, credfile, server_name,
                                password=password) ):
-        print "ERROR: Credential file not found, invalid credentials."
-        sys.exit(1)
+      print "ERROR: Credential file not found, invalid credentials."
+      sys.exit(1)
   elif( core_return['new_credential'] is not None and
-        core_return['new_credential'] != '' ):
+    core_return['new_credential'] != '' ):
     if( os.path.exists(credfile) ):
       credfile_handle = open(credfile, 'w')
       try:
@@ -178,8 +182,8 @@ def IsAuthenticated(user_name, credfile,
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
   authenticated = server.IsAuthenticated(user_name, credstring)
   if( type(authenticated) == dict and 'error' in authenticated ):
-      cli_common_lib.ServerError(authenticated['error'],
-                                 authenticated['log_uuid_string'], 1)
+    cli_common_lib.ServerError(authenticated['error'],
+                                authenticated['log_uuid_string'], 1)
   else:
     return authenticated
 
@@ -237,3 +241,4 @@ def CheckServerVersionMatch(server_name):
     print ('user_tools version %s mismatch with server version %s' % (
                __version__, server_version))
     sys.exit(1)
+    

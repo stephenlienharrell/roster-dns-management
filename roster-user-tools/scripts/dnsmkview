@@ -36,11 +36,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
 import sys
-import getpass
-
-from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -75,7 +71,7 @@ def main(args):
            'To make view assignments:\n'
            '\t%s view_subset -v <view-superset-name>\n'
            '\t-V <view-subset-name>\n' % tuple(
-               [sys.argv[0] for x in range(4)]))
+               [sys.argv[0] for _ in range(4)]))
 
   args_instance = Args(command,
       ['view', 'dns_server_set', 'acl', 'view_subset'], args, usage)
@@ -83,8 +79,8 @@ def main(args):
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    cli_common_lib.DnsError(str(e), 1)
+  except cli_common_lib.ArgumentError, error:
+    cli_common_lib.DnsError(str(error), 1)
 
   views = roster_client_lib.RunFunction(
       u'ListViews', options.username, credfile=options.credfile,
@@ -122,7 +118,8 @@ def main(args):
 
   elif( command == 'dns_server_set' ):
     if( options.view_name not in views ):
-      cli_common_lib.DnsError('View "%s" does not exist.' % options.view_name, 1)
+      cli_common_lib.DnsError(
+          'View "%s" does not exist.' % options.view_name, 1)
     dns_server_sets = roster_client_lib.RunFunction(
         u'ListDnsServerSets', options.username,
         credfile=options.credfile, credstring=options.credstring,
@@ -141,7 +138,8 @@ def main(args):
 
   elif( command == 'acl' ):
     if( options.view_name not in views ):
-      cli_common_lib.DnsError('View "%s" does not exist.' % options.view_name, 1)
+      cli_common_lib.DnsError(
+          'View "%s" does not exist.' % options.view_name, 1)
     view_acl_assignments = roster_client_lib.RunFunction(
         u'ListViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
@@ -161,7 +159,8 @@ def main(args):
 
   elif( command == 'view_subset' ):
     if( options.view_name not in views ):
-      cli_common_lib.DnsError('View "%s" does not exist.' % options.view_name, 1)
+      cli_common_lib.DnsError(
+          'View "%s" does not exist.' % options.view_name, 1)
     view_assignments = roster_client_lib.RunFunction(
         u'ListViewAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
@@ -172,7 +171,7 @@ def main(args):
     if( options.view_name not in view_assignments ):
       view_assignment_exists = False
     elif( options.view_subset not in view_assignments[options.view_name] ):
-        view_assignment_exists = False
+      view_assignment_exists = False
 
     if( view_assignment_exists ):
       cli_common_lib.DnsError('View assignment already exists.', 1)

@@ -30,7 +30,7 @@
 
 """Common library for DNS management command line tools."""
 
-__copyright_ = 'Copyright (C) 2009, Purdue University'
+__copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
@@ -62,7 +62,7 @@ class CliCommonLib:
     self.config_file = ConfigParser.SafeConfigParser()
     if( hasattr(options, 'config_file') and options.config_file is not None ):
       config_file = self.options.config_file
-      a = self.config_file.read(config_file)
+      self.config_file.read(config_file)
       if( hasattr(self.options, 'server') ):
         if( not self.options.server ):
           self.options.server = self.config_file.get('user_tools', 'server')
@@ -80,7 +80,7 @@ class CliCommonLib:
                              '/etc/roster/roster_user_tools.conf'])
       for config_file in file_locations:
         if( os.path.exists(config_file) ):
-          a = self.config_file.read(config_file)
+          self.config_file.read(config_file)
           if( hasattr(self.options, 'server') ):
             if( not self.options.server ):
               self.options.server = self.config_file.get('user_tools', 'server')
@@ -88,7 +88,7 @@ class CliCommonLib:
             if( not options.credfile ):
               self.options.credfile = self.config_file.get('user_tools',
                                                            'cred_file')
-          break;
+          break
       else:
         if( hasattr(self.options, 'server') ):
           if( not self.options.server ):
@@ -124,14 +124,16 @@ class CliCommonLib:
   ## Function accessors, need to be removed at some point
   def DnsError(self, message, exit_status=0):
     return DnsError(message, exit_status)
-  def ServerError(self, message, uuid_string, exit_status=0):
+  def ServerError(self, message, exit_status=0):
     return ServerError(message, exit_status)
   def DnsWarning(self, message):
     return DnsWarning(message)
   def PrintColumns(self, print_list, first_line_header=False):
     return PrintColumns(print_list, first_line_header)
-  def PrintRecords(self, records_dictionary, ip_address_list=[],
+  def PrintRecords(self, records_dictionary, ip_address_list=None,
                    print_headers=False):
+    if ip_address_list is None:
+      ip_address_list = []
     return PrintRecords(records_dictionary, ip_address_list, print_headers)
   def PrintHosts(self, records_dictionary, ip_address_list, view_name=None):
     return PrintHosts(records_dictionary, ip_address_list, view_name)
@@ -201,12 +203,10 @@ def PrintColumns(print_list, first_line_header=False):
     for column in print_list[0]:
       lengths.append(0)
   ## Get sizes of strings
-  total_length = 0
   for row in print_list:
     for column_index, column in enumerate(row):
       if( len(str(column)) > lengths[column_index] ):
         lengths[column_index] = len(str(column))
-        total_length += len(str(column)) - 1
   ## Construct string
   print_string_list = []
   for row in print_list:
@@ -219,18 +219,20 @@ def PrintColumns(print_list, first_line_header=False):
     print_string_list.append('%s\n' % print_line.strip())
     if( first_line_header and (print_list.index(row) == 0) ):
       hyphen_list = []
-      for character in range(len(print_line.strip())):
+      for _ in range(len(print_line.strip())):
         hyphen_list.append('-')
       print_string_list.append('%s\n' % ''.join(hyphen_list))
   return ''.join(print_string_list)
 
-def PrintRecords(records_dictionary, ip_address_list=[], print_headers=True):
+def PrintRecords(records_dictionary, ip_address_list=None, print_headers=True):
   """Prints records dictionary in a nice usable format.
 
   Inputs:
     records_dictionary: dictionary of records
     ip_address_list: list of ip_addresses to use
   """
+  if ip_address_list is None:
+    ip_address_list = []
   if( ip_address_list == [] ):
     for view in records_dictionary:
       ip_address_list.extend(records_dictionary[view].keys())
@@ -264,7 +266,6 @@ def PrintHosts(records_dictionary, ip_address_list, view_name=None):
     ip_address_list: list of ip_addresses
     view_name: string of view_name
   """
-  print_dict = {}
   print_list = []
   sorted_records = SortRecordsDict(records_dictionary, view_name)
   for ip_address in ip_address_list:
@@ -272,7 +273,9 @@ def PrintHosts(records_dictionary, ip_address_list, view_name=None):
       print_list.append(['#%s' % ip_address, '', '', ''])
       continue
     if( len(sorted_records[ip_address]['reverse']) > 1 ):
-      raise HostsError('Multiple reverse records found for %s' % str(sorted_records[ip_address]))
+      raise HostsError(
+          'Multiple reverse records found for %s' % (
+              str(sorted_records[ip_address])))
     elif( len(sorted_records[ip_address]['reverse']) == 0 ):
       for record in sorted_records[ip_address]['forward']:
         forward_zone_origin = record['zone_origin'].rstrip('.')
@@ -286,7 +289,6 @@ def PrintHosts(records_dictionary, ip_address_list, view_name=None):
       reverse_record = sorted_records[ip_address]['reverse'][0]
       for record_number, record in enumerate(
           sorted_records[ip_address]['forward']):
-        last_record = record
         if( record['host'].replace('@.', '') ==
             reverse_record['host'].replace('@.', '') ):
           forward_zone_origin = record['zone_origin'].rstrip('.')
@@ -319,7 +321,7 @@ def EditFile(fname):
     int: return code from editor
   """
   if( 'EDITOR' not in os.environ ):
-      DnsError('EDITOR environment variable not set.', 1)
+    DnsError('EDITOR environment variable not set.', 1)
   closenum = os.system('%s %s' % (os.environ['EDITOR'], fname))
 
   if( closenum is None ):

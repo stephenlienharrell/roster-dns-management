@@ -74,9 +74,9 @@ def main(args):
     if( not options.quiet ):
       print ('No changes made to database. In order to export use the --force '
              'flag.')
-  except tree_exporter.Error, e:
-    print 'ERROR: %s' % str(e)
+  except tree_exporter.Error, error:
+    print 'ERROR: %s' % str(error)
     sys.exit(1)
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+  main(sys.argv[1:])

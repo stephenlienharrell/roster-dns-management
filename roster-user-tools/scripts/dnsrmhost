@@ -36,12 +36,9 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
 import sys
-import getpass
 import xmlrpclib
 
-from optparse import OptionParser
 from roster_user_tools import cli_record_lib
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -68,14 +65,14 @@ def main(args):
            'To remove a host:\n'
            '\t%s --ip-address <ip-address> -t <target>\n'
            '\t-z <zone-name> [--ttl <ttl>] [-v <view-name>]\n' % tuple(
-               [sys.argv[0] for x in range(1)]))
+               [sys.argv[0] for _ in range(1)]))
   args_instance = Args(command, ['host'], args, usage)
   options = args_instance.options
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    print 'ERROR: %s' % e
+  except cli_common_lib.ArgumentError, error:
+    print 'ERROR: %s' % error
     sys.exit(1)
   cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
 
@@ -98,7 +95,7 @@ def main(args):
       server_name=options.server, kwargs={'zone_name': reverse_zone_name})[
           'core_return']
   try:
-    reverse_zone_origin = zone_info[reverse_zone_name][
+    zone_info[reverse_zone_name][
         options.view_name]['zone_origin']
   except KeyError:
     cli_common_lib_instance.DnsError('Reverse zone not found.', 1)

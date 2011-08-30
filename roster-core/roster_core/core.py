@@ -120,8 +120,8 @@ class Core(object):
       self.db_instance.EndTransaction()
 
     user_access_level_dict = {}
-    for user in users:
-      user_access_level_dict[user['user_name']] = user['access_level']
+    for user_dict in users:
+      user_access_level_dict[user_dict['user_name']] = user_dict['access_level']
 
     return user_access_level_dict
 
@@ -513,7 +513,7 @@ class Core(object):
     try:
       self.db_instance.StartTransaction()
       try:
-         row_count += self.db_instance.RemoveRow('acls', acls_dict)
+        row_count += self.db_instance.RemoveRow('acls', acls_dict)
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -548,11 +548,11 @@ class Core(object):
     try:
       self.db_instance.StartTransaction()
       try:
-         # Will only be one ACL because acl_name/cidr_block are unique
-         acls = self.db_instance.ListRow('acl_ranges', acl_ranges_dict)
-         if( acls ):
-           row_count += self.db_instance.RemoveRow('acl_ranges',
-                                                   acls[0])
+        # Will only be one ACL because acl_name/cidr_block are unique
+        acls = self.db_instance.ListRow('acl_ranges', acl_ranges_dict)
+        if( acls ):
+          row_count += self.db_instance.RemoveRow('acl_ranges',
+                                                  acls[0])
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -946,16 +946,16 @@ class Core(object):
                 assignment[
                     'dns_server_set_view_assignments_dns_server_set_name'])
       else:
-         if( not assignment[
-               'dns_server_set_view_assignments_dns_server_set_name'] in
-               assignments_dict ):
-           assignments_dict[
-               assignment[
-                   'dns_server_set_view_assignments_dns_server_set_name']] = []
+        if( not assignment[
+              'dns_server_set_view_assignments_dns_server_set_name'] in
+                  assignments_dict ):
+          assignments_dict[
+              assignment[
+                  'dns_server_set_view_assignments_dns_server_set_name']] = []
 
-         assignments_dict[assignment[
-             'dns_server_set_view_assignments_dns_server_set_name']].append(
-                 assignment['dns_server_set_view_assignments_view_name'])
+        assignments_dict[assignment[
+            'dns_server_set_view_assignments_dns_server_set_name']].append(
+                assignment['dns_server_set_view_assignments_view_name'])
 
     return assignments_dict
 
@@ -1459,7 +1459,7 @@ class Core(object):
     zone_view_assignments = {}
     for row in zone_view_assignment_rows:
       if( not row['zone_view_assignments_zone_name'] in zone_view_assignments ):
-         zone_view_assignments[row['zone_view_assignments_zone_name']] = {}
+        zone_view_assignments[row['zone_view_assignments_zone_name']] = {}
 
       if( not row['zone_view_assignments_view_dependency'].replace('_dep', '')
           in zone_view_assignments[row['zone_view_assignments_zone_name']] ):
@@ -1974,7 +1974,7 @@ class Core(object):
     return self.db_instance.GetEmptyRecordArgsDict(record_type)
 
   def ListRecords(self, record_type=None, target=None, zone_name=None,
-                  view_name=None, ttl=None, record_args_dict={}):
+                  view_name=None, ttl=None, record_args_dict=None):
     """Lists records.
 
     Inputs:
@@ -2009,6 +2009,8 @@ class Core(object):
                    'mail_server': 'smtp-02.university.edu.'},
                    'last_user': 'sharrell}]
     """
+    if not record_args_dict:
+      record_args_dict = {}
     self.user_instance.Authorize('ListRecords')
     if( view_name is not None and view_name != u'any' and not
           view_name.endswith('_dep') ):
@@ -2079,7 +2081,8 @@ class Core(object):
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
     if( view_name is None or view_name == u'any'):
       if( record_type == u'soa' ):
-        raise errors.InvalidInputError('An SOA cannot be made in the "any" view.')
+        raise errors.InvalidInputError(
+            'An SOA cannot be made in the "any" view.')
       view_name = u'any'
     else:
       view_name = '%s_dep' % view_name
@@ -2284,20 +2287,21 @@ class Core(object):
     success = False
     try:
       self.db_instance.StartTransaction()
-      row_count = 0
       try:
         update_records_dict['record_type'] = None
         if( search_record_type == 'cname' ):
           all_records = self.db_instance.ListRow('records',
                                                  update_records_dict)
           if( len(all_records) > 0 ):
-            raise errors.InvalidInputError('Record already exists with target %s.' % (
+            raise errors.InvalidInputError(
+                'Record already exists with target %s.' % (
                                      update_target))
         update_records_dict['record_type'] = u'cname'
         cname_records = self.db_instance.ListRow('records',
                                                  update_records_dict)
         if( len(cname_records) > 0 ):
-          raise errors.InvalidInputError('CNAME already exists with target %s.' % (
+          raise errors.InvalidInputError(
+              'CNAME already exists with target %s.' % (
                                    update_target))
 
         update_records_dict['record_type'] = search_record_type
@@ -2359,7 +2363,7 @@ class Core(object):
           search_records_dict['records_id'] = final_id_set.pop()
           new_records = self.db_instance.ListRow('records',
                                                  search_records_dict)
-          row_count += self.db_instance.UpdateRow('records', new_records[0],
+          self.db_instance.UpdateRow('records', new_records[0],
                                                   update_records_dict)
           for update_args in update_args_list:
             for search_args in search_args_list:
@@ -2367,12 +2371,13 @@ class Core(object):
                   'record_arguments_records_assignments_argument_name'] == (
                       update_args[
                   'record_arguments_records_assignments_argument_name']) ):
-                row_count += self.db_instance.UpdateRow(
+                self.db_instance.UpdateRow(
                     'record_arguments_records_assignments',
                     search_args, update_args)
         else:
-          raise errors.InvalidInputError('Multiple records found for used search '
-                                   'terms.')
+          raise errors.InvalidInputError(
+              'Multiple records found for used search '
+              'terms.')
         if( update_view_name is None ):
           update_view_name = search_view_name
         if( update_zone_name is None ):
@@ -2469,8 +2474,9 @@ class Core(object):
             raise errors.RecordError('Could not remove record with ID "%s" '
                                    'for an unknown reason.' % final_id[0])
         else:
-          raise errors.InvalidInputError('Multiple records found for used search '
-                                 'terms.')
+          raise errors.InvalidInputError(
+              'Multiple records found for used search '
+              'terms.')
         missing_ok = False
         if( record_type == u'soa' ):
           missing_ok = True
@@ -2821,8 +2827,8 @@ class Core(object):
 
       if( len(soa_records_list) == 0 ):
         if( not missing_ok ):
-          pass
-          raise errors.RecordError('No SOA record found for zone "%s" view "%s".' % (
+          raise errors.RecordError(
+              'No SOA record found for zone "%s" view "%s".' % (
               zone_name, view_name))
       else:
         soa_records_list = soa_records_list[0]
@@ -3129,23 +3135,24 @@ class Core(object):
     self.user_instance.Authorize('ListAuditLog')
     if( (begin_timestamp or end_timestamp) and not
         (begin_timestamp or end_timestamp) ):
-      raise errors.UnexpectedDataError('Missing begin_timestamp or end_timestamp.')
+      raise errors.UnexpectedDataError(
+          'Missing begin_timestamp or end_timestamp.')
     audit_dict = {'audit_log_id': None, 'audit_log_user_name': user_name,
                   'action': action, 'data': None, 'success': success,
                   'audit_log_timestamp': None}
     self.db_instance.StartTransaction()
     try:
       if( begin_timestamp and end_timestamp ):
-        audit_log = self.db_instance.ListRow(
+        audit_log_rows = self.db_instance.ListRow(
             'audit_log', audit_dict, column='audit_log_timestamp',
             is_date=True,
             range_values=(begin_timestamp, end_timestamp))
       else:
-        audit_log = self.db_instance.ListRow('audit_log', audit_dict)
+        audit_log_rows = self.db_instance.ListRow('audit_log', audit_dict)
     finally:
       self.db_instance.EndTransaction()
 
-    return audit_log
+    return audit_log_rows
 
   def SetMaintenanceFlag(self, value):
     """Sets maintenance flag

@@ -36,13 +36,10 @@ __version__ = '#TRUNK#'
 
 
 import constants
-import core
 import errors
 import helpers_lib
-import user
 
 import datetime
-import math
 
 import IPy
 
@@ -76,11 +73,11 @@ class CoreHelpers(object):
   def ExpandIPV6(self, ip_address):
     return helpers_lib.ExpandIPV6(ip_address)
 
-  def GetViewsByUser(self, user):
-    """Lists view names available to given user
+  def GetViewsByUser(self, username):
+    """Lists view names available to given username
 
     Inputs:
-        user: string of user name
+        username: string of user name
 
     Outputs:
         list: list of view name strings
@@ -91,7 +88,7 @@ class CoreHelpers(object):
     success = False
     try:
       users_dict = self.db_instance.GetEmptyRowDict('users')
-      users_dict['user_name'] = user
+      users_dict['user_name'] = username
       user_group_assignments_dict = self.db_instance.GetEmptyRowDict(
           'user_group_assignments')
       groups_dict = self.db_instance.GetEmptyRowDict('groups')
@@ -119,12 +116,12 @@ class CoreHelpers(object):
                                   current_args, success)
     return views
 
-  def GetCIDRBlocksByView(self, view, user):
-    """Lists CIDR blocks available to a user in a given view
+  def GetCIDRBlocksByView(self, view, username):
+    """Lists CIDR blocks available to a username in a given view
 
     Inputs:
         view: string of view name
-        user: string of user name
+        username: string of user name
 
     Outputs:
         list: list of cidr block strings
@@ -132,7 +129,7 @@ class CoreHelpers(object):
     self.user_instance.Authorize('GetCIDRBlocksByView')
     cidrs = set([])
     users_dict = self.db_instance.GetEmptyRowDict('users')
-    users_dict['user_name'] = user
+    users_dict['user_name'] = username
     views_dict = self.db_instance.GetEmptyRowDict('views')
     views_dict['view_name'] = view
 
@@ -271,8 +268,9 @@ class CoreHelpers(object):
     named_config = self.core_instance.ListNamedConfGlobalOptions(
         dns_server_set=dns_server_set, option_id=option_id)
     if( len(named_config) == 0 ):
-      raise errors.InvalidInputError('DNS server set "%s" does not contain id "%s"' % (
-          dns_server_set, option_id))
+      raise errors.InvalidInputError(
+        'DNS server set "%s" does not contain id "%s"' % (
+            dns_server_set, option_id))
     elif( len(named_config) == 1 ):
       self.core_instance.MakeNamedConfGlobalOption(
           dns_server_set, named_config[0]['options'])
@@ -361,7 +359,7 @@ class CoreHelpers(object):
     if( record_args_dict['assignment_host'].startswith('@.') ):
       record_args_dict['assignment_host'] = record_args_dict[
           'assignment_host'].lstrip('@.')
-    self.core_instance.RemoveRecord(u'ptr', target, zone_name,
+    self.core_instance.RemoveRecord(record_type, target, zone_name,
                                     record_args_dict, view_name, ttl)
 
   def ListAvailableIpsInCIDR(self, cidr_block, num_ips=1, view_name=None,
@@ -382,7 +380,8 @@ class CoreHelpers(object):
     try:
       cidr_block_ipy = IPy.IP(cidr_block)
     except ValueError:
-      raise errors.InvalidInputError('%s is not a valid cidr block' % cidr_block)
+      raise errors.InvalidInputError(
+          '%s is not a valid cidr block' % cidr_block)
     reserved_ips = []
     if( cidr_block_ipy.version() == 6 ):
       reserved = constants.RESERVED_IPV6
@@ -392,7 +391,8 @@ class CoreHelpers(object):
       reserved_ips.append(IPy.IP(cidr))
     for reserved_ip in reserved_ips:
       if( IPy.IP(cidr_block) in reserved_ip ):
-        raise errors.InvalidInputError('%s is in a reserved IP space' % cidr_block)
+        raise errors.InvalidInputError(
+            '%s is in a reserved IP space' % cidr_block)
     records = self.ListRecordsByCIDRBlock(cidr_block, view_name=view_name,
                                           zone_name=zone_name)
     taken_ips = []
@@ -400,7 +400,7 @@ class CoreHelpers(object):
     for view in records:
       for ip in records[view]:
         taken_ips.append(ip)
-    count = 0L;
+    count = 0L
     while( count < (cidr_block_ipy.len() - 1) ):
       count += 1L
       if( len(avail_ips) >= num_ips ):
@@ -518,7 +518,7 @@ class CoreHelpers(object):
             (decimal_ip_upper >> (64 - cidr_size)) << (64 - cidr_size))
         decimal_ip_upper_upper = (
             (pow(2,64 - cidr_size) - 1 ) | decimal_ip_upper)
-        column='ipv6_dec_upper'
+        column = 'ipv6_dec_upper'
         range_values = (decimal_ip_upper_lower, decimal_ip_upper_upper)
       self.db_instance.StartTransaction()
       try:
@@ -536,7 +536,7 @@ class CoreHelpers(object):
 
     ## Parse returned list
     parsed_record_dict = {}
-    for index, record_entry in enumerate(record_list):
+    for _, record_entry in enumerate(record_list):
       if( record_entry[u'record_type'] not in
           constants.RECORD_TYPES_INDEXED_BY_IP ):
         raise errors.IPIndexError('Record type not indexable by '
@@ -570,7 +570,8 @@ class CoreHelpers(object):
       record_item['record_ttl'] = record_entry['record_ttl']
       record_item['record_zone_name'] = record_entry['record_zone_name']
       record_item[u'zone_origin'] = record_entry[u'zone_origin']
-      record_item['record_view_dependency'] = record_entry['record_view_dependency']
+      record_item['record_view_dependency'] = record_entry[
+          'record_view_dependency']
       #record_item['record_last_updated'] = record_entry['record_last_updated']
       record_item['record_last_user'] = record_entry['record_last_user']
       if record_entry[u'record_view_dependency'].endswith('_dep'):
@@ -594,7 +595,8 @@ class CoreHelpers(object):
         record_item[u'forward'] = False
         record_item[u'host'] = record_entry[u'argument_value'][:-1]
         assignment_ip = helpers_lib.UnReverseIP(
-            '%s.%s' % (record_entry['record_target'],record_entry['zone_origin']))
+            '%s.%s' % (
+                record_entry['record_target'],record_entry['zone_origin']))
         record_item[u'record_args_dict'] = {'assignment_ip': assignment_ip}
         parsed_record_dict[record_view][record_ip].insert(0, record_item )
 
@@ -691,7 +693,8 @@ class CoreHelpers(object):
           found_records_dict = self.db_instance.ListRow(
               'records', records_dict)
           if( len(found_records_dict) != 1 ):
-            raise errors.UnexpectedDataError('Incorrect number of records found!')
+            raise errors.UnexpectedDataError(
+                'Incorrect number of records found!')
           try:
             self.core_instance.user_instance.Authorize(
                 function_name,
@@ -700,7 +703,7 @@ class CoreHelpers(object):
                       'zone_name': records_dict['record_zone_name'],
                       'view_name': records_dict['record_view_dependency']},
                 current_transaction=True)
-          except user.AuthenticationError:
+          except errors.AuthenticationError:
             continue
           row_count += self.db_instance.RemoveRow(
               'records', found_records_dict[0])
@@ -711,7 +714,6 @@ class CoreHelpers(object):
         raise
       self.db_instance.EndTransaction()
       success = True
-      remove_record_string = ''
       log_list = []
       for record_id in remove_record_dict:
         log_list.append('record_id:')
@@ -719,15 +721,13 @@ class CoreHelpers(object):
         for record in remove_record_dict[record_id]:
           log_list.append('%s:' % record)
           log_list.append(remove_record_dict[record_id][record])
-      if( log_list ):
-         remove_record_string = ' '.join(log_list)
       success = True
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
     return row_count
 
-  def ProcessRecordsBatch(self, delete_records=[], add_records=[]):
+  def ProcessRecordsBatch(self, delete_records = None, add_records = None):
     """Proccess batches of records
 
     Inputs:
@@ -751,6 +751,10 @@ class CoreHelpers(object):
     Outputs:
       int: row count
     """
+    if delete_records is None:
+      delete_records = []
+    if add_records is None:
+      add_records = []
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     log_dict = {'delete': [], 'add': []}
     row_count = 0
@@ -774,7 +778,8 @@ class CoreHelpers(object):
           record_dict['record_ttl'] = record['record_ttl']
           if( record['record_view_dependency'].endswith('_dep') or
               record['record_view_dependency'] == u'any' ):
-            record_dict['record_view_dependency'] = record['record_view_dependency']
+            record_dict['record_view_dependency'] = record[
+                'record_view_dependency']
           else:
             record_dict['record_view_dependency'] = (
                 '%s_dep' % record['record_view_dependency'])

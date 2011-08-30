@@ -80,7 +80,7 @@ class SecureXMLRpcRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
       data = self.rfile.read(int(self.headers["content-length"]))
       response = self.server._marshaled_dispatch(
           data, getattr(self, '_dispatch', None))
-    except:
+    except Exception:
       self.send_response(500)
       self.end_headers()
     else:

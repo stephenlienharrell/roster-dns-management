@@ -69,7 +69,6 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import datetime
 import Queue
 import threading
 import time
@@ -77,7 +76,6 @@ import uuid
 import warnings
 
 import MySQLdb
-import MySQLdb.cursors
 
 import constants
 import data_validation
@@ -199,14 +197,14 @@ class dbAccess(object):
 
     if( self.connection is None ):
       if( self.ssl ):
-          self.connection = MySQLdb.connect(
-              host=self.db_host, user=self.db_user, passwd=self.db_passwd,
-              db=self.db_name, use_unicode=True, charset='utf8',
-              ssl=self.ssl_settings)
+        self.connection = MySQLdb.connect(
+            host=self.db_host, user=self.db_user, passwd=self.db_passwd,
+            db=self.db_name, use_unicode=True, charset='utf8',
+            ssl=self.ssl_settings)
       else:
-          self.connection = MySQLdb.connect(
-              host=self.db_host, user=self.db_user, passwd=self.db_passwd,
-              db=self.db_name, use_unicode=True, charset='utf8')
+        self.connection = MySQLdb.connect(
+            host=self.db_host, user=self.db_user, passwd=self.db_passwd,
+            db=self.db_name, use_unicode=True, charset='utf8')
       self.cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
 
     while_sleep = 0
@@ -544,9 +542,10 @@ class dbAccess(object):
       raise errors.UnexpectedDataError('No args given, must at least have a '
                                      'pair of table name and row dict')
     if( len(args) % 2 ):
-      raise errors.UnexpectedDataError('Number of unnamed args is not even. Args '
-                                     'should be entered in pairs of table name '
-                                     'and row dict.')
+      raise errors.UnexpectedDataError(
+          'Number of unnamed args is not even. Args '
+          'should be entered in pairs of table name '
+          'and row dict.')
     count = 0
     for arg in args:
       count += 1
@@ -573,8 +572,9 @@ class dbAccess(object):
                                          'DateTime type' % (column, args[0]))
         for date in range_values:
           if( not self.data_validation_instance.isDateTime(date) ):
-            raise errors.UnexpectedDataError('Date: %s from range is not a valid '
-                                           'datetime object' % date)
+            raise errors.UnexpectedDataError(
+                'Date: %s from range is not a valid '
+                'datetime object' % date)
       else:
         for value in range_values:
           if( not self.data_validation_instance.isUnsignedInt(value) ):
@@ -603,11 +603,11 @@ class dbAccess(object):
     column_names = []
     search_dict = {}
     for table_name, row_dict in tables.iteritems():
-      for k, v in row_dict.iteritems():
-        column_names.append('%s.%s' % (table_name, k))
-        if( v is not None ):
-          search_dict[k] = v
-          query_where.append('%s%s%s%s' % (k, '=%(', k, ')s'))
+      for key, value in row_dict.iteritems():
+        column_names.append('%s.%s' % (table_name, key))
+        if( value is not None ):
+          search_dict[key] = value
+          query_where.append('%s%s%s%s' % (key, '=%(', key, ')s'))
 
     if( range_values ):
       search_dict['start'] = range_values[0]
@@ -648,8 +648,8 @@ class dbAccess(object):
     row_dict = helpers_lib.GetRowDict(table_name)
     if( not row_dict ):
       raise errors.InvalidInputError('Table name not valid: %s' % table_name)
-    for k in row_dict.iterkeys():
-      row_dict[k] = None
+    for key in row_dict.iterkeys():
+      row_dict[key] = None
     return row_dict
 
   # Not sure this is needed, buuuuut.
@@ -844,10 +844,10 @@ class dbAccess(object):
       table_data[table_name]['rows'] = []
       for row in table_rows:
         row_dict = {}
-        for k,v in row.iteritems():
-          row_dict[k] = self.connection.literal(v)
-          if( isinstance(row_dict[k], str) ):
-            row_dict[k] = unicode(row_dict[k],'utf-8')
+        for key, value in row.iteritems():
+          row_dict[key] = self.connection.literal(value)
+          if( isinstance(row_dict[key], str) ):
+            row_dict[key] = unicode(row_dict[key], 'utf-8')
             
 
         table_data[table_name]['rows'].append(row_dict)

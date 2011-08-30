@@ -35,7 +35,6 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import getopt
 import getpass
 import os
 import sys
@@ -50,7 +49,8 @@ def main(args):
            'To import zone files:\n'
            '\t%s -c <config-file> -z <zone-view>\n'
            '\t(-d <directory> | -f <file>)\n'
-           '\t[-v <records-view>] [-z <zone-view>] [-u <username>]\n' % sys.argv[0])
+           '\t[-v <records-view>] [-z <zone-view>] [-u <username>]\n' % (
+               sys.argv[0]))
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
@@ -147,6 +147,4 @@ def main(args):
 
 if( __name__ == "__main__" ):
   main(sys.argv[1:])
-
-
-# vi: set ai aw sw=2:
+  

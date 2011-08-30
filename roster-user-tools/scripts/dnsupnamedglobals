@@ -38,10 +38,7 @@ __version__ = '#TRUNK#'
 
 import os
 import sys
-import getpass
 import datetime
-
-from optparse import OptionParser
 
 from roster_user_tools import cli_record_lib
 from roster_user_tools import cli_common_lib
@@ -97,16 +94,16 @@ def main(args):
            '\n'
            'To revert a change:\n'
            '\t%s revert -d <dns-server-set> -i <option-id>\n' % tuple(
-               [sys.argv[0] for x in range(5)]))
+               [sys.argv[0] for _ in range(5)]))
   args_instance = Args(command,
       ['edit', 'list', 'dump', 'revert', 'update'], args, usage)
   options = args_instance.options
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    print 'ERROR: %s' % e
+  except cli_common_lib.ArgumentError, error:
+    print 'ERROR: %s' % error
     sys.exit(1)
-  cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
+  cli_record_lib.CliRecordLib(cli_common_lib_instance)
 
   timestamp = options.timestamp
   if( options.option_id is not None ):
@@ -218,4 +215,4 @@ def main(args):
         'Command %s exists, but codepath does not.' % command, 1)
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+  main(sys.argv[1:])

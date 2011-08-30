@@ -36,11 +36,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import os
 import sys
-import getpass
-
-from optparse import OptionParser
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -72,8 +68,8 @@ def main(args):
 
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-  except cli_common_lib.ArgumentError, e:
-    print 'ERROR: %s' % e
+  except cli_common_lib.ArgumentError, error:
+    print 'ERROR: %s' % error
     sys.exit(1)
 
   acls = roster_client_lib.RunFunction(
@@ -82,9 +78,9 @@ def main(args):
       kwargs={u'acl_name': options.acl, u'cidr_block': options.cidr_block})[
           'core_return']
   if( not acls ):
-    allowed=0
+    allowed = 0
     if( options.allow ):
-      allowed=1
+      allowed = 1
     roster_client_lib.RunFunction(
         u'MakeACL', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,

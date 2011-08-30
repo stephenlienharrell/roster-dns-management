@@ -46,19 +46,18 @@ import sys
 import socket
 
 import dns.query
-import dns.zone
 from dns.exception import DNSException
 
-def ZoneAXFR(domain, ns, port):
+def ZoneAXFR(domain, name_server, port):
   print "\n----------------------------------------"
-  print "Trying a zone AXFR for %s from NS %s:%s" % (domain, ns, port)
+  print "Trying a zone AXFR for %s from NS %s:%s" % (domain, name_server, port)
   print "----------------------------------------"
   try:
-    zone = dns.zone.from_xfr(dns.query.xfr(where=ns, zone=domain, port=port))
-  except DNSException, e:
+    zone = dns.zone.from_xfr(dns.query.xfr(where=name_server, zone=domain, port=port))
+  except DNSException:
     print "Zone AFXR failed."
     sys.exit(1)
-  except socket.error, e:
+  except socket.error:
     print "Connection refused. Zone AFXR failed."
     sys.exit(1)
 
@@ -71,7 +70,8 @@ def ZoneAXFR(domain, ns, port):
 def main(args):
   if (len(sys.argv) != 4):
     print("To compare two zone files:")
-    print("Usage:%s <domain> <nameserver_1>[:port] <nameserver_2>[:port]" % (sys.argv[0]))
+    print("Usage:%s <domain> <nameserver_1>[:port] <nameserver_2>[:port]" % (
+        sys.argv[0]))
     sys.exit(1)
 
   domain = sys.argv[1]
