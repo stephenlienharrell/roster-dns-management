@@ -39,6 +39,7 @@ import datetime
 import uuid
 
 import IPy
+import iscpy
 
 import audit_log
 import constants
@@ -1045,7 +1046,7 @@ class Core(object):
 
     view_options_dict = {}
     for view in views:
-      view_options_dict[view['view_name']] = view['view_options']
+      view_options_dict[view['view_name']] = iscpy.Deserialize(view['view_options'])
 
     return view_options_dict
 
@@ -1065,10 +1066,10 @@ class Core(object):
     self.user_instance.Authorize(function_name)
 
     if( view_options is None ):
-      view_options = u''
+      view_options = iscpy.Serialize(u'')
 
     views_dict = {'view_name': view_name,
-                  'view_options': view_options}
+                  'view_options': iscpy.Serialize(view_options)}
     view_dep_name = '%s_dep' % view_name
     view_dependencies_dict = {'view_dependency': view_dep_name}
     view_dependency_assignments_dict = {
@@ -1169,7 +1170,7 @@ class Core(object):
     search_view_dict['view_name'] = search_view_name
     search_view_dep_dict = {'view_dependency': '%s_dep' % search_view_name}
     update_view_dict = {'view_name': update_view_name,
-                        'view_options': update_view_options}
+                        'view_options': iscpy.Serialize(update_view_options)}
     update_view_dep_dict = {'view_dependency': '%s_dep' % update_view_name}
     success = False
     try:
@@ -1466,11 +1467,11 @@ class Core(object):
         zone_view_assignments[row['zone_view_assignments_zone_name']][
             row['zone_view_assignments_view_dependency'].replace(
                 '_dep', '')] = {}
-
+      zone_options = iscpy.Deserialize(row['zone_options'])
       zone_view_assignments[row['zone_view_assignments_zone_name']][
           row['zone_view_assignments_view_dependency'].replace('_dep', '')] = (
               {'zone_type': row['zone_view_assignments_zone_type'],
-               'zone_options': row['zone_options'],
+               'zone_options': zone_options,
                'zone_origin': row['zone_origin']})
 
     return zone_view_assignments
@@ -1497,7 +1498,7 @@ class Core(object):
     self.user_instance.Authorize(function_name)
 
     if( zone_options is None ):
-      zone_options = u''
+      zone_options = iscpy.Serialize(u'')
     if( view_name is None ):
       view_name = u'any'
     else:
@@ -1509,7 +1510,7 @@ class Core(object):
         'zone_view_assignments_view_dependency': view_name,
         'zone_view_assignments_zone_type': zone_type,
         'zone_origin': zone_origin,
-        'zone_options': zone_options}
+        'zone_options': iscpy.Serialize(zone_options)}
 
     search_any_dict = self.db_instance.GetEmptyRowDict('zone_view_assignments')
     search_any_dict['zone_view_assignments_view_dependency'] = u'any'
@@ -1634,7 +1635,7 @@ class Core(object):
         update_zone_name)
     update_zone_view_assignments_dict['zone_view_assignments_zone_type'] = (
         update_zone_type)
-    update_zone_view_assignments_dict['zone_options'] = update_zone_options
+    update_zone_view_assignments_dict['zone_options'] = iscpy.Serialize(update_zone_options)
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -2626,6 +2627,9 @@ class Core(object):
       option_id: integer of named conf global option id
       dns_server_set: string of the dns server set name
       timestamp: datetime object of timestamp to search
+
+    Outputs:
+      named_conf_list: list of named conf global options
     """
     self.user_instance.Authorize('ListNamedConfGlobalOptions')
     named_conf_global_options_dict = self.db_instance.GetEmptyRowDict(
@@ -2643,12 +2647,13 @@ class Core(object):
 
     named_conf_list = []
     for named_conf_option in named_conf_options:
+      global_options = iscpy.Deserialize(named_conf_option['global_options'])
       named_conf_list.append(
           {'id': named_conf_option['named_conf_global_options_id'],
            'dns_server_set_name': named_conf_option[
                'named_conf_global_options_dns_server_set_name'],
            'timestamp': named_conf_option['options_created'],
-           'options': named_conf_option['global_options']})
+           'options': global_options})
 
     return named_conf_list
 
@@ -2666,7 +2671,7 @@ class Core(object):
         'named_conf_global_options')
     named_conf_global_options_dict[
         'named_conf_global_options_dns_server_set_name'] = dns_server_set
-    named_conf_global_options_dict['global_options'] = options
+    named_conf_global_options_dict['global_options'] = u'%s' % iscpy.Serialize(options)
     timestamp = self.unittest_timestamp
     if( self.unittest_timestamp is None ):
       timestamp = datetime.datetime.now()

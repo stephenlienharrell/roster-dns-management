@@ -627,25 +627,25 @@ class TestCoreHelpers(unittest.TestCase):
 
   def testRevertNamedConfig(self):
     self.core_instance.MakeDnsServerSet(u'set1')
-    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options')
-    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options2')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options;')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options2;')
     self.assertEqual(self.core_instance.ListNamedConfGlobalOptions(),
                      [{'timestamp': self.unittest_timestamp,
-                       'options': u'test_options', 'id': 1,
+                       'options': u'test_options;', 'id': 1,
                        'dns_server_set_name': u'set1'},
                       {'timestamp': self.unittest_timestamp,
-                       'options': u'test_options2', 'id': 2,
+                       'options': u'test_options2;', 'id': 2,
                        'dns_server_set_name': u'set1'}])
     self.core_helper_instance.RevertNamedConfig(u'set1', 1)
     self.assertEqual(self.core_instance.ListNamedConfGlobalOptions(),
                      [{'timestamp': self.unittest_timestamp,
-                       'options': u'test_options', 'id': 1,
+                       'options': u'test_options;', 'id': 1,
                        'dns_server_set_name': u'set1'},
                       {'timestamp': self.unittest_timestamp,
-                       'options': u'test_options2', 'id': 2,
+                       'options': u'test_options2;', 'id': 2,
                        'dns_server_set_name': u'set1'},
                       {'timestamp': self.unittest_timestamp,
-                       'options': u'test_options', 'id': 3,
+                       'options': u'test_options;', 'id': 3,
                        'dns_server_set_name': u'set1'}])
     config_dict = self.core_instance.db_instance.GetEmptyRowDict(
         'named_conf_global_options')
@@ -664,8 +664,8 @@ class TestCoreHelpers(unittest.TestCase):
     self.core_instance.db_instance.EndTransaction()
     time.sleep(2)
     self.assertEqual(self.core_helper_instance.ListLatestNamedConfig(u'set1'),
-                     {'timestamp': time_difference, 'options': u'test_options',
-                      'id': 3, 'dns_server_set_name': u'set1'})
+        {'timestamp': time_difference, 
+        'options': u'test_options;', 'id': 3, 'dns_server_set_name': u'set1'})
 
   def testListZoneByIPAddress(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'forward_zone',

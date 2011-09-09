@@ -194,7 +194,7 @@ def main(args):
   config_return = RunCommand(' '.join(dnscheckconfig_array))
   if( config_return != 0 ):
     sys.exit(config_return)
-
+  
   dnsconfigsync_array = [options.config_sync]
   if( options.config_file ):
     dnsconfigsync_array.extend(['--config-file', options.config_file])

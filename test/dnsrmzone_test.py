@@ -138,7 +138,7 @@ class Testdnsrmzone(unittest.TestCase):
                                 view_name=u'test_view3', make_any=False)
     self.assertEqual(self.core_instance.ListZones(view_name=u'test_view'),
                      {u'test_zone': {u'test_view':
-                         {'zone_type': u'master', 'zone_options': u'',
+                         {'zone_type': u'master', 'zone_options': '',
                           'zone_origin': u'origin.'}}})
     output = os.popen('python %s -z test_zone -v test_view '
                       '-s %s -u %s -p %s --config-file %s' % (
@@ -150,13 +150,13 @@ class Testdnsrmzone(unittest.TestCase):
     self.assertEqual(self.core_instance.ListZones(),
         {u'test_zone':
           {u'test_view2':
-            {'zone_type': u'master', 'zone_options': u'',
+            {'zone_type': u'master', 'zone_options': '',
                 'zone_origin': u'origin.'},
            u'any':
-            {'zone_type': u'master', 'zone_options': u'',
+            {'zone_type': u'master', 'zone_options': '',
             'zone_origin': u'origin.'},
            u'test_view3':
-            {'zone_type': u'master', 'zone_options': u'',
+            {'zone_type': u'master', 'zone_options': '',
             'zone_origin': u'origin.'}}})
 
     # Delete any view of zone
@@ -170,10 +170,10 @@ class Testdnsrmzone(unittest.TestCase):
     self.assertEqual(self.core_instance.ListZones(), 
         {u'test_zone':
           {u'test_view2':
-            {'zone_type': u'master', 'zone_options': u'',
+            {'zone_type': u'master', 'zone_options': '',
                 'zone_origin': u'origin.'},
           u'test_view3':
-            {'zone_type': u'master', 'zone_options': u'',
+            {'zone_type': u'master', 'zone_options': '',
             'zone_origin': u'origin.'}}})
     
     # Delete entire zone

@@ -275,14 +275,14 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeView(u'test_view', u'')
     self.core_instance.MakeView(u'second_test_view', u'')
     self.assertEquals(self.core_instance.ListViews(),
-        {u'second_test_view': u'', u'test_view': u''})
+        {u'second_test_view': '', u'test_view': ''})
     self.assertTrue(self.core_instance.RemoveView(u'second_test_view'))
-    self.assertEquals(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEquals(self.core_instance.ListViews(), {u'test_view': ''})
     self.assertFalse(self.core_instance.RemoveView(u'second_test_view'))
 
     self.assertTrue(self.core_instance.UpdateView(u'test_view',
                                                   u'not_test_view'))
-    self.assertEquals(self.core_instance.ListViews(), {u'not_test_view': u''})
+    self.assertEquals(self.core_instance.ListViews(), {u'not_test_view': ''})
     self.assertFalse(self.core_instance.UpdateView(u'test_view',
                                                    u'not_test_view'))
 
@@ -346,9 +346,9 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
     self.assertEqual(self.core_instance.ListZones(), {u'test_zone':
-        {u'any': {'zone_type': u'master', 'zone_options': u'',
+        {u'any': {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': u'test_zone.'},
-         u'test_view': {'zone_type': u'master', 'zone_options': u'',
+         u'test_view': {'zone_type': u'master', 'zone_options': '',
                         'zone_origin': u'test_zone.'}}})
 
     self.assertTrue(self.core_instance.RemoveZone(u'test_zone'))
@@ -357,14 +357,14 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
     self.assertEqual(self.core_instance.ListZones(), {u'test_zone':
-        {u'any': {'zone_type': u'master', 'zone_options': u'',
+        {u'any': {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': u'test_zone.'},
-         u'test_view': {'zone_type': u'master', 'zone_options': u'',
+         u'test_view': {'zone_type': u'master', 'zone_options': '',
                         'zone_origin': u'test_zone.'}}})
     self.assertTrue(self.core_instance.RemoveZone(u'test_zone',
                                                   view_name=u'test_view'))
     self.assertEqual(self.core_instance.ListZones(), {u'test_zone':
-        {u'any': {'zone_type': u'master', 'zone_options': u'',
+        {u'any': {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': 'test_zone.'}}})
 
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
@@ -373,9 +373,9 @@ class TestCore(unittest.TestCase):
                     u'test_zone', update_zone_name=u'not_test_zone'))
 
     self.assertEqual(self.core_instance.ListZones(), {u'not_test_zone':
-        {u'any': {'zone_type': u'master', 'zone_options': u'',
+        {u'any': {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': u'test_zone.'},
-         u'test_view': {'zone_type': u'master', 'zone_options': u'',
+         u'test_view': {'zone_type': u'master', 'zone_options': '',
                         'zone_origin': u'test_zone.'}}})
 
     self.assertTrue(self.core_instance.UpdateZone(
@@ -383,9 +383,9 @@ class TestCore(unittest.TestCase):
                     update_zone_type=u'slave'))
 
     self.assertEqual(self.core_instance.ListZones(), {u'not_test_zone':
-        {u'any': {'zone_type': u'master', 'zone_options': u'',
+        {u'any': {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': u'test_zone.'},
-         u'test_view': {'zone_type': u'slave', 'zone_options': u'',
+         u'test_view': {'zone_type': u'slave', 'zone_options': '',
                         'zone_origin': u'test_zone.'}}})
     self.assertRaises(errors.CoreError, self.core_instance.MakeZone,
                       u'test_zone', u'wrongtype', u'test_zone.')
@@ -782,10 +782,10 @@ class TestCore(unittest.TestCase):
 
   def testListMakeNamedConfGlobalOptions(self):
     self.core_instance.MakeDnsServerSet(u'set1')
-    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test;')
     named_conf_options = self.core_instance.ListNamedConfGlobalOptions()
     self.assertEqual(len(named_conf_options), 1)
-    self.assertEqual(named_conf_options[0]['options'], u'test')
+    self.assertEqual(named_conf_options[0]['options'], u'test;')
     self.assertEqual(named_conf_options[0]['dns_server_set_name'], u'set1')
     self.assertEqual(named_conf_options[0]['id'], 1)
 

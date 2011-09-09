@@ -41,6 +41,7 @@ __version__ = '#TRUNK#'
 
 
 import os
+import re
 import sys
 import shutil
 import subprocess
@@ -223,8 +224,7 @@ class TestCheckConfig(unittest.TestCase):
         'type master;', 'type bad_type;')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    self.assertEqual(output.read(),
-        "ERROR: temp_dir/set1_servers/named.conf:11: 'bad_type' unexpected\n\n")
+    self.assertTrue(re.search('[\']bad_type[\'] unexpected',output.read()))
     output.close()
 
     self.TarReplaceString(
@@ -238,9 +238,7 @@ class TestCheckConfig(unittest.TestCase):
         'wrong;')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    self.assertEqual(output.read(),
-        "ERROR: temp_dir/set1_servers/named.conf:12: unknown option "
-        "'wrong'\n\n")
+    self.assertTrue(re.search('unknown option \'wrong\'',output.read()))
     output.close()
 
     self.TarReplaceString(
@@ -251,13 +249,11 @@ class TestCheckConfig(unittest.TestCase):
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
         '%s/set1_servers/named.conf' % self.root_config_dir,
-        '#options',
-        'options\n{\ndirectory "another";\n};\n')
+        'options',
+        'options\n{\ndirectory "another";\n};\noptions')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    self.assertEqual(output.read(),
-        "ERROR: temp_dir/set1_servers/named.conf:7: 'options' redefined near "
-        "'options'\n\n")
+    self.assertTrue(re.search('\'options\' redefined near \'options\'',output.read()))
     output.close()
 
 if( __name__ == '__main__' ):

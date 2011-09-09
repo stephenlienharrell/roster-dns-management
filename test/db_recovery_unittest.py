@@ -40,7 +40,6 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import cPickle
 import datetime
 import unittest
 import time
@@ -128,7 +127,7 @@ class TestdbAccess(unittest.TestCase):
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
-    self.assertEqual(self.core_instance.ListRecords(), 
+    self.assertEqual(self.core_instance.ListRecords(),
         [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
@@ -176,15 +175,15 @@ class TestdbAccess(unittest.TestCase):
 
   def testRunAuditStep(self):
     self.core_instance.MakeView(u'test_view')
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(self.core_instance.ListViews(), {u'test_view': ''})
     self.core_instance.MakeZone(u'university.edu', u'master',
                                 u'university.edu.', view_name=u'test_view')
     self.assertEqual(
         self.core_instance.ListZones(),
         {u'university.edu':
-            {u'test_view': {'zone_type': u'master', 'zone_options': u'',
+            {u'test_view': {'zone_type': u'master', 'zone_options': '',
                             'zone_origin': u'university.edu.'},
-             u'any': {'zone_type': u'master', 'zone_options': u'',
+             u'any': {'zone_type': u'master', 'zone_options': '',
                       'zone_origin': u'university.edu.'}}})
     self.core_instance.MakeView(u'test_view2')
     self.core_instance.RemoveView(u'test_view')
@@ -204,13 +203,13 @@ class TestdbAccess(unittest.TestCase):
          "with arguments: [u'university.edu', u'master', "
          "u'university.edu.', u'test_view', None, True]\n")
     sys.stdout = old_stdout
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(self.core_instance.ListViews(), {u'test_view': ''})
     self.assertEqual(
         self.core_instance.ListZones(),
         {u'university.edu':
-            {u'test_view': {'zone_type': u'master', 'zone_options': u'',
+            {u'test_view': {'zone_type': u'master', 'zone_options': '',
                             'zone_origin': u'university.edu.'},
-             u'any': {'zone_type': u'master', 'zone_options': u'',
+             u'any': {'zone_type': u'master', 'zone_options': '',
                       'zone_origin': u'university.edu.'}}})
   def testRunAuditRange(self):
     self.assertFalse(self.core_instance.ListRecords())
@@ -254,7 +253,7 @@ class TestdbAccess(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(self.core_instance.ListViews(), {u'test_view': ''})
     self.tree_exporter_instance.ExportAllBindTrees()
     old_stdout = sys.stdout
     sys.stdout = StdOutStream()

@@ -142,7 +142,7 @@ class TestDnsMkZone(unittest.TestCase):
     self.assertEqual(self.core_instance.ListZones(),
         {u'test_zone':
             {u'test_view':
-                {'zone_type': u'master', 'zone_options': u'',
+                {'zone_type': u'master', 'zone_options': '',
                  'zone_origin': u'dept.univiersity.edu.'}}})
     output = os.popen('python %s forward -z test_zone2 -v test_view --origin '
                       'dept2.univiersity.edu. --type master --dont-make-any '
@@ -157,11 +157,11 @@ class TestDnsMkZone(unittest.TestCase):
     self.assertEqual(self.core_instance.ListZones(),
         {u'test_zone':
             {u'test_view':
-                {'zone_type': u'master', 'zone_options': u'',
+                {'zone_type': u'master', 'zone_options': '',
                  'zone_origin': u'dept.univiersity.edu.'}},
          u'test_zone2':
              {u'test_view':
-                 {'zone_type': u'master', 'zone_options': u'',
+                 {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': u'dept2.univiersity.edu.'}}})
 
   def testMakeZoneWithViewAny(self):

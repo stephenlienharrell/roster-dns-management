@@ -40,6 +40,8 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import cPickle
+import iscpy
 import os
 import sys
 import shutil
@@ -135,7 +137,7 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
-    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'%s' % cPickle.dumps(iscpy.ParseISCString(u'#options')))
 
     self.tree_exporter_instance.ExportAllBindTrees()
 

@@ -66,7 +66,6 @@ class DataValidation(object):
     """
     if( not isinstance(u_string, unicode) ):
       return False
-
     for word in self.reserved_words:
       if( u_string.lower().find(word.lower()) != -1 ):
         raise errors.ReservedWordError('Reserved word %s found, unable '

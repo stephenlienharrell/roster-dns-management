@@ -141,9 +141,9 @@ class Testdnsrmrecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
     self.assertEqual(self.core_instance.ListZones(), {u'test_zone':
-        {u'any': {'zone_type': u'master', 'zone_options': u'',
+        {u'any': {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': u'test_zone.'},
-         u'test_view': {'zone_type': u'master', 'zone_options': u'',
+         u'test_view': {'zone_type': u'master', 'zone_options': '',
                         'zone_origin': u'test_zone.'}}})
     self.core_instance.MakeRecord(
         u'soa', u'soa1', u'test_zone',
@@ -196,9 +196,9 @@ class Testdnsrmrecord(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
     self.assertEqual(self.core_instance.ListZones(), {u'test_zone':
-        {u'any': {'zone_type': u'master', 'zone_options': u'',
+        {u'any': {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': u'test_zone.'},
-         u'test_view': {'zone_type': u'master', 'zone_options': u'',
+         u'test_view': {'zone_type': u'master', 'zone_options': '',
                         'zone_origin': u'test_zone.'}}})
     self.core_instance.MakeRecord(
         u'soa', u'soa1', u'test_zone',

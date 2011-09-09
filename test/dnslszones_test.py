@@ -128,9 +128,9 @@ class TestDnslszones(unittest.TestCase):
   def testListForwardZones(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.',
-                                view_name=u'test_view', zone_options=u'options')
+                                view_name=u'test_view', zone_options=u'options;')
     self.core_instance.MakeZone(u'zone2', u'master', u'school.edu.',
-                                view_name=u'test_view', zone_options=u'stuff',
+                                view_name=u'test_view', zone_options=u'stuff;',
                                 make_any=False)
     command = os.popen('python %s forward -u %s -p %s --config-file %s -s %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
@@ -139,15 +139,15 @@ class TestDnslszones(unittest.TestCase):
         'cidr_block\n'
         '-----------------------------------------------------------'
         '----------\n'
-        'test_zone test_view master    university.edu. \'options\'    -\n'
-        'test_zone any       master    university.edu. \'options\'    -\n'
-        'zone2     test_view master    school.edu.     \'stuff\'      -\n\n')
+        'test_zone test_view master    university.edu. \'options;\'   -\n'
+        'test_zone any       master    university.edu. \'options;\'   -\n'
+        'zone2     test_view master    school.edu.     \'stuff;\'     -\n\n')
     command.close()
 
   def testListReverseZones(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'reverse_zone', u'master', u'university.edu.',
-                                view_name=u'test_view', zone_options=u'options')
+                                view_name=u'test_view', zone_options=u'options;')
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone', u'10/8')
     command = os.popen('python %s reverse -u %s -p %s --config-file %s -s %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
@@ -156,20 +156,20 @@ class TestDnslszones(unittest.TestCase):
         'cidr_block\n'
         '--------------------------------------------------------------'
         '----------\n'
-        'reverse_zone test_view master    university.edu. \'options\'    10/8\n'
-        'reverse_zone any       master    university.edu. \'options\'    '
+        'reverse_zone test_view master    university.edu. \'options;\'   10/8\n'
+        'reverse_zone any       master    university.edu. \'options;\'   '
         '10/8\n\n')
     command.close()
 
   def testListAllZones(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'university.edu.',
-                                view_name=u'test_view', zone_options=u'options')
+                                view_name=u'test_view', zone_options=u'options;')
     self.core_instance.MakeZone(u'zone2', u'master', u'school.edu.',
-                                view_name=u'test_view', zone_options=u'stuff',
+                                view_name=u'test_view', zone_options=u'stuff;',
                                 make_any=False)
     self.core_instance.MakeZone(u'reverse_zone', u'master', u'university2.edu.',
-                                view_name=u'test_view', zone_options=u'options')
+                                view_name=u'test_view', zone_options=u'options;')
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone', u'10/8')
     command = os.popen('python %s all -u %s -p %s --config-file %s -s %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
@@ -178,11 +178,11 @@ class TestDnslszones(unittest.TestCase):
         'cidr_block\n'
         '---------------------------------------------------------------'
         '----------\n'
-        'test_zone    test_view master    university.edu.  \'options\'    -\n'
-        'test_zone    any       master    university.edu.  \'options\'    -\n'
-        'zone2        test_view master    school.edu.      \'stuff\'      -\n'
-        'reverse_zone test_view master    university2.edu. \'options\'    10/8\n'
-        'reverse_zone any       master    university2.edu. \'options\'    '
+        'test_zone    test_view master    university.edu.  \'options;\'   -\n'
+        'test_zone    any       master    university.edu.  \'options;\'   -\n'
+        'zone2        test_view master    school.edu.      \'stuff;\'     -\n'
+        'reverse_zone test_view master    university2.edu. \'options;\'   10/8\n'
+        'reverse_zone any       master    university2.edu. \'options;\'   '
         '10/8\n\n')
     command.close()
 

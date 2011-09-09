@@ -118,6 +118,7 @@ class TestCheckConfig(unittest.TestCase):
         EXEC, SSH_USER, SSH_ID, CONFIG_FILE))
     lines = command.read().split('\n')
     # These lines will likely need changed depending on implementation
+    print(lines)
     self.assertTrue('Connecting to rsync on "%s"' % TEST_DNS_SERVER in lines)
     self.assertTrue('building file list ... done' in lines)
     self.assertTrue('named/' in lines)
