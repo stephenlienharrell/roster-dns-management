@@ -386,6 +386,7 @@ class User(core_flags.CoreFlags):
                            metavar='<cidr-block>', default=None)
     self.AddFlagRule('cidr_block', required=not_list, command='reverse')
 
+
 class Hosts(core_flags.CoreFlags):
   """Command line uphost flags"""
   def SetDataFlags(self):
@@ -425,6 +426,30 @@ class Hosts(core_flags.CoreFlags):
                            help='File name of hosts file to write to database.',
                            metavar='<file-name>', default='hosts_out')
     self.SetAllFlagRule('file', required=False)
+
+
+class CNAME(core_flags.CoreFlags):
+  """Command line CNAME flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('--hostname', action='store', dest='hostname',
+                           help='String of hostname', metavar='hostname',
+                           default=None)
+    self.AddFlagRule('hostname', required=True)
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name', help='String of the zone name.',
+                           metavar='<zone-name>', default=None)
+    self.SetAllFlagRule('zone_name', required=True)
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name',
+                           help=('String of the view name <view-name>. '
+                                 'Example: "internal"'), metavar='<view-name>',
+                           default='any')
+    self.SetAllFlagRule('view_name', required=True)
+    self.parser.add_option('-r', '--recursive', action='store_true',
+                           dest='recursive', help='Use recursion during lookup',
+                           metavar='<recursive>', default=False)
+    self.SetAllFlagRule('recursive', required=False)
 
 
 class MassAdd(core_flags.CoreFlags):
