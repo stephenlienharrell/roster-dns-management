@@ -67,8 +67,8 @@ class CoreHelpers(object):
   def UnReverseIP(self, ip_address):
     return helpers_lib.UnReverseIP(ip_address)
 
-  def CIDRExpand(self, cidr_block):
-    return helpers_lib.CIDRExpand(cidr_block)
+  def CIDRExpand(self, cidr_block, begin=None, end=None):
+    return helpers_lib.CIDRExpand(cidr_block, begin, end)
 
   def ExpandIPV6(self, ip_address):
     return helpers_lib.ExpandIPV6(ip_address)

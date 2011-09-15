@@ -186,11 +186,14 @@ def UnReverseIP(ip_address):
   return new_ip
 
 
-def CIDRExpand(cidr_block):
+def CIDRExpand(cidr_block, begin=None, end=None):
   """Expands a cidr block to a list of ip addreses
+     from begin (integer) to end (integer).
 
   Inputs:
     cidr_block: string of cidr_block
+    begin: integer of ip address to start
+    end: integer of ip address to end
 
   Raises:
     InvalidInputError: Not a valid CIDR block.
@@ -203,8 +206,19 @@ def CIDRExpand(cidr_block):
   except ValueError:
     raise errors.InvalidInputError('%s is not a valid cidr block' % cidr_block)
   ip_address_list = []
-  for ip_address in cidr_block:
-    ip_address_list.append(unicode(ip_address.strFullsize()))
+  end_count = -1
+  length = cidr_block.len()
+  count = 0
+  start_ip = cidr_block.int()
+  if( begin ):
+    start_ip = cidr_block.int() + begin
+  if( begin and end ):
+    end_count = end - begin
+  elif( end ):
+    end_count = end
+  while( count != end_count and count != length and IPy.IP(start_ip + count) in cidr_block ):
+    ip_address_list.append(unicode(IPy.IP(start_ip + count).strFullsize()))
+    count += 1
 
   return ip_address_list
 
