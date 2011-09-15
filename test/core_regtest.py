@@ -473,6 +473,8 @@ class TestCore(unittest.TestCase):
                                 u'university.edu.')
     self.core_instance.MakeZone(u'university.edu', u'master',
                                 u'university.edu.', view_name=u'test_view')
+    self.core_instance.MakeZone(u'university.edu_rev', u'master',
+                                u'0.168.192.in-addr.arpa.')
     self.assertFalse(self.core_instance.ListRecords())
     self.core_instance.MakeRecord(
         u'soa', u'soa1', u'university.edu',
@@ -670,6 +672,14 @@ class TestCore(unittest.TestCase):
                       u'a', 'computer5', 'university.edu',
                       {u'assignment_ip': u'192.168.0.55'},
                       update_target=u'c.6')
+    self.assertRaises(
+        errors.UnexpectedDataError, self.core_instance.MakeRecord,
+        u'a', u'computer 5', u'university.edu',
+        {u'assignment_ip': u'192.168.0.55'}, ttl=10)
+    self.assertRaises(
+        errors.UnexpectedDataError, self.core_instance.MakeRecord,
+        u'ptr', u'5', u'university.edu_rev',
+        {u'assignment_host': u'computer 5'}, ttl=10)
 
   def testSOA(self):
     self.core_instance.MakeView(u'test_view')

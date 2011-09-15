@@ -472,7 +472,7 @@ TABLES = {
 
     'records':           {'records_id': 'UnsignedInt',
                           'record_type': 'UnicodeString',
-                          'record_target': 'UnicodeString',
+                          'record_target': 'UnicodeStringNoSpaces',
                           'record_ttl': 'UnsignedInt',
                           'record_zone_name': 'UnicodeString',
                           'record_view_dependency': 'UnicodeString',

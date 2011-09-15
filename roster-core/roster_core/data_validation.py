@@ -219,8 +219,24 @@ class DataValidation(object):
     """
     if( host_name == '.' ):
       return True
-    if( self.isUnicodeString(host_name) and host_name.endswith('.') and
-        host_name.split('.') > 2 and not host_name.startswith('.') ):
+    if( self.isUnicodeStringNoSpaces(host_name) and
+        host_name.endswith('.') and
+        host_name.split('.') > 2 and
+        not host_name.startswith('.') ):
+      return True
+    return False
+
+
+  def isUnicodeStringNoSpaces(self, string):
+    """Checks that string is unicode and contains no spaces
+
+    Inputs:
+      string: string to validate
+
+    Outputs:
+      bool: if it is a valid unicode string with no spaces
+    """
+    if( self.isUnicodeString(string) and ' ' not in string ):
       return True
     return False
 
