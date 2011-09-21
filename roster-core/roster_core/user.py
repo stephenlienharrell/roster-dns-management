@@ -89,8 +89,13 @@ class User(object):
 
     Inputs:
       method:	what the user's trying to do
-      record_data: dictionary of target, zone_name and view_name for 
-                   record that is being modified
+      record_data: dictionary of target, zone_name, view_name, and record_type 
+                   for record that is being modified.
+                   {'target': 'test_target',
+                    'zone_name': 'test_zone',
+                    'view_name': 'test_view',
+                    'record_type': 'a'
+                   }
       current_transaction: bool of if this function is run from inside a 
                            transaction in the db_access class
 
@@ -120,8 +125,9 @@ class User(object):
       raise errors.MaintenanceError('Roster is currently under maintenance.')
 
     if( record_data is not None and record_data.has_key('zone_name') ):
-      target_string = ' with %s on %s' % (record_data['target'],
-                                          record_data['zone_name'])
+      target_string = ' with %s on %s of type %s' % (record_data['target'],
+                                          record_data['zone_name'],
+                                          record_data['record_type'])
     else:
       target_string = ''
     auth_fail_string = ('User %s is not allowed to use %s%s' %
@@ -130,6 +136,7 @@ class User(object):
       method_hash = self.abilities[method]
       if( int(self.user_access_level) >= constants.ACCESS_LEVELS['dns_admin'] ):
         return
+      
       if( method_hash['check'] ):
         # Secondary check - ensure the target is in a range delegated to
         # the user
@@ -137,15 +144,21 @@ class User(object):
           raise errors.MissingDataTypeError(
               'No record data provided for access method '
               '%s' % method)
-        if( not record_data.has_key('zone_name') or
+        elif( not record_data.has_key('zone_name') or
             record_data['zone_name'] is None or 
             not record_data.has_key('view_name') or
             record_data['view_name'] is None or
             not record_data.has_key('target') or 
-            record_data['target'] is None ):
+            record_data['target'] is None or
+            not record_data.has_key('record_type') or 
+            record_data['record_type'] is None ):
           raise errors.MissingDataTypeError(
               'Incomplete record data provided for access '
               'method %s' % method)
+          
+        elif( record_data['record_type'] not in constants.USER_LEVEL_RECORDS and
+            int(self.user_access_level) <= constants.ACCESS_LEVELS['user'] ):
+          raise errors.AuthorizationError(auth_fail_string)
 
         for zone in self.forward_zones:
           if( record_data['zone_name'] == zone['zone_name'] ):

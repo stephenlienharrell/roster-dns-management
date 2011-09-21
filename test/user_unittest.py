@@ -91,34 +91,54 @@ class TestUser(unittest.TestCase):
     # good forward zone data
     good_record_data = {'target': u'good',
                         'zone_name': u'cs.university.edu',
-                        'view_name': u'any'}
+                        'view_name': u'any',
+                        'record_type': u'a'}
+
+    txt_record_data = {'target': u'good',
+                        'zone_name': u'cs.university.edu',
+                        'view_name': u'any',
+                        'record_type': u'txt'}
+
+    mx_record_data = {'target': u'good',
+                        'zone_name': u'cs.university.edu',
+                        'view_name': u'any',
+                        'record_type': u'mx'}
+
     # bad forward zone data
     no_forward_record_data = {'target': u'noforward',
                               'zone_name': u'bio.university.edu',
-                              'view_name': u'any'}
+                              'view_name': u'any',
+                              'record_type': u'a'}
 
     # good reverse zone data
     good_reverse_record_data = {'target': u'1',
                                 'zone_name': u'192.168.0.rev',
-                                'view_name': u'any'}
+                                'view_name': u'any',
+                                'record_type': u'ptr'}
     # bad reverse zone data
     no_reverse_record_data = {'target': u'1',
                               'zone_name': u'192.168.1.rev',
-                              'view_name': u'any'}
+                              'view_name': u'any',
+                              'record_type': u'ptr'}
 
     # good reverse zone data (subset of ip range in bigger zone)
     good_10_reverse_record_data = {'target': u'5.10',
                                    'zone_name': u'10.10.rev',
-                                   'view_name': u'any'}
+                                   'view_name': u'any',
+                                   'record_type': u'ptr'}
 
     # bad reverse zone data (subset of ip range in bigger zone)
     no_10_reverse_record_data = {'target': u'4.10',
                                  'zone_name': u'10.10.rev',
-                                 'view_name': u'any'}
+                                 'view_name': u'any',
+                                 'record_type': u'ptr'}
 
     # test success with admin user
     user_instance = user.User(u'sharrell', self.db_instance, self.log_instance)
     user_instance.Authorize(u'MakeView')
+    user_instance.Authorize(u'MakeRecord', good_record_data)
+    user_instance.Authorize(u'MakeRecord', txt_record_data)
+    user_instance.Authorize(u'MakeRecord', mx_record_data)
 
     # test maintenance mode
     # maintainenance flag doesn't apply to admins
@@ -126,10 +146,16 @@ class TestUser(unittest.TestCase):
     # it does apply to users tho
     user_instance = user.User(u'jcollins', self.db_instance, self.log_instance)
     user_instance.Authorize(u'MakeRecord', good_record_data)
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize,
+                      u'MakeRecord', txt_record_data)
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize,
+                      u'MakeRecord', mx_record_data)
                                            
     self.core_instance.SetMaintenanceFlag(True)
     self.assertRaises(errors.MaintenanceError, user_instance.Authorize,
                       u'MakeRecord', good_record_data)
+    self.assertRaises(errors.MaintenanceError, user_instance.Authorize,
+                      u'MakeRecord', mx_record_data)
     self.core_instance.SetMaintenanceFlag(False)
 
     # test missing record_data on certain methods, and make sure it passes 

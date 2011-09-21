@@ -68,6 +68,9 @@ ACCESS_RIGHTS = ['rw', 'r']
 # it is important not to overwrite these tables when doing a partial replay
 TABLES_NOT_AUDIT_LOGGED = ['audit_log', 'locks']
 
+# This is a list of ronly ecord types that can be modified by user level.
+USER_LEVEL_RECORDS = ['a', 'aaaa', 'ptr', 'cname']
+
 # This is a list of record types that can be indexed by IP address.
 RECORD_TYPES_INDEXED_BY_IP = ['ptr', 'a', 'aaaa']
 
@@ -79,12 +82,12 @@ SERVER_CONFIG_FILE_LOCATION = '/etc/roster/roster_server.conf'
 # 'write' indicates whether the method requires write access.
 # 'access_level' is the minimum user access level required to use this method.
 SUPPORTED_METHODS = {
-    'ListRecords':  {'check': True,
+    'ListRecords':  {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['user']},
 
     'ListRecordsByCIDRBlock':
-                    {'check': True,
+                    {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['user']},
 
@@ -225,7 +228,7 @@ SUPPORTED_METHODS = {
                      'access_level': ACCESS_LEVELS['user']},
 
     'RemoveCNamesByAssignmentHost':
-                    {'check': False,
+                    {'check': True,
                      'write': True,
                      'access_level': ACCESS_LEVELS['user']},
 
@@ -380,12 +383,12 @@ SUPPORTED_METHODS = {
                      'access_level': ACCESS_LEVELS['dns_admin']},
 
     'ListNamedConfGlobalOptions':
-                    {'check': True,
+                    {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['dns_admin']},
 
     'MakeNamedConfGlobalOption':
-                    {'check': True,
+                    {'check': False,
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
 

@@ -2090,7 +2090,8 @@ class Core(object):
 
     self.user_instance.Authorize(function_name, {'target': target,
                                                  'zone_name': zone_name,
-                                                 'view_name': view_name})
+                                                 'view_name': view_name,
+                                                 'record_type': record_type})
     if( ttl is None ):
       ttl = constants.DEFAULT_TTL
 
@@ -2210,10 +2211,12 @@ class Core(object):
 
     self.user_instance.Authorize(function_name, {'target': search_target,
                                                  'zone_name': search_zone_name,
-                                                 'view_name': search_view_name})
+                                                 'view_name': search_view_name,
+                                                 'record_type': search_record_type})
     self.user_instance.Authorize(function_name, {'target': update_target,
                                                  'zone_name': update_zone_name,
-                                                 'view_name': update_view_name})
+                                                 'view_name': update_view_name,
+                                                 'record_type': search_record_type})
 
     search_records_dict = self.db_instance.GetEmptyRowDict('records')
     search_records_dict['record_type'] = search_record_type
@@ -2417,7 +2420,8 @@ class Core(object):
 
     self.user_instance.Authorize(function_name, {'target': target,
                                                  'zone_name': zone_name,
-                                                 'view_name': view_name})
+                                                 'view_name': view_name,
+                                                 'record_type': record_type})
 
     records_dict = self.db_instance.GetEmptyRowDict('records')
     records_dict['record_type'] = record_type

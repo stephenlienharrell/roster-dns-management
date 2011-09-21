@@ -662,7 +662,6 @@ class CoreHelpers(object):
       int: number of rows modified
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
-    self.user_instance.Authorize(function_name)
     row_count = 0
     record_arguments_record_assignments_dict = (
         self.db_instance.GetEmptyRowDict(
@@ -699,11 +698,13 @@ class CoreHelpers(object):
             self.core_instance.user_instance.Authorize(
                 function_name,
                  record_data=
-                     {'target': records_dict['record_target'],
+                     {'target': found_records_dict[0]['record_target'],
                       'zone_name': records_dict['record_zone_name'],
-                      'view_name': records_dict['record_view_dependency']},
+                      'view_name': records_dict['record_view_dependency'],
+                      'record_type': records_dict['record_type']},
+
                 current_transaction=True)
-          except errors.AuthenticationError:
+          except errors.AuthorizationError:
             continue
           row_count += self.db_instance.RemoveRow(
               'records', found_records_dict[0])
@@ -770,7 +771,8 @@ class CoreHelpers(object):
               record_data = {
                   'target': record['record_target'],
                   'zone_name': record['record_zone_name'],
-                  'view_name': record_dict['record_view_dependency']},
+                  'view_name': record_dict['record_view_dependency'],
+                  'record_type': record['record_type']},
               current_transaction=True)
           record_dict['records_id'] = record['records_id']
           record_dict['record_type'] = record['record_type']
@@ -807,7 +809,8 @@ class CoreHelpers(object):
               record_data = {
                   'target': record['record_target'],
                   'zone_name': record['record_zone_name'],
-                  'view_name': view_name},
+                  'view_name': view_name,
+                  'record_type': record['record_type']},
               current_transaction=True)
           if( record['record_type'] == u'ptr' ):
             if( record['record_arguments'][
