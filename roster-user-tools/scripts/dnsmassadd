@@ -81,26 +81,26 @@ def main(args):
           server_name=options.server,
           kwargs={'zone_name': options.zone_name})['core_return']
     if( options.zone_name not in zone_list ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'Zone "%s" does not exist.' % options.zone_name, 1)
     if( options.view_name not in zone_list[options.zone_name] ):
-      cli_common_lib_instance.DnsError('Zone "%s" not found in "%s" view.' % (
+      cli_common_lib.DnsError('Zone "%s" not found in "%s" view.' % (
           options.zone_name, options.view_name), 1)
     zone_origin = zone_list[options.zone_name][options.view_name][
         'zone_origin'].rstrip('.')
     if( host_name.rstrip('.').endswith(zone_origin) ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'Hostname cannot end with domain name.', 1)
     if( zone_origin.endswith('.in-addr.arpa') or
         zone_origin.endswith('.ip6.arpa') ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'This tool requires a forward zone as an argument. '
           'Reverse zones are handled automatically.', 1)
     reverse_zone_name = roster_client_lib.RunFunction(
         'ListZoneByIPAddress', options.username, credfile=options.credfile,
         server_name=options.server, args=[ip_address])['core_return']
     if( reverse_zone_name == None ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'No reverse zone found for ip "%s"' % ip_address, 1)
     zone_cidr = roster_client_lib.RunFunction(
         'ListReverseRangeZoneAssignments',
@@ -156,7 +156,7 @@ def main(args):
     record_list.append( options.zone_name )
     record_list.append( options.view_name )
     print_list.append(record_list)
-  print cli_common_lib_instance.PrintColumns(
+  print cli_common_lib.PrintColumns(
       print_list=print_list, first_line_header=True)
 
   print("\nHOSTS TO BE ADDED: ")
@@ -172,7 +172,7 @@ def main(args):
     record_list.append( options.zone_name )
     record_list.append( options.view_name )
     print_list.append(record_list)
-  print cli_common_lib_instance.PrintColumns(
+  print cli_common_lib.PrintColumns(
       print_list=print_list, first_line_header=True)
 
   if options.commit:

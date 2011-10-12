@@ -34,6 +34,7 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
+PARSABLE_MYSQL_ERRORS = [1452]
 
 class CoreError(Exception):
   """Error class that all Roster errors are 
@@ -74,8 +75,33 @@ class IPIndexError(InternalError):
 class MaintenanceError(InternalError):
   pass
 
-class UnexpectedDataError(InternalError):
+class UnexpectedDataError(UserError):
   pass
+
+class DatabaseError(UserError):
+  """Raised when DatabaseError is raised and changes its value
+     to be more readable
+  """
+  def __init__(self, value):
+    """Sets instance variable for value"""
+    self.value = value
+  def __str__(self):
+    """Python standard string method, makes value string
+       easier to understand.
+
+    Outputs:
+      str: reformatted error string
+    """
+    array = self.value[1].split(' ')
+    if( self.value[0] == 1452 ):
+      foreign_index = array.index('FOREIGN')
+      attribute = array[-2].strip('(`)')
+      if( attribute == 'view_dependency' ):
+        attribute = 'view'
+      elif( attribute == 'zone_view_assignments' ):
+        attribute = 'zone or view'
+      self.value = "Specified %s does not exist." % attribute
+    return self.value
 
 class RecordError(InternalError):
   pass

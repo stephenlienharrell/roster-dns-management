@@ -81,7 +81,7 @@ def main(args):
   elif( options.ip_address.find(':') != -1 ):
     version = 6
   else:
-    cli_common_lib_instance.DnsError('Incorrectly formatted IP address.', 1)
+    cli_common_lib.DnsError('Incorrectly formatted IP address.', 1)
 
   records_dict = roster_client_lib.RunFunction(
       'ListRecordsByCIDRBlock', options.username, credfile=options.credfile,
@@ -98,22 +98,22 @@ def main(args):
     zone_info[reverse_zone_name][
         options.view_name]['zone_origin']
   except KeyError:
-    cli_common_lib_instance.DnsError('Reverse zone not found.', 1)
+    cli_common_lib.DnsError('Reverse zone not found.', 1)
   try:
     records_list = []
     for record in records_dict[options.view_name][options.ip_address]:
       if( record['record_zone_name'] == options.zone_name ):
         records_list.append(record)
   except KeyError:
-    cli_common_lib_instance.DnsError('Record not found.', 1)
+    cli_common_lib.DnsError('Record not found.', 1)
   if( len(records_list) == 0 ):
-    cli_common_lib_instance.DnsError('Record not found.', 1)
+    cli_common_lib.DnsError('Record not found.', 1)
   if( len(records_list) == 1 ):
     hostname = records_list[0]['host']
     if( not hostname.endswith('.') ):
       hostname = '%s.' % hostname
   else:
-    cli_common_lib_instance.DnsError('Multiple records found.', 1)
+    cli_common_lib.DnsError('Multiple records found.', 1)
   record_type = u'a'
   if( version == 6 ):
     record_type = u'aaaa'
@@ -151,7 +151,7 @@ def main(args):
       print 'SERVER ERROR: %s' % error_string
       sys.exit(1)
   if( not removed_type and not removed_ptr ):
-    cli_common_lib_instance.DnsError('Record not found.')
+    cli_common_lib.DnsError('Record not found.')
 
 if( __name__ == "__main__" ):
   main(sys.argv[1:])

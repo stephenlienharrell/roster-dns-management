@@ -74,7 +74,7 @@ def main(args):
     sys.exit(1)
 
   if( options.success and options.success not in [1, 0] ):
-    cli_common_lib_instance.DnsError('--success must be a 1 or 0', 1)
+    cli_common_lib.DnsError('--success must be a 1 or 0', 1)
 
   if( options.begin_time and options.end_time ):
     if( len(options.begin_time.split('T')) == 2 and
@@ -84,14 +84,14 @@ def main(args):
           len(options.end_time.split(' ')) == 2 ):
       delimeter = ' '
     else:
-      cli_common_lib_instance.DnsError('Improperly formatted timestamps.', 1)
+      cli_common_lib.DnsError('Improperly formatted timestamps.', 1)
     try:
       options.begin_time = datetime.datetime.strptime(
           options.begin_time, '%%Y-%%m-%%d%s%%H:%%M:%%S' % delimeter)
       options.end_time = datetime.datetime.strptime(
           options.end_time, '%%Y-%%m-%%d%s%%H:%%M:%%S' % delimeter)
     except ValueError:
-      cli_common_lib_instance.DnsError('Improperly formatted timestamps.', 1)
+      cli_common_lib.DnsError('Improperly formatted timestamps.', 1)
 
   log = roster_client_lib.RunFunction(
       u'ListAuditLog', options.username, credfile=options.credfile,
@@ -113,7 +113,7 @@ def main(args):
          entry['audit_log_user_name'], entry['success'],
          str(cPickle.loads(entry['data'])['audit_args'])])
 
-  print cli_common_lib_instance.PrintColumns(
+  print cli_common_lib.PrintColumns(
       print_list, first_line_header=not options.no_header)
 
 if __name__ == "__main__":

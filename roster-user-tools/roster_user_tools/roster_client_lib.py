@@ -100,8 +100,16 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
     if( raise_errors ):
       raise xmlrpclib.Fault(1, '(%s) %s' % (core_return['log_uuid_string'],
                                             core_return['error']))
-    cli_common_lib.ServerError(core_return['error'],
-                               core_return['log_uuid_string'], 1)
+    if( core_return['error_class'] == 'InternalError' ):
+      cli_common_lib.ServerError(core_return['error'],
+                                 core_return['log_uuid_string'], 1)
+    elif( core_return['error_class'] == 'UserError' ):
+      cli_common_lib.UserError(core_return['error'], 1)
+    else:
+      cli_common_lib.UnknownError(
+          core_return['error_class'],
+          core_return['log_uuid_string'],
+          core_return['error'], 1)
 
   if( core_return == 'ERROR: Invalid Credentials' ):
     if( not CheckCredentials(user_name, credfile, server_name,

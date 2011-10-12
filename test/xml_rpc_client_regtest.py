@@ -288,6 +288,79 @@ class TestXMLServerClient(unittest.TestCase):
     for old_thread in client_threads:
       old_thread.join()
 
+  def testRaiseErrors(self):
+    self.daemon_instance.core_die_time = 7200
+    oldstdout = sys.stdout
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, roster_client_lib.RunFunction,
+                                  u'MakeZone', USERNAME,
+                                  credstring=self.credential,
+                                  args=['new_zone', 'forward',
+                                        'zone.com'],
+                                  server_name=self.server_name,
+                                  password=PASSWORD)
+    self.assertEqual(sys.stdout.flush(),
+                     'USER ERROR: Invalid data type Hostname for zone_origin: zone.com\n')
+    sys.stdout = oldstdout
+
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, roster_client_lib.RunFunction,
+                                  u'MakeZone', USERNAME,
+                                  credstring=self.credential,
+                                  args=['new_zone', 'no-exist',
+                                        'zone.com.'],
+                                  server_name=self.server_name,
+                                  password=PASSWORD)
+    self.assertEqual(sys.stdout.flush(),
+                     'USER ERROR: Invalid zone type.\n')
+    sys.stdout = oldstdout
+
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, roster_client_lib.RunFunction,
+                                  u'MakeZone', USERNAME,
+                                  credstring=self.credential,
+                                  args=['new_zone', 'forward',
+                                        'zone.com.'],
+                                  kwargs={'view_name': 'no-exist'},
+                                  server_name=self.server_name,
+                                  password=PASSWORD)
+    out = sys.stdout.flush()
+    self.assertEqual(out,
+                     'USER ERROR: Specified view does not exist.\n')
+    sys.stdout = oldstdout
+
+
+    sys.stdout = StdOutStream()
+    core_return = roster_client_lib.RunFunction(u'MakeZone', USERNAME,
+                                  credstring=self.credential,
+                                  args=['new_zone', 'forward',
+                                        'zone.com.'],
+                                  server_name=self.server_name,
+                                  password=PASSWORD)
+    self.assertEqual(sys.stdout.flush(), '')
+    sys.stdout = oldstdout
+    self.assertEqual(core_return, {'new_credential': '', 'core_return': None, 'log_uuid_string': None, 'error': None})
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, roster_client_lib.RunFunction,
+        u'MakeRecord', USERNAME, credstring=self.credential,
+        args=['a', 'new_host', 'bad_zone_bad',
+              {'assignment_ip': "192.168.1.1"}],
+        server_name=self.server_name)
+    out = sys.stdout.flush()
+    sys.stdout = oldstdout
+    self.assertEqual(out, "USER ERROR: Specified zone or view does not exist.\n")
+
+    sys.stdout = StdOutStream()
+    self.assertRaises(SystemExit, roster_client_lib.RunFunction,
+        u'MakeRecord', USERNAME, credstring=self.credential,
+        args=['a', 'new_host', 'new_zone',
+          {'assignment_ip': "192.168.1.1"}],
+        kwargs={'view_name': u'bad_view'},
+        server_name=self.server_name)
+    out = sys.stdout.flush()
+    sys.stdout = oldstdout
+    self.assertEqual(out, "USER ERROR: Specified zone or view does not exist.\n")
+
   def testMultipleThreadedConnectionsWithDifferentUsers(self):
     data_exporter = tree_exporter.BindTreeExport(CONFIG_FILE)
     self.daemon_instance.core_die_time = 7200

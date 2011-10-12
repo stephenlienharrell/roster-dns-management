@@ -138,7 +138,7 @@ def main(args):
                                    "%Y%m%dT%H:%M:%S").strftime(
                                        '%Y-%m-%d %H:%M:%S'),
         option['dns_server_set_name']])
-    print cli_common_lib_instance.PrintColumns(
+    print cli_common_lib.PrintColumns(
         print_list, first_line_header=not options.no_header)
 
   elif( command in ['dump', 'edit'] ):

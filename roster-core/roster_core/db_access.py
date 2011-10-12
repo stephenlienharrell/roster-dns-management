@@ -153,7 +153,15 @@ class dbAccess(object):
     """
     if( DEBUG == True ):
       print execution_string % values
-    self.cursor.execute(execution_string, values)
+    try:
+      self.cursor.execute(execution_string, values)
+    except MySQLdb.ProgrammingError:
+      raise
+    except MySQLdb.Error, e:
+      if( e[0] in errors.PARSABLE_MYSQL_ERRORS ):
+        raise errors.DatabaseError(e)
+      else:
+        raise
     
     
   def StartTransaction(self):
@@ -169,7 +177,7 @@ class dbAccess(object):
       TransactionError: Cannot start new transaction last transaction not
                         committed or rolled-back.
     """
-    if( self. thread_safe ):
+    if( self.thread_safe ):
       unique_id = uuid.uuid4()
       self.queue.put(unique_id)
 

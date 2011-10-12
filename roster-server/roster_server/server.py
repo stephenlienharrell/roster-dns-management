@@ -269,6 +269,7 @@ class Server(object):
         raise FunctionError('Function does not exist.')
 
       types = inspect.getargspec(run_func)
+      error_class = None
       try:
         ## Figure out what each function is expecting
         if( types[3] is None and len(types[0]) == 1 ):
@@ -285,10 +286,17 @@ class Server(object):
           core_return = run_func(*args, **kwargs)
         else:
           raise ArgumentError('Arguments do not match.')
+      except roster_core.errors.InternalError, error:
+        uuid_string = self.LogException(function, args, kwargs, user_name)
+        error_class = 'InternalError'
+      except roster_core.errors.UserError, error:
+        error_class = 'UserError'
       except Exception, error:
         uuid_string = self.LogException(function, args, kwargs, user_name)
+        error_class = error.__class__.__name__
+      if( error_class is not None ):
         return {'log_uuid_string': uuid_string, 'error': str(error),
-                'core_return': None, 'new_credential': None}
+                'error_class': error_class, 'core_return': None, 'new_credential': None}
       core_return = {'core_return': core_return, 'new_credential': cred_status,
                      'log_uuid_string': uuid_string, 'error': None}
     else:

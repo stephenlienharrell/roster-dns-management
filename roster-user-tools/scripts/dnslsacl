@@ -93,7 +93,7 @@ def main(args):
       print_list.append([acl, sub_acl['cidr_block'],
                          'Allow' if sub_acl['range_allowed'] else 'Deny'])
 
-  print cli_common_lib_instance.PrintColumns(
+  print cli_common_lib.PrintColumns(
       print_list, first_line_header=not options.no_header)
 
 if __name__ == "__main__":

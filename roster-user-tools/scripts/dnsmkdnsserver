@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
@@ -90,7 +90,7 @@ def main(args):
 
   if( command == 'dns_server' ):
     if( options.dns_server in dns_servers ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'DNS Server "%s" already exists.' % options.dns_server, 1)
     roster_client_lib.RunFunction(
         u'MakeDnsServer', options.username,
@@ -102,10 +102,10 @@ def main(args):
 
   elif( command == 'assignment' ):
     if( options.dns_server not in dns_servers ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'DNS Server "%s" does not exist.' % options.dns_server, 1)
     if( options.dns_server_set not in dns_server_sets ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'DNS Server Set "%s" does not exist.' % options.dns_server_set, 1)
 
 
@@ -120,7 +120,7 @@ def main(args):
 
   elif( command == 'dns_server_set' ):
     if( options.dns_server_set in dns_server_sets ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'DNS Server Set "%s" already exists.' % options.dns_server_set, 1)
     roster_client_lib.RunFunction(
         u'MakeDnsServerSet', options.username,

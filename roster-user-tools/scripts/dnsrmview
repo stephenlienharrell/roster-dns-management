@@ -89,7 +89,7 @@ def main(args):
 
   if( command == 'view' ):
     if( options.view_name not in views ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'View "%s" does not exist.' % options.view_name, 1)
 
     roster_client_lib.RunFunction(

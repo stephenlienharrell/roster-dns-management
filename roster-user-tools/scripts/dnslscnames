@@ -95,7 +95,7 @@ def Main(args):
   for cname in cnames:
     print_list.append([cname['target'], cname['assignment_host']])
 
-  print cli_common_lib_instance.PrintColumns(
+  print cli_common_lib.PrintColumns(
       print_list, first_line_header=(not options.no_header))
 
 if __name__ == "__main__":

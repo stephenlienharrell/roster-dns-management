@@ -89,7 +89,7 @@ def main(args):
       print ('REMOVED DNS SERVER SET ASSIGNMENT: dns_server_set: %s '
              'dns_server: %s' % (options.dns_server_set, options.dns_server))
     elif( not core_return ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'DNS server set assignment "%s/%s" does not exist.' % (
               options.dns_server_set, options.dns_server), 1)
 
@@ -102,7 +102,7 @@ def main(args):
     if( not options.quiet and core_return ):
       print 'REMOVED DNS SERVER SET: %s' % options.dns_server_set
     elif( not core_return ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'DNS server set "%s" does not exist.' % options.dns_server_set, 1)
 
   elif( command == 'dns_server' ):
@@ -114,7 +114,7 @@ def main(args):
     if( not options.quiet and core_return ):
       print 'REMOVED DNS SERVER: %s' % options.dns_server
     elif( not core_return ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'DNS server "%s" does not exist.' % options.dns_server, 1)
   else:
     cli_common_lib.DnsError(

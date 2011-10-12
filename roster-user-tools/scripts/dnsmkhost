@@ -88,7 +88,7 @@ def main(args):
   elif( options.ip_address.find(':') != -1 ):
     version = 6
   else:
-    cli_common_lib_instance.DnsError('Incorrectly formatted IP address.', 1)
+    cli_common_lib.DnsError('Incorrectly formatted IP address.', 1)
 
   record_type = u'a'
   if( version == 6 ):
@@ -104,21 +104,21 @@ def main(args):
       server_name=options.server,
       kwargs={'zone_name': options.zone_name})['core_return']
   if( options.zone_name is None ):
-    cli_common_lib_instance.DnsError(
+    cli_common_lib.DnsError(
         'A zone must be specified with -z/--zone-name.', 1)
   if( options.zone_name not in zone_info ):
-    cli_common_lib_instance.DnsError(
+    cli_common_lib.DnsError(
         'Zone "%s" does not exist.' % options.zone_name, 1)
   if( options.view_name not in zone_info[options.zone_name] ):
-    cli_common_lib_instance.DnsError('Zone "%s" not found in "%s" view.' % (
+    cli_common_lib.DnsError('Zone "%s" not found in "%s" view.' % (
         options.zone_name, options.view_name), 1)
   zone_origin = zone_info[options.zone_name][options.view_name][
       'zone_origin'].rstrip('.')
   if( options.target.rstrip('.').endswith(zone_origin) ):
-    cli_common_lib_instance.DnsError('Hostname cannot end with domain name.', 1)
+    cli_common_lib.DnsError('Hostname cannot end with domain name.', 1)
   if( zone_origin.endswith('.in-addr.arpa') or
       zone_origin.endswith('.ip6.arpa') ):
-    cli_common_lib_instance.DnsError(
+    cli_common_lib.DnsError(
         'This tool requres a forward zone as an argument. '
         'Reverse zones are handled automatically.', 1)
 
@@ -127,7 +127,7 @@ def main(args):
       server_name=options.server, args=[options.ip_address])['core_return']
 
   if( not reverse_zone_name ):
-    cli_common_lib_instance.DnsError('No reverse zone found for "%s"' % (
+    cli_common_lib.DnsError('No reverse zone found for "%s"' % (
         options.ip_address), 1)
 
   cli_record_lib_instance.MakeRecord(record_type, options,

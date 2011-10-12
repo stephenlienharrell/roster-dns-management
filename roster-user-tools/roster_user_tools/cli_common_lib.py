@@ -102,7 +102,6 @@ class CliCommonLib:
         self.options.username, self.options.credfile, self.options.server,
         password=self.options.password)
 
-  ## Needs to be removed eventually, de classify
   def DisallowFlags(self, disallow_list, parser):
     """Dissallows certain command line flags.
 
@@ -122,22 +121,6 @@ class CliCommonLib:
       sys.exit(1)
 
   ## Function accessors, need to be removed at some point
-  def DnsError(self, message, exit_status=0):
-    return DnsError(message, exit_status)
-  def ServerError(self, message, exit_status=0):
-    return ServerError(message, exit_status)
-  def DnsWarning(self, message):
-    return DnsWarning(message)
-  def PrintColumns(self, print_list, first_line_header=False):
-    return PrintColumns(print_list, first_line_header)
-  def PrintRecords(self, records_dictionary, ip_address_list=None,
-                   print_headers=False):
-    if ip_address_list is None:
-      ip_address_list = []
-    return PrintRecords(records_dictionary, ip_address_list, print_headers)
-  def PrintHosts(self, records_dictionary, ip_address_list, view_name=None):
-    return PrintHosts(records_dictionary, ip_address_list, view_name)
-
 def SortRecordsDict(records_dictionary, view_name):
   """Retries records from database and sorts them
 
@@ -181,6 +164,30 @@ def ServerError(message, uuid_string, exit_status=0):
   print "SERVER ERROR: (%s) %s" % (uuid_string, message)
   if( exit_status ):
     sys.exit(exit_status)
+
+def UserError(message, exit_status=0):
+  """Prints standardized user error message to screen.
+
+  Inputs:
+    message: string of message to be displayed on screen
+    exit_status: integer of retrun code, assumed not exit if 0
+  """
+  print "USER ERROR: %s" % (message)
+  if( exit_status ):
+    sys.exit(exit_status)
+
+def UnknownError(error_class, uuid_string, message, exit_status=0):
+  """Prints standardized unknown error message to screen.
+
+  Inputs:
+    message: string of message to be displayed on screen
+    exit_status: integer of retrun code, assumed not exit if 0
+  """
+  print "UNKNOWN ERROR(%s): (%s) %s" % (error_class, uuid_string,
+                                        message)
+  if( exit_status ):
+    sys.exit(exit_status)
+
 
 def DnsWarning(message):
   """Prints standardized warning message to screen.

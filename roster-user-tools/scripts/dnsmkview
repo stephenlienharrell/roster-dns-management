@@ -93,11 +93,11 @@ def main(args):
         credstring=options.credstring, server_name=options.server,
         kwargs={u'acl_name': options.acl})['core_return']
     if( acls == {} ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'ACL "%s" does not exist.' % options.acl, 1)
 
     if( options.view_name in views ):
-      cli_common_lib_instance.DnsError(
+      cli_common_lib.DnsError(
           'View "%s" already exists.' % options.view_name, 1)
 
     roster_client_lib.RunFunction(
