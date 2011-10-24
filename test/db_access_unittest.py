@@ -155,6 +155,7 @@ class DbLockThread(threading.Thread):
 class TestdbAccess(unittest.TestCase):
 
   def setUp(self):
+    self.maxDiff = None
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
 
     self.db_instance = self.config_instance.GetDb()

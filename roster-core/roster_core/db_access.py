@@ -115,11 +115,12 @@ class dbAccess(object):
     self.big_lock_timeout = big_lock_timeout
     self.big_lock_wait = big_lock_wait
     self.ssl = ssl
-    self.ssl_settings = {'ca': ssl_ca, 'cert': ssl_cert, 'key': ssl_key}
-    if( ssl_capath ):
-      self.ssl_settings['capath'] = ssl_capath
-    if( ssl_cipher ):
-      self.ssl_settings['cipher'] = ssl_cipher
+    self.ssl_settings = {}
+    if( self.ssl ):
+      if( self.ssl_ca ):
+        self.ssl_settings['ca'] = ssl_ca
+      else:
+        raise errors.ConfigError('ssl_ca not specified in config file.')
     self.transaction_init = False
     self.connection = None
     self.cursor = None
