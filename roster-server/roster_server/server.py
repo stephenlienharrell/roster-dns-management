@@ -123,6 +123,7 @@ class Server(object):
     self.core_store = [] # {'user': user, 'last_used': last_used, 'instance': }
     self.get_credentials_wait = {} # {'user1': 3, 'user2': 4}
     self.last_cleaned = datetime.datetime.now()
+    self.LogMessage('Roster server started on port %s' % self.port, 'rosterd')
 
   def LogException(self, function, args, kwargs, user_name):
     """Save functions traceback to logfile
@@ -142,22 +143,55 @@ class Server(object):
         open(self.log_file, 'w').close()
       except:
         raise ServerError('Could not write to logfile "%s"' % self.log_file)
-    log_file_handle = open(self.log_file, 'a')
-    log_file_handle.writelines('\n\n---------------------\n')
-    log_file_handle.writelines(uuid_string)
-    log_file_handle.writelines('\n')
-    log_file_handle.writelines('FUNCTION: %s\n' % function)
-    log_file_handle.writelines('ARGS: %s\n' % args)
-    log_file_handle.writelines('KWARGS: %s\n' % kwargs)
-    log_file_handle.writelines('USER: %s\n' % user_name)
-    log_file_handle.writelines('TIMESTAMP: %s\n\n' % (
-        datetime.datetime.now().isoformat()))
-    traceback.print_exc(None, log_file_handle)
-    log_file_handle.writelines('\n---------------------\n')
-    log_file_handle.close()
+    try:
+      log_file_handle = open(self.log_file, 'a')
+      log_file_handle.writelines('\n\n---------------------\n')
+      log_file_handle.writelines(uuid_string)
+      log_file_handle.writelines('\n')
+      log_file_handle.writelines('FUNCTION: %s\n' % function)
+      log_file_handle.writelines('ARGS: %s\n' % args)
+      log_file_handle.writelines('KWARGS: %s\n' % kwargs)
+      log_file_handle.writelines('USER: %s\n' % user_name)
+      log_file_handle.writelines('TIMESTAMP: %s\n\n' % (
+          datetime.datetime.now().isoformat()))
+      traceback.print_exc(None, log_file_handle)
+      log_file_handle.writelines('\n---------------------\n')
+    finally:
+      log_file_handle.close()
 
     return uuid_string
+  
+  def LogMessage(self, log_message, user_name):
+    """Save a message to the logfile
 
+    Inputs:
+      log_message: string of the log message
+      user_name: username string
+
+    Outputs:
+      str: uuid string from logfile
+    """
+    uuid_string = str(uuid.uuid4())
+    if( not os.path.exists ):
+      try:
+        open(self.log_file, 'w').close()
+      except:
+        raise ServerError('Could not write to logfile "%s"' % self.log_file)
+    try:
+      log_file_handle = open(self.log_file, 'a')
+      log_file_handle.writelines('\n\n---------------------\n')
+      log_file_handle.writelines(uuid_string)
+      log_file_handle.writelines('\n')
+      log_file_handle.writelines('MESSAGE: %s\n' % log_message)
+      log_file_handle.writelines('USER: %s\n' % user_name)
+      log_file_handle.writelines('TIMESTAMP: %s' % (
+          datetime.datetime.now().isoformat()))
+      log_file_handle.writelines('\n---------------------\n')
+    finally:
+      log_file_handle.close()
+
+    return uuid_string
+  
   def CleanupCoreStore(self):
     """Cleans up expired instances in core_store"""
     delete_list = []
