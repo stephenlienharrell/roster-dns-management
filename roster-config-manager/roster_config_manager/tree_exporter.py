@@ -105,64 +105,11 @@ class BindTreeExport(object):
     Outputs:
       string: string of namedconf header
     """
-    namedconflines = named_conf_header.split('\n')
-    found_options = False
-    in_comment = False
-
-    for line_number, line in enumerate(namedconflines):
-      if( line.strip().startswith('#') ):
-        continue
-      elif( line.strip().startswith('//') ):
-        continue
-      elif( line.strip().startswith('/*') ):
-        in_comment = True
-      elif( '*/' in line and in_comment ):
-        in_comment = False
-        continue
-      if( in_comment ):
-        continue
-      elif( line.strip().startswith('directory ') ):
-        namedconflines.pop(line_number)
-      elif( line.strip().startswith('options') ):
-        found_options = True
-
-    if( found_options ):
-      for line_number, line in enumerate(namedconflines):
-        if( line.strip().startswith('#') ):
-          continue
-        elif( line.strip().startswith('//') ):
-          continue
-        elif( line.strip().startswith('/*') ):
-          in_comment = True
-        elif( '*/' in line and in_comment ):
-          in_comment = False
-          continue
-        if( in_comment ):
-          continue
-        for char in range(len(line)):
-          if( line[char] == 'o' ):
-            if( line[char:char + len('options')] == 'options' ):
-              if( '{' not in line ):
-                temp = char
-                while( '{' not in namedconflines[temp] ):
-                  temp += 1
-                else:
-                  line = namedconflines[temp]
-                  char += 1
-              char_temp = 0
-              while( char_temp < len(line) ):
-                if( line[char_temp] == '{' ):
-                  newline = '\tdirectory "%s";' % new_directory.rstrip('/')
-                  namedconflines.insert(line_number + 1, newline)
-                  return '\n'.join(namedconflines)
-                if( line[char_temp] == '}' ):
-                  return None
-                char_temp += 1
-              return None
-    else:
-      namedconflines.insert(-1, 'options\n{\n\tdirectory "%s";\n};\n' % (
-          new_directory))
-      return '\n'.join(namedconflines)
+    named_conf_header_contents = iscpy.ParseISCString(named_conf_header)
+    if( 'options' not in named_conf_header_contents ):
+      named_conf_header_contents['options'] = {}
+    named_conf_header_contents['options']['directory'] = '"%s"' % new_directory
+    return iscpy.MakeISC(named_conf_header_contents)
 
 
   def AddToTarFile(self, tar_file, file_name, file_string):
