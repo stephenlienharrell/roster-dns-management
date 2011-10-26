@@ -38,6 +38,7 @@ __version__ = '#TRUNK#'
 import os
 
 import roster_client_lib
+import cli_common_lib
 
 
 class RecordNotFoundException(Exception):
@@ -68,7 +69,7 @@ class CliRecordLib:
     """
     for item in record_args_dict:
       if( record_args_dict[item] is None ):
-        self.cli_common_lib.DnsError('Must specify --%s-%s' % (
+        cli_common_lib.DnsError('Must specify --%s-%s' % (
             record_type, item.replace('_', '-')), 1)
 
     options.credfile = os.path.expanduser(options.credfile)
@@ -98,10 +99,10 @@ class CliRecordLib:
         record_args_dict['assignment_ip'] = expanded_ip
     ## Check if view exists
     if( not views.has_key(options.view_name) and options.view_name != 'any' ):
-      self.cli_common_lib.DnsError('View does not exist!', 2)
+      cli_common_lib.DnsError('View does not exist!', 2)
     ## Check if zone exists
     if( not zones.has_key(options.zone_name) ):
-      self.cli_common_lib.DnsError('Zone does not exist!', 3)
+      cli_common_lib.DnsError('Zone does not exist!', 3)
 
     records = roster_client_lib.RunFunction(
         'ListRecords', options.username, credfile=options.credfile,
@@ -117,7 +118,7 @@ class CliRecordLib:
           if( record[record_arg] != record_args_dict[record_arg] ):
             break
         else:
-          self.cli_common_lib.DnsError('Duplicate record!', 4)
+          cli_common_lib.DnsError('Duplicate record!', 4)
       if( fix_ptr_origin and record_type == u'ptr' ):
         roster_client_lib.RunFunction(
             'MakePTRRecord', options.username, credfile=options.credfile,
@@ -205,7 +206,7 @@ class CliRecordLib:
     """
     for item in record_args_dict:
       if( record_args_dict[item] is None ):
-        self.cli_common_lib.DnsError('Must specify --%s-%s' % (
+        cli_common_lib.DnsError('Must specify --%s-%s' % (
             record_type, item.replace('_', '-')), 1)
     if( record_type == u'ptr' ):
       options.target, options.zone_name = roster_client_lib.RunFunction(
@@ -230,10 +231,10 @@ class CliRecordLib:
         server_name=options.server, raise_errors=raise_errors)['core_return']
     ## Check if view exists
     if( options.view_name not in views and options.view_name != 'any'  ):
-      self.cli_common_lib.DnsError('View does not exist!', 2)
+      cli_common_lib.DnsError('View does not exist!', 2)
     ## Check if zone exists
     if( options.zone_name not in zones ):
-      self.cli_common_lib.DnsError('Zone does not exist!', 3)
+      cli_common_lib.DnsError('Zone does not exist!', 3)
     function = u'RemoveRecord'
     if( fix_ptr_origin and record_type == u'ptr' ):
       function = u'RemovePTRRecord'
@@ -243,7 +244,7 @@ class CliRecordLib:
               options.view_name], kwargs={'ttl': int(options.ttl)},
         server_name=options.server, raise_errors=raise_errors)['core_return']
     if( removed_records == 0 ):
-      self.cli_common_lib.DnsError(
+      cli_common_lib.DnsError(
           '"%s" record with target "%s" in "%s" zone and "%s" view not found.',
           1)
     if( options.view_name is None ):
@@ -310,7 +311,7 @@ class CliRecordLib:
             print_list = [key_list]
             have_keys = True
           print_list.append(record.values())
-        return_list.append(self.cli_common_lib.PrintColumns(
+        return_list.append(cli_common_lib.PrintColumns(
             print_list, first_line_header=(not options.no_header)))
       return return_list
     else:
@@ -324,5 +325,5 @@ class CliRecordLib:
           print_list = [key_list]
           have_keys = True
         print_list.append(record.values())
-      return self.cli_common_lib.PrintColumns(
+      return cli_common_lib.PrintColumns(
           print_list, first_line_header=(not options.no_header))
