@@ -93,15 +93,24 @@ class TestCredentialsLibrary(unittest.TestCase):
     logfile_lines = logfile_handle.readlines()
     logfile_handle.close()
 
-    self.assertEqual(logfile_lines[4:8],
+    self.assertEqual(logfile_lines[12:16],
         ['FUNCTION: testfunction\n', "ARGS: ['arg1', 'arg2']\n",
          "KWARGS: {'kwarg': 'value'}\n", 'USER: sharrell\n'])
-    self.assertEqual(logfile_lines[9:],
+    self.assertEqual(logfile_lines[17:],
         ['\n', 'Traceback (most recent call last):\n',
          '  File "%s", line 88, in testLogException\n' % sys.argv[0],
          '    raise Exception\n', 'Exception\n', '\n',
          '---------------------\n'])
-    self.assertEqual(len(logfile_lines), 16)
+    self.assertEqual(len(logfile_lines), 24)
+
+  def testLogMessage(self):
+    self.server_instance.LogMessage('On the record.', USERNAME)
+    logfile_handle = open(self.logfile, 'r')
+    logfile_lines = logfile_handle.readlines()
+    logfile_handle.close()
+    self.assertEqual(logfile_lines[12:14],
+                     ['MESSAGE: On the record.\n',
+                      'USER: sharrell\n'])
 
   def testCoreRun(self):
     new_cred = self.server_instance.GetCredentials(u'shuey', 'testpass')

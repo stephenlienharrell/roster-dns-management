@@ -319,16 +319,8 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
     config_credentials = config.config_file['credentials']
     config_server = config.config_file['server']
     self.assertEqual(config_database['server'], self.cfg_database['server'])
-    self.assertEqual(config_database['ssl_cert'], self.cfg_database['ssl_cert'])
     self.assertEqual(config_database['ssl'], self.cfg_database['ssl'])
     self.assertEqual(config_database['ssl_ca'], self.cfg_database['ssl_ca'])
-    self.assertEqual(config_database['ssl_capath'],
-                     self.cfg_database['ssl_capath'])
-    self.assertEqual(config_database['ssl_key'], self.cfg_database['ssl_key'])
-    self.assertEqual(config_database['ssl_cipher'],
-                     self.cfg_database['ssl_cipher'])
-    self.assertEqual(config_server['ssl_cert_file'],
-        self.cfg_server['ssl_cert_file'])
 
 if( __name__ == '__main__' ):
       unittest.main()
