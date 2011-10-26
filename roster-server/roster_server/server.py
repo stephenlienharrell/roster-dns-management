@@ -42,6 +42,7 @@ import datetime
 import os
 import inspect
 import SocketServer
+import StringIO
 import time
 import traceback
 import uuid
@@ -138,29 +139,28 @@ class Server(object):
       str: uuid string from logfile
     """
     uuid_string = str(uuid.uuid4())
-    if( not os.path.exists ):
-      try:
-        open(self.log_file, 'w').close()
-      except:
-        raise ServerError('Could not write to logfile "%s"' % self.log_file)
+    log_file_contents = []
+    exception_string = StringIO.StringIO()
+    traceback.print_exc(None, exception_string)
+    log_file_contents.append('\n\n---------------------\n')
+    log_file_contents.append(uuid_string)
+    log_file_contents.append('\n')
+    log_file_contents.append('FUNCTION: %s\n' % function)
+    log_file_contents.append('ARGS: %s\n' % args)
+    log_file_contents.append('KWARGS: %s\n' % kwargs)
+    log_file_contents.append('USER: %s\n' % user_name)
+    log_file_contents.append('TIMESTAMP: %s\n\n' % (
+        datetime.datetime.now().isoformat()))
+    log_file_contents.append(exception_string.getvalue())
+    log_file_contents.append('\n---------------------\n')
     try:
       log_file_handle = open(self.log_file, 'a')
-      log_file_handle.writelines('\n\n---------------------\n')
-      log_file_handle.writelines(uuid_string)
-      log_file_handle.writelines('\n')
-      log_file_handle.writelines('FUNCTION: %s\n' % function)
-      log_file_handle.writelines('ARGS: %s\n' % args)
-      log_file_handle.writelines('KWARGS: %s\n' % kwargs)
-      log_file_handle.writelines('USER: %s\n' % user_name)
-      log_file_handle.writelines('TIMESTAMP: %s\n\n' % (
-          datetime.datetime.now().isoformat()))
-      traceback.print_exc(None, log_file_handle)
-      log_file_handle.writelines('\n---------------------\n')
+      log_file_handle.writelines(''.join(log_file_contents))
     finally:
       log_file_handle.close()
 
     return uuid_string
-  
+
   def LogMessage(self, log_message, user_name):
     """Save a message to the logfile
 
@@ -172,21 +172,18 @@ class Server(object):
       str: uuid string from logfile
     """
     uuid_string = str(uuid.uuid4())
-    if( not os.path.exists ):
-      try:
-        open(self.log_file, 'w').close()
-      except:
-        raise ServerError('Could not write to logfile "%s"' % self.log_file)
+    log_file_contents = []
+    log_file_contents.append('\n\n---------------------\n')
+    log_file_contents.append(uuid_string)
+    log_file_contents.append('\n')
+    log_file_contents.append('MESSAGE: %s\n' % log_message)
+    log_file_contents.append('USER: %s\n' % user_name)
+    log_file_contents.append('TIMESTAMP: %s' % (
+        datetime.datetime.now().isoformat()))
+    log_file_contents.append('\n---------------------\n')
     try:
       log_file_handle = open(self.log_file, 'a')
-      log_file_handle.writelines('\n\n---------------------\n')
-      log_file_handle.writelines(uuid_string)
-      log_file_handle.writelines('\n')
-      log_file_handle.writelines('MESSAGE: %s\n' % log_message)
-      log_file_handle.writelines('USER: %s\n' % user_name)
-      log_file_handle.writelines('TIMESTAMP: %s' % (
-          datetime.datetime.now().isoformat()))
-      log_file_handle.writelines('\n---------------------\n')
+      log_file_handle.writelines(''.join(log_file_contents))
     finally:
       log_file_handle.close()
 
@@ -403,6 +400,11 @@ class Server(object):
       server_name: name of server you wish to create
       port: listening port number of server
     """
+    if( not os.path.exists ):
+      try:
+        open(self.log_file, 'w').close()
+      except:
+        raise ServerError('Could not write to logfile "%s"' % self.log_file)
     if( not port ):
       port = self.port
     if( not server_name ):
