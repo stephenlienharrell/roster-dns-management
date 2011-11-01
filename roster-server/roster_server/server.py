@@ -345,6 +345,7 @@ class Server(object):
       string: string of credential
               example: u'be4d4ecf-d670-44a0-b957-770e118e2755'
     """
+    error_class = None
     try:
       user_name = unicode(user_name)
       core_instance = self.GetCoreInstance(user_name)
@@ -361,6 +362,10 @@ class Server(object):
     except Exception, error:
       uuid_string = self.LogException(
           'GetCredentials', [user_name, '<password>'], {}, user_name)
+      error_class = error.__class__.__name__
+      if( error_class is not None ):
+        return {'log_uuid_string': uuid_string, 'error': str(error),
+                'error_class': error_class, 'core_return': None, 'new_credential': None}
       return {'log_uuid_string': uuid_string, 'error': str(error),
               'core_return': None, 'new_credential': None}
 
@@ -375,6 +380,7 @@ class Server(object):
     Outputs:
       bool: bool of valid string
     """
+    error_class = None
     try:
       user_name = unicode(user_name)
       credstring = unicode(credstring)
@@ -384,6 +390,10 @@ class Server(object):
     except Exception, error:
       uuid_string = self.LogException(
           'IsAuthenticated', [user_name, '<credstring>'], {}, user_name)
+      error_class = error.__class__.__name__
+      if( error_class is not None ):
+        return {'log_uuid_string': uuid_string, 'error': str(error),
+                'error_class': error_class, 'core_return': None, 'new_credential': None}
       return {'log_uuid_string': uuid_string, 'error': str(error),
               'core_return': None, 'new_credential': None}
     if( valid == '' ):
