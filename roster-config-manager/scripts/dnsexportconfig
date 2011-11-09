@@ -218,7 +218,6 @@ def main(args):
     dnsconfigsync_array.extend(['--rndc-conf', options.rndc_conf])
   if( options.ssh_exec ):
     dnsconfigsync_array.extend(['--ssh-exec', options.ssh_exec])
-
   sys.exit(RunCommand(' '.join(dnsconfigsync_array)))
 
 

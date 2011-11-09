@@ -188,7 +188,7 @@ class TestCliRecordLib(unittest.TestCase):
     self.core_instance.MakeView(options.view_name)
     sys.stdout = StdOutStream()
 
-    self.assertRaises(DnsErrorException, cli_record_lib_instance.MakeRecord,
+    self.assertRaises(cli_common_lib_instance.DnsError, cli_record_lib_instance.MakeRecord,
         u'a', options, {u'assignment_ip': u'192.168.1.1'})
     self.assertEqual(sys.stdout.flush(), 'ERROR: Zone does not exist!\n')
 

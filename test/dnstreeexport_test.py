@@ -1189,7 +1189,6 @@ class TestDnsMkHost(unittest.TestCase):
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
         'options { directory "%s/named";\n'
-        '\tdirectory "%s/named";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
         'controls { keys { rndc-key; };\n'
@@ -1215,7 +1214,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\t\tfile "%s/named/external/4.3.2.1.in-addr.db";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '};' % tuple([self.named_dir for x in range(4)]))
+        '};' % tuple([self.named_dir for x in range(3)]))
     handle.close()
     handle = open(
         './%s/external_dns_servers/named/external/4.3.2.1.in-addr.db' %
@@ -1263,7 +1262,6 @@ class TestDnsMkHost(unittest.TestCase):
             'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
             'print-time yes; }; };\n'
             'options { directory "%s/named";\n'
-            '\tdirectory "%s/named";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
             'controls { keys { rndc-key; };\n'
@@ -1302,7 +1300,7 @@ class TestDnsMkHost(unittest.TestCase):
             '\t\tfile "%s/named/external/4.3.2.1.in-addr.db";\n'
             '\t\tallow-update { none; };\n'
             '\t};\n'
-            '};' % tuple([self.named_dir for x in range(6)]))
+            '};' % tuple([self.named_dir for x in range(5)]))
     handle.close()
     handle = open(
         './%s/internal_dns_servers/named/external/4.3.2.1.in-addr.db' % 
@@ -1376,7 +1374,6 @@ class TestDnsMkHost(unittest.TestCase):
             'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
             'print-time yes; }; };\n'
             'options { directory "%s/named";\n'
-            '\tdirectory "%s/named";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
             'controls { keys { rndc-key; };\n'
@@ -1397,7 +1394,7 @@ class TestDnsMkHost(unittest.TestCase):
             '\t\tfile "%s/named/private/university.edu.db";\n'
             '\t\tallow-update { none; };\n'
             '\t};\n'
-            '};' % tuple([self.named_dir for x in range(3)]))
+            '};' % tuple([self.named_dir for x in range(2)]))
     handle.close()
     handle = open(
         './%s/private_dns_servers/named/private/university.edu.db' %

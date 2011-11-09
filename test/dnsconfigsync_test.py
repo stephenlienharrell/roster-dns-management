@@ -32,6 +32,10 @@
 
 Make sure you are running this against a database that can be destroyed.
 
+In order to restart bind for this unittest on Ubuntu, make sure
+/etc/apparmor.d/usr/sbin/named has permission to your roster test directory
+I added "/home/dcfritz/** r," under the "/usr/sbin/named {" section
+
 DO NOT EVER RUN THIS TEST AGAINST A PRODUCTION DATABASE.
 """
 
@@ -40,12 +44,18 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import getpass
 import os
 import sys
 import subprocess
 import shutil
+import socket
+import time
 import unittest
 import tarfile
+from fabric import api as fabric_api
+from fabric import network as fabric_network
+from fabric import state as fabric_state
 
 import roster_core
 from roster_config_manager import tree_exporter
@@ -55,27 +65,46 @@ EXEC = '../roster-config-manager/scripts/dnsconfigsync'
 ZONE_IMPORTER_EXEC='../roster-config-manager/scripts/dnszoneimporter'
 KEY_FILE = 'test_data/rndc.key'
 RNDC_CONF_FILE = 'test_data/rndc.conf'
-USERNAME = 'sharrell'
+USERNAME = u'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 SSH_ID = 'test_data/roster_id_dsa'
-SSH_USER = 'root'
+SSH_USER = getpass.getuser()
 TEST_DNS_SERVER = u'localhost'
 NS_IP_ADDRESS = '127.0.0.1'
 NS_DOMAIN = '' #Blank since using localhost
+NAMEDPID_FILE = '/var/run/named/named.pid'
 
 
 class TestCheckConfig(unittest.TestCase):
   def setUp(self):
+    def PickUnusedPort():
+      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      s.bind((TEST_DNS_SERVER, 0))
+      addr, port = s.getsockname()
+      s.close()
+      return port
+    self.PORT = PickUnusedPort()
+    fabric_api.env.warn_only = True
+    fabric_state.output['everything'] = False
+    fabric_state.output['warnings'] = False
+    fabric_api.env.host_string = "%s@%s" % (SSH_USER, TEST_DNS_SERVER)
+
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
+
+    db_instance = self.config_instance.GetDb()
+    self.core_instance = roster_core.Core(USERNAME, self.config_instance)
+
+    db_instance.CreateRosterDatabase()
+
     self.bind_config_dir = os.path.expanduser(
         self.config_instance.config_file['exporter']['root_config_dir'])
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
-    db_instance = self.config_instance.GetDb()
-    self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
-
-    db_instance.CreateRosterDatabase()
+    self.named_dir = os.path.expanduser(
+        self.config_instance.config_file['exporter']['named_dir'])
+    if( not os.path.exists(self.named_dir) ):
+      os.mkdir(self.named_dir)
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
@@ -85,10 +114,14 @@ class TestCheckConfig(unittest.TestCase):
     self.db_instance = db_instance
 
   def tearDown(self):
+    fabric_api.local('killall named', capture=True)
+    fabric_network.disconnect_all()
     if( os.path.exists('backup') ):
       shutil.rmtree('backup')
     if( os.path.exists('test_data/backup_dir') ):
       shutil.rmtree('test_data/backup_dir')
+    if( os.path.exists(self.named_dir) ):
+      shutil.rmtree(self.named_dir)
 
   def testNull(self):
     self.core_instance.MakeView(u'test_view')
@@ -110,7 +143,7 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
-        u'set1', u'#options') # So we can test
+        u'set1', u'pid-file "test_data/named.pid') # So we can test
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'any')
     self.tree_exporter_instance.ExportAllBindTrees()
 
@@ -118,29 +151,48 @@ class TestCheckConfig(unittest.TestCase):
         EXEC, SSH_USER, SSH_ID, CONFIG_FILE))
     lines = command.read().split('\n')
     # These lines will likely need changed depending on implementation
-    print(lines)
-    self.assertTrue('Connecting to rsync on "%s"' % TEST_DNS_SERVER in lines)
-    self.assertTrue('building file list ... done' in lines)
-    self.assertTrue('named/' in lines)
-    self.assertTrue('named/test_view/' in lines)
-    # Variable line 5 'X bytes/sec'
-    # Variable line 6 'total size is 1070  speedup is X'
-    self.assertTrue('Connecting to ssh on "%s"' % TEST_DNS_SERVER in lines)
-    self.assertTrue('server reload successful' in lines)
+    self.assertTrue('Connecting to "%s"' % TEST_DNS_SERVER in lines)
+    # self.assertTrue('sending incremental file list' in lines)
+    # self.assertTrue('named/' in lines)
+    # self.assertTrue('named/test_view/' in lines)
+    # self.assertTrue('test_data/named/' in lines)
+    # self.assertTrue('server reload successful' in lines)
+    # self.assertTrue('[%s@%s] out:  * Starting domain name service... bind9\r' % (
+    #     SSH_USER, TEST_DNS_SERVER) in lines)
+    self.assertTrue('[%s@%s] out: server reload successful\r' % (
+        SSH_USER, TEST_DNS_SERVER) in lines)
+    self.assertTrue('Disconnecting from %s... done.' % (
+            TEST_DNS_SERVER) in lines)
     command.close()
 
-    command = os.popen('dig @%s%s mail1.sub.university.edu' % (
-        TEST_DNS_SERVER, NS_DOMAIN))
-    lines = command.readlines()
-    id = lines[5].split()[-1]
-    outputlines = ''.join(lines)
+    try:
+
+      file_handle = open('temp_dir/set1_servers/named.conf', 'r')
+      lines = file_handle.read()
+      file_handle.close()
+      ##lines = lines.replace('\"temp_dir\"', '%s/temp_dir' % os.getcwd())
+      ##lines = lines.replace('temp_dir/', '%s/temp_dir/set1_servers/named/' % os.getcwd())
+      file_handle = open('temp_dir/set1_servers/named.conf', 'w')
+      file_handle.write(lines)
+      file_handle.close()
+      file_handle = open('temp_dir/set1_servers/named.conf', 'r')
+      lines = file_handle.read()
+    except IOError:
+      pass
+
+    fabric_api.local('/usr/sbin/named -p %s -u %s -c %snamed.conf' % (
+        self.PORT, SSH_USER, self.named_dir), capture=True)
+    time.sleep(3)
+    command = os.popen('dig @%s%s mail1.sub.university.edu -p %s' % (
+        TEST_DNS_SERVER, NS_DOMAIN, self.PORT))
+    lines = ''.join(command.read()).split('\n')
     testlines = (
         '\n'
-        '%s'
+        '%s\n'
         '; (1 server found)\n'
-        ';; global options:  printcmd\n'
+        '%s\n'
         ';; Got answer:\n'
-        ';; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: %s\n'
+        '%s\n'
         ';; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: '
         '2\n'
         '\n'
@@ -158,13 +210,14 @@ class TestCheckConfig(unittest.TestCase):
         'ns.sub.university.edu. 3600  IN  A 192.168.1.103\n'
         'ns2.sub.university.edu.  3600  IN  A 192.168.1.104\n'
         '\n'
-        '%s'
-        ';; SERVER: %s#53(%s)\n'
-        '%s'
+        '%s\n'
+        ';; SERVER: %s#%s(%s)\n'
+        '%s\n'
         ';; MSG SIZE  rcvd: 125\n'
-        '\n' % (lines[1], id, lines[22], NS_IP_ADDRESS, NS_IP_ADDRESS,
-                lines[24]))
-    self.assertEqual(set(outputlines.split()), set(outputlines.split()))
+        '\n' % (lines[1], lines[3], lines[5], lines[22], NS_IP_ADDRESS,
+            self.PORT, NS_IP_ADDRESS, lines[24]))
+    lines = '\n'.join(lines)
+    self.assertEqual(set(lines.split()), set(testlines.split()))
     command.close()
 
 if( __name__ == '__main__' ):

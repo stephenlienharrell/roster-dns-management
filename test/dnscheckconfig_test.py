@@ -96,6 +96,10 @@ class TestCheckConfig(unittest.TestCase):
     self.named_dir = self.config_instance.config_file[
         'exporter']['named_dir'].lstrip('./').rstrip('/')
     self.bind_config_dir = os.path.expanduser(self.root_config_dir)
+    self.named_dir = os.path.expanduser(
+        self.config_instance.config_file['exporter']['named_dir'])
+    if( not os.path.exists(self.named_dir)):
+      os.mkdir(self.named_dir)
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
@@ -123,6 +127,8 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.root_config_dir)
     if( os.path.exists('temp_dir') ):
       shutil.rmtree('temp_dir')
+    if( os.path.exists(self.named_dir)):
+      shutil.rmtree(self.named_dir)
 
   def testCheckConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
@@ -173,10 +179,9 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named/test_view/sub.university.edu.db' % (
+        './%s/set1_servers/named/test_view/sub.university.edu.db' % (
             self.root_config_dir),
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aa 192.168.1.104')
     output = os.popen('python %s --config-file %s --' % (
@@ -188,17 +193,17 @@ class TestCheckConfig(unittest.TestCase):
         ":16: unknown RR type 'aa'\n"
         "zone sub.university.edu/IN: loading from master file "
         "temp_dir/set1_servers/named/test_view/sub.university.edu.db failed: "
-        "unknown class/type\n\n")
+        "unknown class/type\n")
     output.close()
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named/test_view/sub.university.edu.db' % (
+        './%s/set1_servers/named/test_view/sub.university.edu.db' % (
             self.root_config_dir),
         'ns2 3600 in aa 192.168.1.104', 'ns2 3600 in a 192.168.1.104')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named/test_view/sub.university.edu.db' % (
+        './%s/set1_servers/named/test_view/sub.university.edu.db' % (
             self.root_config_dir),
         ' 811 10800', ' 10800')
     output = os.popen('python %s --config-file %s' % (
@@ -211,16 +216,16 @@ class TestCheckConfig(unittest.TestCase):
         'near eol: unexpected end of input\n'
         'zone sub.university.edu/IN: loading from master file '
         'temp_dir/set1_servers/named/test_view/sub.university.edu.db '
-        'failed: unexpected end of input\n\n')
+        'failed: unexpected end of input\n')
     output.close()
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named/test_view/sub.university.edu.db' % (
+        './%s/set1_servers/named/test_view/sub.university.edu.db' % (
             self.root_config_dir), ' 10800', ' 810 10800')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named.conf' % self.root_config_dir,
+        './%s/set1_servers/named.conf' % self.root_config_dir,
         'type master;', 'type bad_type;')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -229,31 +234,34 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named.conf' % self.root_config_dir,
+        './%s/set1_servers/named.conf' % self.root_config_dir,
         'type bad_type;', 'type master;')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named.conf' % self.root_config_dir,
-        'file "%s/named/test_view/sub.university.edu.db";' % self.named_dir,
-        'wrong;')
+        './%s/set1_servers/named.conf' % self.root_config_dir,
+        'type master;',
+        'type master;\nwrong;')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    self.assertTrue(re.search('unknown option \'wrong\'',output.read()))
+    lines = output.read()
+    self.assertTrue(re.search('unknown option \'wrong\'', lines))
     output.close()
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named.conf' % self.root_config_dir,
+        './%s/set1_servers/named.conf' % self.root_config_dir,
         'wrong;',
-        'file "%s/named/test_view/sub.university.edu.db";' % self.named_dir)
+        '')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/set1_servers/named.conf' % self.root_config_dir,
-        'options',
-        'options\n{\ndirectory "another";\n};\noptions')
+        './%s/set1_servers/named.conf' % self.root_config_dir,
+        'options { directory "%snamed"; };' % self.named_dir,
+        '\noptions\n{\ndirectory "another";\n};\noptions {\n print-time yes;};\n')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    self.assertTrue(re.search('\'options\' redefined near \'options\'',output.read()))
+    lines = output.read()
+    ##ISCPY now combines directives defined twice
+    ##self.assertTrue(re.search('\'options\' redefined near \'options\'',lines))
     output.close()
 
 if( __name__ == '__main__' ):

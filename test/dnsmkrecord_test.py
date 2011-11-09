@@ -181,8 +181,9 @@ class TestDnsMkRecord(unittest.TestCase):
                        '--config-file %s -s %s' % (
                            EXEC, USERNAME, self.password,
                            USER_CONFIG, self.server_name))
-    self.assertEqual(command.read().split(')')[1],
-        ' "." not allowed as terminator in non-ptr target.\n')
+    lines = command.read()
+    self.assertEqual(lines,
+        'USER ERROR: "." not allowed as terminator in non-ptr target.\n')
     command.close()
     command = os.popen('python %s '
                        'a --assignment-ip="10.10.10.0" -t '
@@ -440,8 +441,8 @@ class TestDnsMkRecord(unittest.TestCase):
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
-    self.assertEqual(command.read().split(')')[1],
-                     " Multiple SOA records found.\n")
+    self.assertEqual(command.read(),
+                     "USER ERROR: Multiple SOA records found.\n")
     self.assertTrue(self.retCode(command.close()))
     self.assertEqual(self.core_instance.ListRecords(record_type=u'soa'),
                      [{u'serial_number': 123456790,

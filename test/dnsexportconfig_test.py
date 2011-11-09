@@ -41,6 +41,7 @@ __version__ = '#TRUNK#'
 
 
 import cPickle
+import getpass
 import iscpy
 import os
 import sys
@@ -61,7 +62,7 @@ SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TEST_DNS_SERVER = u'localhost'
 SSH_ID = 'test_data/roster_id_dsa'
-SSH_USER = 'root'
+SSH_USER = getpass.getuser()
 
 
 class TestCheckConfig(unittest.TestCase):
@@ -97,6 +98,10 @@ class TestCheckConfig(unittest.TestCase):
     self.backup_dir = self.config_instance.config_file[
         'exporter']['backup_dir'].rstrip('/').lstrip('./')
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
+    self.named_dir = os.path.expanduser(
+        self.config_instance.config_file['exporter']['named_dir'])
+    if( not os.path.exists(self.named_dir)):
+      os.mkdir(self.named_dir)
 
     db_instance = self.config_instance.GetDb()
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
@@ -117,6 +122,8 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.backup_dir)
     if( os.path.exists(self.root_config_dir) ):
       shutil.rmtree(self.root_config_dir)
+    if( os.path.exists(self.named_dir)):
+      shutil.rmtree(self.named_dir)
 
   def testCheckConfig(self):
     self.core_instance.MakeView(u'test_view')
@@ -137,15 +144,16 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
-    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'%s' % cPickle.dumps(iscpy.ParseISCString(u'#options')))
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'options{allow-transfer {"none";};}')
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = os.popen('python %s -f -u %s --config-file %s --ssh-id %s' % (
-        EXEC, SSH_USER, CONFIG_FILE, SSH_ID))
+    output = os.popen('python %s -f --config-file %s '
+    '-u %s --ssh-id %s' % (
+        EXEC, CONFIG_FILE, SSH_USER, SSH_ID))
     lines = output.read().split('\n')
-    self.assertEqual(lines[-4:], ['Connecting to ssh on "%s"' % TEST_DNS_SERVER,
-                                  'server reload successful', '', ''])
+    self.assertTrue('[%s@%s] out: server reload successful\r' % (
+        SSH_USER, TEST_DNS_SERVER) in lines)
     output.close()
     
 if( __name__ == '__main__' ):
