@@ -105,9 +105,6 @@ class StdOutStream():
     self.stdout = []
     return ''.join(std_array)
 
-class DnsErrorException(Exception):
-  pass
-
 class DaemonThread(threading.Thread):
   def __init__(self, config_instance, port):
     threading.Thread.__init__(self)
@@ -157,15 +154,6 @@ class TestCliRecordLib(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
-  def newDnsError(self, string, errorcode=None):
-    """New dns error that doesnt sys exit
-
-    Inputs:
-      string: string of error
-    """
-    print "ERROR: %s" % string
-    raise DnsErrorException
-
   def testMakeRecord(self):
     options.server = self.server_name
     options.zone_name = u'test_zone'
@@ -174,23 +162,22 @@ class TestCliRecordLib(unittest.TestCase):
     old_stdout = sys.stdout
 
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-    cli_common_lib_instance.DnsError = self.newDnsError
     cli_record_lib_instance = cli_record_lib.CliRecordLib(
         cli_common_lib_instance)
 
     sys.stdout = StdOutStream()
 
-    self.assertRaises(DnsErrorException, cli_record_lib_instance.MakeRecord,
+    self.assertRaises(SystemExit, cli_record_lib_instance.MakeRecord,
         u'a', options, {u'assignment_ip': u'192.168.1.1'})
-    self.assertEqual(sys.stdout.flush(), 'ERROR: View does not exist!\n')
+    self.assertEqual(sys.stdout.flush(), 'CLIENT ERROR: View does not exist!\n')
 
     sys.stdout = old_stdout
     self.core_instance.MakeView(options.view_name)
     sys.stdout = StdOutStream()
 
-    self.assertRaises(cli_common_lib_instance.DnsError, cli_record_lib_instance.MakeRecord,
+    self.assertRaises(SystemExit, cli_record_lib_instance.MakeRecord,
         u'a', options, {u'assignment_ip': u'192.168.1.1'})
-    self.assertEqual(sys.stdout.flush(), 'ERROR: Zone does not exist!\n')
+    self.assertEqual(sys.stdout.flush(), 'CLIENT ERROR: Zone does not exist!\n')
 
     self.core_instance.MakeZone(options.zone_name, u'master',
                                 u'university.edu.',
@@ -209,9 +196,9 @@ class TestCliRecordLib(unittest.TestCase):
          u'ADDED A: server zone_name: test_zone view_name: test_view ttl: 3600'
           '\n    assignment_ip: 192.168.1.1\n')
 
-    self.assertRaises(DnsErrorException, cli_record_lib_instance.MakeRecord,
+    self.assertRaises(SystemExit, cli_record_lib_instance.MakeRecord,
         u'a', options, {u'assignment_ip': u'192.168.1.1'})
-    self.assertEqual(sys.stdout.flush(), 'ERROR: Duplicate record!\n')
+    self.assertEqual(sys.stdout.flush(), 'CLIENT ERROR: Duplicate record!\n')
 
     options.zone_name = u'reverse_zone'
     self.core_instance.MakeZone(options.zone_name, u'master',
@@ -274,7 +261,6 @@ class TestCliRecordLib(unittest.TestCase):
     old_stdout = sys.stdout
 
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-    cli_common_lib_instance.DnsError = self.newDnsError
     cli_record_lib_instance = cli_record_lib.CliRecordLib(
         cli_common_lib_instance)
 
@@ -283,18 +269,18 @@ class TestCliRecordLib(unittest.TestCase):
     options.target = u'server'
     options.zone_name = u'fake_zone'
 
-    self.assertRaises(DnsErrorException,cli_record_lib_instance.RemoveRecord,
+    self.assertRaises(SystemExit, cli_record_lib_instance.RemoveRecord,
         u'a', options, {u'assignment_ip': u'192.168.1.1'})
     self.assertEqual(sys.stdout.flush(),
-                     'ERROR: Zone does not exist!\n')
+                     'CLIENT ERROR: Zone does not exist!\n')
 
     options.zone_name = u'test_zone'
     options.view_name = u'fake_view'
 
-    self.assertRaises(DnsErrorException,cli_record_lib_instance.RemoveRecord,
+    self.assertRaises(SystemExit,cli_record_lib_instance.RemoveRecord,
         u'a', options, {u'assignment_ip': u'192.168.1.1'})
     self.assertEqual(sys.stdout.flush(),
-                     'ERROR: View does not exist!\n')
+                     'CLIENT ERROR: View does not exist!\n')
 
     options.view_name = u'test_view'
 
@@ -324,7 +310,6 @@ class TestCliRecordLib(unittest.TestCase):
     options.server = self.server_name
 
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
-    cli_common_lib_instance.DnsError = self.newDnsError
     cli_record_lib_instance = cli_record_lib.CliRecordLib(
         cli_common_lib_instance)
 

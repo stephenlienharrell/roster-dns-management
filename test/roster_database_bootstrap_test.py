@@ -95,9 +95,7 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
     command = subprocess.Popen(
         '%s --infinite-renew-time %s --core-die-time %s '
         '--get-credentials-wait-increment %s --credential-expiry-time %s '
-        '--big-lock-timeout %s --db-ssl --db-ssl-cert cert '
-        '--db-ssl-key key --db-ssl-ca ca --db-ssl-ca-path capath '
-        '--db-ssl-cipher cipher' % (
+        '--big-lock-timeout %s --db-ssl --db-ssl-ca ca' % (
             self.base_command,
             90210, 22221, 13, 26, 9001),
         shell=True,
@@ -116,11 +114,7 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
     self.assertEquals(config_server['get_credentials_wait_increment'], 13)
     self.assertEquals(config_credentials['exp_time'], 26)
     self.assertEquals(config_database['ssl'], True)
-    self.assertEquals(config_database['ssl_cert'], 'cert')
-    self.assertEquals(config_database['ssl_key'], 'key')
     self.assertEquals(config_database['ssl_ca'], 'ca')
-    self.assertEquals(config_database['ssl_capath'], 'capath')
-    self.assertEquals(config_database['ssl_cipher'], 'cipher')
 
   def testDBBootstrapExtraParam(self):
     command = subprocess.Popen(
@@ -145,11 +139,7 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
     self.assertEquals(config_server['get_credentials_wait_increment'], 13)
     self.assertEquals(config_credentials['exp_time'], 26)
     self.assertEquals(config_database['ssl'], False)
-    self.assertEquals(config_database['ssl_cert'], '')
-    self.assertEquals(config_database['ssl_key'], '')
     self.assertEquals(config_database['ssl_ca'], '')
-    self.assertEquals(config_database['ssl_capath'], '')
-    self.assertEquals(config_database['ssl_cipher'], '')
 
   def testDBBootstrapUsername(self):
     command = subprocess.Popen('python %s -c %s/config.conf -u %s -U %s '
