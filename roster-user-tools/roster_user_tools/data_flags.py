@@ -190,6 +190,24 @@ class Record(core_flags.CoreFlags):
     self.SetAllFlagRule('view_name', required=self.action == 'Remove')
     self.AddFlagRule('view_name', required=self.action == 'Make', command='soa')
 
+class FormattedRecords(core_flags.CoreFlags):
+  """Command line formattedrecords flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    default_view = None
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name',
+                           help='String of view name.', default=default_view)
+    self.AddFlagRule('view_name', required=False)
+    self.parser.add_option('-f', '--records-file', action='store',
+                           dest='records_file',
+                           help='Records file location.', default=default_view)
+    self.AddFlagRule('records_file', required=True)
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name', help='String of zone name.',
+                           default=None)
+    self.AddFlagRule('zone_name', required=True)
+
 class Zone(core_flags.CoreFlags):
   """Command line zone flags"""
   def SetDataFlags(self):

@@ -53,6 +53,7 @@ from roster_core import errors
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
+RECORDS_FILE = 'test_data/test_records.db'
 
 class TestCoreHelpers(unittest.TestCase):
 
@@ -182,6 +183,76 @@ class TestCoreHelpers(unittest.TestCase):
                                   {u'assignment_host':
                                       u'host5.university.edu.'},
                                   view_name=u'test_view2')
+
+  def testAddFormattedRecords(self):
+    self.core_instance.MakeZone(u'records_zone', u'master',
+                                u'records.edu.',
+                                view_name=u'test_view3')
+    self.assertEqual(
+        self.core_instance.ListRecords(zone_name=u'records_zone'),
+        [])
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'records_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view3')
+
+    records_file_string = 'university IN LOC 37 23 30.900 N 121 59 19.000 W 7.00m 100.00m 100.00m 2.00m'
+    self.assertRaises(errors.UnexpectedDataError, self.core_helper_instance.AddFormattedRecords,
+        u'records_zone', records_file_string, view=u'test_view3',
+        use_soa=False)
+
+    records_file_string = open(RECORDS_FILE, 'r').read()
+    self.core_helper_instance.AddFormattedRecords(
+        u'records_zone', records_file_string, view=u'test_view3',
+        use_soa=False)
+    self.assertEqual(
+        self.core_instance.ListRecords(zone_name=u'records_zone'),
+        [{u'serial_number': 3, u'refresh_seconds': 5,
+          'target': u'soa1',
+          u'name_server': u'ns1.university.edu.',
+          u'retry_seconds': 5, 'ttl': 3600,
+          u'minimum_seconds': 5, 'record_type': u'soa',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'records_zone',
+          u'admin_email': u'admin.university.edu.',
+          u'expiry_seconds': 5},
+         {'target': u'university.edu', u'weight': 5, 'ttl': 0,
+          u'priority': 0, 'record_type': u'srv',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'records_zone',
+          u'assignment_host': u'test.sub.university.edu.',
+          u'port': 80},
+         {'target': u'desktop-1', 'ttl': 0, 'record_type': u'a',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'records_zone',
+          u'assignment_ip': u'192.168.1.100'},
+         {'target': u'ns2', 'ttl': 0, 'record_type': u'a',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'records_zone',
+          u'assignment_ip': u'192.168.1.104'},
+         {'target': u'www', 'ttl': 0, 'record_type': u'cname',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'records_zone',
+          u'assignment_host': u'sub.university.edu.'},
+         {'target': u'ns', 'ttl': 0, 'record_type': u'a',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'records_zone',
+          u'assignment_ip': u'192.168.1.103'},
+         {'target': u'www.data', 'ttl': 0,
+          'record_type': u'cname', 'view_name': u'test_view3',
+          'last_user': u'sharrell', 'zone_name': u'records_zone',
+          u'assignment_host': u'ns.university.edu.'},
+         {'target': u'mail1', 'ttl': 0, 'record_type': u'a',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'records_zone',
+          u'assignment_ip': u'192.168.1.101'},
+         {'target': u'mail2', 'ttl': 0, 'record_type': u'a',
+          'view_name': u'test_view3', 'last_user': u'sharrell',
+          'zone_name': u'records_zone',
+          u'assignment_ip': u'192.168.1.102'}])
 
   def testGetAssociatedCNAMEs(self):
     self.core_instance.MakeRecord(

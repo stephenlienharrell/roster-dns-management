@@ -67,11 +67,17 @@ class ZoneImport(object):
     """
     config_instance = roster_core.Config(file_name=config_file_name)
     self.core_instance = roster_core.Core(user_name, config_instance)
-    self.zone = dns.zone.from_file(zone_file_name)
-    self.origin = unicode(self.zone.origin)
+    self.core_helper_instance = roster_core.CoreHelpers(
+        self.core_instance)
+
+    self.zone_file_string = unicode(open(zone_file_name, 'r').read())
+
     self.zone_name = zone_name
     self.view = records_view
     self.zone_view = zone_view
+
+    self.origin = self.core_instance.ListZones(zone_name=zone_name)[
+        zone_name][self.zone_view][u'zone_origin']
 
   def ReverseZoneToCIDRBlock(self):
     """Creates CIDR block from reverse zone name.
@@ -120,112 +126,12 @@ class ZoneImport(object):
 
     return cidr_block
 
-  def FixHostname(self, host_name):
-    """Checks name and returns fqdn.
-
-    Inputs:
-      string of host name
-
-    Outputs:
-      string of fully qualified domain name
-    """
-    if( host_name == u'@' ):
-      host_name = self.origin
-    elif( not host_name.endswith('.') ):
-      host_name = '%s.%s' % (host_name, self.origin)
-    return host_name
-
   def MakeRecordsFromZone(self):
     """Makes records in the database from dns.zone class.
 
     Outputs:
       int: Amount of records added to db.
     """
-    record_count = 0
-    make_record_args_list = []
-    for record_tuple in self.zone.items():
-      record_target = unicode(record_tuple[0])
-
-      for record_set in record_tuple[1].rdatasets:
-        ttl = record_set.ttl
-        for record_object in record_set.items:
-
-          if( record_object.rdtype == dns.rdatatype.PTR ):
-            record_type = u'ptr'
-            assignment_host = self.FixHostname(unicode(record_object))
-            record_args_dict = {u'assignment_host': assignment_host}
-
-          elif( record_object.rdtype == dns.rdatatype.A ):
-            record_type = u'a'
-            record_args_dict = {u'assignment_ip': unicode(record_object)}
-
-          elif( record_object.rdtype == dns.rdatatype.AAAA ):
-            record_type = u'aaaa'
-            record_args_dict = {u'assignment_ip':
-                                    unicode(IPy.IP(str(
-                                        record_object)).strFullsize())}
-
-          elif( record_object.rdtype == dns.rdatatype.CNAME ):
-            record_type = u'cname'
-            assignment_host = self.FixHostname(unicode(record_object))
-            record_args_dict = {u'assignment_host': assignment_host}
-
-          elif( record_object.rdtype == dns.rdatatype.HINFO ):
-            record_type = u'hinfo'
-            record_args_dict = {u'hardware': unicode(record_object.cpu),
-                                u'os': unicode(record_object.os)}
-
-          elif( record_object.rdtype == dns.rdatatype.TXT ):
-            record_type = u'txt'
-            record_args_dict = {u'quoted_text': unicode(record_object)}
-
-          elif( record_object.rdtype == dns.rdatatype.MX ):
-            record_type = u'mx'
-            mail_server = self.FixHostname(unicode(record_object.exchange))
-            record_args_dict = {u'priority': record_object.preference,
-                                u'mail_server': mail_server}
-
-          elif( record_object.rdtype == dns.rdatatype.NS ):
-            record_type = u'ns'
-            name_server = self.FixHostname(unicode(record_object))
-            record_args_dict = {u'name_server': name_server}
-
-          elif( record_object.rdtype == dns.rdatatype.SRV ):
-            record_type = u'srv'
-            assignment_host = self.FixHostname(unicode(record_object.target))
-            record_args_dict = {u'priority': record_object.priority,
-                                u'weight': record_object.weight,
-                                u'port': record_object.port,
-                                u'assignment_host': assignment_host}
-
-          elif( record_object.rdtype == dns.rdatatype.SOA ):
-            record_type = u'soa'
-            name_server = self.FixHostname(unicode(record_object.mname))
-            admin_email = self.FixHostname(unicode(record_object.rname))
-            record_args_dict = {u'name_server': name_server,
-                                u'admin_email': admin_email,
-                                u'serial_number': record_object.serial,
-                                u'retry_seconds': record_object.retry,
-                                u'refresh_seconds': record_object.refresh,
-                                u'expiry_seconds': record_object.expire,
-                                u'minimum_seconds': record_object.minimum}
-
-          else:
-            print 'Unkown record type: %s.\n %s' % (record_object.rdtype,
-                                                    record_object)
-            continue
-
-          if( record_type == u'soa' ):
-            make_record_args_list.insert(0, (record_type, record_target,
-                                             self.zone_name, record_args_dict,
-                                             self.zone_view, ttl))
-          else:
-            make_record_args_list.append((record_type, record_target,
-                                          self.zone_name, record_args_dict,
-                                          self.view, ttl))
-
-    for make_record_args in make_record_args_list:
-      self.core_instance.MakeRecord(*make_record_args)
-      record_count += 1
-
-    return record_count
+    return self.core_helper_instance.AddFormattedRecords(
+        self.zone_name, self.zone_file_string, view=self.view,
+        zone_view=self.zone_view, use_soa=True)
