@@ -1,4 +1,12 @@
 Current Release
+- Added version compatibility checking between user-tools/server, server/core, and config-manager/core
+- Added dnszonecompare. A tool to compare two zone files via AXFR from two BIND servers.
+- Removed named_importer_lib and its regtest.
+- Changed wording of config-file world permissions error in rosterd.
+- Using iscpy to store python dicts of global options in the db instead of strings
+- Fixed NamedHeaderChangeDirectory function and tree_exporter test.
+- Moved all exporter SSH functionality to Fabric.
+- Moved zone importing core function to core_helpers in roster-core
 
 2011-06-08 release-0.15
 - Added unicode support to tree_exporter using new punycode lib

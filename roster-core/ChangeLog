@@ -1,4 +1,14 @@
 Current Release
+- Added version compatibility checking between user-tools/server, server/core, and config-manager/core
+- Changes database bootstrap to display a different error message if user opts to use config file with missing information
+- Consolidated core error classes into UserError and InternalError which are both subclasses of CoreError.
+- Added authorization and audit-logging to all functions in core_helpers that don't exclusively use core functions
+- Using iscpy to store python dicts of global options in the db instead of strings
+- Added cname lookup tool to use core_helpers function, a unittest, and data flags
+- Made CIDRExpand bounded.
+- Disallowed spaces in hostnames.
+- Added record type authorization by user level.
+- Added AddFormattedRecords function to core_helpers
 
 2011-06-08 release-0.15
 - Added create roster database function

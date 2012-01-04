@@ -1,4 +1,8 @@
 Current Release
+- Fixes to the auth_pam module.
+- Optimized logging functions.
+- Fixed error propogation problem.
+- Added version compatiblity checking between user-tools/server, server/core, and config-manager/core
 
 2011-06-08 release-0.15
 - Added pam auth module

@@ -1,4 +1,10 @@
 Current Release
+- Listing zones when no zones are availible no longer raises an error and instead notifies that there are no zones.
+- dnsrmzone can now remove zones in the 'any' view.
+- Adjusts/adds error messages for roster_user_tools_bootstrap when missing command line arguments
+- Added cname lookup tool to use core_helpers function, a unittest, and data flags
+- Fixed references to cli_common_lib in cli_record_lib
+- Added dnsaddformattedrecords script library and unittest.
 
 2011-06-08 release-0.15
 - Added ability to pull config file from environ.
