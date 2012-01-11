@@ -139,7 +139,7 @@ class TestDnsZoneImport(unittest.TestCase):
     output.close()
     for record in self.core_instance.ListRecords():
         self.assertTrue(record in
-        [{u'serial_number': 811, u'refresh_seconds': 10800, 'target': u'@',
+        [{u'serial_number': 796, u'refresh_seconds': 10800, 'target': u'@',
           u'name_server': u'ns.university.edu.', u'retry_seconds': 3600,
           'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -221,7 +221,7 @@ class TestDnsZoneImport(unittest.TestCase):
         '5 total records added\n')
     for record in self.core_instance.ListRecords():
         self.assertTrue(record in
-        [{u'serial_number': 9, u'refresh_seconds': 10800, 'target': u'@',
+        [{u'serial_number': 6, u'refresh_seconds': 10800, 'target': u'@',
           u'name_server': u'ns.university.edu.', u'retry_seconds': 3600,
           'ttl': 86400, u'minimum_seconds': 86400, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -256,7 +256,7 @@ class TestDnsZoneImport(unittest.TestCase):
         '6 total records added\n')
     for record in self.core_instance.ListRecords():
         self.assertTrue(record in
-        [{u'serial_number': 10, u'refresh_seconds': 10800, 'target': u'@',
+        [{u'serial_number': 6, u'refresh_seconds': 10800, 'target': u'@',
           u'name_server': u'ns.university.edu.', u'retry_seconds': 3600,
           'ttl': 86400, u'minimum_seconds': 86400, 'record_type': u'soa',
           'view_name': u'test_view', 'last_user': u'sharrell',

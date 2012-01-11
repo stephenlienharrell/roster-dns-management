@@ -105,16 +105,6 @@ class TestZoneImport(unittest.TestCase):
                       importer_instance.ReverseZoneToCIDRBlock)
 
 
-  def testFixHostname(self):
-    importer_instance = zone_importer_lib.ZoneImport(
-        ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.edu')
-    self.assertEqual(importer_instance.FixHostname(u'host'),
-                     u'host.sub.university.edu.')
-    self.assertEqual(importer_instance.FixHostname(u'@'),
-                     u'sub.university.edu.')
-    self.assertEqual(importer_instance.FixHostname(u'university.edu.'),
-                     u'university.edu.')
-
   def testMakeRecordsFromForwardZone(self):
     importer_instance = zone_importer_lib.ZoneImport(
         ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.edu')

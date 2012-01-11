@@ -137,11 +137,7 @@ class Config(object):
           self.config_file['database']['database'],
           self.config_file['database']['big_lock_timeout'],
           self.config_file['database']['big_lock_wait'],
-          ssl=True, ssl_ca=self.config_file['database']['ssl_ca'],
-          ssl_cert=self.config_file['database']['ssl_cert'],
-          ssl_key=self.config_file['database']['ssl_key'],
-          ssl_capath=self.config_file['database']['ssl_capath'],
-          ssl_cipher=self.config_file['database']['ssl_cipher'])
+          ssl=True, ssl_ca=self.config_file['database']['ssl_ca'])
     else:
       return db_access.dbAccess(
         self.config_file['database']['server'],

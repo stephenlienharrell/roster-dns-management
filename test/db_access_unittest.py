@@ -241,9 +241,17 @@ class TestdbAccess(unittest.TestCase):
     del self.db_instance
     self.config_instance = roster_core.Config(file_name=SSL_CONFIG_FILE)
     self.db_instance = self.config_instance.GetDb()
+    self.db_instance.CreateRosterDatabase()
+    data = open(DATA_FILE, 'r').read()
+    self.db_instance.StartTransaction()
+    self.db_instance.cursor.execute(data)
+    self.db_instance.EndTransaction()
+    self.db_instance.close()
+
     if( not self.config_instance.config_file['database']['ssl'] ):
       raise SSLTestError(
           "SSL not enabled in config file. Enable to allow for testing.")
+    core_instance = roster_core.Core(u'sharrell', self.config_instance)
     self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'notindb'), {})
 
     self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'jcollins'),

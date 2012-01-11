@@ -115,6 +115,7 @@ class dbAccess(object):
     self.big_lock_timeout = big_lock_timeout
     self.big_lock_wait = big_lock_wait
     self.ssl = ssl
+    self.ssl_ca = ssl_ca
     self.ssl_settings = {}
     if( self.ssl ):
       if( self.ssl_ca ):

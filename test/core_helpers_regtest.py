@@ -184,6 +184,14 @@ class TestCoreHelpers(unittest.TestCase):
                                       u'host5.university.edu.'},
                                   view_name=u'test_view2')
 
+  def testFixHostname(self):
+    self.assertEqual(self.core_helper_instance._FixHostname(u'host', u'sub.university.edu.'),
+                     u'host.sub.university.edu.')
+    self.assertEqual(self.core_helper_instance._FixHostname(u'@', u'sub.university.edu.'),
+                     u'sub.university.edu.')
+    self.assertEqual(self.core_helper_instance._FixHostname(u'university.edu.', u'sub.university.edu.'),
+                     u'university.edu.')
+
   def testAddFormattedRecords(self):
     self.core_instance.MakeZone(u'records_zone', u'master',
                                 u'records.edu.',
