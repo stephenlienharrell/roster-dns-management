@@ -1,27 +1,27 @@
-$ORIGIN		sub.university.edu.
+$ORIGIN		sub.university.lcl.
 $TTL		3600
-@	in	soa	ns.university.edu. hostmaster.ns.university.edu. (
+@	in	soa	ns.university.lcl. hostmaster.ns.university.lcl. (
 				794	; serial
 				10800	; refresh 3 hours
 				3600	; retry   1 hour
 				3600000	; expire  1000 hours
 				86400 )	; minimum 24 hours
-	in	ns	ns.sub.university.edu.
-	in	ns	ns2.sub.university.edu.
-  in  mx  10 mail1.sub.university.edu.
-  in  mx  20 mail2.sub.university.edu.
-	in	txt	"Contact 1:  Stephen Harrell (sharrell@university.edu)"
+	in	ns	ns.sub.university.lcl.
+	in	ns	ns2.sub.university.lcl.
+  in  mx  10 mail1.sub.university.lcl.
+  in  mx  20 mail2.sub.university.lcl.
+	in	txt	"Contact 1:  Stephen Harrell (sharrell@university.lcl)"
   in  a   192.168.0.1
 
 localhost	in	a		127.0.0.1
 
 
-www       in  cname sub.university.edu.
+www       in  cname sub.university.lcl.
 desktop-1 in  aaaa  3FFE:800::2A8:79FF:FE32:1982
 desktop-1 in  a     192.168.1.100
 mail1     in  a     192.168.1.101
 mail2     in  a     192.168.1.102
 ns        in  a     192.168.1.103
-www.data  in  cname ns.university.edu.
+www.data  in  cname ns.university.lcl.
 ns2       in  a     192.168.1.104
           in  hinfo PC NT

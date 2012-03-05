@@ -97,19 +97,19 @@ def findNewestTar(file_list, backup_directory, temp_root_directory, tar_id):
     tar_id: id of the roster state
   """
   error_files = []
-  newest = 0 
+  newest_id = 0
   new_file_name = None
   for file_name in file_list:
     if( not file_name.startswith('dns_tree') ):
       continue
     try:
-      id = int(file_name.split('-')[1].split('.')[0])
+      tar_id = int(file_name.split('-')[1].split('.')[0])
     except IndexError:
       error_files.append(file_name)
       break
       # If this error occurs, error out completely
-    if( id > newest ):
-      newest = id
+    if( tar_id > newest_id ):
+      newest_id = tar_id
       new_file_name = file_name
   if( error_files ):
     print 'ERROR: Filenames: %s not named correctly' % ', '.join(error_files)
@@ -122,7 +122,7 @@ def findNewestTar(file_list, backup_directory, temp_root_directory, tar_id):
     tar.extractall()
   finally:
     tar.close()
-  root_directory = '%s_%s' % (temp_root_directory, tar_id)
+  root_directory = '%s_%s' % (temp_root_directory, newest_id)
   shutil.move(temp_root_directory, root_directory)
   return root_directory
 
@@ -168,12 +168,7 @@ def pushFiles(ssh_port, ssh_id, user_name, destination_directory, rndc_exec,
         fabric_api.env.host_string = rsync_url_string
         fabric_api.put(rsync_dir, destination_directory)
 
-        ##Restart BIND instance
-        bind_status = fabric_api.run("/etc/init.d/bind9 status")
-        if bind_status != '* bind9 is running':
-          print 'Starting BIND9'
-          fabric_api.run('/etc/init.d/bind9 start')
-        fabric_api.run('%s reload' % (rndc_exec))
+        out = fabric_api.run('%s reload' % (rndc_exec))
   finally:
     fabric_network.disconnect_all()
     if( os.path.exists(root_directory) ):
@@ -225,6 +220,9 @@ def main(args):
   parser.add_option('--rndc-key', action='store', dest='rndc_key',
                     help='Rndc key file.', metavar='<rndc-key>',
                     default=None)
+  parser.add_option('--rndc-port', action='store', dest='rndc_port',
+                    help='Rndc communication port.', metavar='<rndc-port>',
+                    default=None)
   parser.add_option('--rndc-conf', action='store', dest='rndc_conf',
                     help='Rndc conf file.', metavar='<rndc-conf>',
                     default=None)
@@ -258,6 +256,9 @@ def main(args):
       options.rndc_conf = '%s/%s' % (os.getcwd(), options.rndc_conf.lstrip('./'))
     options.rndc_exec = '%s -c %s' % (
         options.rndc_exec, os.path.expanduser(options.rndc_conf))
+  if( options.rndc_port ):
+    options.rndc_exec = '%s -p %s' % (
+        options.rndc_exec, options.rndc_port)
 
   file_list = os.listdir(backup_directory)
   if( options.id ):

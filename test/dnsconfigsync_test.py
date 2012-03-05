@@ -85,6 +85,9 @@ class TestCheckConfig(unittest.TestCase):
       s.close()
       return port
     self.PORT = PickUnusedPort()
+    self.rndc_port = PickUnusedPort()
+    while( self.rndc_port == self.port ):
+      self.rndc_port = PickUnusedPort()
     fabric_api.env.warn_only = True
     fabric_state.output['everything'] = False
     fabric_state.output['warnings'] = False
@@ -115,6 +118,7 @@ class TestCheckConfig(unittest.TestCase):
 
   def tearDown(self):
     fabric_api.local('killall named', capture=True)
+    os.remove('%s/named.conf' % self.named_dir)
     fabric_network.disconnect_all()
     if( os.path.exists('backup') ):
       shutil.rmtree('backup')
@@ -125,17 +129,17 @@ class TestCheckConfig(unittest.TestCase):
 
   def testNull(self):
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'sub.university.edu', u'master',
-                                u'sub.university.edu.', view_name=u'test_view')
+    self.core_instance.MakeZone(u'sub.university.lcl', u'master',
+                                u'sub.university.lcl.', view_name=u'test_view')
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_zone.db '
                       '--view test_view -u %s --config-file %s '
-                      '-z sub.university.edu' % ( 
+                      '-z sub.university.lcl' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
                      '17 records loaded from zone test_data/test_zone.db\n'
-                     '17 total records added\n')
+                      '17 total records added\n')
     output.close()
 
     self.core_instance.MakeDnsServer(TEST_DNS_SERVER)
@@ -143,12 +147,29 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
-        u'set1', u'pid-file "test_data/named.pid') # So we can test
+        u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\ncontrols { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'any')
     self.tree_exporter_instance.ExportAllBindTrees()
+    # Copy blank named.conf to start named with
+    shutil.copyfile('test_data/named.blank.conf', '%s/named.conf' % self.named_dir)
+    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
+    named_file_contents = named_file_contents.replace('NAMED_DIR', '%s/test_data/named' % os.getcwd())
+    named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
+    named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
+    named_file_handle = open('%s/named.conf' % self.named_dir, 'w')
+    named_file_handle.write(named_file_contents)
+    named_file_handle.close()
+    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    # Start named
+    out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %s/named.conf' % (
+        self.PORT, SSH_USER, self.named_dir), capture=True)
+    time.sleep(2)
 
-    command = os.popen('python %s -i 26 -u %s --ssh-id %s --config-file %s' % (
-        EXEC, SSH_USER, SSH_ID, CONFIG_FILE))
+    command = os.popen(
+        'python %s --rndc-key test_data/rndc.key --rndc-port %s -u %s '
+        '--ssh-id %s --config-file %s' % (
+            EXEC, self.rndc_port, SSH_USER, SSH_ID, CONFIG_FILE))
     lines = command.read().split('\n')
     # These lines will likely need changed depending on implementation
     self.assertTrue('Connecting to "%s"' % TEST_DNS_SERVER in lines)
@@ -180,16 +201,13 @@ class TestCheckConfig(unittest.TestCase):
     except IOError:
       pass
 
-    fabric_api.local('/usr/sbin/named -p %s -u %s -c %snamed.conf' % (
-        self.PORT, SSH_USER, self.named_dir), capture=True)
-    time.sleep(3)
-    command = os.popen('dig @%s%s mail1.sub.university.edu -p %s' % (
+    command = os.popen('dig @%s%s mail1.sub.university.lcl -p %s' % (
         TEST_DNS_SERVER, NS_DOMAIN, self.PORT))
     lines = ''.join(command.read()).split('\n')
     testlines = (
         '\n'
         '%s\n'
-        '; (1 server found)\n'
+        '; (2 servers found)\n'
         '%s\n'
         ';; Got answer:\n'
         '%s\n'
@@ -197,18 +215,18 @@ class TestCheckConfig(unittest.TestCase):
         '2\n'
         '\n'
         ';; QUESTION SECTION:\n'
-        ';mail1.sub.university.edu. IN  A\n'
+        ';mail1.sub.university.lcl. IN  A\n'
         '\n'
         ';; ANSWER SECTION:\n'
-        'mail1.sub.university.edu. 3600 IN  A 192.168.1.101\n'
+        'mail1.sub.university.lcl. 3600 IN  A 192.168.1.101\n'
         '\n'
         ';; AUTHORITY SECTION:\n'
-        'sub.university.edu.  3600  IN  NS  ns.sub.university.edu.\n'
-        'sub.university.edu.  3600  IN  NS  ns2.sub.university.edu.\n'
+        'sub.university.lcl.  3600  IN  NS  ns.sub.university.lcl.\n'
+        'sub.university.lcl.  3600  IN  NS  ns2.sub.university.lcl.\n'
         '\n'
         ';; ADDITIONAL SECTION:\n'
-        'ns.sub.university.edu. 3600  IN  A 192.168.1.103\n'
-        'ns2.sub.university.edu.  3600  IN  A 192.168.1.104\n'
+        'ns.sub.university.lcl. 3600  IN  A 192.168.1.103\n'
+        'ns2.sub.university.lcl.  3600  IN  A 192.168.1.104\n'
         '\n'
         '%s\n'
         ';; SERVER: %s#%s(%s)\n'
