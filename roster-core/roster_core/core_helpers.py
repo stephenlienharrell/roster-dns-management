@@ -424,9 +424,24 @@ class CoreHelpers(object):
     self.core_instance.MakeRecord(u'aaaa', target, zone_name, record_args_dict,
                                   view_name, ttl)
 
+  def MakeSubdomainDelegation(self, zone_name, subdomain_name, nameserver, 
+                              view_name=u'any'):
+    """"Makes a Delegated Subdomain
+    Assumes delegation zone is created
+
+    Inputs:
+      view_name: string of view name
+      zone_name: string of zone name
+      subdomain_name: string of subdomain name 
+      nameserver: string of fully qualified nameserver
+    Raises:
+      InvalidInputError: Zone does not exist.
+    """
+    self.core_instance.MakeRecord(u'ns', subdomain_name, zone_name,
+                                  {u'name_server':nameserver}, view_name)
+
   def GetPTRTarget(self, long_target, view_name=u'any'):
     """Gets the short PTR target given the long PTR target
-
     Inputs:
       long_target: String of long PTR target
       view_name: String of view name

@@ -183,6 +183,42 @@ class TestCoreHelpers(unittest.TestCase):
                                   {u'assignment_host':
                                       u'host5.university.edu.'},
                                   view_name=u'test_view2')
+	
+  def testMakeSubdomainDelegation(self):
+    self.core_instance.MakeZone(u'domain.example.lcl',u'master',
+                                u'example.lcl.',
+                                view_name=u'test_view3')
+    self.core_instance.MakeRecord(
+            u'soa',u'soa1',u'domain.example.lcl',
+            {u'name_server':u'ns1.example.lcl.',
+             u'admin_email': u'admin.example.lcl.',
+             u'serial_number':1, u'refresh_seconds':5,
+             u'retry_seconds':5, u'expiry_seconds':5,
+             u'minimum_seconds':5},view_name=u'test_view3')
+    self.core_instance.MakeZone(u'sub_domain.domain.example.lcl',u'master',
+                                u'domain.example.lcl.',
+                                view_name=u'test_view3')
+    self.core_instance.MakeRecord(u'ns',u'@',u'domain.example.lcl',
+            {u'name_server':u'drumbandbass.domain.example.lcl.'},
+            view_name=u'test_view3')
+    self.core_instance.MakeRecord(u'a',u'drumandbass',u'domain.example.lcl',
+            {u'assignment_ip':u'192.168.1.26'},view_name=u'test_view3')
+    self.core_instance.MakeRecord(
+            u'soa',u'soa1',u'sub_domain.domain.example.lcl',
+            {u'name_server':u'drumandbass.domain.example.lcl.',
+             u'admin_email': u'admin.example.lcl.',
+             u'serial_number':1, u'refresh_seconds':5,
+             u'retry_seconds':5, u'expiry_seconds':5,
+             u'minimum_seconds':5},view_name=u'test_view3')
+    self.core_instance.MakeRecord(u'ns',u'@',u'sub_domain.domain.example.lcl',
+            {u'name_server':u'drumbandbass.domain.example.lcl.'},
+            view_name=u'test_view3')
+    self.core_instance.MakeRecord(u'a',u'drumbandbass.domain.example.lcl',
+            u'sub_domain.domain.example.lcl',{u'assignment_ip':u'192.168.1.26'}, 
+            view_name=u'test_view3')
+    self.core_helper_instance.MakeSubdomainDelegation(
+            u'domain.example.lcl', u'sub_domain',
+            u'drumandbass.domain.example.lcl.',	view_name=u'test_view3')
 
   def testFixHostname(self):
     self.assertEqual(self.core_helper_instance._FixHostname(u'host', u'sub.university.edu.'),
