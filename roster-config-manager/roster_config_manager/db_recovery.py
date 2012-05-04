@@ -62,6 +62,8 @@ class Recover(object):
     self.config_instance = config_instance
     self.db_instance = config_instance.GetDb()
     self.core_instance = roster_core.Core(self.username, self.config_instance)
+    self.core_helper_instance = roster_core.CoreHelpers(
+         self.core_instance)
 
   def PushBackup(self, audit_log_id):
     """Restores database from sql backup with specified audit log id
@@ -113,8 +115,15 @@ class Recover(object):
       data = cPickle.loads(str(audit_log[0]['data']))['replay_args']
       print 'Replaying action with id %s: %s\nwith arguments: %s' % (
           audit_log_id, action, str(data))
-      function = getattr(self.core_instance, action)
-      function(*data)
+      if( hasattr(self.core_instance, action) ):
+        function = getattr(self.core_instance, action)
+        function(*data)
+      elif( hasattr(self.core_helper_instance, action) ):
+        function = getattr(self.core_helper_instance, action)
+        function(*data)
+      else:
+        raise roster_core.errors.UnexpectedDataError(
+            "Function %s does not exist." % action)
 
   def RunAuditRange(self, audit_log_id):
     """Runs a range of audit steps
