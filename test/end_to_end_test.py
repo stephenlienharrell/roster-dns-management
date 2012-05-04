@@ -32,6 +32,8 @@
 Make sure you are running this against a database that can be destroyed.
 
 DO NOT EVER RUN THIS TEST AGAINST A PRODUCTION DATABASE.
+
+This test REQUIRES SELinux or Apparmor to be reconfigured or disabled
 """
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
@@ -67,9 +69,11 @@ CHECKZONE_EXEC = '/usr/sbin/named-checkzone'
 CHECKCONF_EXEC = '/usr/sbin/named-checkconf'
 #SSH
 SSH_ID = 'test_data/roster_id_dsa'
-SSH_USER = 'root'
-TEST_DNS_SERVER = u'testns1' # change this to real bind servers
+SSH_USER = getpass.getuser()
+TEST_DNS_SERVER = u'localhost' # change this to real bind servers
 TEST_DNS_SERVER2 = u'testns2'
+RNDC_KEY = 'test_data/rndc.key'
+SESSION_KEYFILE = 'test_data/session.key'
 
 
 class InitThread(threading.Thread):
@@ -102,7 +106,7 @@ class TestComplete(unittest.TestCase):
     self.ldap = config.get('fakeldap','server')
     self.binddn = config.get('fakeldap','binddn')
     self.userconfig = './completeconfig.conf'
-    self.toolsconfig = '%s/completetoolsconfig.conf' % TESTDIR
+    self.toolsconfig = './completetoolsconfig.conf'
     self.testfile = '%s/testfile' % TESTDIR
     def PickUnusedPort():
       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -111,7 +115,10 @@ class TestComplete(unittest.TestCase):
       s.close()
       return port
     self.port = PickUnusedPort()
+    self.rndc_port = PickUnusedPort()
+    self.named_port = PickUnusedPort()
     self.server_name = 'https://%s:%s' % (HOST, self.port)
+    self.named_dir = config.get('exporter', 'named_dir')
 
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
@@ -195,6 +202,24 @@ class TestComplete(unittest.TestCase):
         '%s' % self.toolsconfig) ):
       self.fail('User tools config file was not created.')
 
+    # Copy blank named.conf to start named with
+    shutil.copyfile('test_data/named.blank.conf', '%s/named.conf' % self.named_dir)
+    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
+    named_file_contents = named_file_contents.replace('NAMED_DIR', '%s/test_data/named' % os.getcwd())
+    named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
+    named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
+    named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
+    named_file_handle = open('%s/named.conf' % self.named_dir, 'w')
+    named_file_handle.write(named_file_contents)
+    named_file_handle.close()
+    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    # Start named
+    named_proc = os.popen('/usr/sbin/named -p %s -u %s -c %s/named.conf' % ( 
+        self.named_port, SSH_USER, self.named_dir))
+    output = named_proc.read()
+    time.sleep(2)
+
     ## Turn off the killswitch and add fakeldap to the config
     config = ConfigParser.ConfigParser()
     config.read(self.userconfig)
@@ -203,8 +228,9 @@ class TestComplete(unittest.TestCase):
       config.set('fakeldap','binddn',self.binddn)
       config.set('fakeldap','server',self.ldap)
     config.set('credentials','authentication_method','fakeldap')
-    config.set('server','lock_file','%s/lock_file' % TESTDIR)
+    config.set('server','lock_file','./roster_lock_file')
     config.set('server','server_killswitch','off')
+    config.set('server','port',self.port)
     handle = open(self.userconfig,'w')
     config.write(handle)
     handle.close()
@@ -226,7 +252,8 @@ class TestComplete(unittest.TestCase):
     os.system('chmod 760 %s/init' % TESTDIR)
     self.init_thread = InitThread()
     self.init_thread.start()
-    time.sleep(1)
+    time.sleep(3)
+
 
     ## User tool: dnsmkdnsserver
     ## dnsmkdnsserver dns_server -d dns1
@@ -610,9 +637,9 @@ class TestComplete(unittest.TestCase):
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
-    input = command.read()
-    input = input.split(')')
-    self.assertEqual(input[1],
+    output = command.read()
+    output = output.split(')')
+    self.assertEqual(output[2],
         ' (1062, "Duplicate entry \'testreserved\' for key 2"')
     command.close()
     ## User tool: dnslsreservedwords
@@ -645,10 +672,9 @@ class TestComplete(unittest.TestCase):
             'sharrell', 'test', self.server_name,
             self.toolsconfig, CREDFILE))
     command = os.popen(command_string)
-    input = command.read()
-    input = input.split(')')
-    self.assertEqual(input[1],
-        ' Reserved word testreserved found, unable to complete request\n')
+    output = command.read()
+    self.assertEqual(output,
+        'USER ERROR: Reserved word testreserved found, unable to complete request\n')
     command.close()
 
     ## User tool: dnsmkacl
@@ -1160,7 +1186,7 @@ class TestComplete(unittest.TestCase):
     command = os.popen(command_string)
     output = command.read()
     output = output.split(')')
-    self.assertEqual(output[1],
+    self.assertEqual(output[2],
         ' (1062, "Duplicate entry \'set1-test_view2\' for key 2"')
     command.close()
     ## User tool: dnsmkview
@@ -1280,7 +1306,7 @@ class TestComplete(unittest.TestCase):
     command = os.popen(command_string)
     output = command.read()
     output = output.split(')')
-    self.assertEqual(output[1],
+    self.assertEqual(output[2],
         ' (1062, "Duplicate entry \'test_zone5-test_view_dep\' for key 2"')
     command.close()
     ## User tool: dnsmkzone
@@ -1293,7 +1319,7 @@ class TestComplete(unittest.TestCase):
     command = os.popen(command_string)
     output = command.read()
     output = output.split(')')
-    self.assertEqual(output[1],
+    self.assertEqual(output[2],
         ' (1062, "Duplicate entry \'test_zone6-test_view2_dep\' for key 2"')
     command.close()
     ## User tool: dnslszones
@@ -1895,9 +1921,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     output = command.read()
-    output = output.split(')')
-    self.assertEqual(output[1],
-        ' No records found.\n')
+    self.assertEqual(output,
+        'USER ERROR: No records found.\n')
     command.close()
     ## User tool: dnsrmrecord
     ## dnsrmrecord a --assignment-ip NONE -t machine4 -v any -z test_zone3
@@ -1908,9 +1933,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     output = command.read()
-    output = output.split(')')
-    self.assertEqual(output[1],
-        ' Invalid data type IPv4IPAddress: NONE\n')
+    self.assertEqual(output,
+        'USER ERROR: Invalid data type IPv4IPAddress: NONE\n')
     command.close()
     ## User tool: dnsrmrecord
     ## dnsrmrecord a --assignment-ip 192.168.2.4 -t machine4 -v any -z test_zone3
@@ -2007,9 +2031,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     output = command.read()
-    output = output.split(')')
-    self.assertEqual(output[1],
-         ' NONE is not a valid IP address\n')
+    self.assertEqual(output,
+        'USER ERROR: NONE is not a valid IP address\n')
     command.close()
     ## User tool: dnslsrecord
     ## dnslsrecord a -z test_zone
@@ -2155,9 +2178,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     output = command.read()
-    output = output.split(')')
-    self.assertEqual(output[1],
-         ' No records found.\n')
+    self.assertEqual(output,
+        'USER ERROR: No records found.\n')
     command.close() 
     ## User tool: dnsrmrecord
     ## dnsrmrecord hinfo --hardware Hardware2 --os NONE -t machine4 -z test_zone
@@ -2168,9 +2190,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     output = command.read()
-    output = output.split(')')
-    self.assertEqual(output[1],
-         ' No records found.\n')
+    self.assertEqual(output,
+        'USER ERROR: No records found.\n')
     command.close() 
     ## User tool: dnsrmrecord
     ## dnsrmrecord hinfo --hardware Hardware2 --os "OSX" -t machine4 -z test_zone
@@ -2422,9 +2443,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     output = command.read()
-    output = output.split(')')
-    self.assertEqual(output[1],
-        ' Invalid data type Hostname: NONE\n')
+    self.assertEqual(output,
+        'USER ERROR: Invalid data type Hostname: NONE\n')
     command.close()
     ## User tool: dnslsrecord
     ## dnslsrecord ns -z test_zone
@@ -2505,7 +2525,7 @@ class TestComplete(unittest.TestCase):
     ## User tool: dnsmkhost
     ## dnsmkhost -i 192.168.2.0 -t @ -z test_zone -v test_view
     command_string = (
-        'python ../roster-user-tools/scripts/dnsmkhost '
+        'python ../roster-user-tools/scripts/dnsmkhost add '
         '-i 192.168.2.0 -t @ -z test_zone -v test_view '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -2519,7 +2539,7 @@ class TestComplete(unittest.TestCase):
     ## User tool: dnsmkhost
     ## dnsmkhost -i 192.168.2.0 -t @ -z test_zone -v test_view
     command_string = (
-        'python ../roster-user-tools/scripts/dnsmkhost '
+        'python ../roster-user-tools/scripts/dnsmkhost add '
         '-i 192.168.2.0 -t @ -z test_zone -v test_view '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -2530,7 +2550,7 @@ class TestComplete(unittest.TestCase):
     ## User tool: dnsmkhost
     ## dnsmkhost -i 192.168.2.1 -t @ -z test_zone -v test_view
     command_string = (
-        'python ../roster-user-tools/scripts/dnsmkhost '
+        'python ../roster-user-tools/scripts/dnsmkhost add '
         '-i 192.168.2.1 -t @ -z test_zone -v test_view '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -2550,17 +2570,6 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'View:       test_view\n'
-        '192.168.2.0 Reverse   university.edu                  test_zone3 test_view\n'
-        '192.168.2.0 Forward   @.university.edu                test_zone  test_view\n'
-        '192.168.2.1 Reverse   university.edu                  test_zone3 test_view\n'
-        '192.168.2.1 Forward   @.university.edu                test_zone  test_view\n'
-        '192.168.2.2 --        --                              --         --\n'
-        '192.168.2.3 --        --                              --         --\n'
-        '192.168.2.4 --        --                              --         --\n'
-        '192.168.2.5 --        --                              --         --\n'
-        '192.168.2.6 --        --                              --         --\n'
-        '192.168.2.7 --        --                              --         --\n'
         'View:       any\n'
         '192.168.2.0 --        --                              --         --\n'
         #'192.168.2.1 Reverse   university.edu                  test_zone3 any\n'
@@ -2571,6 +2580,17 @@ class TestComplete(unittest.TestCase):
         '192.168.2.5 --        --                              --         --\n'
         '192.168.2.6 --        --                              --         --\n'
         #'192.168.2.6 Reverse   university.edu                  test_zone3 any\n'
+        '192.168.2.7 --        --                              --         --\n'
+        'View:       test_view\n'
+        '192.168.2.0 Reverse   university.edu                  test_zone3 test_view\n'
+        '192.168.2.0 Forward   @.university.edu                test_zone  test_view\n'
+        '192.168.2.1 Reverse   university.edu                  test_zone3 test_view\n'
+        '192.168.2.1 Forward   @.university.edu                test_zone  test_view\n'
+        '192.168.2.2 --        --                              --         --\n'
+        '192.168.2.3 --        --                              --         --\n'
+        '192.168.2.4 --        --                              --         --\n'
+        '192.168.2.5 --        --                              --         --\n'
+        '192.168.2.6 --        --                              --         --\n'
         '192.168.2.7 --        --                              --         --\n\n')
     command.close()
     ## User tool: dnsrmhost
@@ -2726,7 +2746,7 @@ class TestComplete(unittest.TestCase):
     ## dnsupnamedglobals update -d set1 -f unittest_dir/namedglobalconfoption
     handle = open('%s/namedconfglobaloption' % TESTDIR,'w')
     handle.write(
-        '#options')
+        'options { additional-from-auth yes; };')
     handle.close()
     command_string = (
         'python ../roster-user-tools/scripts/dnsupnamedglobals '
@@ -2740,7 +2760,7 @@ class TestComplete(unittest.TestCase):
     command.close()
     handle = open('%s/namedconfglobaloption' % TESTDIR,'w')
     handle.write(
-        '#options')
+        'options { additional-from-auth yes; };')
     handle.close()
     ## User tool: dnsupnamedglobals
     ## dnsupnamedglobals list -d set1
@@ -2771,9 +2791,7 @@ class TestComplete(unittest.TestCase):
     ## User tool: dnsupnamedglobals
     ## dnsupnamedglobals update -d set1 -f unittest_dir/in
     handle = open('%s/in' % TESTDIR,'w')
-    handle.write('//DIFFERENT options')
-    handle.close()
-    handle = open('%s/in' % TESTDIR,'r')
+    handle.write('options { new2; new; test; };')
     handle.close()
     command_string = (
         'python ../roster-user-tools/scripts/dnsupnamedglobals '
@@ -2800,14 +2818,10 @@ class TestComplete(unittest.TestCase):
     command.close()
     ## User tool: dnsupnamedglobals
     ## dnsupnamedglobals update -d set1 -f unittest_dir/in
-    os.environ['EDITOR'] = 'python fake_editor.py original new '
+    os.environ['EDITOR'] = 'python fake_editor.py options tools '
     handle = open('%s/in' % TESTDIR,'w')
     handle.write(
-        '//EDITED options\n'
-        '//original text is original\n'
-        '//very original')
-    handle.close()
-    handle = open('%s/in' % TESTDIR,'r')
+        'options { test; newoption; };\n')
     handle.close()
     command_string = (
         'python ../roster-user-tools/scripts/dnsupnamedglobals '
@@ -2829,7 +2843,6 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'ADDED NAMED_CONF_GLOBAL_OPTION: %s/dump\n' % TESTDIR )
     command.close()
-    handle.close()
     time.sleep(5)
     ## User tool: dnsupnamedglobals
     ## dnsupnamedglobals dump -i 6 -f unittest_dir/dump
@@ -2843,9 +2856,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'Wrote file: %s/dump\n' % TESTDIR)
     command.close()
+    time.sleep(1)
     handle = open('%s/dump' % TESTDIR,'r')
     self.assertEqual(handle.read(),
-        '//EDITED options\n//new text is new\n//very new')
+        'tools { test;\nnewoption; };')
     handle.close()
     ## User tool: dnsupnamedglobals
     ## dnsupnamedglobals revert -d set1 -i 1
@@ -2870,9 +2884,8 @@ class TestComplete(unittest.TestCase):
     command.close()
     handle = open('%s/dump' % TESTDIR,'r')
     self.assertEqual(handle.read(),
-        '#options')
+        'options { additional-from-auth yes; };')
     handle.close()
-
     ## User tool: dnsauditlog
     ## dnslsauditlog --success 1
     command_string = (
@@ -2937,6 +2950,7 @@ class TestComplete(unittest.TestCase):
     command.close()
 
     ## dnstreeexport -f --config-file ./completeconfig.conf
+    os.system('rm -rf temp_dir')
     command_string = (
         'python ../roster-config-manager/scripts/dnstreeexport '
         ' -f --config-file %s ' % (
@@ -2977,23 +2991,19 @@ class TestComplete(unittest.TestCase):
     ## connection to rsync is not successfully established.
     command_string = (
         'python ../roster-config-manager/scripts/dnsconfigsync '
-        ' -i %s -u %s --ssh-id %s -c %s ' % (
-            tarfilename[0], SSH_USER, SSH_ID, self.userconfig))
+        ' -i %s -u %s --ssh-id %s -c %s --rndc-port %s --rndc-key %s' % (
+            tarfilename[0], SSH_USER, SSH_ID, self.userconfig,
+	    self.rndc_port, RNDC_KEY)) # ADD RNDC PORT CALC
     command = os.popen(command_string)
     output = command.read()
     output = re.sub('\d+\s','',output)
     output = re.sub('\d+\.','',output)
     self.assertEqual(output,
-        'Connecting to rsync on "%s"\n'
-        'building file list ... done\n'
-        'named/\n'
-        'named/test_view/\n\n'
-        
-        'sent bytes  received bytes  bytes/sec\n'
-        'total size is  speedup is \n'
-        'Connecting to ssh on "%s"\n'
-        'server reload successful\n\n' % (
-            TEST_DNS_SERVER, TEST_DNS_SERVER))
+        'Connecting to "%s"\n'
+        '[%s@%s] out: server reload successful\r\n'
+        'Disconnecting from %s... done.\n' % (
+            TEST_DNS_SERVER, SSH_USER, TEST_DNS_SERVER,
+            TEST_DNS_SERVER))
     command.close()
     ## dnsmkzone forward -z sub.university.edu -v test_view -t master --origin sub.university.edu.
     command_string = (
@@ -3029,8 +3039,8 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         '')
     command.close()
-    os.rename('./backup/full_database_dump-157.bz2','%s/origdb.bz2' % self.backup_dir)
-    dbdump = glob.glob('%s/*-157.*' % self.backup_dir)
+    os.rename('%s/full_database_dump-145.bz2' % self.backup_dir,'%s/origdb.bz2' % self.backup_dir)
+    dbdump = glob.glob('%s/*-144.*' % self.backup_dir)
     for db in dbdump:
       if( os.path.exists(db) ):
         os.remove(db)
@@ -3039,73 +3049,86 @@ class TestComplete(unittest.TestCase):
     command_string = (
         'python ../roster-config-manager/scripts/dnsrecover '
         ' -i %s '
-        '-u %s --config-file %s ' % (157,
+        '-u %s --config-file %s ' % (145,
             USERNAME, self.userconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-      'Loading database from backup with ID 138\n'
-      'Replaying action with id 139: MakeZone\n'
+      'Loading database from backup with ID 142\n'
+      'Replaying action with id 143: MakeZone\n'
       'with arguments: [u\'sub.university.edu\', u\'master\', '
       'u\'sub.university.edu.\', u\'test_view\', None, True]\n'
-      'Replaying action with id 140: MakeRecord\n'
-      'with arguments: [u\'soa\', u\'@\', u\'sub.university.edu\', '
+      'Replaying action with id 144: ProcessRecordsBatch\n'
+      'with arguments: [[], [{u\'record_arguments\': '
       '{u\'refresh_seconds\': 10800L, u\'expiry_seconds\': 3600000L, '
-      'u\'name_server\': u\'ns.university.edu.\', '
+      'u\'name_server\': u\'ns.university.lcl.\', '
       'u\'minimum_seconds\': 86400L, u\'retry_seconds\': 3600L, '
       'u\'serial_number\': 794L, u\'admin_email\': '
-      'u\'hostmaster.ns.university.edu.\'}, u\'test_view\', 3600L]\n'
-      'Replaying action with id 141: MakeRecord\n'
-      'with arguments: [u\'ns\', u\'@\', u\'sub.university.edu\', '
-      '{u\'name_server\': u\'ns.sub.university.edu.\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 142: MakeRecord\n'
-      'with arguments: [u\'ns\', u\'@\', u\'sub.university.edu\', '
-      '{u\'name_server\': u\'ns2.sub.university.edu.\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 143: MakeRecord\n'
-      'with arguments: [u\'mx\', u\'@\', u\'sub.university.edu\', '
-      '{u\'priority\': 10, u\'mail_server\': u\'mail1.sub.university.edu.\'}, '
-      'u\'any\', 3600L]\n'
-      'Replaying action with id 144: MakeRecord\n'
-      'with arguments: [u\'mx\', u\'@\', u\'sub.university.edu\', '
-      '{u\'priority\': 20, u\'mail_server\': u\'mail2.sub.university.edu.\'}'
-      ', u\'any\', 3600L]\n'
-      'Replaying action with id 145: MakeRecord\n'
-      'with arguments: [u\'txt\', u\'@\', u\'sub.university.edu\', '
-      '{u\'quoted_text\': u\'"Contact 1:  Stephen Harrell '
-      '(sharrell@university.edu)"\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 146: MakeRecord\n'
-      'with arguments: [u\'a\', u\'@\', u\'sub.university.edu\', '
-      '{u\'assignment_ip\': u\'192.168.0.1\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 147: MakeRecord\n'
-      'with arguments: [u\'aaaa\', u\'desktop-1\', u\'sub.university.edu\', '
-      '{u\'assignment_ip\': u\'3ffe:0800:0000:0000:02a8:79ff:fe32:1982\'}'
-      ', u\'any\', 3600L]\n'
-      'Replaying action with id 148: MakeRecord\n'
-      'with arguments: [u\'a\', u\'desktop-1\', u\'sub.university.edu\', '
-      '{u\'assignment_ip\': u\'192.168.1.100\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 149: MakeRecord\n'
-      'with arguments: [u\'a\', u\'ns2\', u\'sub.university.edu\', '
-      '{u\'assignment_ip\': u\'192.168.1.104\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 150: MakeRecord\n'
-      'with arguments: [u\'hinfo\', u\'ns2\', u\'sub.university.edu\', '
-      '{u\'hardware\': u\'PC\', u\'os\': u\'NT\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 151: MakeRecord\n'
-      'with arguments: [u\'cname\', u\'www\', u\'sub.university.edu\', '
-      '{u\'assignment_host\': u\'sub.university.edu.\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 152: MakeRecord\n'
-      'with arguments: [u\'a\', u\'ns\', u\'sub.university.edu\', '
-      '{u\'assignment_ip\': u\'192.168.1.103\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 153: MakeRecord\n'
-      'with arguments: [u\'a\', u\'localhost\', u\'sub.university.edu\', '
-      '{u\'assignment_ip\': u\'127.0.0.1\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 154: MakeRecord\n'
-      'with arguments: [u\'cname\', u\'www.data\', u\'sub.university.edu\', '
-      '{u\'assignment_host\': u\'ns.university.edu.\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 155: MakeRecord\n'
-      'with arguments: [u\'a\', u\'mail1\', u\'sub.university.edu\', '
-      '{u\'assignment_ip\': u\'192.168.1.101\'}, u\'any\', 3600L]\n'
-      'Replaying action with id 156: MakeRecord\n'
-      'with arguments: [u\'a\', u\'mail2\', u\'sub.university.edu\', '
-      '{u\'assignment_ip\': u\'192.168.1.102\'}, u\'any\', 3600L]\n')
+      'u\'hostmaster.ns.university.lcl.\'}, u\'record_type\': '
+      'u\'soa\', u\'ttl\': 3600L, u\'record_target\': u\'@\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'test_view\'}, {u\'record_arguments\': '
+      '{u\'name_server\': u\'ns.sub.university.lcl.\'}, u\'record_type\': '
+      'u\'ns\', u\'ttl\': 3600L, u\'record_target\': u\'@\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'name_server\': u\'ns2.sub.university.lcl.\'}, u\'record_type\''': '
+      'u\'ns\', u\'ttl\': 3600L, u\'record_target\': u\'@\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'priority\': 10, u\'mail_server\': u\'mail1.sub.university.lcl.\'}, '
+      'u\'record_type\': u\'mx\', u\'ttl\': 3600L, u\'record_target\': u\'@\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'priority\': 20, u\'mail_server\': u\'mail2.sub.university.lcl.\'}, '
+      'u\'record_type\': u\'mx\', u\'ttl\': 3600L, u\'record_target\': u\'@\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'quoted_text\': u\'"Contact 1:  '
+      'Stephen Harrell (sharrell@university.lcl)"\'}, u\'record_type\': '
+      'u\'txt\', u\'ttl\': 3600L, u\'record_target\': u\'@\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'assignment_ip\': u\'192.168.0.1\'}, u\'record_type\': u\'a\', '
+      'u\'ttl\': 3600L, u\'record_target\': u\'@\', u\'record_zone_name\': '
+      'u\'sub.university.edu\', u\'record_view_dependency\': u\'any\'}, '
+      '{u\'record_arguments\': {u\'assignment_ip\': u\'192.168.1.103\'}, '
+      'u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': u\'ns\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'assignment_ip\': u\'3ffe:0800:0000:0000:02a8:79ff:fe32:1982\'}, '
+      'u\'record_type\': u\'aaaa\', u\'ttl\': 3600L, u\'record_target\': '
+      'u\'desktop-1\', u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'assignment_ip\': u\'192.168.1.100\'}, u\'record_type\': u\'a\', '
+      'u\'ttl\': 3600L, u\'record_target\': u\'desktop-1\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'assignment_ip\': u\'192.168.1.104\'}, u\'record_type\': u\'a\', '
+      'u\'ttl\': 3600L, u\'record_target\': u\'ns2\', u\'record_zone_name\': '
+      'u\'sub.university.edu\', u\'record_view_dependency\': u\'any\'}, '
+      '{u\'record_arguments\': {u\'hardware\': u\'PC\', u\'os\': u\'NT\'}, '
+      'u\'record_type\': u\'hinfo\', u\'ttl\': 3600L, u\'record_target\': '
+      'u\'ns2\', u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'assignment_host\': u\'sub.university.lcl.\'}, u\'record_type\': '
+      'u\'cname\', u\'ttl\': 3600L, u\'record_target\': u\'www\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'assignment_ip\': u\'127.0.0.1\'}, u\'record_type\': u\'a\', '
+      'u\'ttl\': 3600L, u\'record_target\': u\'localhost\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'assignment_host\': u\'ns.university.lcl.\'}, u\'record_type\': '
+      'u\'cname\', u\'ttl\': 3600L, u\'record_target\': u\'www.data\', '
+      'u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}, {u\'record_arguments\': '
+      '{u\'assignment_ip\': u\'192.168.1.101\'}, u\'record_type\': u\'a\', '
+      'u\'ttl\': 3600L, u\'record_target\': u\'mail1\', u\'record_zone_name\': '
+      'u\'sub.university.edu\', u\'record_view_dependency\': u\'any\'}, '
+      '{u\'record_arguments\': {u\'assignment_ip\': u\'192.168.1.102\'}, '
+      'u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': '
+      'u\'mail2\', u\'record_zone_name\': u\'sub.university.edu\', '
+      'u\'record_view_dependency\': u\'any\'}]]\n')
     command.close()
 
     ## dnstreeexport -f --config-file ./completeconfig.conf
@@ -3126,7 +3149,7 @@ class TestComplete(unittest.TestCase):
         ' ', origdump)
     origdb.close()
 
-    newdb = bz2.BZ2File('%s/full_database_dump-176.bz2' % self.backup_dir)
+    newdb = bz2.BZ2File('%s/full_database_dump-148.bz2' % self.backup_dir)
     newdump = newdb.read()
     newdump = re.sub(
         '[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}',
@@ -3136,13 +3159,14 @@ class TestComplete(unittest.TestCase):
     for line in newdump.split('\n'):
       if( line.startswith('INSERT INTO audit_log') ):
         number = int(line.split()[5].strip('(').strip(',').strip())
-        if( number < 157 ):
+        if( number < 145 ):
           newdump_list.append(line)
       else:
         newdump_list.append(line)
     newdump = '\n'.join(newdump_list)
-    self.assertEqual(origdump.replace(
-        'AUTO_INCREMENT=157', 'AUTO_INCREMENT=176'), newdump)
-    
+    origdump = re.sub('AUTO_INCREMENT=[0-9]+', 'AUTO_INCREMENT=', origdump)
+    newdump = re.sub('AUTO_INCREMENT=[0-9]+', 'AUTO_INCREMENT=', newdump)
+    self.assertEqual(origdump, newdump)
+
 if( __name__ == '__main__' ):
     unittest.main()

@@ -74,6 +74,7 @@ TEST_DNS_SERVER = u'localhost'
 NS_IP_ADDRESS = '127.0.0.1'
 NS_DOMAIN = '' #Blank since using localhost
 NAMEDPID_FILE = '/var/run/named/named.pid'
+SESSION_KEYFILE = 'test_data/session.key'
 
 
 class TestCheckConfig(unittest.TestCase):
@@ -86,7 +87,7 @@ class TestCheckConfig(unittest.TestCase):
       return port
     self.PORT = PickUnusedPort()
     self.rndc_port = PickUnusedPort()
-    while( self.rndc_port == self.port ):
+    while( self.rndc_port == self.PORT ):
       self.rndc_port = PickUnusedPort()
     fabric_api.env.warn_only = True
     fabric_state.output['everything'] = False
@@ -126,6 +127,8 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree('test_data/backup_dir')
     if( os.path.exists(self.named_dir) ):
       shutil.rmtree(self.named_dir)
+    if( os.path.exists('roster_lock_file') ):
+      os.remove('roster_lock_file')
 
   def testNull(self):
     self.core_instance.MakeView(u'test_view')
@@ -157,6 +160,7 @@ class TestCheckConfig(unittest.TestCase):
     named_file_contents = named_file_contents.replace('NAMED_DIR', '%s/test_data/named' % os.getcwd())
     named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
+    named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
     named_file_handle = open('%s/named.conf' % self.named_dir, 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
@@ -212,28 +216,30 @@ class TestCheckConfig(unittest.TestCase):
         ';; Got answer:\n'
         '%s\n'
         ';; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: '
-        '2\n'
+        '3\n'
         '\n'
+        ';; OPT PSEUDOSECTION:\n'
+        '; EDNS: version: 0, flags:; udp: 4096\n'
         ';; QUESTION SECTION:\n'
-        ';mail1.sub.university.lcl. IN  A\n'
+        ';mail1.sub.university.lcl.\tIN\tA\n'
         '\n'
         ';; ANSWER SECTION:\n'
-        'mail1.sub.university.lcl. 3600 IN  A 192.168.1.101\n'
+        'mail1.sub.university.lcl. 3600\tIN\tA\t192.168.1.101\n'
         '\n'
         ';; AUTHORITY SECTION:\n'
-        'sub.university.lcl.  3600  IN  NS  ns.sub.university.lcl.\n'
-        'sub.university.lcl.  3600  IN  NS  ns2.sub.university.lcl.\n'
+        'sub.university.lcl.\t3600\tIN\tNS\tns2.sub.university.lcl.\n'
+        'sub.university.lcl.\t3600\tIN\tNS\tns.sub.university.lcl.\n'
         '\n'
         ';; ADDITIONAL SECTION:\n'
-        'ns.sub.university.lcl. 3600  IN  A 192.168.1.103\n'
-        'ns2.sub.university.lcl.  3600  IN  A 192.168.1.104\n'
+        'ns.sub.university.lcl.\t3600\tIN\tA\t192.168.1.103\n'
+        'ns2.sub.university.lcl.\t3600\tIN\tA\t192.168.1.104\n'
         '\n'
         '%s\n'
         ';; SERVER: %s#%s(%s)\n'
         '%s\n'
-        ';; MSG SIZE  rcvd: 125\n'
-        '\n' % (lines[1], lines[3], lines[5], lines[22], NS_IP_ADDRESS,
-            self.PORT, NS_IP_ADDRESS, lines[24]))
+        ';; MSG SIZE  rcvd: 136\n'
+        '\n' % (lines[1], lines[3], lines[5], lines[24], NS_IP_ADDRESS,
+            self.PORT, NS_IP_ADDRESS, lines[26]))
     lines = '\n'.join(lines)
     self.assertEqual(set(lines.split()), set(testlines.split()))
     command.close()
