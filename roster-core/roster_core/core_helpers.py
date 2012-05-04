@@ -86,34 +86,32 @@ class CoreHelpers(object):
     self.user_instance.Authorize(function_name)
     views = set([])
     success = False
+
+    users_dict = self.db_instance.GetEmptyRowDict('users')
+    users_dict['user_name'] = username
+    user_group_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'user_group_assignments')
+    groups_dict = self.db_instance.GetEmptyRowDict('groups')
+    forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'forward_zone_permissions')
+    zones_dict = self.db_instance.GetEmptyRowDict('zones')
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    self.db_instance.StartTransaction()
     try:
-      users_dict = self.db_instance.GetEmptyRowDict('users')
-      users_dict['user_name'] = username
-      user_group_assignments_dict = self.db_instance.GetEmptyRowDict(
-          'user_group_assignments')
-      groups_dict = self.db_instance.GetEmptyRowDict('groups')
-      forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
-          'forward_zone_permissions')
-      zones_dict = self.db_instance.GetEmptyRowDict('zones')
-      zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
-          'zone_view_assignments')
-      self.db_instance.StartTransaction()
-      try:
-        joined_list = self.db_instance.ListRow(
-            'users', users_dict, 'user_group_assignments',
-            user_group_assignments_dict,
-            'groups', groups_dict, 'forward_zone_permissions',
-            forward_zone_permissions_dict, 'zones', zones_dict,
-            'zone_view_assignments', zone_view_assignments_dict)
-      finally:
-        self.db_instance.EndTransaction()
-      for view_dict in joined_list:
-        views.add(view_dict['zone_view_assignments_view_dependency'].split(
-            '_dep')[0])
-      success = True
+      joined_list = self.db_instance.ListRow(
+          'users', users_dict, 'user_group_assignments',
+          user_group_assignments_dict,
+          'groups', groups_dict, 'forward_zone_permissions',
+          forward_zone_permissions_dict, 'zones', zones_dict,
+          'zone_view_assignments', zone_view_assignments_dict)
     finally:
-      self.log_instance.LogAction(self.user_instance.user_name, function_name,
-                                  current_args, success)
+      self.db_instance.EndTransaction()
+    for view_dict in joined_list:
+      views.add(view_dict['zone_view_assignments_view_dependency'].split(
+          '_dep')[0])
+    success = True
+
     return views
 
   def _FixHostname(self, host_name, origin):
@@ -762,15 +760,14 @@ class CoreHelpers(object):
       list: list of dictionarires from ListNamedConfGlobalOptions
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
     success = False
     named_conf_global_options = None
-    try:
-      named_conf_global_options = self.core_instance.ListNamedConfGlobalOptions(
-          option_id, dns_server_set, timestamp)
-      success = True
-    finally:
-      self.log_instance.LogAction(self.user_instance.user_name, function_name,
-                                  current_args, success)
+
+    named_conf_global_options = self.core_instance.ListNamedConfGlobalOptions(
+        option_id, dns_server_set, timestamp)
+    success = True
+
     return named_conf_global_options
 
   def ListZoneByIPAddress(self, ip_address):
