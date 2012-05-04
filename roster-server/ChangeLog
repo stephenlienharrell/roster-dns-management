@@ -1,4 +1,6 @@
 Current Release
+
+2012-05-04 release-0.16
 - Fixes to the auth_pam module.
 - Optimized logging functions.
 - Fixed error propogation problem.

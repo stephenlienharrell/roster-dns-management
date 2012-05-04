@@ -1,4 +1,6 @@
 Current Release
+
+2012-05-04 release-0.16
 - Listing zones when no zones are availible no longer raises an error and instead notifies that there are no zones.
 - dnsrmzone can now remove zones in the 'any' view.
 - Adjusts/adds error messages for roster_user_tools_bootstrap when missing command line arguments
