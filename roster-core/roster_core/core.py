@@ -2898,8 +2898,8 @@ class Core(object):
       if( not ip ):
         ip = record_args_dict['assignment_ip']
       ip_obj = IPy.IP(ip)
-      decimal_ip_lower = int('0x%s' % ip_obj.strHex()[18:], 0)
-      decimal_ip_upper = int(ip_obj.strHex()[:-16], 0)
+      decimal_ip_lower = ip_obj.int() & 0x0000000000000000ffffffffffffffff
+      decimal_ip_upper = ip_obj.int() >> 64
       ipv6_index_dict = {'ipv6_dec_upper': decimal_ip_upper,
                          'ipv6_dec_lower': decimal_ip_lower,
                          'ipv6_index_record_id': record_id}
