@@ -1,4 +1,7 @@
 Current Release
+- Fixed core_helpers functions not getting replayed restore
+- Fixed ipv6 bit shifting bug
+- Added subdomain delegation helper function to core_helpers
 - Added version compatibility checking between user-tools/server, server/core, and config-manager/core
 - Changes database bootstrap to display a different error message if user opts to use config file with missing information
 - Consolidated core error classes into UserError and InternalError which are both subclasses of CoreError.

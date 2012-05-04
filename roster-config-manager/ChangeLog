@@ -1,4 +1,5 @@
 Current Release
+- Fixed dnsconfigsync and end to end tests
 - Added version compatibility checking between user-tools/server, server/core, and config-manager/core
 - Added dnszonecompare. A tool to compare two zone files via AXFR from two BIND servers.
 - Removed named_importer_lib and its regtest.
