@@ -1,5 +1,3 @@
-Current Release
-
 2012-05-04 release-0.16
 - Fixed dnsconfigsync and end to end tests
 - Added version compatibility checking between user-tools/server, server/core, and config-manager/core

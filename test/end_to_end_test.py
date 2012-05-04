@@ -38,7 +38,7 @@ This test REQUIRES SELinux or Apparmor to be reconfigured or disabled
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.16'
 
 
 import bz2
