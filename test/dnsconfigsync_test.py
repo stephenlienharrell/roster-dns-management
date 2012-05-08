@@ -60,7 +60,7 @@ from fabric import state as fabric_state
 import roster_core
 from roster_config_manager import tree_exporter
 
-CONFIG_FILE = 'test_data/roster.conf.real'
+CONFIG_FILE = 'test_data/roster.conf'
 EXEC = '../roster-config-manager/scripts/dnsconfigsync'
 ZONE_IMPORTER_EXEC='../roster-config-manager/scripts/dnszoneimporter'
 KEY_FILE = 'test_data/rndc.key'

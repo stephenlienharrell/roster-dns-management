@@ -58,7 +58,7 @@ import getpass
 import unittest
 
 
-UNITTEST_CONFIG = 'test_data/roster.conf.real'
+UNITTEST_CONFIG = 'test_data/roster.conf'
 HOST = u'localhost'
 CREDFILE = '%s/.dnscred' % os.getcwd()
 USERNAME = 'shuey'

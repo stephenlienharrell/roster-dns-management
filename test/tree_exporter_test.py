@@ -1342,8 +1342,7 @@ class TestTreeExporter(unittest.TestCase):
         'options { directory "%s/named";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
-        'controls { keys { rndc-key; };\n'
-        'inet * allow { control-hosts; }; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
         '};\n'
@@ -1956,8 +1955,7 @@ class TestTreeExporter(unittest.TestCase):
             'options { directory "/var/domain";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
-            'controls { keys { rndc-key; };\n'
-            'inet * allow { control-hosts; }; };'))
+            'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
     global_options_external = (
         self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
             self.data[0], u'external_dns'))
@@ -1974,8 +1972,7 @@ class TestTreeExporter(unittest.TestCase):
             'options { directory "/var/domain";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
-            'controls { keys { rndc-key; };\n'
-            'inet * allow { control-hosts; }; };'))
+            'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
     global_options_private = (
         self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
             self.data[0], u'private_dns'))
@@ -1992,8 +1989,7 @@ class TestTreeExporter(unittest.TestCase):
             'options { directory "/var/domain";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
-            'controls { keys { rndc-key; };\n'
-            'inet * allow { control-hosts; }; };'))
+            'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
 
   def testTreeExporterExpportAllBindTrees(self):
     self.core_instance.SetMaintenanceFlag(1)
@@ -2029,8 +2025,7 @@ class TestTreeExporter(unittest.TestCase):
         'options { directory "%s/named";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
-        'controls { keys { rndc-key; };\n'
-        'inet * allow { control-hosts; }; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
         '};\n\n'
@@ -2099,8 +2094,7 @@ class TestTreeExporter(unittest.TestCase):
         'options { directory "%s/named";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
-        'controls { keys { rndc-key; };\n'
-        'inet * allow { control-hosts; }; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
         '};\n'
@@ -2211,8 +2205,7 @@ class TestTreeExporter(unittest.TestCase):
         'options { directory "%s/named";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
-        'controls { keys { rndc-key; };\n'
-        'inet * allow { control-hosts; }; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'acl secret {\n'
         '\t!10.10/32;\n'
         '};\n'
@@ -2328,8 +2321,7 @@ class TestTreeExporter(unittest.TestCase):
     self.assertEqual(self.tree_exporter_instance.NamedHeaderChangeDirectory(
         header_string, '/tmp/newdir'),
         'include "/etc/rndc.key";\n'
-        'controls { keys { rndc-key; };\n'
-        'inet * allow { control-hosts; }; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'logging { category "update-security" { "security"; };\n'
         'category "queries" { "query_logging"; };\n'
         'channel "query_logging" { syslog local5;\n'
@@ -2383,8 +2375,7 @@ class TestTreeExporter(unittest.TestCase):
         'category "client" { "null"; };\n'
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
-        'controls { keys { rndc-key; };\n'
-        'inet * allow { control-hosts; }; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'otherstanza { stuff; };\n'
         'options { directory "/tmp/newdir"; };')
     header_string = (  ## The string was arbitrarily chosen.
@@ -2424,8 +2415,7 @@ class TestTreeExporter(unittest.TestCase):
     self.assertEqual(self.tree_exporter_instance.NamedHeaderChangeDirectory(
         header_string, '/tmp/newdir'),
         'include "/etc/rndc.key";\n'
-        'controls { keys { rndc-key; };\n'
-        'inet * allow { control-hosts; }; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'logging { category "update-security" { "security"; };\n'
         'category "queries" { "query_logging"; };\n'
         'channel "query_logging" { syslog local5;\n'
@@ -2467,8 +2457,7 @@ class TestTreeExporter(unittest.TestCase):
         'category "client" { "null"; };\n'
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
-        'controls { keys { rndc-key; };\n'
-        'inet * allow { control-hosts; }; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'otherstanza { stuff; };\n'
         'options { directory "/tmp/newdir"; };')
 
