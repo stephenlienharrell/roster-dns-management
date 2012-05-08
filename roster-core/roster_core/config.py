@@ -36,8 +36,9 @@ __version__ = '#TRUNK#'
 
 
 import ConfigParser
-import errors
+import constants
 import db_access
+import errors
 
 
 class Config(object):
@@ -66,24 +67,7 @@ class Config(object):
     if( a == [] ):
       raise errors.ConfigError('Could not read the file %s' % file_name)
 
-    # Supported data types: str, int, boolean, float
-    file_schema = {'database': {'server': 'str', 'login': 'str',
-                                'passwd': 'str', 'database': 'str',
-                                'big_lock_timeout': 'int',
-                                'big_lock_wait': 'int', 'ssl': 'boolean',
-                                'ssl_ca': 'str'},
-                   'server': {'inf_renew_time': 'int', 'core_die_time': 'int',
-                              'get_credentials_wait_increment': 'int',
-                              'run_as_username': 'str',
-                              'port': 'int', 'host': 'str',
-                              'server_killswitch': 'boolean',
-                              'lock_file': 'str', 'ssl_key_file': 'str',
-                              'server_log_file': 'str', 'ssl_cert_file': 'str'},
-                   'credentials': {'authentication_method': 'str',
-                                   'exp_time': 'int'},
-                   'exporter': {'backup_dir': 'str',
-                                'root_config_dir': 'str',
-                                'named_dir': 'str'}}
+    file_schema = constants.CONFIG_FILE_SCHEMA
 
     for section in file_schema:
       self.config_file[section] = {}
@@ -129,22 +113,17 @@ class Config(object):
     Outputs:
       dbAccess instance
     """
+    args = [self.config_file['database']['server'],
+            self.config_file['database']['login'],
+            self.config_file['database']['passwd'],
+            self.config_file['database']['database'],
+            self.config_file['database']['big_lock_timeout'],
+            self.config_file['database']['big_lock_wait']]
+    kwargs = {}
     if( self.config_file['database']['ssl'] ):
-      return db_access.dbAccess(
-          self.config_file['database']['server'],
-          self.config_file['database']['login'],
-          self.config_file['database']['passwd'],
-          self.config_file['database']['database'],
-          self.config_file['database']['big_lock_timeout'],
-          self.config_file['database']['big_lock_wait'],
-          ssl=True, ssl_ca=self.config_file['database']['ssl_ca'])
-    else:
-      return db_access.dbAccess(
-        self.config_file['database']['server'],
-        self.config_file['database']['login'],
-        self.config_file['database']['passwd'],
-        self.config_file['database']['database'],
-        self.config_file['database']['big_lock_timeout'],
-        self.config_file['database']['big_lock_wait'])
+      kwargs['ssl'] = True
+      kwargs['ssl_ca'] = self.config_file['database']['ssl_ca']
+    
+    return db_access.dbAccess(*args, **kwargs)
 
 # vi: set ai aw sw=2:

@@ -77,6 +77,28 @@ RECORD_TYPES_INDEXED_BY_IP = ['ptr', 'a', 'aaaa']
 # This is the default config file location for roster server
 SERVER_CONFIG_FILE_LOCATION = '/etc/roster/roster_server.conf'
 
+# CONFIG_FILE_SCHMEA holds the expected inputs from config files and
+# their types for checking.
+# Supported data types: str, int, boolean, float
+CONFIG_FILE_SCHEMA = {'database': {'server': 'str', 'login': 'str',
+                                   'passwd': 'str', 'database': 'str',
+                                   'big_lock_timeout': 'int',
+                                   'big_lock_wait': 'int', 'ssl': 'boolean',
+                                   'ssl_ca': 'str'},
+                      'server': {'inf_renew_time': 'int', 'core_die_time': 'int',
+                                 'get_credentials_wait_increment': 'int',
+                                 'run_as_username': 'str',
+                                 'port': 'int', 'host': 'str',
+                                 'server_killswitch': 'boolean',
+                                 'lock_file': 'str', 'ssl_key_file': 'str',
+                                 'server_log_file': 'str', 'ssl_cert_file': 'str'},
+                      'credentials': {'authentication_method': 'str',
+                                      'exp_time': 'int'},
+                      'exporter': {'backup_dir': 'str',
+                                   'root_config_dir': 'str',
+                                   'named_dir': 'str'}}
+
+
 # The SUPPORTED_METHODS hash contains a hash for every supported method.
 # 'check' indicates whether the target zone/IP range should be checked.
 # 'write' indicates whether the method requires write access.
