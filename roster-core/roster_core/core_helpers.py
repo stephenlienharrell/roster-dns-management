@@ -506,15 +506,143 @@ class CoreHelpers(object):
     self.core_instance.RemoveRecord(record_type, target, zone_name,
                                     record_args_dict, view_name, ttl)
 
+  def MakeIPv4ClasslessReverseDelegation(self, name_server, cidr_block,
+                                     view_name=u'any', ttl=None):
+    """Creates classless forwarding for reverse DNS lookups
+
+    Inputs:
+      name_server: nameserver to add for reverse delegation
+      cidr_block: string of CIDR block
+      view_name: string of view for the reverse zone, defaults to 'any'
+      ttl: time-to-live for the newly added records, defaults to zone ttl
+
+    Raises:
+      InvalidInputError: nameserver required
+      InvalidInputError: cidr block range required
+      InvalidInputError: Not a valid zone name or CIDR block
+    """
+    view_dep = '%s_dep' % view_name
+    cidr_octets = cidr_block.split('.')
+    num_octets = len(cidr_octets)
+    if( num_octets != 4 ):
+      raise errors.InvalidInputError('Invalid CIDR octet number')
+    cidr_block_target = cidr_octets[-1]
+    broadcast_last_octet = cidr_block_target.split('/')[0]
+    netmask = cidr_block_target.split('/')[1]
+    if( str.isdigit(str(broadcast_last_octet)) and str.isdigit(str(netmask))):
+      if( int(netmask) < 25 or int(netmask) > 31 ):
+        raise errors.InvalidInputError('Invalid CIDR netmask: %s' % netmask)
+      if( int(broadcast_last_octet) < 0 or int(broadcast_last_octet) > 255):
+        raise errors.InvalidInputError('Invalid CIDR last octet')
+    else:
+      raise errors.InvalidInputError('Invalid CIDR last octet/netmask')
+
+    for i in range(1, len(cidr_octets) - 1):
+      if( str.isdigit(str(cidr_octets[i])) ):
+        if( int(cidr_octets[i]) < 0 or int(cidr_octets[i]) > 255):
+          raise errors.InvalidInputError('Invalid CIDR octet %s' %
+                                         cidr_octets[i])
+      else:
+          raise errors.InvalidInputError('Invalid CIDR octet %s' %
+                                         cidr_octets[i])
+
+    cidr_for_ipy = cidr_octets[0]
+    for i in range(1, num_octets - 1):
+      cidr_for_ipy = '%s.%s' % (cidr_for_ipy, cidr_octets[i])
+    cidr_for_ipy = '%s.%s/%s' % (cidr_for_ipy, '0', netmask)
+    expanded_cidr = self.CIDRExpand(cidr_for_ipy,
+                                    begin=long(broadcast_last_octet))
+    expanded_cidr.remove(expanded_cidr[-1])
+
+    zone_name = self.ListZoneByIPAddress(cidr_block)
+    if( zone_name is None ):
+      raise errors.InvalidInputError(
+          'ERROR: zone that includes cidr block %s not found' % cidr_block)
+
+    records = self.core_instance.ListRecords(zone_name=zone_name)
+    for record in records:
+      for ip in expanded_cidr:
+        if( self.ReverseIP(ip).split('.')[0] == record['target'] ):
+          raise errors.InvalidInputError('ERROR: existing record(s) with '
+                                         'target: %s overlaps given cidr: %s' %
+                                         (record['target'], cidr_block))
+
+    records_batch = []
+    cidr_last_target = int(broadcast_last_octet) + pow(2, 32 - int(netmask))
+    ns_target = cidr_block_target
+    ns_args_dict = self.core_instance.GetEmptyRecordArgsDict(u'ns')
+    ns_args_dict['name_server'] = name_server
+    ns_record = {'record_type': u'ns', 'record_target': ns_target,
+                 'record_zone_name': zone_name, 'view_name': view_name,
+                 'record_view_dependency': view_dep,
+                 'record_arguments': ns_args_dict}
+    records_batch.append(ns_record)
+
+    for ip in expanded_cidr:
+      reverse_ip = self.ReverseIP(ip)
+      split_reverse_ip = reverse_ip.split('.')
+      target = split_reverse_ip[0]
+      reverse_ip_for_record = '%s.%s' % (target, cidr_block_target)
+      for i in range(1, len(split_reverse_ip)):
+        reverse_ip_for_record = '%s.%s' % (reverse_ip_for_record,
+                                           split_reverse_ip[i])
+      if( target == broadcast_last_octet or target == unicode(
+             cidr_last_target - 1) ):
+        continue
+      cname_args_dict = self.core_instance.GetEmptyRecordArgsDict(u'cname')
+      cname_args_dict['assignment_host'] = unicode(reverse_ip_for_record)
+      cname_record = {'record_type': u'cname', 'record_target': unicode(target),
+                      'record_zone_name': zone_name, 'view_name': view_name,
+                      'record_view_dependency': view_dep,
+                      'record_arguments': cname_args_dict}
+      records_batch.append(cname_record)
+
+    self.ProcessRecordsBatch(add_records=records_batch)
+
+  def MakeIPv4ClasslessReverseDelegatedTargetZone(self, cidr_block):
+    """Creates a delegated reverse zone
+
+    Inputs:
+      cidr_block: string of IPv4 cidr block
+
+    Raises:
+      InvalidInputError: Not a valid cidr block
+    """
+    cidr_octets = cidr_block.split('.')
+    cidr_block_target = cidr_octets[-1]
+    broadcast_last_octet = cidr_block_target.split('/')[0]
+    netmask = cidr_block_target.split('/')[1]
+
+    if( str.isdigit(str(broadcast_last_octet)) and str.isdigit(str(netmask))):
+      if( int(netmask) < 25 or int(netmask) > 31 or
+          int(broadcast_last_octet) < 0 or int(broadcast_last_octet) > 255 ):
+        raise errors.InvalidInputError('Invalid CIDR block')
+    else:
+      raise errors.InvalidInputError('Invalid CIDR block')
+
+    for i in range(1, len(cidr_octets) - 1):
+      if( str.isdigit(str(cidr_octets[i])) ):
+        if( int(cidr_octets[i]) < 0 or int(cidr_octets[i]) > 255):
+          raise errors.InvalidInputError('Invalid CIDR block')
+      else:
+          raise errors.InvalidInputError('Invalid CIDR block')
+
+    zone_name = u'in-addr.arpa'
+    for i in range(0, len(cidr_octets)):
+      zone_name = u'%s.%s' % (cidr_octets[i], zone_name)
+    zone_type = u'master'
+    zone_origin = u'%s.' % zone_name
+    self.core_instance.MakeZone(zone_name, zone_type, zone_origin)
+ 
   def ListAvailableIpsInCIDR(self, cidr_block, num_ips=1, view_name=None,
-                           zone_name=None):
+                             zone_name=None):
     """Finds first available ips. Only lists as many IPs as are available.
     Returns empty list if no IPs are available in given cidr block and a
     truncated list if only a portion of IPs are available.
 
     Inputs:
       cidr_block: string of ipv4 or ipv6 cidr block
-    
+
     Raises:
       InvalidInputError: IP is in a reserved IP space.
       InvalidInputError: Not a valid cidr block

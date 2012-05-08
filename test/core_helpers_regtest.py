@@ -737,6 +737,154 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(self.core_helper_instance.ReverseIP(
         u'192.168.0/31'), u'0/31.168.192.in-addr.arpa.')
 
+  def testMakeIPv4ClasslessReverseDelegation(self):
+    self.core_instance.MakeZone(u'example.lcl', u'master',
+                                u'56.168.192.in-addr.arpa.',
+                                view_name=u'test_view')
+    self.core_instance.MakeZone(u'example2.lcl', u'master',
+                                u'57.168.192.in-addr.arpa.',
+                                view_name=u'test_view')
+    self.core_instance.MakeZone(u'example3.lcl', u'master',
+                                u'58.168.192.in-addr.arpa.',
+                                view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'example.lcl', u'example.lcl',
+        {u'name_server': u'ns1.example.lcl.',
+         u'admin_email': u'admin@example.lcl.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'example2.lcl', u'example2.lcl',
+        {u'name_server': u'ns2.example.lcl.',
+         u'admin_email': u'admin@example.lcl.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'example3.lcl', u'example3.lcl',
+        {u'name_server': u'ns3.example.lcl.',
+         u'admin_email': u'admin@example.lcl.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'example.lcl',
+                                                      u'192.168.56.0/25')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'example2.lcl',
+                                                      u'192.168.57.0/26')
+    self.core_instance.MakeReverseRangeZoneAssignment(u'example3.lcl',
+                                                      u'192.168.58.0/30')
+
+    self.core_helper_instance.MakeIPv4ClasslessReverseDelegation(
+        u'ns1.example.lcl.', u'192.168.56.0/25', view_name=u'test_view')
+    self.core_helper_instance.MakeIPv4ClasslessReverseDelegation(
+        u'ns2.example.lcl.', u'192.168.57.0/26', view_name=u'test_view')
+    self.core_helper_instance.MakeIPv4ClasslessReverseDelegation(
+        u'ns3.example.lcl.', u'192.168.58.0/30', view_name=u'test_view')
+    records = self.core_instance.ListRecords()
+
+    self.assertTrue({'target': u'0/25', u'name_server': u'ns1.example.lcl.',
+                     'ttl': 3600, 'record_type': u'ns', 'view_name': u'test_view',
+                     'last_user': u'sharrell', 'zone_name': u'example.lcl'} in
+                    records)
+    self.assertTrue({'target': u'0/26', u'name_server': u'ns2.example.lcl.',
+                     'ttl': 3600, 'record_type': u'ns', 'view_name': u'test_view',
+                     'last_user': u'sharrell', 'zone_name': u'example2.lcl'} in
+                    records)
+    self.assertTrue({'target': u'0/30', u'name_server': u'ns3.example.lcl.',
+                     'ttl': 3600, 'record_type': u'ns', 'view_name': u'test_view',
+                     'last_user': u'sharrell', 'zone_name': u'example3.lcl'} in
+                    records)
+
+    ## test delegation records to ns1
+    target = 1
+    while( target < 127 ):
+      self.assertTrue({'target': u'%d' % target, 'ttl': 3600,
+                       'record_type': u'cname', 'view_name': u'test_view',
+                       'last_user': u'sharrell', 'zone_name': u'example.lcl',
+                       u'assignment_host': u'%d.0/25.56.168.192.in-addr.arpa.' %
+                       target} in records)
+      target += 1
+
+    self.assertTrue({'target': u'0', 'ttl': 3600, 'record_type': u'cname',
+                     'view_name': u'test_view', 'last_user': u'sharrell',
+                     'zone_name': u'example.lcl',
+                     u'assignment_host': u'0.0/25.56.168.192.in-addr.arpa.'}
+                    not in records)
+    self.assertTrue({'target': u'127', 'ttl': 3600, 'record_type': u'cname',
+                     'view_name': u'test_view', 'last_user': u'sharrell',
+                     'zone_name': u'example.lcl',
+                     u'assignment_host': u'255.0/25.56.168.192.in-addr.arpa.'}
+                    not in records)
+
+    ## test delegation records to ns2
+    target = 1
+    while( target < 63 ):
+      self.assertTrue({'target': u'%d' % target, 'ttl': 3600,
+                       'record_type': u'cname', 'view_name': u'test_view',
+                       'last_user': u'sharrell', 'zone_name': u'example2.lcl',
+                       u'assignment_host': u'%d.0/26.57.168.192.in-addr.arpa.' %
+                       target} in records)
+      target += 1
+
+    self.assertTrue({'target': u'0', 'ttl': 3600, 'record_type': u'cname',
+                     'view_name': u'test_view', 'last_user': u'sharrell',
+                     'zone_name': u'example2.lcl',
+                     u'assignment_host': u'0.0/26.57.168.192.in-addr.arpa.'}
+                    not in records)
+    self.assertTrue({'target': u'63', 'ttl': 3600, 'record_type': u'cname',
+                     'view_name': u'test_view', 'last_user': u'sharrell',
+                     'zone_name': u'example2.lcl',
+                     u'assignment_host': u'63.0/26.57.168.192.in-addr.arpa.'}
+                    not in records)
+
+    ## test delegation records to ns3
+    target = 1
+    while( target < 3 ):
+      self.assertTrue({'target': u'%d' % target, 'ttl': 3600,
+                       'record_type': u'cname', 'view_name': u'test_view',
+                       'last_user': u'sharrell', 'zone_name': u'example3.lcl',
+                       u'assignment_host': u'%d.0/30.58.168.192.in-addr.arpa.' %
+                       target} in records)
+      target += 1
+
+    self.assertTrue({'target': u'0', 'ttl': 3600, 'record_type': u'cname',
+                     'view_name': u'test_view', 'last_user': u'sharrell',
+                     'zone_name': u'example3.lcl',
+                     u'assignment_host': u'0.0/30.58.168.192.in-addr.arpa.'}
+                    not in records)
+    self.assertTrue({'target': u'3', 'ttl': 3600, 'record_type': u'cname',
+                     'view_name': u'test_view', 'last_user': u'sharrell',
+                     'zone_name': u'example3.lcl',
+                     u'assignment_host': u'3.0/30.58.168.192.in-addr.arpa.'}
+                    not in records)
+
+  def testMakeIPv4ClasslessReverseDelegatedTargetZone(self):
+    self.core_helper_instance.MakeIPv4ClasslessReverseDelegatedTargetZone(
+        u'192.168.88.5/26')
+    zones = self.core_instance.ListZones();
+    self.assertEqual(zones[u'5/26.88.168.192.in-addr.arpa'], {
+        u'any': {'zone_type': u'master', 'zone_options': u'',
+                 'zone_origin': u'5/26.88.168.192.in-addr.arpa.'}})
+
+    self.assertRaises(
+        errors.InvalidInputError,
+        self.core_helper_instance.MakeIPv4ClasslessReverseDelegatedTargetZone,
+        u'192.168.88.1/24')
+    self.assertRaises(
+        errors.InvalidInputError,
+        self.core_helper_instance.MakeIPv4ClasslessReverseDelegatedTargetZone,
+        u'192.168.88.1/33')
+    self.assertRaises(
+        errors.InvalidInputError,
+        self.core_helper_instance.MakeIPv4ClasslessReverseDelegatedTargetZone,
+        u'192.168.256.1/26')
+    self.assertRaises(
+        errors.InvalidInputError,
+        self.core_helper_instance.MakeIPv4ClasslessReverseDelegatedTargetZone,
+        u'192.168.a8.1/26')
+
+
   def testListAccessRights(self):
     self.assertEqual(self.core_helper_instance.ListAccessRights(), ['rw', 'r'])
 
