@@ -181,8 +181,8 @@ class Server(object):
     log_file_contents.append('TIMESTAMP: %s' % (
         datetime.datetime.now().isoformat()))
     log_file_contents.append('\n---------------------\n')
+    log_file_handle = open(self.log_file, 'a')
     try:
-      log_file_handle = open(self.log_file, 'a')
       log_file_handle.writelines(''.join(log_file_contents))
     finally:
       log_file_handle.close()
