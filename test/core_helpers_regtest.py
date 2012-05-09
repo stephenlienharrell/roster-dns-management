@@ -83,10 +83,10 @@ class TestCoreHelpers(unittest.TestCase):
                                 u'1.168.192.in-addr.arpa.',
                                 view_name=u'test_view')
     self.core_instance.MakeZone(u'forward_zone', u'master',
-                                u'university.edu.',
+                                u'university.lcl.',
                                 view_name=u'test_view')
     self.core_instance.MakeZone(u'forward_zone', u'master',
-                                u'university.edu.',
+                                u'university.lcl.',
                                 view_name=u'test_view3')
     self.core_instance.MakeZone(u'reverse_zone', u'master',
                                 u'1.168.192.in-addr.arpa.',
@@ -95,36 +95,36 @@ class TestCoreHelpers(unittest.TestCase):
                                 u'ipv6.net.', view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'soa', u'soa1', u'ipv6zone',
-        {u'name_server': u'ns1.university.edu.',
-         u'admin_email': u'admin.university.edu.',
+        {u'name_server': u'ns1.university.lcl.',
+         u'admin_email': u'admin.university.lcl.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'soa', u'soa2', u'forward_zone',
-        {u'name_server': u'ns1.university.edu.',
-         u'admin_email': u'admin.university.edu.',
+        {u'name_server': u'ns1.university.lcl.',
+         u'admin_email': u'admin.university.lcl.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'soa', u'soa2', u'forward_zone',
-        {u'name_server': u'ns1.university.edu.',
-         u'admin_email': u'admin.university.edu.',
+        {u'name_server': u'ns1.university.lcl.',
+         u'admin_email': u'admin.university.lcl.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view3')
     self.core_instance.MakeRecord(
         u'soa', u'soa2', u'reverse_zone',
-        {u'name_server': u'ns1.university.edu.',
-         u'admin_email': u'admin.university.edu.',
+        {u'name_server': u'ns1.university.lcl.',
+         u'admin_email': u'admin.university.lcl.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'soa', u'soa2', u'reverse_zone',
-        {u'name_server': u'ns1.university.edu.',
-         u'admin_email': u'admin.university.edu.',
+        {u'name_server': u'ns1.university.lcl.',
+         u'admin_email': u'admin.university.lcl.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view2')
@@ -161,27 +161,27 @@ class TestCoreHelpers(unittest.TestCase):
     self.core_instance.MakeRecord(u'ptr', u'8',
                                   u'reverse_zone',
                                   {u'assignment_host':
-                                      u'host6.university.edu.'},
+                                      u'host6.university.lcl.'},
                                   view_name=u'test_view')
     self.core_instance.MakeRecord(u'ptr', u'11',
                                   u'reverse_zone',
                                   {u'assignment_host':
-                                      u'host2.university.edu.'},
+                                      u'host2.university.lcl.'},
                                   view_name=u'test_view2')
     self.core_instance.MakeRecord(u'ptr', u'5',
                                   u'reverse_zone',
                                   {u'assignment_host':
-                                      u'host3.university.edu.'},
+                                      u'host3.university.lcl.'},
                                   view_name=u'test_view2')
     self.core_instance.MakeRecord(u'ptr', u'10',
                                   u'reverse_zone',
                                   {u'assignment_host':
-                                      u'host4.university.edu.'},
+                                      u'host4.university.lcl.'},
                                   view_name=u'test_view2')
     self.core_instance.MakeRecord(u'ptr', u'7',
                                   u'reverse_zone',
                                   {u'assignment_host':
-                                      u'host5.university.edu.'},
+                                      u'host5.university.lcl.'},
                                   view_name=u'test_view2')
 	
   def testMakeSubdomainDelegation(self):
@@ -221,24 +221,24 @@ class TestCoreHelpers(unittest.TestCase):
             u'drumandbass.domain.example.lcl.',	view_name=u'test_view3')
 
   def testFixHostname(self):
-    self.assertEqual(self.core_helper_instance._FixHostname(u'host', u'sub.university.edu.'),
-                     u'host.sub.university.edu.')
-    self.assertEqual(self.core_helper_instance._FixHostname(u'@', u'sub.university.edu.'),
-                     u'sub.university.edu.')
-    self.assertEqual(self.core_helper_instance._FixHostname(u'university.edu.', u'sub.university.edu.'),
-                     u'university.edu.')
+    self.assertEqual(self.core_helper_instance._FixHostname(u'host', u'sub.university.lcl.'),
+                     u'host.sub.university.lcl.')
+    self.assertEqual(self.core_helper_instance._FixHostname(u'@', u'sub.university.lcl.'),
+                     u'sub.university.lcl.')
+    self.assertEqual(self.core_helper_instance._FixHostname(u'university.lcl.', u'sub.university.lcl.'),
+                     u'university.lcl.')
 
   def testAddFormattedRecords(self):
     self.core_instance.MakeZone(u'records_zone', u'master',
-                                u'records.edu.',
+                                u'records.lcl.',
                                 view_name=u'test_view3')
     self.assertEqual(
         self.core_instance.ListRecords(zone_name=u'records_zone'),
         [])
     self.core_instance.MakeRecord(
         u'soa', u'soa1', u'records_zone',
-        {u'name_server': u'ns1.university.edu.',
-         u'admin_email': u'admin.university.edu.',
+        {u'name_server': u'ns1.university.lcl.',
+         u'admin_email': u'admin.university.lcl.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view3')
@@ -256,18 +256,18 @@ class TestCoreHelpers(unittest.TestCase):
         self.core_instance.ListRecords(zone_name=u'records_zone'),
         [{u'serial_number': 3, u'refresh_seconds': 5,
           'target': u'soa1',
-          u'name_server': u'ns1.university.edu.',
+          u'name_server': u'ns1.university.lcl.',
           u'retry_seconds': 5, 'ttl': 3600,
           u'minimum_seconds': 5, 'record_type': u'soa',
           'view_name': u'test_view3', 'last_user': u'sharrell',
           'zone_name': u'records_zone',
-          u'admin_email': u'admin.university.edu.',
+          u'admin_email': u'admin.university.lcl.',
           u'expiry_seconds': 5},
-         {'target': u'university.edu', u'weight': 5, 'ttl': 0,
+         {'target': u'university.lcl', u'weight': 5, 'ttl': 0,
           u'priority': 0, 'record_type': u'srv',
           'view_name': u'test_view3', 'last_user': u'sharrell',
           'zone_name': u'records_zone',
-          u'assignment_host': u'test.sub.university.edu.',
+          u'assignment_host': u'test.sub.university.lcl.',
           u'port': 80},
          {'target': u'desktop-1', 'ttl': 0, 'record_type': u'a',
           'view_name': u'test_view3', 'last_user': u'sharrell',
@@ -280,7 +280,7 @@ class TestCoreHelpers(unittest.TestCase):
          {'target': u'www', 'ttl': 0, 'record_type': u'cname',
           'view_name': u'test_view3', 'last_user': u'sharrell',
           'zone_name': u'records_zone',
-          u'assignment_host': u'sub.university.edu.'},
+          u'assignment_host': u'sub.university.lcl.'},
          {'target': u'ns', 'ttl': 0, 'record_type': u'a',
           'view_name': u'test_view3', 'last_user': u'sharrell',
           'zone_name': u'records_zone',
@@ -288,7 +288,7 @@ class TestCoreHelpers(unittest.TestCase):
          {'target': u'www.data', 'ttl': 0,
           'record_type': u'cname', 'view_name': u'test_view3',
           'last_user': u'sharrell', 'zone_name': u'records_zone',
-          u'assignment_host': u'ns.university.edu.'},
+          u'assignment_host': u'ns.university.lcl.'},
          {'target': u'mail1', 'ttl': 0, 'record_type': u'a',
           'view_name': u'test_view3', 'last_user': u'sharrell',
           'zone_name': u'records_zone',
@@ -301,78 +301,78 @@ class TestCoreHelpers(unittest.TestCase):
   def testGetAssociatedCNAMEs(self):
     self.core_instance.MakeRecord(
         u'cname', u'cname_host2', u'forward_zone',
-        {u'assignment_host': u'host2.university.edu.'},
+        {u'assignment_host': u'host2.university.lcl.'},
         view_name=u'test_view3')
     self.core_instance.MakeRecord(
         u'cname', u'cname2_host2', u'forward_zone',
-        {u'assignment_host': u'host2.university.edu.'},
+        {u'assignment_host': u'host2.university.lcl.'},
         view_name=u'test_view3')
     self.core_instance.MakeRecord(
         u'cname', u'fry0', u'forward_zone',
-        {u'assignment_host': u'host1.university.edu.'},
+        {u'assignment_host': u'host1.university.lcl.'},
         view_name=u'test_view3')
     self.core_instance.MakeRecord(
         u'cname', u'bender', u'forward_zone',
-        {u'assignment_host': u'host6.university.edu.'},
+        {u'assignment_host': u'host6.university.lcl.'},
         view_name=u'test_view')
     self.core_instance.MakeRecord(
         u'cname', u'bender2', u'forward_zone',
-        {u'assignment_host': u'bender.university.edu.'},
+        {u'assignment_host': u'bender.university.lcl.'},
         view_name=u'test_view')
     self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
-        u'host2.university.edu.', u'test_view3', u'forward_zone'),
+        u'host2.university.lcl.', u'test_view3', u'forward_zone'),
         [{'target': u'cname_host2', 'ttl': 3600, 'record_type': u'cname',
           'view_name': u'test_view3', 'last_user': u'sharrell',
           'zone_name': u'forward_zone',
-          'assignment_host': u'host2.university.edu.',
-          'zone_origin': u'university.edu.'},
+          'assignment_host': u'host2.university.lcl.',
+          'zone_origin': u'university.lcl.'},
          {'target': u'cname2_host2', 'ttl': 3600, 'record_type': u'cname',
           'view_name': u'test_view3', 'last_user': u'sharrell',
           'zone_name': u'forward_zone',
-          'assignment_host': u'host2.university.edu.',
-          'zone_origin': u'university.edu.'}])
+          'assignment_host': u'host2.university.lcl.',
+          'zone_origin': u'university.lcl.'}])
     self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
-        u'host6.university.edu.', u'test_view3', u'forward_zone'),
+        u'host6.university.lcl.', u'test_view3', u'forward_zone'),
         [])
     self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
-        u'unknownhost.university.edu.', u'test_view3', u'forward_zone'),
+        u'unknownhost.university.lcl.', u'test_view3', u'forward_zone'),
         [])
     self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
-        u'host6.university.edu.', u'test_view', u'forward_zone'),
+        u'host6.university.lcl.', u'test_view', u'forward_zone'),
         [{'target': u'bender', 'ttl': 3600, 'record_type': u'cname',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone',
-          'assignment_host': u'host6.university.edu.',
-          'zone_origin': u'university.edu.'}])
+          'assignment_host': u'host6.university.lcl.',
+          'zone_origin': u'university.lcl.'}])
     self.assertEqual(self.core_helper_instance.GetAssociatedCNAMEs(
-        u'host6.university.edu.', u'test_view', u'forward_zone',
+        u'host6.university.lcl.', u'test_view', u'forward_zone',
         recursive=True),
         [{'target': u'bender', 'ttl': 3600, 'record_type': u'cname',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone',
-          'assignment_host': u'host6.university.edu.',
-          'zone_origin': u'university.edu.'},
+          'assignment_host': u'host6.university.lcl.',
+          'zone_origin': u'university.lcl.'},
          {'target': u'bender2', 'ttl': 3600, 'record_type': u'cname',
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'forward_zone',
-          'assignment_host': u'bender.university.edu.',
-          'zone_origin': u'university.edu.'}])
+          'assignment_host': u'bender.university.lcl.',
+          'zone_origin': u'university.lcl.'}])
     # 100 CNAMEs pointing to the same host
     for i in range(100):
       self.core_instance.MakeRecord(
           u'cname', u'loop%d' % i, u'forward_zone',
-          {u'assignment_host': u'host6.university.edu.'},
+          {u'assignment_host': u'host6.university.lcl.'},
           view_name=u'test_view')
     self.assertEqual(len(self.core_helper_instance.GetAssociatedCNAMEs(
-        u'host6.university.edu.', u'test_view', u'forward_zone')), 101)
+        u'host6.university.lcl.', u'test_view', u'forward_zone')), 101)
     # 100 CNAMEs recursively pointing to each other pointing to one host
     for i in range(100):
       self.core_instance.MakeRecord(
           u'cname', u'fry%d' % (i + 1), u'forward_zone',
-          {u'assignment_host': u'fry%d.university.edu.' % i},
+          {u'assignment_host': u'fry%d.university.lcl.' % i},
           view_name=u'test_view3')
     self.assertEqual(len(self.core_helper_instance.GetAssociatedCNAMEs(
-        u'host1.university.edu.', u'test_view3', u'forward_zone',
+        u'host1.university.lcl.', u'test_view3', u'forward_zone',
         recursive=True)), 101)
 
   def testListRecordByIPAddress(self):
@@ -383,7 +383,7 @@ class TestCoreHelpers(unittest.TestCase):
       {u'test_view3': {u'192.168.1.17':
           [{'record_ttl': 3600,
           'record_last_user': u'sharrell',
-          u'host': u'host5.university.edu',
+          u'host': u'host5.university.lcl',
           u'forward': True,
           'record_type': u'a',
           u'view_name': u'test_view3',
@@ -391,14 +391,14 @@ class TestCoreHelpers(unittest.TestCase):
           u'record_args_dict': {'assignment_ip': u'192.168.1.17'},
           'record_target': u'host5',
           'record_zone_name': u'forward_zone',
-          u'zone_origin': u'university.edu.',
+          u'zone_origin': u'university.lcl.',
           'record_view_dependency': u'test_view3_dep'}]}})
     self.assertEqual(self.core_helper_instance.ListRecordsByCIDRBlock(
         u'192.168.1.7', view_name=u'test_view2'),
         {u'test_view2': {u'192.168.1.7':
             [{'record_ttl': 3600,
             'record_last_user': u'sharrell',
-            u'host': u'host5.university.edu',
+            u'host': u'host5.university.lcl',
             u'forward': False,
             'record_type': u'ptr',
             u'view_name': u'test_view2',
@@ -437,7 +437,7 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(len(returned_dict[u'test_view'][u'192.168.1.8']), 2)
     self.assertTrue(
         { u'forward': False,
-          u'host': u'host6.university.edu',
+          u'host': u'host6.university.lcl',
           u'record_args_dict': { 'assignment_ip': u'192.168.1.8'},
           'record_last_user': u'sharrell',
           'record_target': u'8',
@@ -451,7 +451,7 @@ class TestCoreHelpers(unittest.TestCase):
         returned_dict[u'test_view'][u'192.168.1.8'])
     self.assertTrue(
         { u'forward': True,
-          u'host': u'host6.university.edu',
+          u'host': u'host6.university.lcl',
           u'record_args_dict': { 'assignment_ip': u'192.168.1.8'},
           'record_last_user': u'sharrell',
           'record_target': u'host6',
@@ -461,7 +461,7 @@ class TestCoreHelpers(unittest.TestCase):
           'record_zone_name': u'forward_zone',
           'records_id': 15,
           u'view_name': u'test_view',
-          u'zone_origin': u'university.edu.'} in
+          u'zone_origin': u'university.lcl.'} in
         returned_dict[u'test_view'][u'192.168.1.8'])
 
   def testListRecordsByCIDRBlock(self):
@@ -478,7 +478,7 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertTrue(len(returned_dict[u'test_view3'][u'192.168.1.5']), 1)
     self.assertTrue(
         { u'forward': False,
-          u'host': u'host5.university.edu',
+          u'host': u'host5.university.lcl',
           u'record_args_dict': { 'assignment_ip': u'192.168.1.7'},
           'record_last_user': u'sharrell',
           'record_target': u'7',
@@ -492,7 +492,7 @@ class TestCoreHelpers(unittest.TestCase):
         returned_dict[u'test_view2'][u'192.168.1.7'])
     self.assertTrue(
         { u'forward': False,
-          u'host': u'host3.university.edu',
+          u'host': u'host3.university.lcl',
           u'record_args_dict': { 'assignment_ip': u'192.168.1.5'},
           'record_last_user': u'sharrell',
           'record_target': u'5',
@@ -506,7 +506,7 @@ class TestCoreHelpers(unittest.TestCase):
         returned_dict[u'test_view2'][u'192.168.1.5'])
     self.assertTrue(
         { u'forward': True,
-          u'host': u'host3.university.edu',
+          u'host': u'host3.university.lcl',
           u'record_args_dict': { 'assignment_ip': u'192.168.1.5'},
           'record_last_user': u'sharrell',
           'record_target': u'host3',
@@ -516,7 +516,7 @@ class TestCoreHelpers(unittest.TestCase):
           'record_zone_name': u'forward_zone',
           'records_id': 12,
           u'view_name': u'test_view3',
-          u'zone_origin': u'university.edu.'} in
+          u'zone_origin': u'university.lcl.'} in
         returned_dict[u'test_view3'][u'192.168.1.5'])
 
     returned_dict = self.core_helper_instance.ListRecordsByCIDRBlock(
@@ -941,36 +941,36 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(self.core_instance.ListRecords(record_type=u'cname'), [])
     self.core_instance.MakeRecord(
         u'cname', u'cname_host2', u'forward_zone',
-        {u'assignment_host': u'host2.university.edu.'},
+        {u'assignment_host': u'host2.university.lcl.'},
         view_name=u'test_view3')
     self.core_instance.MakeRecord(
         u'cname', u'cname2_host2', u'forward_zone',
-        {u'assignment_host': u'host2.university.edu.'},
+        {u'assignment_host': u'host2.university.lcl.'},
         view_name=u'test_view3')
     self.core_instance.MakeRecord(
         u'cname', u'cname3_host2', u'forward_zone',
-        {u'assignment_host': u'host1.university.edu.'},
+        {u'assignment_host': u'host1.university.lcl.'},
         view_name=u'test_view3')
     self.assertEqual(self.core_instance.ListRecords(record_type=u'cname'),
                      [{'target': u'cname_host2', 'ttl': 3600,
                        'record_type': u'cname', 'view_name': u'test_view3',
                        'last_user': u'sharrell', 'zone_name': u'forward_zone',
-                       u'assignment_host': u'host2.university.edu.'},
+                       u'assignment_host': u'host2.university.lcl.'},
                       {'target': u'cname2_host2', 'ttl': 3600,
                        'record_type': u'cname', 'view_name': u'test_view3',
                        'last_user': u'sharrell', 'zone_name': u'forward_zone',
-                       u'assignment_host': u'host2.university.edu.'},
+                       u'assignment_host': u'host2.university.lcl.'},
                       {'target': u'cname3_host2', 'ttl': 3600,
                        'record_type': u'cname', 'view_name': u'test_view3',
                        'last_user': u'sharrell', 'zone_name': u'forward_zone',
-                       u'assignment_host': u'host1.university.edu.'}])
+                       u'assignment_host': u'host1.university.lcl.'}])
     self.core_helper_instance.RemoveCNamesByAssignmentHost(
-        u'host2.university.edu.', u'test_view3', u'forward_zone')
+        u'host2.university.lcl.', u'test_view3', u'forward_zone')
     self.assertEqual(self.core_instance.ListRecords(record_type=u'cname'),
                      [{'target': u'cname3_host2', 'ttl': 3600,
                        'record_type': u'cname', 'view_name': u'test_view3',
                        'last_user': u'sharrell', 'zone_name': u'forward_zone',
-                       u'assignment_host': u'host1.university.edu.'}])
+                       u'assignment_host': u'host1.university.lcl.'}])
 
   def testProcessRecordsBatch(self):
     self.assertEqual(
@@ -1009,11 +1009,11 @@ class TestCoreHelpers(unittest.TestCase):
                  u'4321:0000:0001:0002:0003:0004:0567:89ab'},
              'record_view_dependency': u'test_view'}])
     self.core_instance.MakeRecord(
-        u'cname', u'university_edu', u'forward_zone',
-        {u'assignment_host': u'blah.university.edu.'}, view_name=u'test_view')
+        u'cname', u'university_lcl', u'forward_zone',
+        {u'assignment_host': u'blah.university.lcl.'}, view_name=u'test_view')
     self.assertRaises(errors.RecordsBatchError,
         self.core_helper_instance.ProcessRecordsBatch, add_records=[
-          {'record_type': u'a', 'record_target': u'university_edu',
+          {'record_type': u'a', 'record_target': u'university_lcl',
             'record_zone_name': u'forward_zone',
             'record_arguments': {u'assignment_ip': u'192.168.1.1'},
           'record_view_dependency': u'test_view'}])
