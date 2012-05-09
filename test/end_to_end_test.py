@@ -69,7 +69,7 @@ CHECKZONE_EXEC = '/usr/sbin/named-checkzone'
 CHECKCONF_EXEC = '/usr/sbin/named-checkconf'
 #SSH
 SSH_ID = 'test_data/roster_id_dsa'
-SSH_USER = getpass.getuser()
+SSH_USER = 'root'
 TEST_DNS_SERVER = u'localhost' # change this to real bind servers
 TEST_DNS_SERVER2 = u'testns2'
 RNDC_KEY = 'test_data/rndc.key'
@@ -228,7 +228,7 @@ class TestComplete(unittest.TestCase):
       config.set('fakeldap','binddn',self.binddn)
       config.set('fakeldap','server',self.ldap)
     config.set('credentials','authentication_method','fakeldap')
-    config.set('server','lock_file','./roster_lock_file')
+    config.set('server','lock_file','/tmp/roster_lock_file')
     config.set('server','server_killswitch','off')
     config.set('server','port',self.port)
     handle = open(self.userconfig,'w')
@@ -3001,9 +3001,9 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(output,
         'Connecting to "%s"\n'
         '[%s@%s] out: server reload successful\r\n'
-        'Disconnecting from %s... done.\n' % (
+        'Disconnecting from %s@%s... done.\n' % (
             TEST_DNS_SERVER, SSH_USER, TEST_DNS_SERVER,
-            TEST_DNS_SERVER))
+            SSH_USER, TEST_DNS_SERVER))
     command.close()
     ## dnsmkzone forward -z sub.university.edu -v test_view -t master --origin sub.university.edu.
     command_string = (

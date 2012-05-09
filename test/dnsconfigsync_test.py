@@ -37,6 +37,10 @@ In order to restart bind for this unittest on Ubuntu, make sure
 I added "/home/dcfritz/** r," under the "/usr/sbin/named {" section
 
 DO NOT EVER RUN THIS TEST AGAINST A PRODUCTION DATABASE.
+
+This test needs apparmor and selinux either disabled or reconfigured
+
+This test requires BIND 9.9 with dig 9.9
 """
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'

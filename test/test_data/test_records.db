@@ -1,8 +1,8 @@
-university.edu IN SRV 0 5 80 test.sub.university.edu.
-www       IN  CNAME sub.university.edu.
+university.lcl IN SRV 0 5 80 test.sub.university.lcl.
+www       IN  CNAME sub.university.lcl.
 desktop-1 IN  A     192.168.1.100
 mail1     IN  A     192.168.1.101
 mail2     IN  A     192.168.1.102
 ns        IN  A     192.168.1.103
-www.data  IN  CNAME ns.university.edu.
+www.data  IN  CNAME ns.university.lcl.
 ns2       IN  A     192.168.1.104

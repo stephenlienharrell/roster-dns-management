@@ -1960,7 +1960,7 @@ class TestTreeExporter(unittest.TestCase):
         self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
             self.data[0], u'external_dns'))
     self.assertEqual(
-        global_options_external, (
+        global_options_external,
             u'include "/etc/rndc.key";\n'
             'logging { category "update-security" { "security"; };\n'
             'category "queries" { "query_logging"; };\n'
@@ -1972,12 +1972,12 @@ class TestTreeExporter(unittest.TestCase):
             'options { directory "/var/domain";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
-            'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
+            'controls { inet * allow { control-hosts; } keys { rndc-key; }; };')
     global_options_private = (
         self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
             self.data[0], u'private_dns'))
     self.assertEqual(
-        global_options_private, (
+        global_options_private,
             u'include "/etc/rndc.key";\n'
             'logging { category "update-security" { "security"; };\n'
             'category "queries" { "query_logging"; };\n'
@@ -1989,7 +1989,7 @@ class TestTreeExporter(unittest.TestCase):
             'options { directory "/var/domain";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
-            'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
+            'controls { inet * allow { control-hosts; } keys { rndc-key; }; };')
 
   def testTreeExporterExpportAllBindTrees(self):
     self.core_instance.SetMaintenanceFlag(1)
@@ -2295,7 +2295,7 @@ class TestTreeExporter(unittest.TestCase):
         '*/\n'
         'otherstanza{\n'
         '\tstuff\n'
-        '}\n'
+        '};\n'
         'options {\n'
         '\tdirectory "/var/domain";\n'
         '\trecursion no;\n'
@@ -2347,7 +2347,7 @@ class TestTreeExporter(unittest.TestCase):
         '*/\n'
         'otherstanza{\n'
         '\tstuff\n'
-        '}\n' # No options stanza
+        '};\n' # No options stanza
         'logging {\n'
         '\tchannel "security" {\n'
         '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
@@ -2392,7 +2392,7 @@ class TestTreeExporter(unittest.TestCase):
         '*/\n'
         'otherstanza{\n'
         '\tstuff\n'
-        '}\n'
+        '};\n'
         'options {\n'
         '};\n\n'
         'logging {\n'
@@ -2429,7 +2429,7 @@ class TestTreeExporter(unittest.TestCase):
     header_string = (  ## The string was arbitrarily chosen.
         'otherstanza{\n'
         '\tstuff\n'
-        '}\n'
+        '};\n'
         'logging {\n'
         '\tchannel "security" {\n'
         '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'

@@ -1,14 +1,14 @@
 $ORIGIN 8.0.e.f.f.3.ip6.arpa.
 $TTL		86400
-@	in	soa	ns.university.edu. hostmaster.university.edu. (
+@	in	soa	ns.university.lcl. hostmaster.university.lcl. (
 				4	; serial
 				10800	; refresh 3 hours
 				3600	; retry	  1 hour
 				3600000 ; expire  1000 hours
 				86400 )	; minimum 24 hours
-	in	ns	ns.university.edu.
-	in	ns	ns2.university.edu.
+	in	ns	ns.university.lcl.
+	in	ns	ns2.university.lcl.
 
 
-2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0	in	ptr	router.university.edu.
-0.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0	in	ptr	desktop-1.university.edu.
+2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0	in	ptr	router.university.lcl.
+0.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0	in	ptr	desktop-1.university.lcl.
