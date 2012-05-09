@@ -887,8 +887,6 @@ class CoreHelpers(object):
     Outputs:
       list: list of dictionarires from ListNamedConfGlobalOptions
     """
-    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
-    self.user_instance.Authorize(function_name)
     success = False
     named_conf_global_options = None
 
