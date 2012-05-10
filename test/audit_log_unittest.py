@@ -93,10 +93,14 @@ class TestAuditLog(unittest.TestCase):
     self.audit_log_instance._LogToSyslog(unittest_string)
     found = False
     for syslogfile in SYSLOG:
-      lines = open(syslogfile, 'r').readlines()
+      try:
+        lines = open(syslogfile, 'r').readlines()
+      except:
+        continue
       for line in lines:
         if( line.endswith('dnsManagement: %s' % unittest_string) != -1):
           found = True
+          break
     if( not found ):
       self.fail()
 
@@ -106,10 +110,14 @@ class TestAuditLog(unittest.TestCase):
         'ASCII', 'replace')
     found = False
     for syslogfile in SYSLOG:
-      lines = open(syslogfile, 'r').readlines()
+      try:
+        lines = open(syslogfile, 'r').readlines()
+      except:
+        continue
       for line in lines:
         if( line.endswith('dnsManagement: %s' % unittest_string) != -1):
           found = True
+          break
     if( not found ):
       self.fail()
 
