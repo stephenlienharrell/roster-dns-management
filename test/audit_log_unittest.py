@@ -57,8 +57,7 @@ SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TEMP_LOG = 'temp_log'
 # Change SYSLOG according to your distribution and specific version
-SYSLOG = '/var/log/messages'
-#SYSLOG = '/var/log/syslog'
+SYSLOG = ['/var/log/messages', '/var/log/syslog']
 
 class TestAuditLog(unittest.TestCase):
 
@@ -92,22 +91,26 @@ class TestAuditLog(unittest.TestCase):
     current_time = time.time()
     unittest_string = 'unittest %s' % current_time
     self.audit_log_instance._LogToSyslog(unittest_string)
-    lines = open(SYSLOG, 'r').readlines()
-    for line in lines:
-      if( line.endswith('dnsManagement: %s' % unittest_string) != -1):
-        break
-    else:
+    found = False
+    for syslogfile in SYSLOG:
+      lines = open(syslogfile, 'r').readlines()
+      for line in lines:
+        if( line.endswith('dnsManagement: %s' % unittest_string) != -1):
+          found = True
+    if( not found ):
       self.fail()
 
     unittest_string = u'unicode \xc6 unittest %s' % current_time
     self.audit_log_instance._LogToSyslog(unittest_string)
     unittest_string = unicodedata.normalize('NFKD', unittest_string).encode(
         'ASCII', 'replace')
-    lines = open(SYSLOG, 'r').readlines()
-    for line in lines:
-      if( line.endswith('dnsManagement: %s' % unittest_string) != -1):
-        break
-    else:
+    found = False
+    for syslogfile in SYSLOG:
+      lines = open(syslogfile, 'r').readlines()
+      for line in lines:
+        if( line.endswith('dnsManagement: %s' % unittest_string) != -1):
+          found = True
+    if( not found ):
       self.fail()
 
   def testLogToDatabase(self):

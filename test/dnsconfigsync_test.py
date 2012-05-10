@@ -79,6 +79,21 @@ NS_IP_ADDRESS = '127.0.0.1'
 NS_DOMAIN = '' #Blank since using localhost
 NAMEDPID_FILE = '/var/run/named/named.pid'
 SESSION_KEYFILE = 'test_data/session.key'
+RNDC_CONF_DATA = ('# Start of rndc.conf\n'
+                  'key "rndc-key" {\n'
+                  '    algorithm hmac-md5;\n'
+                  '      secret "yTB86M+Ai8vKJYGYo2ossQ==";\n'
+                  '};\n\n'
+                  'options {\n'
+                  '    default-key "rndc-key";\n'
+                  '      default-server 127.0.0.1;\n'
+                  '};\n')
+RNDC_KEY_DATA = ('key "rndc-key" {\n'
+                 '   algorithm hmac-md5;\n'
+                 '   secret "yTB86M+Ai8vKJYGYo2ossQ==";\n'
+                 ' };')
+RNDC_CONF = 'test_data/rndc.conf'
+RNDC_KEY = 'test_data/rndc.key'
 
 
 class TestCheckConfig(unittest.TestCase):
@@ -89,10 +104,18 @@ class TestCheckConfig(unittest.TestCase):
       addr, port = s.getsockname()
       s.close()
       return port
-    self.PORT = PickUnusedPort()
+    self.port = PickUnusedPort()
     self.rndc_port = PickUnusedPort()
-    while( self.rndc_port == self.PORT ):
+    while( self.rndc_port == self.port ):
       self.rndc_port = PickUnusedPort()
+
+    rndc_key = open(RNDC_KEY, 'w')
+    rndc_key.write(RNDC_KEY_DATA)
+    rndc_key.close()
+    rndc_conf = open(RNDC_CONF, 'w')
+    rndc_conf.write(RNDC_CONF_DATA)
+    rndc_conf.close()
+
     fabric_api.env.warn_only = True
     fabric_state.output['everything'] = False
     fabric_state.output['warnings'] = False
@@ -123,14 +146,14 @@ class TestCheckConfig(unittest.TestCase):
 
   def tearDown(self):
     fabric_api.local('killall named', capture=True)
-    os.remove('%s/named.conf' % self.named_dir)
     fabric_network.disconnect_all()
+    time.sleep(1) # Wait for disk to settle
+    if( os.path.exists(self.named_dir) ):
+      shutil.rmtree(self.named_dir)
     if( os.path.exists('backup') ):
       shutil.rmtree('backup')
     if( os.path.exists('test_data/backup_dir') ):
       shutil.rmtree('test_data/backup_dir')
-    if( os.path.exists(self.named_dir) ):
-      shutil.rmtree(self.named_dir)
     if( os.path.exists('roster_lock_file') ):
       os.remove('roster_lock_file')
 
@@ -171,13 +194,13 @@ class TestCheckConfig(unittest.TestCase):
     named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
     # Start named
     out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %s/named.conf' % (
-        self.PORT, SSH_USER, self.named_dir), capture=True)
+        self.port, SSH_USER, self.named_dir), capture=True)
     time.sleep(2)
 
     command = os.popen(
         'python %s --rndc-key test_data/rndc.key --rndc-port %s -u %s '
-        '--ssh-id %s --config-file %s' % (
-            EXEC, self.rndc_port, SSH_USER, SSH_ID, CONFIG_FILE))
+        '--ssh-id %s --config-file %s --rndc-port %s' % (
+            EXEC, self.rndc_port, SSH_USER, SSH_ID, CONFIG_FILE, self.rndc_port))
     lines = command.read().split('\n')
     # These lines will likely need changed depending on implementation
     self.assertTrue('Connecting to "%s"' % TEST_DNS_SERVER in lines)
@@ -210,8 +233,9 @@ class TestCheckConfig(unittest.TestCase):
       pass
 
     command = os.popen('dig @%s%s mail1.sub.university.lcl -p %s' % (
-        TEST_DNS_SERVER, NS_DOMAIN, self.PORT))
+        TEST_DNS_SERVER, NS_DOMAIN, self.port))
     lines = ''.join(command.read()).split('\n')
+
     testlines = (
         '\n'
         '%s\n'
@@ -243,7 +267,7 @@ class TestCheckConfig(unittest.TestCase):
         '%s\n'
         ';; MSG SIZE  rcvd: 136\n'
         '\n' % (lines[1], lines[3], lines[5], lines[24], NS_IP_ADDRESS,
-            self.PORT, NS_IP_ADDRESS, lines[26]))
+            self.port, NS_IP_ADDRESS, lines[26]))
     lines = '\n'.join(lines)
     self.assertEqual(set(lines.split()), set(testlines.split()))
     command.close()

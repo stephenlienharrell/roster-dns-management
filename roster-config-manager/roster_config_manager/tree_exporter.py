@@ -88,10 +88,13 @@ class BindTreeExport(object):
     self.root_config_dir = config_instance.config_file['exporter'][
         'root_config_dir']
     if( directory ):
-      self.named_dir = directory
+      self.named_dir = os.path.abspath(os.path.expanduser(
+          directory))
     else:
-      self.named_dir = config_instance.config_file['exporter']['named_dir']
-    self.backup_dir = config_instance.config_file['exporter']['backup_dir']
+      self.named_dir = os.path.abspath(os.path.expanduser(
+          config_instance.config_file['exporter']['named_dir']))
+    self.backup_dir = os.path.abspath(os.path.expanduser(
+        config_instance.config_file['exporter']['backup_dir']))
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
 

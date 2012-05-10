@@ -69,12 +69,26 @@ CHECKZONE_EXEC = '/usr/sbin/named-checkzone'
 CHECKCONF_EXEC = '/usr/sbin/named-checkconf'
 #SSH
 SSH_ID = 'test_data/roster_id_dsa'
-SSH_USER = 'root'
+SSH_USER = getpass.getuser()
 TEST_DNS_SERVER = u'localhost' # change this to real bind servers
 TEST_DNS_SERVER2 = u'testns2'
-RNDC_KEY = 'test_data/rndc.key'
 SESSION_KEYFILE = 'test_data/session.key'
-
+LOCKFILE = '/tmp/roster_lock_file'
+RNDC_CONF_DATA = ('# Start of rndc.conf\n'
+                  'key "rndc-key" {\n'
+                  '    algorithm hmac-md5;\n'
+                  '      secret "yTB86M+Ai8vKJYGYo2ossQ==";\n'
+                  '};\n\n'
+                  'options {\n'
+                  '    default-key "rndc-key";\n'
+                  '      default-server 127.0.0.1;\n'
+                  '};\n')
+RNDC_KEY_DATA = ('key "rndc-key" {\n'
+                 '   algorithm hmac-md5;\n'
+                 '   secret "yTB86M+Ai8vKJYGYo2ossQ==";\n'
+                 ' };')
+RNDC_CONF = 'test_data/rndc.conf'
+RNDC_KEY = 'test_data/rndc.key'
 
 class InitThread(threading.Thread):
   def __init__(self):
@@ -92,6 +106,13 @@ class InitThread(threading.Thread):
 class TestComplete(unittest.TestCase):
 
   def setUp(self):
+    rndc_key = open(RNDC_KEY, 'w')
+    rndc_key.write(RNDC_KEY_DATA)
+    rndc_key.close()
+    rndc_conf = open(RNDC_CONF, 'w')
+    rndc_conf.write(RNDC_CONF_DATA)
+    rndc_conf.close()
+
     config = ConfigParser.ConfigParser()
     config.read(UNITTEST_CONFIG)
     self.login = config.get('database','login')
@@ -119,6 +140,8 @@ class TestComplete(unittest.TestCase):
     self.named_port = PickUnusedPort()
     self.server_name = 'https://%s:%s' % (HOST, self.port)
     self.named_dir = config.get('exporter', 'named_dir')
+    if( not os.path.exists(self.named_dir) ):
+      os.mkdir(self.named_dir)
 
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
@@ -136,9 +159,6 @@ class TestComplete(unittest.TestCase):
     if( os.path.exists(self.root_config_dir) ):
       shutil.rmtree(self.root_config_dir)
     ## kill rosterd deamon threads
-    config = ConfigParser.ConfigParser()
-    config.read(UNITTEST_CONFIG)
-    LOCKFILE = config.get('server','lock_file')
     if( os.path.exists(LOCKFILE) ):
       os.remove(LOCKFILE)
 
@@ -228,7 +248,7 @@ class TestComplete(unittest.TestCase):
       config.set('fakeldap','binddn',self.binddn)
       config.set('fakeldap','server',self.ldap)
     config.set('credentials','authentication_method','fakeldap')
-    config.set('server','lock_file','/tmp/roster_lock_file')
+    config.set('server','lock_file', LOCKFILE)
     config.set('server','server_killswitch','off')
     config.set('server','port',self.port)
     handle = open(self.userconfig,'w')
@@ -2614,8 +2634,8 @@ class TestComplete(unittest.TestCase):
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
-    self.assertEqual(command.read(),
-        'View:       test_view\n'
+    self.assertEqual(set(command.read().split('\n')),
+        set('View:       test_view\n'
         '192.168.2.0 Reverse   university.edu                  test_zone3 test_view\n'
         '192.168.2.0 Forward   @.university.edu                test_zone  test_view\n'
         #'192.168.2.1 Reverse   university.edu                  test_zone3 test_view\n'
@@ -2637,7 +2657,7 @@ class TestComplete(unittest.TestCase):
         '192.168.2.5 --        --                              --         --\n'
         '192.168.2.6 --        --                              --         --\n'
         #'192.168.2.6 Reverse   university.edu                  test_zone3 any\n'
-        '192.168.2.7 --        --                              --         --\n\n')
+        '192.168.2.7 --        --                              --         --\n\n'.split('\n')))
     command.close()
 
 
@@ -2998,12 +3018,12 @@ class TestComplete(unittest.TestCase):
     output = command.read()
     output = re.sub('\d+\s','',output)
     output = re.sub('\d+\.','',output)
-    self.assertEqual(output,
+    # Below we remove the last "Disconnecting" line since the text
+    # can vary depending on operating system
+    self.assertEqual(output.split("Disconnecting")[0],
         'Connecting to "%s"\n'
-        '[%s@%s] out: server reload successful\r\n'
-        'Disconnecting from %s@%s... done.\n' % (
-            TEST_DNS_SERVER, SSH_USER, TEST_DNS_SERVER,
-            SSH_USER, TEST_DNS_SERVER))
+        '[%s@%s] out: server reload successful\r\n' % (
+            TEST_DNS_SERVER, SSH_USER, TEST_DNS_SERVER))
     command.close()
     ## dnsmkzone forward -z sub.university.edu -v test_view -t master --origin sub.university.edu.
     command_string = (
@@ -3039,8 +3059,8 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         '')
     command.close()
-    os.rename('%s/full_database_dump-145.bz2' % self.backup_dir,'%s/origdb.bz2' % self.backup_dir)
-    dbdump = glob.glob('%s/*-144.*' % self.backup_dir)
+    os.rename('%s/full_database_dump-141.bz2' % self.backup_dir,'%s/origdb.bz2' % self.backup_dir)
+    dbdump = glob.glob('%s/*-141.*' % self.backup_dir)
     for db in dbdump:
       if( os.path.exists(db) ):
         os.remove(db)
@@ -3049,15 +3069,15 @@ class TestComplete(unittest.TestCase):
     command_string = (
         'python ../roster-config-manager/scripts/dnsrecover '
         ' -i %s '
-        '-u %s --config-file %s ' % (145,
+        '-u %s --config-file %s ' % (141,
             USERNAME, self.userconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-      'Loading database from backup with ID 142\n'
-      'Replaying action with id 143: MakeZone\n'
+      'Loading database from backup with ID 138\n'
+      'Replaying action with id 139: MakeZone\n'
       'with arguments: [u\'sub.university.edu\', u\'master\', '
       'u\'sub.university.edu.\', u\'test_view\', None, True]\n'
-      'Replaying action with id 144: ProcessRecordsBatch\n'
+      'Replaying action with id 140: ProcessRecordsBatch\n'
       'with arguments: [[], [{u\'record_arguments\': '
       '{u\'refresh_seconds\': 10800L, u\'expiry_seconds\': 3600000L, '
       'u\'name_server\': u\'ns.university.lcl.\', '
@@ -3149,7 +3169,7 @@ class TestComplete(unittest.TestCase):
         ' ', origdump)
     origdb.close()
 
-    newdb = bz2.BZ2File('%s/full_database_dump-148.bz2' % self.backup_dir)
+    newdb = bz2.BZ2File('%s/full_database_dump-144.bz2' % self.backup_dir)
     newdump = newdb.read()
     newdump = re.sub(
         '[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}',
@@ -3159,7 +3179,7 @@ class TestComplete(unittest.TestCase):
     for line in newdump.split('\n'):
       if( line.startswith('INSERT INTO audit_log') ):
         number = int(line.split()[5].strip('(').strip(',').strip())
-        if( number < 145 ):
+        if( number < 141 ):
           newdump_list.append(line)
       else:
         newdump_list.append(line)

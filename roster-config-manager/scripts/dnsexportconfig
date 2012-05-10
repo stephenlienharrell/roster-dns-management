@@ -130,6 +130,9 @@ def main(args):
   parser.add_option('--rndc-conf', action='store', dest='rndc_conf',
                     help='(dnsconfigsync)Rndc conf file.',
                     metavar='<rndc-conf>', default=None)
+  parser.add_option('--rndc-port', action='store', dest='rndc_port',
+                    help='Rndc communication port.', metavar='<rndc-port>',
+                    default=None)
   parser.add_option('--ssh-exec', action='store', dest='ssh_exec',
                     help='(dnsconfigsync)SSH executable location.',
                     metavar='<ssh-exec>', default=None)
@@ -196,6 +199,8 @@ def main(args):
     sys.exit(config_return)
   
   dnsconfigsync_array = [options.config_sync]
+  if( options.rndc_port ):
+    dnsconfigsync_array.extend(['--rndc-port', options.rndc_port])
   if( options.config_file ):
     dnsconfigsync_array.extend(['--config-file', options.config_file])
   if( options.destination_directory ):

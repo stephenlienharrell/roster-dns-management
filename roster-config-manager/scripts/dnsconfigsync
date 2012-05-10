@@ -235,15 +235,15 @@ def main(args):
   server_config_file.read(options.config_file)
 
 
-  backup_directory = server_config_file.get(
-      'exporter', 'backup_dir').rstrip('/')
-  temp_root_directory = server_config_file.get(
-      'exporter', 'root_config_dir').rstrip('/')
+  backup_directory = os.path.abspath(os.path.expanduser(
+      server_config_file.get('exporter', 'backup_dir').rstrip('/')))
+  temp_root_directory = os.path.abspath(os.path.expanduser(
+      server_config_file.get('exporter', 'root_config_dir').rstrip('/')))
   if( not os.path.exists(temp_root_directory) ):
     os.makedirs(temp_root_directory)
   if( not options.destination_directory ):
-    options.destination_directory = server_config_file.get(
-        'exporter', 'named_dir')
+    options.destination_directory = os.path.abspath(os.path.expanduser(
+        server_config_file.get('exporter', 'named_dir')))
   if( options.rndc_key ):
     if( options.rndc_key.startswith('./')
         or not options.rndc_key.startswith('/') ):

@@ -47,6 +47,7 @@ import shutil
 import subprocess
 import unittest
 import tarfile
+import time
 import StringIO
 
 import roster_core
@@ -115,8 +116,8 @@ class TestCheckConfig(unittest.TestCase):
     self.db_instance = db_instance
 
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeZone(u'sub.university.edu', u'master',
-                                u'sub.university.edu.', view_name=u'test_view')
+    self.core_instance.MakeZone(u'sub.university.lcl', u'master',
+                                u'sub.university.lcl.', view_name=u'test_view')
 
   def tearDown(self):
     if( os.path.exists(KEY_FILE) ):
@@ -134,7 +135,7 @@ class TestCheckConfig(unittest.TestCase):
     self.assertEqual(self.core_instance.ListRecords(), []) 
     output = os.popen('python %s -f test_data/test_zone.db '
                       '--view test_view -u %s --config-file %s '
-                      '-z sub.university.edu' % ( 
+                      '-z sub.university.lcl' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
@@ -155,8 +156,9 @@ class TestCheckConfig(unittest.TestCase):
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
 
-    output = os.popen('python %s -i 25 --config-file %s' % (
+    output = os.popen('python %s -i 9 --config-file %s' % (
         EXEC, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), '')
     output.close()
  
@@ -164,7 +166,7 @@ class TestCheckConfig(unittest.TestCase):
     self.assertEqual(self.core_instance.ListRecords(), []) 
     output = os.popen('python %s -f test_data/test_zone.db '
                       '--view test_view -u %s --config-file %s '
-                      '-z sub.university.edu' % ( 
+                      '-z sub.university.lcl' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
                      'Loading in test_data/test_zone.db\n'
@@ -181,51 +183,51 @@ class TestCheckConfig(unittest.TestCase):
     self.tree_exporter_instance.ExportAllBindTrees()
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named/test_view/sub.university.edu.db' % (
+        '%s/set1_servers/named/test_view/sub.university.lcl.db' % (
             self.root_config_dir),
-        'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aa 192.168.1.104')
+        'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aaq 192.168.1.104')
     output = os.popen('python %s --config-file %s --' % (
         EXEC, CONFIG_FILE))
     # Replacement below to accomodate for later bind versions
     self.assertEqual(output.read().replace(
-        'zone sub.university.edu/IN: not loaded due to errors.\n', ''),
-        "ERROR: temp_dir/set1_servers/named/test_view/sub.university.edu.db"
-        ":16: unknown RR type 'aa'\n"
-        "zone sub.university.edu/IN: loading from master file "
-        "temp_dir/set1_servers/named/test_view/sub.university.edu.db failed: "
+        'zone sub.university.lcl/IN: not loaded due to errors.\n', ''),
+        "ERROR: temp_dir/set1_servers/named/test_view/sub.university.lcl.db"
+        ":16: unknown RR type 'aaq'\n"
+        "zone sub.university.lcl/IN: loading from master file "
+        "temp_dir/set1_servers/named/test_view/sub.university.lcl.db failed: "
         "unknown class/type\n")
     output.close()
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named/test_view/sub.university.edu.db' % (
+        '%s/set1_servers/named/test_view/sub.university.lcl.db' % (
             self.root_config_dir),
-        'ns2 3600 in aa 192.168.1.104', 'ns2 3600 in a 192.168.1.104')
+        'ns2 3600 in aaq 192.168.1.104', 'ns2 3600 in a 192.168.1.104')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named/test_view/sub.university.edu.db' % (
+        '%s/set1_servers/named/test_view/sub.university.lcl.db' % (
             self.root_config_dir),
-        ' 811 10800', ' 10800')
+        ' 796 10800', ' 10800')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     # Replacement below to accomodate for later bind versions
     self.assertEqual(output.read().replace(
-        'zone sub.university.edu/IN: not loaded due to errors.\n', ''),
+        'zone sub.university.lcl/IN: not loaded due to errors.\n', ''),
         'ERROR: dns_rdata_fromtext: '
-        'temp_dir/set1_servers/named/test_view/sub.university.edu.db:3: '
+        'temp_dir/set1_servers/named/test_view/sub.university.lcl.db:3: '
         'near eol: unexpected end of input\n'
-        'zone sub.university.edu/IN: loading from master file '
-        'temp_dir/set1_servers/named/test_view/sub.university.edu.db '
+        'zone sub.university.lcl/IN: loading from master file '
+        'temp_dir/set1_servers/named/test_view/sub.university.lcl.db '
         'failed: unexpected end of input\n')
     output.close()
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named/test_view/sub.university.edu.db' % (
+        '%s/set1_servers/named/test_view/sub.university.lcl.db' % (
             self.root_config_dir), ' 10800', ' 810 10800')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named.conf' % self.root_config_dir,
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'type master;', 'type bad_type;')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -234,11 +236,11 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named.conf' % self.root_config_dir,
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'type bad_type;', 'type master;')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named.conf' % self.root_config_dir,
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'type master;',
         'type master;\nwrong;')
     output = os.popen('python %s --config-file %s' % (
@@ -249,12 +251,12 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named.conf' % self.root_config_dir,
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'wrong;',
         '')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        './%s/set1_servers/named.conf' % self.root_config_dir,
+        '%s/set1_servers/named.conf' % self.root_config_dir,
         'options { directory "%snamed"; };' % self.named_dir,
         '\noptions\n{\ndirectory "another";\n};\noptions {\n print-time yes;};\n')
     output = os.popen('python %s --config-file %s' % (

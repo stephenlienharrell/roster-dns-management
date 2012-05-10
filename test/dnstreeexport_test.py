@@ -1213,7 +1213,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\t\tfile "%s/named/external/4.3.2.1.in-addr.db";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '};' % tuple([self.named_dir for x in range(3)]))
+        '};' % tuple(['%s/%s' % (os.getcwd(), self.named_dir) for x in range(3)]))
 
     handle.close()
     handle = open(
@@ -1299,7 +1299,7 @@ class TestDnsMkHost(unittest.TestCase):
             '\t\tfile "%s/named/external/4.3.2.1.in-addr.db";\n'
             '\t\tallow-update { none; };\n'
             '\t};\n'
-            '};' % tuple([self.named_dir for x in range(5)]))   
+            '};' % tuple(['%s/%s' % (os.getcwd(), self.named_dir) for x in range(5)]))
     handle.close()
     handle = open(
         './%s/internal_dns_servers/named/external/4.3.2.1.in-addr.db' % 
@@ -1392,7 +1392,7 @@ class TestDnsMkHost(unittest.TestCase):
             '\t\tfile "%s/named/private/university.edu.db";\n'
             '\t\tallow-update { none; };\n'
             '\t};\n'
-            '};' % tuple([self.named_dir for x in range(2)]))
+            '};' % tuple(['%s/%s' % (os.getcwd(), self.named_dir) for x in range(2)]))
     handle.close()
     handle = open(
         './%s/private_dns_servers/named/private/university.edu.db' %

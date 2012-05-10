@@ -211,7 +211,7 @@ class TestDnsRecover(unittest.TestCase):
     self.assertEqual(output.read(),
          "Replaying action with id 2: MakeZone\n"
          "with arguments: [u'university.edu', u'master', "
-         "u'university.edu.', u'test_view', None, True, False]\n")
+         "u'university.edu.', u'test_view', None, True]\n")
     output.close()
     self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
     self.assertEqual(
