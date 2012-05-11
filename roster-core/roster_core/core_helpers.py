@@ -241,7 +241,7 @@ class CoreHelpers(object):
                u'record_view_dependency': view_dependency,
                u'ttl': ttl})
 
-    self.ProcessRecordsBatch(add_records=make_record_args_list)
+    self.ProcessRecordsBatch(add_records=make_record_args_list, zone_import=True)
 
     return len(make_record_args_list)
 
@@ -997,7 +997,8 @@ class CoreHelpers(object):
                                   current_args, success)
     return row_count
 
-  def ProcessRecordsBatch(self, delete_records = None, add_records = None):
+  def ProcessRecordsBatch(self, delete_records=None, add_records=None,
+                          zone_import=False):
     """Proccess batches of records
 
     Inputs:
@@ -1133,7 +1134,8 @@ class CoreHelpers(object):
               if( record['record_arguments'][arg] != current_record[arg] ):
                 break
             else:
-              raise errors.RecordsBatchError('Duplicate record found')
+              raise errors.RecordsBatchError('Duplicate record found: %s' %
+                                             current_record)
 
 
           records_dict['record_type'] = record['record_type']
@@ -1158,7 +1160,7 @@ class CoreHelpers(object):
                 record['record_arguments'])
         changed_view_dep = set(changed_view_dep)
         for view_dep_pair in changed_view_dep:
-          self.core_instance._IncrementSoa(*view_dep_pair)
+          self.core_instance._IncrementSoa(*view_dep_pair, missing_ok=zone_import)
 
       except:
         self.db_instance.EndTransaction(rollback=True)

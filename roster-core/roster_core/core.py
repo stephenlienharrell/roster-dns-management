@@ -2832,7 +2832,8 @@ class Core(object):
       soa_records_list = self.db_instance.ListRow('records', soa_dict)
 
       if( len(soa_records_list) > 1 ):
-        raise errors.InvalidInputError('Multiple SOA records found.')
+        raise errors.InvalidInputError('Multiple SOA records found: %s' % 
+                                       str(soa_records_list))
 
       if( len(soa_records_list) == 0 ):
         if( not missing_ok ):

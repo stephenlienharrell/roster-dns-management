@@ -135,7 +135,7 @@ def main(args):
     importer = zone_importer_lib.ZoneImport(options.file, options.config,
                                             user, unicode(options.view),
                                             unicode(options.zone),
-                                            records_view=records_view)
+                                            records_view=unicode(records_view))
 
     record_count = importer.MakeRecordsFromZone()
     print '%s records loaded from zone %s' % (record_count, options.file)
