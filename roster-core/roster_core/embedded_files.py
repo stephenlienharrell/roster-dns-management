@@ -637,7 +637,7 @@ CREATE TABLE `audit_log` (
   `audit_log_id` bigint unsigned NOT NULL auto_increment,
   `audit_log_user_name` varchar(255) NOT NULL,
   `action` varchar(255) NOT NULL,
-  `data` mediumtext NOT NULL,
+  `data` longtext NOT NULL,
   `success` boolean NOT NULL,
   `audit_log_timestamp` timestamp NOT NULL default CURRENT_TIMESTAMP,
 
