@@ -385,6 +385,7 @@ CREATE TABLE `acls` (
 CREATE TABLE `acl_ranges` (
   `acl_range_id` mediumint unsigned NOT NULL auto_increment,
   `acl_ranges_acl_name` varchar(255) NOT NULL,
+  `acl_range_allowed` boolean,
   `acl_range_cidr_block` varchar(43),
 
   PRIMARY KEY (`acl_range_id`),
@@ -414,7 +415,6 @@ CREATE TABLE `view_acl_assignments` (
   `view_acl_assignments_id` mediumint unsigned NOT NULL auto_increment,
   `view_acl_assignments_view_name` varchar(255) NOT NULL,
   `view_acl_assignments_acl_name` varchar(255) NOT NULL,
-  `view_acl_range_allowed` boolean,
 
   PRIMARY KEY (`view_acl_assignments_id`),
 
