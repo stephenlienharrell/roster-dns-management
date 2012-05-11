@@ -144,8 +144,8 @@ class TestCheckConfig(unittest.TestCase):
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
     self.named_dir = os.path.expanduser(
         self.config_instance.config_file['exporter']['named_dir'])
-    if( not os.path.exists(self.named_dir)):
-      os.mkdir(self.named_dir)
+    self.lockfile = self.config_instance.config_file[
+        'server']['lock_file']
 
     db_instance = self.config_instance.GetDb()
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
@@ -169,8 +169,12 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.backup_dir)
     if( os.path.exists(self.root_config_dir) ):
       shutil.rmtree(self.root_config_dir)
-    if( os.path.exists(self.named_dir)):
-      shutil.rmtree(self.named_dir)
+    if( os.path.exists('%s/named' % self.named_dir) ):
+      shutil.rmtree('%s/named' % self.named_dir)
+    if( os.path.exists('%s/named.conf' % self.named_dir) ):
+      os.remove('%s/named.conf' % self.named_dir)
+    if( os.path.exists(self.lockfile) ):
+      os.remove(self.lockfile)
 
   def testCheckConfig(self):
     self.core_instance.MakeView(u'test_view')

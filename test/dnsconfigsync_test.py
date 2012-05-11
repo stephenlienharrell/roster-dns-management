@@ -134,8 +134,8 @@ class TestCheckConfig(unittest.TestCase):
 
     self.named_dir = os.path.expanduser(
         self.config_instance.config_file['exporter']['named_dir'])
-    if( not os.path.exists(self.named_dir) ):
-      os.mkdir(self.named_dir)
+    self.lockfile = self.config_instance.config_file[
+        'server']['lock_file']
 
     data = open(DATA_FILE, 'r').read()
     db_instance.StartTransaction()
@@ -148,14 +148,16 @@ class TestCheckConfig(unittest.TestCase):
     fabric_api.local('killall named', capture=True)
     fabric_network.disconnect_all()
     time.sleep(1) # Wait for disk to settle
-    if( os.path.exists(self.named_dir) ):
-      shutil.rmtree(self.named_dir)
+    if( os.path.exists('%s/named' % self.named_dir) ):
+      shutil.rmtree('%s/named' % self.named_dir)
+    if( os.path.exists('%s/named.conf' % self.named_dir) ):
+      os.remove('%s/named.conf' % self.named_dir)
     if( os.path.exists('backup') ):
       shutil.rmtree('backup')
     if( os.path.exists('test_data/backup_dir') ):
       shutil.rmtree('test_data/backup_dir')
-    if( os.path.exists('roster_lock_file') ):
-      os.remove('roster_lock_file')
+    if( os.path.exists(self.lockfile) ):
+      os.remove(self.lockfile)
 
   def testNull(self):
     self.core_instance.MakeView(u'test_view')

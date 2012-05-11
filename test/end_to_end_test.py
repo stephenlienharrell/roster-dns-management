@@ -140,8 +140,6 @@ class TestComplete(unittest.TestCase):
     self.named_port = PickUnusedPort()
     self.server_name = 'https://%s:%s' % (HOST, self.port)
     self.named_dir = config.get('exporter', 'named_dir')
-    if( not os.path.exists(self.named_dir) ):
-      os.mkdir(self.named_dir)
 
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
@@ -161,6 +159,10 @@ class TestComplete(unittest.TestCase):
     ## kill rosterd deamon threads
     if( os.path.exists(LOCKFILE) ):
       os.remove(LOCKFILE)
+    if( os.path.exists('%s/named' % self.named_dir) ):
+      shutil.rmtree('%s/named' % self.named_dir)
+    if( os.path.exists('%s/named.conf' % self.named_dir) ):
+      os.remove('%s/named.conf' % self.named_dir)
 
   def testEndToEnd(self):
     ## Bootstraps

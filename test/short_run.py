@@ -7,6 +7,10 @@ import subprocess
 import curses
 import datetime
 import copy
+import time
+
+RUN_FIRST = ['dnsconfigsync_test.py', 'dnsexportconfig_test.py',
+             'dnscheckconfig_test.py', 'end_to_end_test.py']
 
 class ShortRun(object):
   def __init__(self):
@@ -29,6 +33,11 @@ class ShortRun(object):
 
   def RunTests(self, window):
     unittests = glob.glob('*test.py')
+    for i, unittest in enumerate(unittests):
+      if( unittest in RUN_FIRST ):
+	unittests.pop(i)
+    for unittest in RUN_FIRST:
+      unittests.insert(0, unittest)
     try:
       skiplist = open('skip', 'r').read().split()
     except:
@@ -70,6 +79,7 @@ class ShortRun(object):
       window.addstr('%s\n\n%s' % (self.current_string,
                                   self.stat_string))
       window.refresh()
+      time.sleep(3) # Wait for disks to settle
     self.stat_string = '%s%s' % (self.stat_string,
                                  '\n\nPress any key to exit...')
     window.clear()
