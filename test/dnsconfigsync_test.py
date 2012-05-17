@@ -241,7 +241,7 @@ class TestCheckConfig(unittest.TestCase):
     testlines = (
         '\n'
         '%s\n'
-        '; (2 servers found)\n'
+        '; (1 server found)\n'
         '%s\n'
         ';; Got answer:\n'
         '%s\n'

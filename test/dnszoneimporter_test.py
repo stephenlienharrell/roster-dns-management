@@ -109,14 +109,16 @@ class TestDnsZoneImport(unittest.TestCase):
     time.sleep(1)
     roster_client_lib.GetCredentials(USERNAME, u'test', credfile=CREDFILE,
                                      server_name=self.server_name)
-    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeView(u'test_view1')
+    self.core_instance.MakeView(u'test_view2')
     self.core_instance.MakeZone(u'sub.university.lcl', u'master',
-                                u'sub.university.lcl.', view_name=u'test_view')
+                                u'sub.university.lcl.', view_name=u'test_view1')
     self.core_instance.MakeZone(u'0.168.192.in-addr.arpa', u'master',
                                 u'0.168.192.in-addr.arpa.',
-                                view_name=u'test_view')
+                                view_name=u'test_view1')
     self.core_instance.MakeZone(u'8.0.e.f.f.3.ip6.arpa', u'master',
-                                u'8.0.e.f.f.3.ip6.arpa.', view_name=u'test_view')
+                                u'8.0.e.f.f.3.ip6.arpa.', 
+                                view_name=u'test_view1')
     self.core_instance.MakeReverseRangeZoneAssignment(
         u'0.168.192.in-addr.arpa', u'192.168.0/24')
     self.core_instance.MakeReverseRangeZoneAssignment(
@@ -127,9 +129,9 @@ class TestDnsZoneImport(unittest.TestCase):
       os.remove(CREDFILE)
 
 
-  def testImportForwardZone(self):
+  def testImportForwardZoneToAny(self):
     self.assertEqual(self.core_instance.ListRecords(), [])
-    output = os.popen('python %s -f test_data/test_zone.db -v test_view '
+    output = os.popen('python %s -f test_data/test_zone.db -v any '
                       '-u %s --config-file %s -z sub.university.lcl' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
@@ -137,81 +139,145 @@ class TestDnsZoneImport(unittest.TestCase):
                      '17 records loaded from zone test_data/test_zone.db\n'
                      '17 total records added\n')
     output.close()
-    for record in self.core_instance.ListRecords():
-        self.assertTrue(record in
-        [{u'serial_number': 796, u'refresh_seconds': 10800, 'target': u'@',
-          u'name_server': u'ns.university.lcl.', u'retry_seconds': 3600,
-          'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa',
-          'view_name': u'test_view', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'admin_email': u'hostmaster.ns.university.lcl.',
-          u'expiry_seconds': 3600000},
-         {'target': u'@', u'name_server': u'ns.sub.university.lcl.',
-          'ttl': 3600, 'record_type': u'ns', 'view_name': u'any',
-          'last_user': u'sharrell', 'zone_name': u'sub.university.lcl'},
-         {'target': u'@', u'name_server': u'ns2.sub.university.lcl.',
-          'ttl': 3600, 'record_type': u'ns', 'view_name': u'any',
-          'last_user': u'sharrell', 'zone_name': u'sub.university.lcl'},
-         {'target': u'@', 'ttl': 3600, u'priority': 10, 'record_type': u'mx',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'mail_server': u'mail1.sub.university.lcl.'},
-         {'target': u'@', 'ttl': 3600, u'priority': 20, 'record_type': u'mx',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'mail_server': u'mail2.sub.university.lcl.'},
-         {'target': u'@', 'ttl': 3600, 'record_type': u'txt',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'quoted_text': u'"Contact 1:  Stephen Harrell '
-                           '(sharrell@university.lcl)"'},
-         {'target': u'@', 'ttl': 3600, 'record_type': u'a', 'view_name': u'any',
-          'last_user': u'sharrell', 'zone_name': u'sub.university.lcl',
-          u'assignment_ip': u'192.168.0.1'},
-         {'target': u'desktop-1', 'ttl': 3600, 'record_type': u'aaaa',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'assignment_ip': u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'},
-         {'target': u'desktop-1', 'ttl': 3600, 'record_type': u'a',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'assignment_ip': u'192.168.1.100'},
-         {'target': u'ns2', 'ttl': 3600, 'record_type': u'a',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'assignment_ip': u'192.168.1.104'},
-         {'target': u'ns2', 'ttl': 3600, u'hardware': u'PC',
-          'record_type': u'hinfo', 'view_name': u'any',
-          'last_user': u'sharrell', 'zone_name': u'sub.university.lcl',
-          u'os': u'NT'},
-         {'target': u'www', 'ttl': 3600, 'record_type': u'cname',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'assignment_host': u'sub.university.lcl.'},
-         {'target': u'ns', 'ttl': 3600, 'record_type': u'a',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'assignment_ip': u'192.168.1.103'},
-         {'target': u'localhost', 'ttl': 3600, 'record_type': u'a',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl', u'assignment_ip': u'127.0.0.1'},
-         {'target': u'www.data', 'ttl': 3600, 'record_type': u'cname',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'assignment_host': u'ns.university.lcl.'},
-         {'target': u'mail1', 'ttl': 3600, 'record_type': u'a',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'assignment_ip': u'192.168.1.101'},
-         {'target': u'mail2', 'ttl': 3600, 'record_type': u'a',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'sub.university.lcl',
-          u'assignment_ip': u'192.168.1.102'}])
 
-  def testImportReverseIPV6Zone(self):
+    self.assertEqual(self.core_instance.ListRecords(), 
+        [{u'serial_number': 796, u'refresh_seconds': 10800, 'target': u'@', 
+        u'name_server': u'ns.university.lcl.', u'retry_seconds': 3600, 
+        'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa', 
+        'view_name': u'test_view1', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', 
+        u'admin_email': u'hostmaster.ns.university.lcl.', 
+        u'expiry_seconds': 3600000}, {'target': u'@', 
+        u'name_server': u'ns.sub.university.lcl.', 'ttl': 3600, 
+        'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl'}, {'target': u'@', 
+        u'name_server': u'ns2.sub.university.lcl.', 'ttl': 3600, 
+        'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl'}, {'target': u'@', 'ttl': 3600, 
+        u'priority': 10, 'record_type': u'mx', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+        u'mail_server': u'mail1.sub.university.lcl.'}, {'target': u'@', 
+        'ttl': 3600, u'priority': 20, 'record_type': u'mx', 
+        'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', 
+        u'mail_server': u'mail2.sub.university.lcl.'}, 
+        {'target': u'@', 'ttl': 3600, 'record_type': u'txt', 
+        'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', 
+        u'quoted_text': u'"Contact 1:  Stephen Harrell (sharrell@university.lcl)"'}, 
+        {'target': u'@', 'ttl': 3600, 'record_type': u'a', 
+        'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', 
+        u'assignment_ip': u'192.168.0.1'}, 
+        {'target': u'ns', 'ttl': 3600, 'record_type': u'a', 
+        'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', u'assignment_ip': u'192.168.1.103'}, 
+        {'target': u'desktop-1', 'ttl': 3600, 'record_type': u'aaaa', 
+        'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', 
+        u'assignment_ip': u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'}, 
+        {'target': u'desktop-1', 'ttl': 3600, 'record_type': u'a', 
+        'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', u'assignment_ip': u'192.168.1.100'}, 
+        {'target': u'ns2', 'ttl': 3600, 'record_type': u'a', 
+        'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', u'assignment_ip': u'192.168.1.104'}, 
+        {'target': u'ns2', 'ttl': 3600, u'hardware': u'PC', 
+        'record_type': u'hinfo', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+        u'os': u'NT'}, {'target': u'www', 'ttl': 3600, 
+        'record_type': u'cname', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+        u'assignment_host': u'sub.university.lcl.'}, {'target': u'localhost', 
+        'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+        u'assignment_ip': u'127.0.0.1'}, {'target': u'www.data', 
+        'ttl': 3600, 'record_type': u'cname', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+        u'assignment_host': u'ns.university.lcl.'}, {'target': u'mail1', 
+        'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+        u'assignment_ip': u'192.168.1.101'}, {'target': u'mail2', 
+        'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+        u'assignment_ip': u'192.168.1.102'}])
+
+  def testImportForwardZoneToView(self):
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    output = os.popen('python %s -f test_data/test_zone.db -v test_view1 '
+                      '-u %s --config-file %s -z sub.university.lcl' % (
+                          EXEC, USERNAME, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'Loading in test_data/test_zone.db\n'
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
+    output.close()
+
+    #fix indenting
+    self.assertEqual(self.core_instance.ListRecords(), 
+        [{u'serial_number': 795, u'refresh_seconds': 10800, 'target': u'@', 
+        u'name_server': u'ns.university.lcl.', u'retry_seconds': 3600, 
+        'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa', 
+        'view_name': u'test_view1', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', 
+        u'admin_email': u'hostmaster.ns.university.lcl.', 
+        u'expiry_seconds': 3600000}, {'target': u'@', 
+        u'name_server': u'ns.sub.university.lcl.', 'ttl': 3600, 
+        'record_type': u'ns', 'view_name': u'test_view1', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl'}, 
+        {'target': u'@', u'name_server': u'ns2.sub.university.lcl.', 
+        'ttl': 3600, 'record_type': u'ns', 'view_name': u'test_view1', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl'}, 
+        {'target': u'@', 'ttl': 3600, u'priority': 10, 'record_type': u'mx', 
+        'view_name': u'test_view1', 'last_user': u'sharrell', 
+        'zone_name': u'sub.university.lcl', 
+        u'mail_server': u'mail1.sub.university.lcl.'}, 
+        {'target': u'@', 'ttl': 3600, u'priority': 20, 
+        'record_type': u'mx', 'view_name': u'test_view1', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+        u'mail_server': u'mail2.sub.university.lcl.'}, {'target': u'@', 
+        'ttl': 3600, 'record_type': u'txt', 'view_name': u'test_view1', 
+        'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+         u'quoted_text': u'"Contact 1:  Stephen Harrell (sharrell@university.lcl)"'}, 
+         {'target': u'@', 'ttl': 3600, 'record_type': u'a', 
+         'view_name': u'test_view1', 'last_user': u'sharrell', 
+         'zone_name': u'sub.university.lcl', u'assignment_ip': u'192.168.0.1'}, 
+         {'target': u'ns', 'ttl': 3600, 'record_type': u'a', 
+         'view_name': u'test_view1', 'last_user': u'sharrell', 
+         'zone_name': u'sub.university.lcl', u'assignment_ip': u'192.168.1.103'}, 
+         {'target': u'desktop-1', 'ttl': 3600, 'record_type': u'aaaa', 
+         'view_name': u'test_view1', 'last_user': u'sharrell', 
+         'zone_name': u'sub.university.lcl', 
+         u'assignment_ip': u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'}, 
+         {'target': u'desktop-1', 'ttl': 3600, 'record_type': u'a', 
+         'view_name': u'test_view1', 'last_user': u'sharrell', 
+         'zone_name': u'sub.university.lcl', u'assignment_ip': u'192.168.1.100'}, 
+         {'target': u'ns2', 'ttl': 3600, 'record_type': u'a', 
+         'view_name': u'test_view1', 'last_user': u'sharrell', 
+         'zone_name': u'sub.university.lcl', u'assignment_ip': u'192.168.1.104'}, 
+         {'target': u'ns2', 'ttl': 3600, u'hardware': u'PC', 
+         'record_type': u'hinfo', 'view_name': u'test_view1', 
+         'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+         u'os': u'NT'}, {'target': u'www', 'ttl': 3600, 
+         'record_type': u'cname', 'view_name': u'test_view1', 
+         'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+         u'assignment_host': u'sub.university.lcl.'}, {'target': u'localhost', 
+         'ttl': 3600, 'record_type': u'a', 'view_name': u'test_view1', 
+         'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+         u'assignment_ip': u'127.0.0.1'}, {'target': u'www.data', 
+         'ttl': 3600, 'record_type': u'cname', 'view_name': u'test_view1', 
+         'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+         u'assignment_host': u'ns.university.lcl.'}, {'target': u'mail1', 
+         'ttl': 3600, 'record_type': u'a', 'view_name': u'test_view1', 
+         'last_user': u'sharrell', 'zone_name': u'sub.university.lcl', 
+         u'assignment_ip': u'192.168.1.101'}, {'target': u'mail2', 'ttl': 3600, 
+         'record_type': u'a', 'view_name': u'test_view1', 'last_user': u'sharrell', 
+         'zone_name': u'sub.university.lcl', u'assignment_ip': u'192.168.1.102'}])
+
+  def testImportReverseIPV6ZoneToAny(self):
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                      '-v test_view -u %s --config-file %s '
+                      '-v any -u %s --config-file %s '
                       '-z 8.0.e.f.f.3.ip6.arpa' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(
@@ -219,34 +285,58 @@ class TestDnsZoneImport(unittest.TestCase):
         'Loading in test_data/test_reverse_ipv6_zone.db\n'
         '5 records loaded from zone test_data/test_reverse_ipv6_zone.db\n'
         '5 total records added\n')
-    for record in self.core_instance.ListRecords():
-        self.assertTrue(record in
-        [{u'serial_number': 6, u'refresh_seconds': 10800, 'target': u'@',
-          u'name_server': u'ns.university.lcl.', u'retry_seconds': 3600,
-          'ttl': 86400, u'minimum_seconds': 86400, 'record_type': u'soa',
-          'view_name': u'test_view', 'last_user': u'sharrell',
-          'zone_name': u'8.0.e.f.f.3.ip6.arpa',
-          u'admin_email': u'hostmaster.university.lcl.',
-          u'expiry_seconds': 3600000},
-         {'target': u'@', u'name_server': u'ns.university.lcl.', 'ttl': 86400,
-          'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'8.0.e.f.f.3.ip6.arpa'},
-         {'target': u'@', u'name_server': u'ns2.university.lcl.', 'ttl': 86400,
-          'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'8.0.e.f.f.3.ip6.arpa'},
-         {'target': u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0',
-          'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any',
-          'last_user': u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa',
-          u'assignment_host': u'router.university.lcl.'},
-         {'target': u'0.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0',
-          'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any',
-          'last_user': u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa',
-          u'assignment_host': u'desktop-1.university.lcl.'}])
 
-  def testImportReverseZone(self):
+    self.assertEqual(self.core_instance.ListRecords(), 
+         [{u'serial_number': 6, u'refresh_seconds': 10800, 'target': u'@', 
+          u'name_server': u'ns.university.lcl.', u'retry_seconds': 3600, 'ttl': 86400, 
+          u'minimum_seconds': 86400, 'record_type': u'soa', 'view_name': u'test_view1', 
+          'last_user': u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa', u'admin_email': 
+          u'hostmaster.university.lcl.', u'expiry_seconds': 3600000}, {'target': 
+          u'@', u'name_server': u'ns.university.lcl.', 'ttl': 86400, 'record_type': 
+          u'ns', 'view_name': u'any', 'last_user': u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa'}, 
+          {'target': u'@', u'name_server': u'ns2.university.lcl.', 'ttl': 86400, 
+          'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell', 'zone_name': 
+          u'8.0.e.f.f.3.ip6.arpa'}, {'target': u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0', 
+          'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any', 'last_user': 
+          u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa', u'assignment_host': 
+          u'router.university.lcl.'}, {'target': u'0.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0', 
+          'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any', 'last_user': 
+          u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa', u'assignment_host': 
+          u'desktop-1.university.lcl.'}])
+
+  def testImportReverseIPV6ZoneToView(self):
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    output = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
+                      '-v test_view1 -u %s --config-file %s '
+                      '-z 8.0.e.f.f.3.ip6.arpa' % (
+                          EXEC, USERNAME, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'Loading in test_data/test_reverse_ipv6_zone.db\n'
+        '5 records loaded from zone test_data/test_reverse_ipv6_zone.db\n'
+        '5 total records added\n')
+    self.assertEqual(self.core_instance.ListRecords(),
+        [{u'serial_number': 5, u'refresh_seconds': 10800, 'target': u'@', u'name_server': 
+          u'ns.university.lcl.', u'retry_seconds': 3600, 'ttl': 86400, u'minimum_seconds': 
+          86400, 'record_type': u'soa', 'view_name': u'test_view1', 'last_user': 
+          u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa', u'admin_email': u'hostmaster.university.lcl.', 
+          u'expiry_seconds': 3600000}, {'target': u'@', u'name_server': u'ns.university.lcl.', 
+          'ttl': 86400, 'record_type': u'ns', 'view_name': u'test_view1', 'last_user': 
+          u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa'}, {'target': u'@', u'name_server': 
+          u'ns2.university.lcl.', 'ttl': 86400, 'record_type': u'ns', 'view_name': 
+          u'test_view1', 'last_user': u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa'}, 
+          {'target': u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0', 'ttl': 
+          86400, 'record_type': u'ptr', 'view_name': u'test_view1', 'last_user': 
+          u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa', u'assignment_host': 
+          u'router.university.lcl.'}, {'target': u'0.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0', 
+          'ttl': 86400, 'record_type': u'ptr', 'view_name': u'test_view1', 'last_user': 
+          u'sharrell', 'zone_name': u'8.0.e.f.f.3.ip6.arpa', u'assignment_host': 
+          u'desktop-1.university.lcl.'}])
+
+  def testImportReverseZoneToAny(self):
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_reverse_zone.db '
-                      '-v test_view -u %s --config-file %s '
+                      '-v any -u %s --config-file %s '
                       '-z 0.168.192.in-addr.arpa' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(
@@ -254,33 +344,53 @@ class TestDnsZoneImport(unittest.TestCase):
         'Loading in test_data/test_reverse_zone.db\n'
         '6 records loaded from zone test_data/test_reverse_zone.db\n'
         '6 total records added\n')
-    for record in self.core_instance.ListRecords():
-        self.assertTrue(record in
-        [{u'serial_number': 6, u'refresh_seconds': 10800, 'target': u'@',
-          u'name_server': u'ns.university.lcl.', u'retry_seconds': 3600,
-          'ttl': 86400, u'minimum_seconds': 86400, 'record_type': u'soa',
-          'view_name': u'test_view', 'last_user': u'sharrell',
-          'zone_name': u'0.168.192.in-addr.arpa',
-          u'admin_email': u'hostmaster.university.lcl.',
-          u'expiry_seconds': 3600000},
-         {'target': u'@', u'name_server': u'ns.university.lcl.', 'ttl': 86400,
-          'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'0.168.192.in-addr.arpa'},
-         {'target': u'@', u'name_server': u'ns2.university.lcl.', 'ttl': 86400,
-          'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'0.168.192.in-addr.arpa'},
-         {'target': u'1', 'ttl': 86400, 'record_type': u'ptr',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'0.168.192.in-addr.arpa',
-          u'assignment_host': u'router.university.lcl.'},
-         {'target': u'11', 'ttl': 86400, 'record_type': u'ptr',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'0.168.192.in-addr.arpa',
-          u'assignment_host': u'desktop-1.university.lcl.'},
-         {'target': u'12', 'ttl': 86400, 'record_type': u'ptr',
-          'view_name': u'any', 'last_user': u'sharrell',
-          'zone_name': u'0.168.192.in-addr.arpa',
-          u'assignment_host': u'desktop-2.university.lcl.'}])
+    self.assertEqual(self.core_instance.ListRecords(), 
+        [{u'serial_number': 6, u'refresh_seconds': 10800, 'target': u'@', u'name_server': 
+          u'ns.university.lcl.', u'retry_seconds': 3600, 'ttl': 86400, u'minimum_seconds': 
+          86400, 'record_type': u'soa', 'view_name': u'test_view1', 'last_user': 
+          u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa', u'admin_email': u'hostmaster.university.lcl.', 
+          u'expiry_seconds': 3600000}, {'target': u'@', u'name_server': u'ns.university.lcl.', 
+          'ttl': 86400, 'record_type': u'ns', 'view_name': u'any', 'last_user': u'sharrell', 
+          'zone_name': u'0.168.192.in-addr.arpa'}, {'target': u'@', u'name_server': 
+          u'ns2.university.lcl.', 'ttl': 86400, 'record_type': u'ns', 'view_name': 
+          u'any', 'last_user': u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa'}, 
+          {'target': u'1', 'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any', 
+          'last_user': u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa', u'assignment_host': 
+          u'router.university.lcl.'}, {'target': u'11', 'ttl': 86400, 'record_type': 
+          u'ptr', 'view_name': u'any', 'last_user': u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa', 
+          u'assignment_host': u'desktop-1.university.lcl.'}, {'target': u'12', 'ttl': 
+          86400, 'record_type': u'ptr', 'view_name': u'any', 'last_user': u'sharrell', 
+          'zone_name': u'0.168.192.in-addr.arpa', u'assignment_host': u'desktop-2.university.lcl.'}])
+
+  def testImportReverseZoneToView(self):
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    output = os.popen('python %s -f test_data/test_reverse_zone.db '
+                      '-v test_view1 -u %s --config-file %s '
+                      '-z 0.168.192.in-addr.arpa' % (
+                          EXEC, USERNAME, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'Loading in test_data/test_reverse_zone.db\n'
+        '6 records loaded from zone test_data/test_reverse_zone.db\n'
+        '6 total records added\n')
+    self.assertEqual(self.core_instance.ListRecords(), 
+        [{u'serial_number': 5, u'refresh_seconds': 10800, 'target': u'@', u'name_server': 
+          u'ns.university.lcl.', u'retry_seconds': 3600, 'ttl': 86400, u'minimum_seconds': 
+          86400, 'record_type': u'soa', 'view_name': u'test_view1', 'last_user': 
+          u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa', u'admin_email': u'hostmaster.university.lcl.', 
+          u'expiry_seconds': 3600000}, {'target': u'@', u'name_server': u'ns.university.lcl.', 
+          'ttl': 86400, 'record_type': u'ns', 'view_name': u'test_view1', 'last_user': 
+          u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa'}, {'target': u'@', 
+          u'name_server': u'ns2.university.lcl.', 'ttl': 86400, 'record_type': u'ns', 
+          'view_name': u'test_view1', 'last_user': u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa'}, 
+          {'target': u'1', 'ttl': 86400, 'record_type': u'ptr', 'view_name': u'test_view1', 
+          'last_user': u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa', u'assignment_host': 
+          u'router.university.lcl.'}, {'target': u'11', 'ttl': 86400, 'record_type': 
+          u'ptr', 'view_name': u'test_view1', 'last_user': u'sharrell', 'zone_name': 
+          u'0.168.192.in-addr.arpa', u'assignment_host': u'desktop-1.university.lcl.'}, 
+          {'target': u'12', 'ttl': 86400, 'record_type': u'ptr', 'view_name': u'test_view1', 
+          'last_user': u'sharrell', 'zone_name': u'0.168.192.in-addr.arpa', u'assignment_host': 
+          u'desktop-2.university.lcl.'}])
 
 if( __name__ == '__main__' ):
       unittest.main()

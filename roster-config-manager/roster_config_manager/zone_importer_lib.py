@@ -55,17 +55,19 @@ class ZoneImport(object):
   from a file using dns.zone and then use the core API to put it in
   the database.
   """
-  def __init__(self, zone_file_name, config_file_name, user_name, zone_view,
-               zone_name, records_view=None):
+  def __init__(self, zone_file_name, config_file_name, user_name, view,
+               zone_name):
     """Sets self.core_instance, self.zone self.domain and self.view.
 
     Inputs:
       zone_file_name: name of zone file to impport
       config_file_name: name of config file to load db info from
       user_name: username of person running the script
-      view: view name if needed
+      view: view name
     """
     config_instance = roster_core.Config(file_name=config_file_name)
+
+
     self.core_instance = roster_core.Core(user_name, config_instance)
     self.core_helper_instance = roster_core.CoreHelpers(
         self.core_instance)
@@ -73,11 +75,14 @@ class ZoneImport(object):
     self.zone_file_string = unicode(open(zone_file_name, 'r').read())
 
     self.zone_name = zone_name
-    self.view = records_view
-    self.zone_view = zone_view
-
+    self.view = view
+  
     self.origin = self.core_instance.ListZones(zone_name=zone_name)[
-        zone_name][self.zone_view][u'zone_origin']
+        zone_name][view][u'zone_origin']
+        
+    self.all_views = self.core_instance.ListZones(zone_name=zone_name)[
+        zone_name]
+
 
   def ReverseZoneToCIDRBlock(self):
     """Creates CIDR block from reverse zone name.
@@ -125,7 +130,7 @@ class ZoneImport(object):
       raise Error('%s is not a reverse zone.' % self.zone_name)
 
     return cidr_block
-
+    
   def MakeRecordsFromZone(self):
     """Makes records in the database from dns.zone class.
 
@@ -133,5 +138,4 @@ class ZoneImport(object):
       int: Amount of records added to db.
     """
     return self.core_helper_instance.AddFormattedRecords(
-        self.zone_name, self.zone_file_string, view=self.view,
-        zone_view=self.zone_view, use_soa=True)
+        self.zone_name, self.zone_file_string, self.view)

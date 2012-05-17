@@ -110,7 +110,7 @@ class TestZoneImport(unittest.TestCase):
         ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.lcl')
     importer_instance.MakeRecordsFromZone()
     self.assertEquals(self.core_instance.ListRecords(record_type=u'soa'),
-                      [{u'serial_number': 796, u'refresh_seconds': 10800,
+                      [{u'serial_number': 795, u'refresh_seconds': 10800,
                         'target': u'@',
                         u'name_server': u'ns.university.lcl.',
                         u'retry_seconds': 3600, 'ttl': 3600,
@@ -122,67 +122,67 @@ class TestZoneImport(unittest.TestCase):
     self.assertEquals(self.core_instance.ListRecords(record_type=u'ns'),
                       [{'target': u'@',
                         u'name_server': u'ns.sub.university.lcl.', 'ttl': 3600,
-                        'record_type': u'ns', 'view_name': u'any',
+                        'record_type': u'ns', 'view_name': u'external',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl'},
                        {'target': u'@',
                         u'name_server': u'ns2.sub.university.lcl.', 'ttl': 3600,
-                        'record_type': u'ns', 'view_name': u'any',
+                        'record_type': u'ns', 'view_name': u'external',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl'}])
     self.assertEquals(self.core_instance.ListRecords(record_type=u'mx'),
                       [{'target': u'@', 'ttl': 3600,
                         u'priority': 10, 'record_type': u'mx',
-                        'view_name': u'any', 'last_user': u'sharrell',
+                        'view_name': u'external', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl',
                         u'mail_server': u'mail1.sub.university.lcl.'},
                        {'target': u'@', 'ttl': 3600,
                         u'priority': 20, 'record_type': u'mx',
-                        'view_name': u'any', 'last_user': u'sharrell',
+                        'view_name': u'external', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl',
                         u'mail_server': u'mail2.sub.university.lcl.'}])
     self.assertEquals(self.core_instance.ListRecords(record_type=u'txt'),
                       [{'target': u'@', 'ttl': 3600,
-                        'record_type': u'txt', 'view_name': u'any',
+                        'record_type': u'txt', 'view_name': u'external',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl',
                         u'quoted_text': u'"Contact 1:  Stephen Harrell '
                                         u'(sharrell@university.lcl)"'}])
     records_list = self.core_instance.ListRecords(record_type=u'a')
     self.assertTrue({'target': u'localhost', 'ttl': 3600,
-                     'record_type': u'a', 'view_name': u'any',
+                     'record_type': u'a', 'view_name': u'external',
                      'last_user': u'sharrell',
                      'zone_name': u'sub.university.lcl',
                      u'assignment_ip': u'127.0.0.1'} in records_list)
     self.assertTrue({'target': u'desktop-1', 'ttl': 3600,
-                     'record_type': u'a', 'view_name': u'any',
+                     'record_type': u'a', 'view_name': u'external',
                      'last_user': u'sharrell',
                      'zone_name': u'sub.university.lcl',
                      u'assignment_ip': u'192.168.1.100'} in records_list)
     self.assertTrue({'target': u'@', 'ttl': 3600,
-                      'record_type': u'a', 'view_name': u'any',
+                      'record_type': u'a', 'view_name': u'external',
                       'last_user': u'sharrell',
                       'zone_name': u'sub.university.lcl',
                       u'assignment_ip': u'192.168.0.1'} in records_list)
     self.assertEquals(self.core_instance.ListRecords(record_type=u'cname'),
                       [{'target': u'www', 'ttl': 3600,
-                        'record_type': u'cname', 'view_name': u'any',
+                        'record_type': u'cname', 'view_name': u'external',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl',
                         u'assignment_host': u'sub.university.lcl.'},
                        {'target': u'www.data', 'ttl': 3600,
-                        'record_type': u'cname', 'view_name': u'any',
+                        'record_type': u'cname', 'view_name': u'external',
                         'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl',
                         u'assignment_host': u'ns.university.lcl.'}])
     self.assertEquals(self.core_instance.ListRecords(record_type=u'hinfo'), 
                       [{'target': u'ns2', 'ttl': 3600,
                         u'hardware': u'PC', 'record_type': u'hinfo',
-                        'view_name': u'any', 'last_user': u'sharrell',
+                        'view_name': u'external', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl', u'os': u'NT'}])
     self.assertEquals(self.core_instance.ListRecords(record_type=u'aaaa'),
                       [{'target': u'desktop-1', 'ttl': 3600, 'record_type':
-                        u'aaaa', 'view_name': u'any', 'last_user': u'sharrell',
+                        u'aaaa', 'view_name': u'external', 'last_user': u'sharrell',
                         'zone_name': u'sub.university.lcl', u'assignment_ip':
                         u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'}])
 
@@ -196,17 +196,17 @@ class TestZoneImport(unittest.TestCase):
         {u'0.168.192.in-addr.arpa': u'192.168.0/24'})
     self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
                       [{'target': u'1', 'ttl': 86400,
-                        'record_type': u'ptr', 'view_name': u'any',
+                        'record_type': u'ptr', 'view_name': u'external',
                         'last_user': u'sharrell',
                         'zone_name': u'0.168.192.in-addr.arpa',
                         u'assignment_host': u'router.university.lcl.'}, 
                        {'target': u'11', 'ttl': 86400,
-                        'record_type': u'ptr', 'view_name': u'any',
+                        'record_type': u'ptr', 'view_name': u'external',
                         'last_user': u'sharrell',
                         'zone_name': u'0.168.192.in-addr.arpa',
                         u'assignment_host': u'desktop-1.university.lcl.'},
                        {'target': u'12', 'ttl': 86400,
-                        'record_type': u'ptr', 'view_name': u'any',
+                        'record_type': u'ptr', 'view_name': u'external',
                         'last_user': u'sharrell',
                         'zone_name': u'0.168.192.in-addr.arpa',
                         u'assignment_host': u'desktop-2.university.lcl.'}])
@@ -224,14 +224,14 @@ class TestZoneImport(unittest.TestCase):
         self.assertTrue(record in
                      [{'target':
                        u'2.8.9.1.2.3.e.f.f.f.9.7.8.a.2.0.0.0.0.0.0.0.0.0.0.0',
-                       'ttl': 86400, 'record_type': u'ptr', 'view_name': u'any',
+                       'ttl': 86400, 'record_type': u'ptr', 'view_name': u'external',
                        'last_user': u'sharrell', 'zone_name':
                        u'8.0.e.f.f.3.ip6.arpa', u'assignment_host':
                        u'router.university.lcl.'}, 
                       {'target':
                          u'0.8.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0',
                          'ttl': 86400, 'record_type': u'ptr', 'view_name':
-                         u'any', 'last_user': u'sharrell', 'zone_name':
+                         u'external', 'last_user': u'sharrell', 'zone_name':
                          u'8.0.e.f.f.3.ip6.arpa', u'assignment_host':
                          u'desktop-1.university.lcl.'}])
 

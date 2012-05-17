@@ -131,28 +131,29 @@ class CoreHelpers(object):
     return unicode(host_name)
 
   def AddFormattedRecords(self, zone_name, zone_file_string,
-                          view=u'any', zone_view=None,
-                          use_soa=True):
+                          view):
     """Adds records from a string of a partial zone file
 
     Inputs:
       zone_name: string of zone name
       zone_file_string: string of zone name
       view: string of view name
-      zone_view: view to put SOA record in
-      use_soa: use a zone file with an SOA record
 
     Outputs:
       int: Amount of records added to db.
     """
-    if( use_soa ):
-      zone = dns.zone.from_text(str(zone_file_string))
-      origin = zone.origin
-    else:
-      origin = self.core_instance.ListZones(zone_name=zone_name)[
+    origin = self.core_instance.ListZones(zone_name=zone_name)[
           zone_name][view][u'zone_origin']
-      zone = dns.zone.from_text(
-          str(zone_file_string), check_origin=False, origin=origin)
+
+    zone = None
+    #If the file doesn't have an origin, we need to give it something
+    #otherwise dns.zone will raise an UnknownOrigin exception
+    if( zone_file_string.find("$ORIGIN") == -1 ):
+      zone = dns.zone.from_text(str(zone_file_string), check_origin=False,
+        origin=origin)
+    else:
+      zone = dns.zone.from_text(str(zone_file_string), check_origin=False)   
+
     make_record_args_list = []
     for record_tuple in zone.items():
       record_target = unicode(record_tuple[0])
@@ -225,24 +226,28 @@ class CoreHelpers(object):
                 'Unkown record type: %s.\n %s' % (
                     dns.rdatatype.to_text(record_object.rdtype), record_object))
 
-          view_dependency = u'any'
-          if( record_object.rdtype == dns.rdatatype.SOA ):
-            if( zone_view ):
-              view_dependency = zone_view
-          else:
-            if( view ):
-              view_dependency = view
+          if( record_object.rdtype == dns.rdatatype.SOA and view == u'any'):
+            all_views = self.core_instance.ListZones(zone_name=zone_name)[zone_name]
 
-          make_record_args_list.append(
-              {u'record_type': record_type,
-               u'record_target': record_target,
-               u'record_zone_name': zone_name,
-               u'record_arguments': record_args_dict,
-               u'record_view_dependency': view_dependency,
-               u'ttl': ttl})
+            for single_view in all_views:
+              if( single_view != u'any' ):
+                make_record_args_list.append(
+                  {u'record_type': record_type,
+                   u'record_target': record_target,
+                   u'record_zone_name': zone_name,
+                   u'record_arguments': record_args_dict,
+                   u'record_view_dependency': single_view,
+                   u'ttl': ttl})
+          else:
+            make_record_args_list.append(
+                {u'record_type': record_type,
+                 u'record_target': record_target,
+                 u'record_zone_name': zone_name,
+                 u'record_arguments': record_args_dict,
+                 u'record_view_dependency': view,
+                 u'ttl': ttl})
 
     self.ProcessRecordsBatch(add_records=make_record_args_list, zone_import=True)
-
     return len(make_record_args_list)
 
   def GetCIDRBlocksByView(self, view, username):

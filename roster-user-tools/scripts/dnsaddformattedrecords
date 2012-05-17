@@ -77,8 +77,7 @@ def main(args):
   added_records = roster_client_lib.RunFunction(
       u'AddFormattedRecords', options.username, credfile=options.credfile,
       credstring=options.credstring,
-      args=[options.zone_name, records_file_string],
-      kwargs={u'view': options.view_name, u'use_soa': False},
+      args=[options.zone_name, records_file_string, options.view_name],
       server_name=options.server)['core_return']
   if( not options.quiet ):
     print ('ADDED %s records to %s.' % (

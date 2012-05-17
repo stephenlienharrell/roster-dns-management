@@ -54,6 +54,7 @@ CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 RECORDS_FILE = 'test_data/test_records.db'
+ZONE_FILE = 'test_data/test_zone.db'
 
 class TestCoreHelpers(unittest.TestCase):
 
@@ -228,75 +229,146 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertEqual(self.core_helper_instance._FixHostname(u'university.lcl.', u'sub.university.lcl.'),
                      u'university.lcl.')
 
-  def testAddFormattedRecords(self):
+  def testAddFormattedRecords(self):    
+    self.core_instance.MakeView(u'test_view4')
+    self.core_instance.MakeView(u'test_view5')
+
     self.core_instance.MakeZone(u'records_zone', u'master',
                                 u'records.lcl.',
-                                view_name=u'test_view3')
+                                view_name=u'test_view4')
+
+    self.core_instance.MakeZone(u'records_zone', u'master',
+                                u'records.lcl.',
+                                view_name=u'test_view5')
     self.assertEqual(
-        self.core_instance.ListRecords(zone_name=u'records_zone'),
-        [])
-    self.core_instance.MakeRecord(
-        u'soa', u'soa1', u'records_zone',
-        {u'name_server': u'ns1.university.lcl.',
-         u'admin_email': u'admin.university.lcl.',
-         u'serial_number': 1, u'refresh_seconds': 5,
-         u'retry_seconds': 5, u'expiry_seconds': 5,
-         u'minimum_seconds': 5}, view_name=u'test_view3')
+        self.core_instance.ListRecords(zone_name=u'records_zone'), [])     
 
-    records_file_string = 'university IN LOC 37 23 30.900 N 121 59 19.000 W 7.00m 100.00m 100.00m 2.00m'
-    self.assertRaises(errors.UnexpectedDataError, self.core_helper_instance.AddFormattedRecords,
-        u'records_zone', records_file_string, view=u'test_view3',
-        use_soa=False)
-
+    zone_file_string = open(ZONE_FILE, 'r').read()    
     records_file_string = open(RECORDS_FILE, 'r').read()
-    self.core_helper_instance.AddFormattedRecords(
-        u'records_zone', records_file_string, view=u'test_view3',
-        use_soa=False)
-    self.assertEqual(
-        self.core_instance.ListRecords(zone_name=u'records_zone'),
-        [{u'serial_number': 3, u'refresh_seconds': 5,
-          'target': u'soa1',
-          u'name_server': u'ns1.university.lcl.',
-          u'retry_seconds': 5, 'ttl': 3600,
-          u'minimum_seconds': 5, 'record_type': u'soa',
-          'view_name': u'test_view3', 'last_user': u'sharrell',
-          'zone_name': u'records_zone',
-          u'admin_email': u'admin.university.lcl.',
-          u'expiry_seconds': 5},
-         {'target': u'university.lcl', u'weight': 5, 'ttl': 0,
-          u'priority': 0, 'record_type': u'srv',
-          'view_name': u'test_view3', 'last_user': u'sharrell',
-          'zone_name': u'records_zone',
-          u'assignment_host': u'test.sub.university.lcl.',
-          u'port': 80},
-         {'target': u'desktop-1', 'ttl': 0, 'record_type': u'a',
-          'view_name': u'test_view3', 'last_user': u'sharrell',
-          'zone_name': u'records_zone',
-          u'assignment_ip': u'192.168.1.100'},
-         {'target': u'ns2', 'ttl': 0, 'record_type': u'a',
-          'view_name': u'test_view3', 'last_user': u'sharrell',
-          'zone_name': u'records_zone',
-          u'assignment_ip': u'192.168.1.104'},
-         {'target': u'www', 'ttl': 0, 'record_type': u'cname',
-          'view_name': u'test_view3', 'last_user': u'sharrell',
-          'zone_name': u'records_zone',
-          u'assignment_host': u'sub.university.lcl.'},
-         {'target': u'ns', 'ttl': 0, 'record_type': u'a',
-          'view_name': u'test_view3', 'last_user': u'sharrell',
-          'zone_name': u'records_zone',
-          u'assignment_ip': u'192.168.1.103'},
-         {'target': u'www.data', 'ttl': 0,
-          'record_type': u'cname', 'view_name': u'test_view3',
-          'last_user': u'sharrell', 'zone_name': u'records_zone',
-          u'assignment_host': u'ns.university.lcl.'},
-         {'target': u'mail1', 'ttl': 0, 'record_type': u'a',
-          'view_name': u'test_view3', 'last_user': u'sharrell',
-          'zone_name': u'records_zone',
-          u'assignment_ip': u'192.168.1.101'},
-         {'target': u'mail2', 'ttl': 0, 'record_type': u'a',
-          'view_name': u'test_view3', 'last_user': u'sharrell',
-          'zone_name': u'records_zone',
-          u'assignment_ip': u'192.168.1.102'}])
+
+    #Making sure that AddFormattedRecords puts records into a single view correctly
+    self.core_helper_instance.AddFormattedRecords(u'records_zone', records_file_string, 
+        view=u'test_view4')
+    self.assertEqual(self.core_instance.ListRecords(zone_name=u'records_zone'), 
+        [{'target': u'university.lcl', u'weight': 5, 'ttl': 0, u'priority': 0, 
+        'record_type': u'srv', 'view_name': u'test_view4', 'last_user': u'sharrell', 
+        'zone_name': u'records_zone', u'assignment_host': u'test.sub.university.lcl.', u'port': 80}, 
+
+        {'target': u'desktop-1', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.100'}, 
+
+        {'target': u'ns2', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.104'}, 
+
+        {'target': u'www', 'ttl': 0, 'record_type': u'cname', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_host': u'sub.university.lcl.'}, 
+
+        {'target': u'ns', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.103'}, 
+
+        {'target': u'www.data', 'ttl': 0, 'record_type': u'cname', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_host': u'ns.university.lcl.'}, 
+
+        {'target': u'mail1', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.101'}, 
+
+        {'target': u'mail2', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.102'}])
+
+    #Making sure that AddFormattedRecords correctly puts SOA's into all the views (other than any), 
+    #and the rest of the records into the any view, i.e. checking to make sure they show up in 
+    #test_view4 and test_view5
+    self.core_helper_instance.AddFormattedRecords(u'records_zone', zone_file_string, view=u'any')
+    self.assertEqual(self.core_instance.ListRecords(zone_name=u'records_zone'), 
+        [{'target': u'university.lcl', u'weight': 5, 'ttl': 0, u'priority': 0, 'record_type': u'srv', 
+        'view_name': u'test_view4', 'last_user': u'sharrell', 'zone_name': u'records_zone', 
+        u'assignment_host': u'test.sub.university.lcl.', u'port': 80}, 
+
+        {'target': u'desktop-1', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.100'}, 
+
+        {'target': u'ns2', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.104'}, 
+
+        {'target': u'www', 'ttl': 0, 'record_type': u'cname', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_host': u'sub.university.lcl.'}, 
+
+        {'target': u'ns', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.103'}, 
+
+        {'target': u'www.data', 'ttl': 0, 'record_type': u'cname', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_host': u'ns.university.lcl.'}, 
+
+        {'target': u'mail1', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.101'},
+
+        {'target': u'mail2', 'ttl': 0, 'record_type': u'a', 'view_name': u'test_view4', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.102'}, 
+
+        {u'serial_number': 796, u'refresh_seconds': 10800, 'target': u'@', 
+        u'name_server': u'ns.university.lcl.', u'retry_seconds': 3600, 'ttl': 3600, 
+        u'minimum_seconds': 86400, 'record_type': u'soa', 'view_name': u'test_view4', 'last_user': u'sharrell', 
+        'zone_name': u'records_zone', u'admin_email': u'hostmaster.ns.university.lcl.', 
+        u'expiry_seconds': 3600000},
+
+        {u'serial_number': 795, u'refresh_seconds': 10800, 'target': u'@', u'name_server': u'ns.university.lcl.', 
+         u'retry_seconds': 3600, 'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa', 
+        'view_name': u'test_view5', 'last_user': u'sharrell', 'zone_name': u'records_zone', 
+         u'admin_email': u'hostmaster.ns.university.lcl.', u'expiry_seconds': 3600000}, 
+
+        {'target': u'@', u'name_server': u'ns.records.lcl.', 'ttl': 3600, 'record_type': u'ns', 
+        'view_name': u'any', 'last_user': u'sharrell', 'zone_name': u'records_zone'}, 
+
+        {'target': u'@', u'name_server': u'ns2.records.lcl.', 'ttl': 3600, 'record_type': u'ns', 
+        'view_name': u'any', 'last_user': u'sharrell', 'zone_name': u'records_zone'}, 
+
+        {'target': u'@', 'ttl': 3600, u'priority': 10, 'record_type': u'mx', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'mail_server': u'mail1.records.lcl.'}, 
+
+        {'target': u'@', 'ttl': 3600, u'priority': 20, 'record_type': u'mx', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'mail_server': u'mail2.records.lcl.'}, 
+
+        {'target': u'@', 'ttl': 3600, 'record_type': u'txt', 'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'records_zone', u'quoted_text': u'"Contact 1:  Stephen Harrell (sharrell@university.lcl)"'}, 
+
+        {'target': u'@', 'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'records_zone', u'assignment_ip': u'192.168.0.1'}, 
+
+        {'target': u'ns', 'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.103'}, 
+
+        {'target': u'desktop-1', 'ttl': 3600, 'record_type': u'aaaa', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', 
+        u'assignment_ip': u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'}, 
+
+        {'target': u'desktop-1', 'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.100'}, 
+
+        {'target': u'ns2', 'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 'last_user': u'sharrell', 
+        'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.104'}, 
+
+        {'target': u'ns2', 'ttl': 3600, u'hardware': u'PC', 'record_type': u'hinfo', 
+        'view_name': u'any', 'last_user': u'sharrell', 'zone_name': u'records_zone', u'os': u'NT'}, 
+
+        {'target': u'www', 'ttl': 3600, 'record_type': u'cname', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_host': u'records.lcl.'}, 
+
+        {'target': u'localhost', 'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'127.0.0.1'}, 
+
+        {'target': u'www.data', 'ttl': 3600, 'record_type': u'cname', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_host': u'ns.university.lcl.'}, 
+
+        {'target': u'mail1', 'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.101'}, 
+
+        {'target': u'mail2', 'ttl': 3600, 'record_type': u'a', 'view_name': u'any', 
+        'last_user': u'sharrell', 'zone_name': u'records_zone', u'assignment_ip': u'192.168.1.102'}])
+
+    #Making sure AddFormattedRecords raises errors correctly
+    records_string = 'university IN LOC 37 23 30.900 N 121 59 19.000 W 7.00m 100.00m 100.00m 2.00m'
+    self.assertRaises(errors.UnexpectedDataError, self.core_helper_instance.AddFormattedRecords,
+        u'records_zone', records_string, view=u'any')
 
   def testGetAssociatedCNAMEs(self):
     self.core_instance.MakeRecord(

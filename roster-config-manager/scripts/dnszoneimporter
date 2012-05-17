@@ -67,14 +67,12 @@ def main(args):
                     default=None)
   parser.add_option('-v', '--view', action='store', dest='view',
                     help='View to assign zone to. '
-                         '(This cannot be the any view)',
+                    'If the view passed is any, the SOA record '
+                    'will be added to every view that is associated '
+                    'with the zone and the records will be assigned '
+                    'to any. Otherwise the the SOA and the records '
+                    'will be assigned to the view specified.',
                     metavar='<view>', default=None)
-  parser.add_option('--use-specific-view', action='store_true',
-                    dest='use_specific_view',
-                    help='Records will be put in the any view unless this '
-                         'flag is used. If the flag is set records will go to '
-                         'the view specified with the -v flag.',
-                    default=False)
   parser.add_option('-u', '--username', action='store', dest='user_name',
                     help='Override default username.', metavar='<user_name>',
                     default=None)
@@ -113,29 +111,23 @@ def main(args):
     parser.print_help()
     sys.exit(1)
 
-  if( options.view == u'any' ):
-    print "View cannot be any."
-    parser.print_help()
-    sys.exit(1)
-
-  if( options.use_specific_view ):
-    records_view = options.view
-  else:
-    records_view = u'any'
+  records_view = options.view
 
   if( options.directory is not None ):
     zone_list = os.listdir(options.directory)
   else:
     zone_list = [options.file]
+    
   total_record_count = 0
   for options.file in zone_list:
     if( options.directory is not None ):
       options.file = '%s/%s' % (options.directory, options.file)
     print 'Loading in %s' % options.file
-    importer = zone_importer_lib.ZoneImport(options.file, options.config,
-                                            user, unicode(options.view),
-                                            unicode(options.zone),
-                                            records_view=unicode(records_view))
+    importer = zone_importer_lib.ZoneImport(options.file, 
+                                            options.config,
+                                            user, 
+                                            unicode(options.view),
+                                            unicode(options.zone))
 
     record_count = importer.MakeRecordsFromZone()
     print '%s records loaded from zone %s' % (record_count, options.file)
@@ -143,7 +135,6 @@ def main(args):
     total_record_count += record_count
 
   print '%s total records added' % total_record_count
-
 
 if( __name__ == "__main__" ):
   main(sys.argv[1:])
