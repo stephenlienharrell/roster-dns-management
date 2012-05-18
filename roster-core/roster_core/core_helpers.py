@@ -136,7 +136,7 @@ class CoreHelpers(object):
 
     Inputs:
       zone_name: string of zone name
-      zone_file_string: string of zone name
+      zone_file_string: string of the file contents
       view: string of view name
 
     Outputs:

@@ -80,8 +80,8 @@ class TestPythonStyle(unittest.TestCase):
                                      stdout=subprocess.PIPE)
     which_process.communicate()
     if( which_process.returncode != 0 ):
-      print("pylint is not installed")
-      print("Please visit: http://pypi.python.org/pypi/pylint#downloads")
+      print 'pylint is not installed'
+      print 'Please visit: http://pypi.python.org/pypi/pylint#downloads'
       self.fail()
     
   def test_core(self):
