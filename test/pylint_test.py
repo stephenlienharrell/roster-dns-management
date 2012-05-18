@@ -65,7 +65,7 @@ def pylint_dir(directory, mask='.py$'):
     if re.search(mask, filename) and filename != '.svn':
       lint_command = shlex.split('%s %s/%s' % (PYLINT_CMD, directory, filename))
       lint_process = subprocess.Popen(lint_command, stderr=subprocess.STDOUT,
-          stdout=subprocess.PIPE)
+                                      stdout=subprocess.PIPE)
       lint_output = lint_process.communicate()
       if lint_output[0] != '':
         lint_output_list.append(lint_output[0])
@@ -73,6 +73,17 @@ def pylint_dir(directory, mask='.py$'):
 
 
 class TestPythonStyle(unittest.TestCase):
+  def setUp(self):
+    which_command = ['which', 'pylint']
+    
+    which_process = subprocess.Popen(which_command, stderr=subprocess.STDOUT,
+                                     stdout=subprocess.PIPE)
+    which_process.communicate()
+    if( which_process.returncode != 0 ):
+      print("pylint is not installed")
+      print("Please visit: http://pypi.python.org/pypi/pylint#downloads")
+      self.fail()
+    
   def test_core(self):
     lint_output = pylint_dir(CORE_DIR)
     for output in lint_output:
@@ -120,5 +131,6 @@ class TestPythonStyle(unittest.TestCase):
   #   for output in lint_output:
   #     print(output)
 
+    
 if( __name__ == '__main__' ):
   unittest.main()
