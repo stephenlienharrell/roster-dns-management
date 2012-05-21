@@ -199,6 +199,8 @@ CREATE TABLE `record_arguments` (
   `argument_data_type` varchar(255) NOT NULL,
 
   PRIMARY KEY (`record_arguments_id`),
+  UNIQUE KEY `unique_type_argument_order_1` (`record_arguments_type`,
+    `argument_name`, `argument_order`),
   INDEX `record_arguments_type_1` (`record_arguments_type`),
   INDEX `record_arguments_data_type_1` (`argument_data_type`),
   INDEX `record_arguments_type_argument_1` (`record_arguments_type`,
@@ -206,8 +208,6 @@ CREATE TABLE `record_arguments` (
   INDEX `record_arguments_type_argument_order_1` (`record_arguments_type`,
       `argument_name`, `argument_order`),
 
-  CONSTRAINT `unique_type_argument_order_1` UNIQUE (`record_arguments_type`,
-    `argument_name`, `argument_order`),
   CONSTRAINT `argument_data_type_1` FOREIGN KEY (`argument_data_type`)
     REFERENCES `data_types` (`data_type`),
   CONSTRAINT `record_type_1` FOREIGN KEY (`record_arguments_type`) REFERENCES
@@ -286,9 +286,14 @@ CREATE TABLE `zone_view_assignments` (
   `zone_options` longtext,
 
   PRIMARY KEY (`zone_view_assignments_id`),
+  UNIQUE KEY `unique_zone_name_zone_dependency` 
+    (`zone_view_assignments_zone_name`,`zone_view_assignments_view_dependency`),
+  UNIQUE KEY `unique_zone_origin_view_dependency` 
+    (`zone_view_assignments_view_dependency`,`zone_origin`),
   INDEX `zone_name` (`zone_view_assignments_zone_name`,
                    `zone_view_assignments_view_dependency`),
   INDEX `view_dependency_3` (`zone_view_assignments_view_dependency`),
+  INDEX `zone_type_1` (`zone_view_assignments_zone_type`),
 
   CONSTRAINT `zone_type_1` FOREIGN KEY (`zone_view_assignments_zone_type`)
      REFERENCES `zone_types` (`zone_type`),
@@ -297,10 +302,6 @@ CREATE TABLE `zone_view_assignments` (
   CONSTRAINT `view_dependency_3` FOREIGN KEY
     (`zone_view_assignments_view_dependency`) REFERENCES `view_dependencies`
     (`view_dependency`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `unique_zone_name_zone_dependency` UNIQUE
-    (`zone_view_assignments_zone_name`,`zone_view_assignments_view_dependency`),
-  CONSTRAINT `unique_zone_origin_view_dependency` UNIQUE
-    (`zone_view_assignments_view_dependency`,`zone_origin`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -346,14 +347,23 @@ CREATE TABLE `record_arguments_records_assignments` (
   `argument_value` varchar(1022) NOT NULL,
 
   PRIMARY KEY (`record_arguments_records_assignments_id`),
-  INDEX `argument_value_1` (`argument_value`(15)),
-  INDEX `record_arguments_records_assignments_record_id_1`
-    (`record_arguments_records_assignments_record_id`),
-  INDEX `record_arguments_records_assignments_type_1`
-    (`record_arguments_records_assignments_type`),
-  INDEX `record_arguments_record_assignments_id_argument_1`
+  UNIQUE KEY `unique_record_arguments_records_assignments` 
     (`record_arguments_records_assignments_record_id`,
       `record_arguments_records_assignments_argument_name`),
+  INDEX `argument_value_1` (`argument_value`(15)),
+  INDEX `record_arguments_records_assignments_record_id_1` 
+    (`record_arguments_records_assignments_record_id`),
+  INDEX `record_arguments_records_assignments_type_1` 
+    (`record_arguments_records_assignments_type`),
+  INDEX `record_arguments_record_assignments_id_argument_1` 
+    (`record_arguments_records_assignments_record_id`,
+      `record_arguments_records_assignments_argument_name`),
+  INDEX `record_id_record_type_1` 
+    (`record_arguments_records_assignments_record_id`,
+     `record_arguments_records_assignments_type`),
+  INDEX `argument_record_type_1` 
+    (`record_arguments_records_assignments_type`,
+     `record_arguments_records_assignments_argument_name`),
 
   CONSTRAINT `record_id_record_type_1` FOREIGN KEY
     (`record_arguments_records_assignments_record_id`,
@@ -362,10 +372,7 @@ CREATE TABLE `record_arguments_records_assignments` (
   CONSTRAINT `argument_record_type_1` FOREIGN KEY
     (`record_arguments_records_assignments_type`,
       `record_arguments_records_assignments_argument_name`) REFERENCES
-    `record_arguments` (`record_arguments_type`, `argument_name`),
-  CONSTRAINT `unique_record_arguments_records_assignments` UNIQUE
-    (`record_arguments_records_assignments_record_id`,
-      `record_arguments_records_assignments_argument_name`)
+    `record_arguments` (`record_arguments_type`, `argument_name`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -376,8 +383,8 @@ CREATE TABLE `acls` (
   `acl_name` varchar(255) NOT NULL,
 
   PRIMARY KEY (`acl_id`),
-  INDEX `acl_name_1` (`acl_name`),
-  CONSTRAINT `acl_name_3` UNIQUE (`acl_name`)
+  UNIQUE KEY `acl_name_3` (`acl_name`),
+  INDEX `acl_name_1` (`acl_name`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -389,9 +396,10 @@ CREATE TABLE `acl_ranges` (
   `acl_range_cidr_block` varchar(43),
 
   PRIMARY KEY (`acl_range_id`),
+  UNIQUE KEY `acl_name_cidr_block_1`
+    (`acl_ranges_acl_name`, `acl_range_cidr_block`),
 
-  CONSTRAINT `acl_name_cidr_block_1` UNIQUE 
-      (`acl_ranges_acl_name`, `acl_range_cidr_block`),
+      
   CONSTRAINT `acl_name_1` FOREIGN KEY (`acl_ranges_acl_name`)
     REFERENCES `acls` (`acl_name`) ON DELETE CASCADE ON UPDATE CASCADE
 
@@ -417,14 +425,13 @@ CREATE TABLE `view_acl_assignments` (
   `view_acl_assignments_acl_name` varchar(255) NOT NULL,
 
   PRIMARY KEY (`view_acl_assignments_id`),
+  UNIQUE KEY `acl_name_view_name_1` (`view_acl_assignments_acl_name`,
+    `view_acl_assignments_view_name`),
 
   CONSTRAINT `acl_name_2` FOREIGN KEY (`view_acl_assignments_acl_name`)
     REFERENCES `acls` (`acl_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `view_name_2` FOREIGN KEY (`view_acl_assignments_view_name`)
-    REFERENCES `views` (`view_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-
-  CONSTRAINT `acl_name_view_name_1` UNIQUE (`view_acl_assignments_acl_name`,
-    `view_acl_assignments_view_name`)
+    REFERENCES `views` (`view_name`) ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -436,14 +443,15 @@ CREATE TABLE `view_dependency_assignments` (
   `view_dependency_assignments_view_dependency` varchar(255) NOT NULL,
 
   PRIMARY KEY (`view_dependency_assignments_id`),
+  UNIQUE KEY `view_dependency_assignments_unique_1` 
+    (`view_dependency_assignments_view_name`,
+     `view_dependency_assignments_view_dependency`),
   INDEX `view_name_1` (`view_dependency_assignments_view_name`),
   INDEX `view_dependency_4` (`view_dependency_assignments_view_dependency`),
 
   CONSTRAINT `view_name_1` FOREIGN KEY (`view_dependency_assignments_view_name`)
     REFERENCES `views` (`view_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `view_dependency_assignments_unique_1` UNIQUE
-    (`view_dependency_assignments_view_name`,
-      `view_dependency_assignments_view_dependency`),
+  
   CONSTRAINT `view_dependency_4` FOREIGN KEY 
     (`view_dependency_assignments_view_dependency`) REFERENCES
       `view_dependencies` (`view_dependency`) ON DELETE CASCADE
@@ -500,6 +508,9 @@ CREATE TABLE `dns_server_set_view_assignments` (
   `dns_server_set_view_assignments_view_name` varchar(255) NOT NULL,
 
   PRIMARY KEY (`dns_server_set_view_assignments_id`),
+  UNIQUE KEY `dns_server_set_view_assignments_unique_1`
+    (`dns_server_set_view_assignments_dns_server_set_name`,
+     `dns_server_set_view_assignments_view_name`),
 
   CONSTRAINT `view_name_3` FOREIGN KEY 
     (`dns_server_set_view_assignments_view_name`) REFERENCES `views` 
@@ -507,10 +518,7 @@ CREATE TABLE `dns_server_set_view_assignments` (
   CONSTRAINT `dns_server_set_2` FOREIGN KEY 
     (`dns_server_set_view_assignments_dns_server_set_name`) REFERENCES 
     `dns_server_sets` (`dns_server_set_name`) ON DELETE CASCADE 
-    ON UPDATE CASCADE,
-  CONSTRAINT `dns_server_set_view_assignments_unique_1` UNIQUE
-    (`dns_server_set_view_assignments_dns_server_set_name`,
-     `dns_server_set_view_assignments_view_name`)
+    ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -533,13 +541,13 @@ CREATE TABLE `user_group_assignments` (
   `user_group_assignments_user_name` varchar(255) NOT NULL,
 
   PRIMARY KEY (`user_group_assignments_id`),
+  UNIQUE KEY `user_group_assignments_unique_1`
+    (`user_group_assignments_group_name`, `user_group_assignments_user_name`),
   INDEX `group_name_1` (`user_group_assignments_group_name`),
   INDEX `user_name_2` (`user_group_assignments_user_name`),
 
   CONSTRAINT `group_name_1` FOREIGN KEY (`user_group_assignments_group_name`)
     REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `user_group_assignments_unique_1` UNIQUE
-    (`user_group_assignments_group_name`, `user_group_assignments_user_name`),
   CONSTRAINT `user_name_2` FOREIGN KEY (`user_group_assignments_user_name`)
     REFERENCES `users` (`user_name`) ON DELETE CASCADE ON UPDATE CASCADE
 
@@ -554,6 +562,9 @@ CREATE TABLE `forward_zone_permissions` (
   `forward_zone_permissions_access_right` varchar(4) NOT NULL,
 
   PRIMARY KEY (`forward_zone_permissions_id`),
+  UNIQUE KEY `forward_zone_permissions_unique_1`
+    (`forward_zone_permissions_group_name`,
+      `forward_zone_permissions_zone_name`),
   INDEX `group_name_2` (`forward_zone_permissions_group_name`),
   INDEX `zone_name_4` (`forward_zone_permissions_zone_name`),
   INDEX `access_right_1` (`forward_zone_permissions_access_right`),
@@ -561,10 +572,7 @@ CREATE TABLE `forward_zone_permissions` (
   CONSTRAINT `group_name_2` FOREIGN KEY (`forward_zone_permissions_group_name`)
     REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `zone_name_4` FOREIGN KEY (`forward_zone_permissions_zone_name`)
-    REFERENCES `zones` (`zone_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `forward_zone_permissions_unique_1` UNIQUE
-    (`forward_zone_permissions_group_name`,
-      `forward_zone_permissions_zone_name`)
+    REFERENCES `zones` (`zone_name`) ON DELETE CASCADE ON UPDATE CASCADE  
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -577,14 +585,14 @@ CREATE TABLE `reverse_range_permissions` (
   `reverse_range_permissions_access_right` varchar(4) NOT NULL,
 
   PRIMARY KEY (`reverse_range_permissions_id`),
+  UNIQUE KEY `reverse_range_permissions_unique_1`
+    (`reverse_range_permissions_group_name`,
+     `reverse_range_permissions_cidr_block`),
   INDEX `group_name_3` (`reverse_range_permissions_group_name`),
   INDEX `access_right_2` (`reverse_range_permissions_access_right`),
 
   CONSTRAINT `group_name_3` FOREIGN KEY (`reverse_range_permissions_group_name`)
-    REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `reverse_range_permissions_unique_1` UNIQUE
-    (`reverse_range_permissions_group_name`,
-     `reverse_range_permissions_cidr_block`)
+    REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE  
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -596,11 +604,11 @@ CREATE TABLE `reverse_range_zone_assignments` (
   `reverse_range_zone_assignments_cidr_block` varchar(43) NOT NULL,
 
   PRIMARY KEY (`reverse_range_zone_assignments_id`),
-  INDEX `zone_name_5` (`reverse_range_zone_assignments_zone_name`),
-
-  CONSTRAINT `reverse_range_zone_assignments_unique_1` UNIQUE
+  UNIQUE KEY `reverse_range_zone_assignments_unique_1`
     (`reverse_range_zone_assignments_zone_name`,
      `reverse_range_zone_assignments_cidr_block`),
+  INDEX `zone_name_5` (`reverse_range_zone_assignments_zone_name`),
+  
   CONSTRAINT `zone_name_5` FOREIGN KEY 
     (`reverse_range_zone_assignments_zone_name`) REFERENCES `zones` 
     (`zone_name`) ON DELETE CASCADE ON UPDATE CASCADE
