@@ -301,7 +301,7 @@ CREATE TABLE `zone_view_assignments` (
     REFERENCES `zones` (`zone_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `view_dependency_3` FOREIGN KEY
     (`zone_view_assignments_view_dependency`) REFERENCES `view_dependencies`
-    (`view_dependency`) ON DELETE CASCADE ON UPDATE CASCADE,
+    (`view_dependency`) ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
