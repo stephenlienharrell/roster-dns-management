@@ -126,9 +126,9 @@ class Testdnsmkview(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testMakeView(self):
-    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
     command = os.popen('python %s view -v test_view '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
@@ -139,11 +139,11 @@ class Testdnsmkview(unittest.TestCase):
     self.assertEqual(self.core_instance.ListViewToACLAssignments(), [])
 
   def testMakeViewAclAssignment(self):
-    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
     command = os.popen('python %s acl -v test_view -a acl1 '
-                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                       '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
@@ -171,7 +171,7 @@ class Testdnsmkview(unittest.TestCase):
     command.close()
 
   def testMakeDnsServerSetAssignment(self):
-    self.core_instance.MakeACL(u'outside', u'192.168.1.0/24', 1)
+    self.core_instance.MakeACL(u'outside', u'192.168.1.0/24')
     self.core_instance.MakeDnsServerSet(u'set2')
     command = os.popen('python %s dns_server_set -v test_view -e set2 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
@@ -225,6 +225,15 @@ class Testdnsmkview(unittest.TestCase):
                            self.server_name))
     self.assertEqual(command.read(),
         'CLIENT ERROR: The -v/--view-name flag is required.\n')
+    command.close()
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
+    command = os.popen('python %s acl -v test_view -a acl1 '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'USER ERROR: Either --allow or --deny must be used.\n')
     command.close()
 
 if( __name__ == '__main__' ):

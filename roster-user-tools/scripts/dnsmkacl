@@ -59,10 +59,9 @@ def main(args):
   usage = ('\n'
            '\n'
            'To make acls:\n'
-           '\t%s -a <acl-name> --cidr-block <cidr_block> [--allow/--deny]\n'
+           '\t%s -a <acl-name> --cidr-block <cidr_block>\n'
            '\n'
-           'All arguments above are required except for either '
-           'allow or deny.\n' % sys.argv[0])
+           'All arguments above are required.\n' % sys.argv[0])
   args_instance = Args(command, ['acl'], args, usage)
   options = args_instance.options
 
@@ -78,16 +77,13 @@ def main(args):
       kwargs={u'acl_name': options.acl, u'cidr_block': options.cidr_block})[
           'core_return']
   if( not acls ):
-    allowed = 0
-    if( options.allow ):
-      allowed = 1
     roster_client_lib.RunFunction(
         u'MakeACL', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
-        args=[options.acl, options.cidr_block, allowed])
+        args=[options.acl, options.cidr_block])
     if( not options.quiet ):
-      print 'ADDED ACL: acl: %s cidr_block: %s allowed: %s' % (
-          options.acl, options.cidr_block, allowed == 1)
+      print 'ADDED ACL: acl: %s cidr_block: %s' % (
+          options.acl, options.cidr_block)
   else:
     cli_common_lib.DnsError('ACL already exists.')
 

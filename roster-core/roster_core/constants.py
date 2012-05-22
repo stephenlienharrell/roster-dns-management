@@ -512,7 +512,6 @@ TABLES = {
     'acls':              {'acl_name': 'UnicodeString'},
 
     'acl_ranges':        {'acl_ranges_acl_name': 'UnicodeString',
-                          'acl_range_allowed': 'IntBool',
                           'acl_range_cidr_block': 'CIDRBlock'},
 
     'views':             {'view_name': 'UnicodeString',
@@ -521,7 +520,8 @@ TABLES = {
 
     'view_acl_assignments':
                          {'view_acl_assignments_acl_name': 'UnicodeString',
-                          'view_acl_assignments_view_name': 'UnicodeString'},
+                          'view_acl_assignments_view_name': 'UnicodeString',
+                          'view_acl_assignments_range_allowed': 'IntBool'},
 
     'view_dependency_assignments':
         {'view_dependency_assignments_view_name': 'UnicodeString',

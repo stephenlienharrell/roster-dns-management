@@ -245,16 +245,16 @@ class TestCore(unittest.TestCase):
 
   def testACLMakeRemoveListUpdate(self):
     self.assertEqual(self.core_instance.ListACLs(),
-                     {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
-    self.core_instance.MakeACL(u'test_acl', u'192.168.0/24', 1)
-    self.core_instance.MakeACL(u'test_acl', u'192.168.1/24', 1)
-    self.core_instance.MakeACL(u'second_test_acl', u'192.168.0/24', 0)
+                     {u'any': [{'cidr_block': None}]})
+    self.core_instance.MakeACL(u'test_acl', u'192.168.0/24')
+    self.core_instance.MakeACL(u'test_acl', u'192.168.1/24')
+    self.core_instance.MakeACL(u'second_test_acl', u'192.168.0/24')
     self.assertEqual(self.core_instance.ListACLs(),
-        {u'any': [{'cidr_block': None, 'range_allowed': 1}],
-         u'test_acl': [{'cidr_block': u'192.168.0/24', 'range_allowed': 1},
-                       {'cidr_block': u'192.168.1/24', 'range_allowed': 1}],
+        {u'any': [{'cidr_block': None}],
+         u'test_acl': [{'cidr_block': u'192.168.0/24'},
+                       {'cidr_block': u'192.168.1/24'}],
          u'second_test_acl':
-            [{'cidr_block': u'192.168.0/24', 'range_allowed': 0}]})
+            [{'cidr_block': u'192.168.0/24'}]})
 
     self.assertTrue(self.core_instance.RemoveACL(u'second_test_acl'))
     self.assertFalse(self.core_instance.ListACLs(u'second_test_acl'))
@@ -262,11 +262,11 @@ class TestCore(unittest.TestCase):
 
     self.assertTrue(self.core_instance.RemoveCIDRBlockFromACL(
                     u'test_acl', u'192.168.0/24'))
-    self.core_instance.MakeACL(u'test_acl', u'192.168.0/24', 0)
+    self.core_instance.MakeACL(u'test_acl', u'192.168.0/24')
     self.assertEqual(self.core_instance.ListACLs(),
-        {u'any': [{'cidr_block': None, 'range_allowed': 1}],
-         u'test_acl': [{'cidr_block': u'192.168.1/24', 'range_allowed': 1},
-                       {'cidr_block': u'192.168.0/24', 'range_allowed': 0}]})
+        {u'any': [{'cidr_block': None}],
+         u'test_acl': [{'cidr_block': u'192.168.0/24'},
+                       {'cidr_block': u'192.168.1/24'}]})
     self.assertFalse(self.core_instance.RemoveCIDRBlockFromACL(u'test_acl',
                      u'192.168.3/24'))
 
@@ -307,37 +307,41 @@ class TestCore(unittest.TestCase):
   def testViewToACLAssignmentsMakeRemoveList(self):
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
     self.core_instance.MakeView(u'test_view', u'')
-    self.core_instance.MakeACL(u'test_acl', u'192.168.0/24', 1)
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl')
+    self.core_instance.MakeACL(u'test_acl', u'192.168.0/24')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
-                     [{'view_name': u'test_view', 'acl_name': u'test_acl'}])
+                     [{'view_name': u'test_view', 'acl_range_allowed': 1,
+                       'acl_name': u'test_acl'}])
 
     self.core_instance.RemoveView(u'test_view')
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
 
     self.core_instance.MakeView(u'test_view', u'')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
-                     [{'view_name': u'test_view', 'acl_name': u'test_acl'}])
+                     [{'view_name': u'test_view', 'acl_range_allowed': 1,
+                       'acl_name': u'test_acl'}])
 
     self.core_instance.RemoveACL(u'test_acl')
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
 
-    self.core_instance.MakeACL(u'test_acl', u'192.168.0/24', 1)
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl')
+    self.core_instance.MakeACL(u'test_acl', u'192.168.0/24')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
-                     [{'view_name': u'test_view', 'acl_name': u'test_acl'}])
+                     [{'view_name': u'test_view', 'acl_range_allowed': 1,
+                       'acl_name': u'test_acl'}])
     self.core_instance.UpdateView(u'test_view', u'not_test_view')
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
-                     [{'view_name': u'not_test_view', 'acl_name': u'test_acl'}])
+                     [{'view_name': u'not_test_view', 'acl_range_allowed': 1,
+                       'acl_name': u'test_acl'}])
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
-                     [{'view_name': u'not_test_view',
+                     [{'view_name': u'not_test_view', 'acl_range_allowed': 1,
                        'acl_name': u'test_acl'}])
     self.assertTrue(self.core_instance.RemoveViewToACLAssignments(
-                    u'not_test_view', u'test_acl'))
+                    u'not_test_view', u'test_acl', 1))
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
     self.assertFalse(self.core_instance.RemoveViewToACLAssignments(
-                     u'not_test_view', u'test_acl'))
+                     u'not_test_view', u'test_acl', 1))
 
   def testZoneMakeRemoveListUpdate(self):
     self.core_instance.MakeView(u'test_view')

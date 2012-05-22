@@ -120,8 +120,8 @@ class Testdnslsacl(unittest.TestCase):
     time.sleep(1)
     roster_client_lib.GetCredentials(USERNAME, u'test', credfile=CREDFILE,
                                      server_name=self.server_name)
-    self.core_instance.MakeACL(u'acl1', u'192.168.1/24', 1)
-    self.core_instance.MakeACL(u'acl2', u'10.10.1/24', 0)
+    self.core_instance.MakeACL(u'acl1', u'192.168.1/24')
+    self.core_instance.MakeACL(u'acl2', u'10.10.1/24')
 
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
@@ -129,57 +129,36 @@ class Testdnslsacl(unittest.TestCase):
 
   def testListAcl(self):
     command = os.popen('python %s -u %s -p %s --config-file %s -s %s -c %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'Name CIDR Block   Allowed\n'
-        '-------------------------\n'
-        'acl1 192.168.1/24 Allow\n'
-        'acl2 10.10.1/24   Deny\n'
-        'any  None         Allow\n\n')
+        'Name CIDR Block\n'
+        '---------------\n'
+        'acl1 192.168.1/24\n'
+        'acl2 10.10.1/24\n'
+        'any  None\n\n')
     command.close()
-    command = os.popen('python %s --allow '
-        '-u %s -p %s --config-file %s -s %s -c %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+    command = os.popen('python %s -a acl2 --no-header -u %s -p %s '
+                       '--config-file %s -s %s -c %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'Name CIDR Block   Allowed\n'
-        '-------------------------\n'
-        'acl1 192.168.1/24 Allow\n'
-        'any  None         Allow\n\n')
-    command.close()
-    command = os.popen('python %s --deny '
-        '-u %s -p %s --config-file %s -s %s -c %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        'Name CIDR Block Allowed\n'
-        '-----------------------\n'
-        'acl2 10.10.1/24 Deny\n\n')
-    command.close()
-    command = os.popen('python %s -a acl2 --no-header '
-        '-u %s -p %s --config-file %s -s %s -c %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        'acl2 10.10.1/24 Deny\n\n')
+        'acl2 10.10.1/24\n\n')
     command.close()
     command = os.popen('python %s --cidr-block 10.10.1/24 -u %s -p %s '
                        '--config-file %s -s %s -c %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'Name CIDR Block Allowed\n'
-        '-----------------------\n'
-        'acl2 10.10.1/24 Deny\n\n')
+        'Name CIDR Block\n'
+        '---------------\n'
+        'acl2 10.10.1/24\n\n')
     command.close()
 
 
 
   def testErrors(self):
-    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
-                       '--allow --deny -u %s -p %s --config-file %s -s %s '
-                       '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
-                                  self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        "CLIENT ERROR: --allow and --deny cannot be used simultaneously.\n")
-    command.close()
+    pass
 
 
 if( __name__ == '__main__' ):

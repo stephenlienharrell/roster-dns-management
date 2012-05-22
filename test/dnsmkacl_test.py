@@ -127,16 +127,16 @@ class Testdnsmkacl(unittest.TestCase):
 
   def testMakeAcl(self):
     command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
-                       '--allow -u %s -p %s --config-file %s -s %s -c %s' % (
+                       '-u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'ADDED ACL: acl: acl1 cidr_block: 192.168.1.0/24 allowed: True\n')
+        'ADDED ACL: acl: acl1 cidr_block: 192.168.1.0/24\n')
     command.close()
     command = os.popen('python %s -a acl2 --cidr-block 192.168.2.0/24 '
-                       '--deny -u %s -p %s --config-file %s -s %s -c %s' % (
+                       '-u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'ADDED ACL: acl: acl2 cidr_block: 192.168.2.0/24 allowed: False\n')
+        'ADDED ACL: acl: acl2 cidr_block: 192.168.2.0/24\n')
     command.close()
 
   def testErrors(self):
@@ -152,25 +152,12 @@ class Testdnsmkacl(unittest.TestCase):
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(),
         'CLIENT ERROR: The -a/--acl flag is required.\n')
-    self.core_instance.MakeACL(u'test_acl', u'192.168.1.0/24', 1)
+    self.core_instance.MakeACL(u'test_acl', u'192.168.1.0/24')
     command = os.popen('python %s --acl test_acl --cidr-block 192.168.1.0/24 '
-                       '--allow -u %s -p %s --config-file %s -s %s -c %s' % (
+                       '-u %s -p %s --config-file %s -s %s -c %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(), 'CLIENT ERROR: ACL already exists.\n')
-    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
-                       '--allow --deny -u %s -p %s --config-file %s -s %s '
-                       '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
-                                  self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        "CLIENT ERROR: --allow and --deny cannot be used simultaneously.\n")
-    command.close()
-    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
-                       '-u %s -p %s --config-file %s -s %s '
-                       '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
-                                  self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        "CLIENT ERROR: Either --allow or --deny must be used.\n")
     command.close()
 
 

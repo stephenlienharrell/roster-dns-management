@@ -428,18 +428,12 @@ class BindTreeExport(object):
           acl_dict[
               acl_range['acl_ranges_acl_name']][acl_range[
                   'acl_range_cidr_block']] = {}
-        acl_dict[
-            acl_range['acl_ranges_acl_name']][acl_range[
-              'acl_range_cidr_block']] = acl_range['acl_range_allowed']
 
     for acl in acl_dict:
       if( acl_dict[acl] is not None and acl != 'any' ):
         named_conf_lines.append('acl %s {' % acl)
         for cidr in acl_dict[acl]:
-          if( acl_dict[acl][cidr] ):
-            named_conf_lines.append('\t%s;' % cidr)
-          else:
-            named_conf_lines.append('\t!%s;' % cidr)
+          named_conf_lines.append('\t%s;' % cidr)
         named_conf_lines.append('};\n')
 
     for view_name in cooked_data[dns_server_set]['views']:
@@ -447,7 +441,17 @@ class BindTreeExport(object):
       clients = []
       found_acl = False
       for acl_name in cooked_data[dns_server_set]['views'][view_name]['acls']:
-        clients.append('%s;' % acl_name)
+        for view_acl_assignment in data['view_acl_assignments']:
+          if( view_acl_assignment['view_acl_assignments_view_name'] ==
+              view_name ):
+            if( view_acl_assignment['view_acl_assignments_acl_name'] ==
+                acl_name ):
+              if( view_acl_assignment['view_acl_assignments_range_allowed'] ==
+                  True ):
+                clients.append('%s;' % acl_name)
+              else:
+                clients.append('!%s;' % acl_name)
+
       if( clients == [] and found_acl ):
         clients = [u'any;']
       named_conf_lines.append('\tmatch-clients { %s };' % ' '.join(clients))
@@ -495,7 +499,8 @@ class BindTreeExport(object):
       example:
         ({'view_acl_assignments': ({
           'view_acl_assignments_view_name': u'external',
-          'view_acl_assignments_acl_name': u'public'})},
+          'view_acl_assignments_acl_name': u'public',
+          'view_acl_assignments_acl_range_allowed': 1})},
         { u'zones':
           {'rows':[{}],
            'columns': [u'zones_id', u'zone_name'],

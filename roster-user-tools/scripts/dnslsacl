@@ -59,7 +59,7 @@ def main(args):
   usage = ('\n'
            '\n'
            'To list acls:\n'
-           '\t%s -a <acl-name> --cidr-block <cidr_block> [--allow/--deny]\n'
+           '\t%s -a <acl-name> --cidr-block <cidr_block>\n'
            '\n'
            'You may use any or none of the arguments above to search ACLs' %
            (sys.argv[0]))
@@ -72,26 +72,19 @@ def main(args):
     print 'ERROR: %s' % error
     sys.exit(1)
 
-  allowed = None
-  if( options.allow ):
-    allowed = 1
-  elif( options.deny ):
-    allowed = 0
   acls = roster_client_lib.RunFunction(
       u'ListACLs', options.username, credfile=options.credfile,
       credstring=options.credstring, server_name=options.server,
-      kwargs={u'acl_name': options.acl, u'cidr_block': options.cidr_block,
-              u'range_allowed': allowed})[
+      kwargs={u'acl_name': options.acl, u'cidr_block': options.cidr_block})[
           'core_return']
 
   print_list = []
   if( not options.no_header ):
-    print_list.append(['Name', 'CIDR Block', 'Allowed'])
+    print_list.append(['Name', 'CIDR Block'])
 
   for acl in acls:
     for sub_acl in acls[acl]:
-      print_list.append([acl, sub_acl['cidr_block'],
-                         'Allow' if sub_acl['range_allowed'] else 'Deny'])
+      print_list.append([acl, sub_acl['cidr_block']])
 
   print cli_common_lib.PrintColumns(
       print_list, first_line_header=not options.no_header)

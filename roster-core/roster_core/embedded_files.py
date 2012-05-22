@@ -392,7 +392,6 @@ CREATE TABLE `acls` (
 CREATE TABLE `acl_ranges` (
   `acl_range_id` mediumint unsigned NOT NULL auto_increment,
   `acl_ranges_acl_name` varchar(255) NOT NULL,
-  `acl_range_allowed` boolean,
   `acl_range_cidr_block` varchar(43),
 
   PRIMARY KEY (`acl_range_id`),
@@ -423,6 +422,7 @@ CREATE TABLE `view_acl_assignments` (
   `view_acl_assignments_id` mediumint unsigned NOT NULL auto_increment,
   `view_acl_assignments_view_name` varchar(255) NOT NULL,
   `view_acl_assignments_acl_name` varchar(255) NOT NULL,
+  `view_acl_assignments_range_allowed` boolean,
 
   PRIMARY KEY (`view_acl_assignments_id`),
   UNIQUE KEY `acl_name_view_name_1` (`view_acl_assignments_acl_name`,
@@ -728,8 +728,7 @@ INSERT INTO record_arguments (record_arguments_type, argument_name,
 
 # make acl any keyword for named.conf
 INSERT INTO acls (acl_name) VALUES ('any');
-INSERT INTO acl_ranges (acl_ranges_acl_name, acl_range_allowed) VALUES 
-    ('any', 1);
+INSERT INTO acl_ranges (acl_ranges_acl_name) VALUES ('any');
 
 # Tree exporter needs to audit log with no active user. Here is a user for the
 # exporter.

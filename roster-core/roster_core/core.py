@@ -420,33 +420,26 @@ class Core(object):
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
 
-  def ListACLs(self, acl_name=None, cidr_block=None, range_allowed=None):
+  def ListACLs(self, acl_name=None, cidr_block=None):
     """List one or many acls, if all args are none it will them all, or just
     search on one more terms.
 
     Inputs:
       acl_name: string of acl name
       cidr_block: string of valid CIDR block or IP address
-      range_allowed: integer boolean of if the acl is allowing or disallowing
-                     the ip range
 
     Outputs:
       dictionary: keyed by the acl name whos value is a list dictionaries with
                   the cidr block and range allowed values.
-        example: {'rfc_1918_networks':   [{'cidr_block': '192.168/16',
-                                           'range_allowed': 1},
-                                          {'cidr_block': '10/8',
-                                           'range_allowed': 1}],
-                  'university_networks': [{'cidr_block': '1.2.3/24',
-                                           'range_allowed': 1},
-                                          {'cidr_block': '1.1.1/24',
-                                           'range_allowed': 0}]}
+        example: {'rfc_1918_networks':   [{'cidr_block': '192.168/16'},
+                                          {'cidr_block': '10/8'}],
+                  'university_networks': [{'cidr_block': '1.2.3/24'},
+                                          {'cidr_block': '1.1.1/24'}]}
     """
     self.user_instance.Authorize('ListACLs')
     acl_dict = self.db_instance.GetEmptyRowDict('acl_ranges')
     acl_dict['acl_ranges_acl_name'] = acl_name
     acl_dict['acl_range_cidr_block'] = cidr_block
-    acl_dict['acl_range_allowed'] = range_allowed
     self.db_instance.StartTransaction()
     try:
       acls = self.db_instance.ListRow('acl_ranges', acl_dict)
@@ -458,27 +451,23 @@ class Core(object):
       if( not acl_cidr_range_dict.has_key(acl['acl_ranges_acl_name']) ):
         acl_cidr_range_dict[acl['acl_ranges_acl_name']] = []
       acl_cidr_range_dict[acl['acl_ranges_acl_name']].append(
-          {'cidr_block': acl['acl_range_cidr_block'],
-           'range_allowed': acl['acl_range_allowed']})
+          {'cidr_block': acl['acl_range_cidr_block']})
 
     return acl_cidr_range_dict
 
-  def MakeACL(self, acl_name, cidr_block, range_allowed):
+  def MakeACL(self, acl_name, cidr_block):
     """Makes an acl from args.
 
     Inputs:
       acl_name: string of acl name
       cidr_block: string of valid CIDR block or IP address
-      range_allowed: integer boolean of if the acl is allowing or disallowing
-                     the ip range
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     acls_dict = {'acl_name': acl_name}
     acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
-                       'acl_range_cidr_block': cidr_block,
-                       'acl_range_allowed': range_allowed}
+                       'acl_range_cidr_block': cidr_block}
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -526,7 +515,7 @@ class Core(object):
     return row_count
 
 
-  def RemoveCIDRBlockFromACL(self, acl_name, cidr_block, range_allowed=None):
+  def RemoveCIDRBlockFromACL(self, acl_name, cidr_block):
     """Makes CIDR Block from ACL
 
     Inputs:
@@ -541,8 +530,7 @@ class Core(object):
     self.user_instance.Authorize(function_name)
 
     acl_ranges_dict = {'acl_ranges_acl_name': acl_name,
-                       'acl_range_cidr_block': cidr_block,
-                       'acl_range_allowed': range_allowed}
+                       'acl_range_cidr_block': cidr_block}
 
     row_count = 0
     success = False
@@ -1317,7 +1305,8 @@ class Core(object):
                                   current_args, success)
     return row_count
 
-  def ListViewToACLAssignments(self, view_name=None, acl_name=None):
+  def ListViewToACLAssignments(self, view_name=None, acl_name=None,
+                               acl_range_allowed=None):
     """Lists some or all view to acl assignments corresponding to the
     given args.
 
@@ -1327,13 +1316,16 @@ class Core(object):
 
     Outputs:
       list: list contains dictionaries of assignments
-        example: [{'view_name': 'main_view', 'acl_name': 'internal'},
-                  {'view_name': 'other_view', 'acl_name': 'external'}]
+        example: [{'view_name': 'main_view', 'acl_name': 'internal',
+                   'acl_range_allowed': 'true'},
+                  {'view_name': 'other_view', 'acl_name': 'external',
+                   'acl_range_allowed': 'false'}]
     """
     self.user_instance.Authorize('ListViewToACLAssignments')
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
-        'view_acl_assignments_view_name': view_name}
+        'view_acl_assignments_view_name': view_name,
+        'view_acl_assignments_range_allowed': acl_range_allowed}
     self.db_instance.StartTransaction()
     try:
       view_acl_assignments = self.db_instance.ListRow('view_acl_assignments',
@@ -1348,23 +1340,27 @@ class Core(object):
           'view_acl_assignments_view_name']
       assignments_dict['acl_name'] = view_acl_assignment[
           'view_acl_assignments_acl_name']
+      assignments_dict['acl_range_allowed'] = view_acl_assignment[
+          'view_acl_assignments_range_allowed']
       assignments_dicts.append(assignments_dict)
 
     return assignments_dicts
 
-  def MakeViewToACLAssignments(self, view_name, acl_name):
+  def MakeViewToACLAssignments(self, view_name, acl_name, acl_range_allowed):
     """Makes view to acl assignment
 
     Inputs:
       view_name: string of view name
       acl_name: string of acl name
+      acl_range_allowed: boolean to allow/disallow given acl range
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
-        'view_acl_assignments_view_name': view_name}
+        'view_acl_assignments_view_name': view_name,
+        'view_acl_assignments_range_allowed': acl_range_allowed}
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -1379,7 +1375,7 @@ class Core(object):
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
 
-  def RemoveViewToACLAssignments(self, view_name, acl_name):
+  def RemoveViewToACLAssignments(self, view_name, acl_name, acl_range_allowed):
     """Removes view to acl assignment
 
     Inputs:
@@ -1394,7 +1390,8 @@ class Core(object):
 
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
-        'view_acl_assignments_view_name': view_name}
+        'view_acl_assignments_view_name': view_name,
+        'view_acl_assignments_range_allowed': acl_range_allowed}
     success = False
     try:
       self.db_instance.StartTransaction()

@@ -59,10 +59,9 @@ def main(args):
   usage = ('\n'
            '\n'
            'To remove acls:\n'
-           '\t%s -a <acl-name> --cidr-block <cidr-block> [--allow/--deny]\n'
+           '\t%s -a <acl-name> --cidr-block <cidr-block>\n'
            '\n'
-           'All arguments are required except for either '
-           '--allow or --deny.\n' % sys.argv[0])
+           'All arguments are required.\n' % sys.argv[0])
   args_instance = Args(command, ['remove'], args, usage)
   options = args_instance.options
 
@@ -72,8 +71,7 @@ def main(args):
     print 'ERROR: %s' % error
     sys.exit(1)
 
-  if( options.acl and not options.allow and not options.deny
-      and not options.cidr_block ):
+  if( options.acl and not options.cidr_block ):
     if( options.force ):
       roster_client_lib.RunFunction(
           u'RemoveACL', options.username, credfile=options.credfile,
@@ -85,24 +83,17 @@ def main(args):
       cli_common_lib.DnsError('Must use --force to delete entire ACL.', 1)
 
   else:
-    allowed = None
-    if( options.allow ):
-      allowed = 1 
-    elif( options.deny ):
-      allowed = 0 
     core_return = roster_client_lib.RunFunction(
         u'RemoveCIDRBlockFromACL', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
-        args=[options.acl, options.cidr_block, allowed])['core_return']
-    if( allowed is None ):
-      allowed = 'N/A'
+        args=[options.acl, options.cidr_block])['core_return']
     if( not core_return ):
       cli_common_lib.DnsError(
-          'No acl found with acl: %s cidr_block: %s allowed: %s' % (
-              options.acl, options.cidr_block, allowed))
+          'No acl found with acl: %s cidr_block: %s' % (
+              options.acl, options.cidr_block))
     elif( not options.quiet ):
-      print 'REMOVED ACL: acl: %s cidr_block: %s allowed: %s' % (
-          options.acl, options.cidr_block, allowed)
+      print 'REMOVED ACL: acl: %s cidr_block: %s' % (
+          options.acl, options.cidr_block)
 
 
 if __name__ == "__main__":

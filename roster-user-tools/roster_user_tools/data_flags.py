@@ -60,13 +60,6 @@ class Acl(core_flags.CoreFlags):
       self.AddFlagRule(('force', 'cidr_block'), flag_type='independent_args',
                        required=False)
 
-    self.parser.add_option('--allow', action='store_true', dest='allow',
-                           help='Allow CIDR block in ACL.', default=None)
-    self.parser.add_option('--deny', action='store_true', dest='deny',
-                           help='Deny CIDR block in ACL.', default=None)
-    self.AddFlagRule(('allow', 'deny'), required=self.action=='Make',
-                     flag_type='independent_args')
-
 
 class Record(core_flags.CoreFlags):
   """Command line record flags"""
@@ -294,6 +287,12 @@ class View(core_flags.CoreFlags):
     self.parser.add_option('-a', '--acl', action='store', dest='acl',
                            help='String of access control list name.',
                            default=None)
+    self.parser.add_option('--allow', action='store_true', dest='allow',
+                           help='Allow ACL in view.', default=None)
+    self.parser.add_option('--deny', action='store_true', dest='deny',
+                           help='Deny ACL in view.', default=None)
+    self.AddFlagRule(('allow', 'deny'), required=self.action=='Make',
+                     flag_type='independent_args')
     if( self.action != 'Remove' ):
       self.AddFlagRule('acl', required=not_list, command='view')
     self.AddFlagRule('acl', required=not_list, command='acl')

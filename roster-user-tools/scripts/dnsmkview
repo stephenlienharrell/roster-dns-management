@@ -66,7 +66,7 @@ def main(args):
            '\t%s dns_server_set -v <view-name> -e <dns-server-set>\n'
            '\n'
            'To make acl view assignments:\n'
-           '\t%s acl -v <view-name> -a <acl-name>\n'
+           '\t%s acl -v <view-name> -a <acl-name> [--allow/--deny]\n'
            '\n'
            'To make view assignments:\n'
            '\t%s view_subset -v <view-superset-name>\n'
@@ -88,6 +88,8 @@ def main(args):
       kwargs={u'view_name': options.view_name})['core_return']
 
   if( command == 'view' ):
+    if( options.acl and options.allow is None ):
+      cli_common_lib.ArgumentError('Either --allow or --deny must be used.')
     acls = roster_client_lib.RunFunction(
         u'ListACLs', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
@@ -95,6 +97,10 @@ def main(args):
     if( acls == {} ):
       cli_common_lib.DnsError(
           'ACL "%s" does not exist.' % options.acl, 1)
+    else:
+      allowed = 0
+      if( options.allow ):
+        allowed = 1
 
     if( options.view_name in views ):
       cli_common_lib.DnsError(
@@ -111,10 +117,11 @@ def main(args):
     roster_client_lib.RunFunction(
         u'MakeViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.view_name, options.acl])
+        server_name=options.server, args=[options.view_name, options.acl,
+                                          allowed])
     if( not options.quiet ):
-      print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s' % (
-          options.view_name, options.acl)
+      print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s allowed: %s' % (
+          options.view_name, options.acl, allowed)
 
   elif( command == 'dns_server_set' ):
     if( options.view_name not in views ):
@@ -149,10 +156,14 @@ def main(args):
     if( view_acl_assignments ):
       cli_common_lib.DnsError('View ACL Assignment already exists.', 1)
 
+    allowed = 0
+    if( options.allow ):
+      allowed = 1
     roster_client_lib.RunFunction(
         u'MakeViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.view_name, options.acl])
+        server_name=options.server, args=[options.view_name, options.acl,
+                                          allowed])
     if( not options.quiet ):
       print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s' % (
           options.view_name, options.acl)

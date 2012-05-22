@@ -66,7 +66,7 @@ def main(args):
            '\t%s dns_server_set -v <view-name> -e <dns-server-set>\n'
            '\n'
            'To remove acl view assignments:\n'
-           '\t%s acl -v <view-name> -a <acl-name>\n'
+           '\t%s acl -v <view-name> -a <acl-name> [--allow/--deny]\n'
            '\n'
            'To remove view assignments:\n'
            '\t%s view_subset -v <view-superset-name>\n'
@@ -125,6 +125,8 @@ def main(args):
     if( options.view_name not in views ):
       cli_common_lib.DnsError(
           'View "%s" does not exist.' % options.view_name, 1)
+    if( options.allow is None ):
+      cli_common_lib.UserError('Either --allow or --deny must be used.', 1)
     view_acl_assignments = roster_client_lib.RunFunction(
         u'ListViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
@@ -134,10 +136,15 @@ def main(args):
     if( not view_acl_assignments ):
       cli_common_lib.DnsError('View ACL Assignment does not exist.', 1)
 
+    allowed = 0
+    if( options.allow == 1 ):
+      allowed = 1
+
     roster_client_lib.RunFunction(
         u'RemoveViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.view_name, options.acl])
+        server_name=options.server, args=[options.view_name, options.acl,
+                                          allowed])
     if( not options.quiet ):
       print 'REMOVED VIEW TO ACL ASSIGNMENT: view_name: %s acl_name: %s' % (
           options.view_name, options.acl)

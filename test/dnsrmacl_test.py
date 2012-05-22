@@ -126,11 +126,10 @@ class Testdnsrmacl(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testRemoveAcl(self):
-    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.assertEqual(self.core_instance.ListACLs(),
-                     {u'acl1': [{'cidr_block': u'192.168.1.0/24',
-                                 'range_allowed': 1}],
-                      u'any': [{'cidr_block': None, 'range_allowed': 1}]})
+                     {u'acl1': [{'cidr_block': u'192.168.1.0/24'}],
+                      u'any': [{'cidr_block': None}]})
     command = os.popen('python %s --force -a acl1 -u %s -p %s --config-file %s '
         '-s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
@@ -138,68 +137,58 @@ class Testdnsrmacl(unittest.TestCase):
         'REMOVED ACL: acl: acl1\n')
     command.close()
     self.assertEqual(self.core_instance.ListACLs(),
-                     {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
+                     {u'any': [{'cidr_block': None}]})
 
   def testRemoveCIDRFromAcl(self):
-    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
-    self.core_instance.MakeACL(u'acl1', u'192.168.2.0/24', 0)
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
+    self.core_instance.MakeACL(u'acl1', u'192.168.2.0/24')
     self.assertEqual(self.core_instance.ListACLs(),
-                     {u'acl1': [{'cidr_block': u'192.168.1.0/24',
-                                 'range_allowed': 1},
-                                {'cidr_block': u'192.168.2.0/24',
-                                 'range_allowed': 0}],
-                      u'any': [{'cidr_block': None, 'range_allowed': 1}]})
-    command = os.popen('python %s -a acl1 --cidr-block 192.168.2.0/24 '
-        '--deny -u %s -p %s --config-file %s -s %s -c %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        'REMOVED ACL: acl: acl1 cidr_block: 192.168.2.0/24 allowed: 0\n')
-    self.assertEqual(self.core_instance.ListACLs(),
-                     {u'acl1': [{'cidr_block': u'192.168.1.0/24',
-                                 'range_allowed': 1}],
-                      u'any': [{'cidr_block': None, 'range_allowed': 1}]})
-    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
-        '--allow -u %s -p %s --config-file %s -s %s -c %s' % (
-        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        'REMOVED ACL: acl: acl1 cidr_block: 192.168.1.0/24 allowed: 1\n')
-    self.assertEqual(self.core_instance.ListACLs(),
-        {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
-    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
-    self.core_instance.MakeACL(u'acl1', u'192.168.2.0/24', 0)
+                     {u'acl1': [{'cidr_block': u'192.168.1.0/24'},
+                                {'cidr_block': u'192.168.2.0/24'}],
+                      u'any': [{'cidr_block': None}]})
     command = os.popen('python %s -a acl1 --cidr-block 192.168.2.0/24 '
         '-u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'REMOVED ACL: acl: acl1 cidr_block: 192.168.2.0/24 allowed: N/A\n')
+        'REMOVED ACL: acl: acl1 cidr_block: 192.168.2.0/24\n')
+    self.assertEqual(self.core_instance.ListACLs(),
+                     {u'acl1': [{'cidr_block': u'192.168.1.0/24'}],
+                      u'any': [{'cidr_block': None}]})
     command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
         '-u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'REMOVED ACL: acl: acl1 cidr_block: 192.168.1.0/24 allowed: N/A\n')
+        'REMOVED ACL: acl: acl1 cidr_block: 192.168.1.0/24\n')
     self.assertEqual(self.core_instance.ListACLs(),
-        {u'any': [{'cidr_block': None, 'range_allowed': 1}]})
+        {u'any': [{'cidr_block': None}]})
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
+    self.core_instance.MakeACL(u'acl1', u'192.168.2.0/24')
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.2.0/24 '
+        '-u %s -p %s --config-file %s -s %s -c %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        'REMOVED ACL: acl: acl1 cidr_block: 192.168.2.0/24\n')
+    command = os.popen('python %s -a acl1 --cidr-block 192.168.1.0/24 '
+        '-u %s -p %s --config-file %s -s %s -c %s' % (
+        EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        'REMOVED ACL: acl: acl1 cidr_block: 192.168.1.0/24\n')
+    self.assertEqual(self.core_instance.ListACLs(),
+        {u'any': [{'cidr_block': None}]})
 
   def testErrors(self):
     command = os.popen('python %s -a acl1 --cidr-block 192.168.2.0/24 '
-        '--deny -u %s -p %s --config-file %s -s %s -c %s' % (
+        '-u %s -p %s --config-file %s -s %s -c %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name, CREDFILE))
     self.assertEqual(command.read(),
-        'CLIENT ERROR: No acl found with acl: acl1 cidr_block: 192.168.2.0/24 '
-        'allowed: 0\n')
+        'CLIENT ERROR: No acl found with acl: acl1 cidr_block: 192.168.2.0/24'
+        '\n')
     command = os.popen('python %s -u %s -p %s --config-file %s '
                        '--force -s %s -c %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name, CREDFILE))
     self.assertEqual(command.read(),
         "CLIENT ERROR: The -a/--acl flag is required.\n")
-    command.close()
-    command = os.popen('python %s -u %s -p %s --config-file %s --allow --deny '
-                       '-a acl1 --force -s %s -c %s' % (
-                           EXEC, USERNAME, self.password, USER_CONFIG,
-                           self.server_name, CREDFILE))
-    self.assertEqual(command.read(),
-        "CLIENT ERROR: --allow and --deny cannot be used simultaneously.\n")
     command.close()
     command = os.popen('python %s --acl acl1 -u %s -p %s --config-file %s '
                        '-s %s -c %s' % (

@@ -126,9 +126,9 @@ class Testdnsmkview(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testMakeView(self):
-    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
     command = os.popen('python %s view -v test_view -a acl1 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
@@ -140,9 +140,9 @@ class Testdnsmkview(unittest.TestCase):
     command.close()
 
   def testMakeViewAclAssignment(self):
-    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24', 1)
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
     command = os.popen('python %s acl -v test_view -a acl1 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
