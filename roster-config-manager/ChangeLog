@@ -1,45 +1,5 @@
 Current Release
 
-2012-05-23 release-0.91
-
-2012-05-23 release-0.91
-
-2012-05-23 release-0.91
-
-2012-05-23 release-0.91
-
-2012-05-23 release-0.91
-
-2012-05-23 release-0.93
-
-2012-05-23 release-0.92
-
-2012-05-23 release-0.91
-
-2012-05-23 release-0.93
-
-2012-05-23 release-0.92
-
-2012-05-23 release-0.91
-
-2012-05-22 release-0.91
-
-2012-05-22 release-0.91
-
-2012-05-22 release-0.91
-
-2012-05-22 release-0.91
-
-2012-05-22 release-0.91
-
-2012-05-22 release-0.91
-
-2012-05-22 release-0.91
-
-2012-05-22 release-0.91
-
-2012-05-22 release-0.91
-
 2012-05-04 release-0.16
 - Fixed dnsconfigsync and end to end tests
 - Added version compatibility checking between user-tools/server, server/core, and config-manager/core
@@ -54,7 +14,6 @@ Current Release
 2011-06-08 release-0.15
 - Added unicode support to tree_exporter using new punycode lib
 
-
 2010-07-21 release-0.14
 - Added username flag for dnszoneimporter
 - Added check to see if there are changes in the database before exporting
@@ -67,7 +26,6 @@ Current Release
 - Added dnsrecover tool
 - Several fixes to tree_exporter
 - Made EditFile function in cli_common_lib
-
 
 2010-03-03 release-0.12
 - Reordered records in zone_importer_lib so SOA comes first
