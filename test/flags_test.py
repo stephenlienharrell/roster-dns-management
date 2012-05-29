@@ -100,23 +100,28 @@ class TestCoreHelpers(unittest.TestCase):
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
-        {'username': 'sharrell', 'deny': None, 'config_file': None,
-         'credfile': DNS_CRED_FILE, 'no_header': False, 'server': None,
-         'credstring': None, 'allow': None, 'cidr_block': None,
-         'password': None, 'acl': None})
+           {'username': u'sharrell', 
+           'credfile': DNS_CRED_FILE, 
+           'config_file': None, 
+           'no_header': False, 
+           'server': None, 
+           'credstring': None, 
+           'cidr_block': None, 
+           'password': None, 
+           'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
-        ['__cmp__', '__doc__', '__init__', '__module__', '__repr__', '__str__',
-         '_update', '_update_careful', '_update_loose', 'acl', 'allow',
-         'cidr_block', 'config_file', 'credfile', 'credstring', 'deny',
-         'ensure_value', 'no_header', 'password', 'read_file', 'read_module',
-         'server', 'username']))
+        ['username', '__module__', '_update', 'config_file', 'credfile',
+        '__str__', '_update_loose', 'no_header', '__cmp__', '_update_careful', 
+         'credstring', 'password', 'read_file', '__repr__', 'server', 
+         'read_module', 'ensure_value', 'cidr_block', 'acl', '__doc__', 
+         '__init__']))
     self.assertEqual(args_instance.options.username, USERNAME)
     self.assertEqual(args_instance.options.server, None)
 
   def testMakeAclArgs(self):
-    args = ['-a', 'test', '--cidr-block', 'test', '--allow']
+    args = ['-a', 'test', '--cidr-block', 'test']
     usage = "test usage"
 
     args_instance = MakeAclArgs('make', ['make'], args, usage)
@@ -124,18 +129,23 @@ class TestCoreHelpers(unittest.TestCase):
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
-        {'username': u'sharrell', 'deny': None, 'config_file': None,
-         'credfile': DNS_CRED_FILE, 'quiet': False, 'server': None,
-         'credstring': None, 'allow': None, 'cidr_block': None,
-         'password': None, 'acl': None})
+        {'username': u'sharrell', 
+         'credfile': DNS_CRED_FILE, 
+         'config_file': None, 
+         'quiet': False, 
+         'server': None, 
+         'credstring': None, 
+         'cidr_block': None, 
+         'password': None, 
+         'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
-        ['__cmp__', '__doc__', '__init__', '__module__', '__repr__', '__str__',
-         '_update', '_update_careful', '_update_loose', 'acl', 'allow',
-         'cidr_block', 'config_file', 'credfile', 'credstring', 'deny',
-         'ensure_value', 'password', 'quiet', 'read_file', 'read_module',
-         'server', 'username']))
+            ['username', '__module__', '_update', 'config_file', 
+             'credfile', '__str__', '_update_loose', 'server', '__cmp__', 
+             '_update_careful', 'credstring', 'password', 'quiet', 
+             'read_file', '__repr__', 'read_module', 'ensure_value', 
+             'cidr_block', 'acl', '__doc__', '__init__']))
     self.assertEqual(args_instance.options.username, USERNAME)
     self.assertEqual(args_instance.options.server, None)
 
@@ -148,18 +158,24 @@ class TestCoreHelpers(unittest.TestCase):
     args_instance.parser.set_default('username', USERNAME)
     args_instance.options.username = USERNAME
     self.assertEqual(args_instance.parser.get_default_values(),
-        {'username': u'sharrell', 'deny': None, 'config_file': None,
-          'credfile': DNS_CRED_FILE, 'quiet': False, 'force': False,
-          'server': None, 'credstring': None, 'allow': None,
-          'cidr_block': None, 'password': None, 'acl': None})
+            {'username': u'sharrell', 
+             'credfile': DNS_CRED_FILE, 
+             'config_file': None, 
+             'quiet': False, 
+             'server': None, 
+             'credstring': None, 
+             'force': False, 
+             'cidr_block': None, 
+             'password': None, 
+             'acl': None})
     self.assertEqual(args_instance.parser.get_usage(),
         'Usage: test usage\n')
     self.assertEqual(set(dir(args_instance.options)), set(
-        ['__cmp__', '__doc__', '__init__', '__module__', '__repr__', '__str__',
-         '_update', '_update_careful', '_update_loose', 'acl', 'allow',
-         'cidr_block', 'config_file', 'credfile', 'credstring', 'deny',
-         'ensure_value', 'password', 'quiet', 'force', 'read_file',
-         'read_module', 'server', 'username']))
+        ['__module__', '_update', 'force', '__str__', 'credstring', 
+        'read_file', 'acl', '_update_careful', '_update_loose', 
+        'ensure_value', '__cmp__', '__init__', 'read_module', '__doc__', 
+        'username', 'credfile', 'config_file', 'cidr_block', 'password', 
+        'quiet', 'server', '__repr__']))
     self.assertEqual(args_instance.options.username, USERNAME)
     self.assertEqual(args_instance.options.server, None)
 
@@ -358,14 +374,14 @@ class TestCoreHelpers(unittest.TestCase):
 
   def testCheckDataFlags(self):
     usage = "test usage"
-    args = ['-a', 'test', '--cidr-block', 'test', '--allow']
+    args = ['-a', 'test', '--cidr-block', 'test']
     args_instance = MakeAclArgs('make', ['make'], args, usage)
 
     args_instance.functions_dict['make']['args'] = {
         'acl': True, 'cidr_block': True}
     args_instance.functions_dict['make']['independent_args'] = [
         {'allow': True, 'deny': True}]
-    args_instance.args = ['-a', 'test', '--allow']
+    args_instance.args = ['-a', 'test']
     args_instance.options = args_instance.parser.parse_args(
         args_instance.args)[0]
 
@@ -376,61 +392,13 @@ class TestCoreHelpers(unittest.TestCase):
         'CLIENT ERROR: The --cidr-block flag is required.\n')
     sys.stdout = oldstdout
 
-    args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow']
+    args = ['-a', 'test', '--cidr-block', '192.168.1/24']
     args_instance = MakeAclArgs('make', ['make'], args, usage)
-    args_instance.functions_dict['make']['args'] = {'acl': True, 'cidr_block': True}
-    args_instance.functions_dict['make']['independent_args'] = [{'allow': True, 'deny': True}]
-    args_instance.args = ['-a', 'test', '--cidr-block', '192.168.1/24']
-    args_instance.options = args_instance.parser.parse_args(
-        args_instance.args)[0]
-
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    self.assertRaises(SystemExit, args_instance.CheckDataFlags)
-    self.assertEqual(sys.stdout.flush(),
-        'CLIENT ERROR: Either --allow or --deny must be used.\n')
-    sys.stdout = oldstdout
-
-    args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow']
-    args_instance = MakeAclArgs('make', ['make'], args, usage)
-    args_instance.functions_dict['make']['args'] = {'acl': True, 'cidr_block': True}
-    args_instance.functions_dict['make']['independent_args'] = [{'allow': True, 'deny': True}]
-    args_instance.args = ['-a', 'test', '--cidr-block', '192.168.1/24',\
-                          '--allow', '--deny']
-    args_instance.options = args_instance.parser.parse_args(
-        args_instance.args)[0]
-
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    self.assertRaises(SystemExit, args_instance.CheckDataFlags)
-    self.assertEqual(sys.stdout.flush(),
-        'CLIENT ERROR: --allow and --deny cannot be used simultaneously.\n')
-    sys.stdout = oldstdout
-
-    args = ['-a', 'test', '--cidr-block', '192.168.1/24', '--allow']
-    args_instance = MakeAclArgs('make', ['make'], args, usage)
-    args_instance.functions_dict['make']['args'] = {'acl': True, 'cidr_block': True}
-    args_instance.functions_dict['make']['independent_args'] = [{'allow': True, 'deny': True}]
-
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    args_instance.CheckDataFlags()
-    self.assertEqual(sys.stdout.flush(), '')
-    sys.stdout = oldstdout
-
-    args_instance.functions_dict['make']['args'] = {'acl': True, 'cidr_block': True}
-    args_instance.functions_dict['make']['dependent_args'] = [{'allow': True, 'deny': True}]
-
-    oldstdout = sys.stdout
-    sys.stdout = StdOutStream()
-    self.assertRaises(SystemExit, args_instance.CheckDataFlags)
-    self.assertEqual(sys.stdout.flush(),
-        'CLIENT ERROR: --allow and --deny must be used together.\n')
-    sys.stdout = oldstdout
-
     args_instance.functions_dict['make']['args'] = {'cidr_block': True}
-    args_instance.functions_dict['make']['dependent_args'] = []
     args_instance.functions_dict['make']['independent_args'] = [{'allow': True, 'deny': True}]
+    args_instance.functions_dict['make']['dependent_args'] = []
+    args_instance.options = args_instance.parser.parse_args(
+        args_instance.args)[0]
 
     oldstdout = sys.stdout
     sys.stdout = StdOutStream()
@@ -442,32 +410,30 @@ class TestCoreHelpers(unittest.TestCase):
 
   def testSetAll(self):
     usage = "test usage"
-    args = ['-a', 'test', '--cidr-block', 'test', '--allow']
+    args = ['-a', 'test', '--cidr-block', 'test']
     args_instance = MakeAclArgs('make', ['make', 'list', 'remove'], args, usage)
-
 
     args_instance.SetAllFlagRule('zone_name')
 
     self.assertEqual(args_instance.functions_dict,
-        {'make': {'independent_args': [{'deny': True, 'allow': True}],
-                  'args': {'username': False, 'credfile': False,
-                           'config_file': False, 'quiet': False,
-                           'server': False, 'credstring': False,
-                           'zone_name': True, 'cidr_block': True,
-                           'password': False, 'acl': True},
-                  'dependent_args': [], 'forbidden_args': {}},
-         'list': {'independent_args': [],
-                  'args': {'username': False, 'credfile': False,
-                           'config_file': False, 'server': False,
-                           'credstring': False, 'zone_name': True,
-                           'password': False}, 'dependent_args': [],
-                  'forbidden_args': {}},
-         'remove': {'independent_args': [],
-                    'args': {'username': False, 'credfile': False,
-                             'config_file': False, 'server': False,
-                             'credstring': False, 'zone_name': True,
-                             'password': False}, 'dependent_args': [],
-                    'forbidden_args': {}}})
+        {'make': {'independent_args': [], 'args': 
+                    {'username': False, 'credfile': False, 
+                    'config_file': False, 'quiet': False, 'server': False, 
+                    'credstring': False, 'zone_name': True, 
+                    'cidr_block': True, 'password': False, 'acl': True}, 
+                  'dependent_args': [], 'forbidden_args': {}}, 
+         'list': {'independent_args': [], 'args': 
+                    {'username': False, 'credfile': False, 
+                     'config_file': False, 'server': False, 
+                     'credstring': False, 'zone_name': True, 
+                     'password': False}, 
+                  'dependent_args': [], 'forbidden_args': {}}, 
+         'remove': {'independent_args': [], 'args': 
+                        {'username': False, 'credfile': False, 
+                         'config_file': False, 'server': False, 
+                         'credstring': False, 'zone_name': True, 
+                         'password': False}, 
+                    'dependent_args': [], 'forbidden_args': {}}})
 
 if( __name__ == '__main__' ):
       unittest.main()

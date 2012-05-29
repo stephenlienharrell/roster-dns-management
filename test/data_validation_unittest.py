@@ -131,8 +131,7 @@ class TestDataValidation(unittest.TestCase):
         '09-06-04 05:25:30'))
 
   def testValidateAclsDict(self):
-    acl_ranges_dict = {'acl_range_allowed': None,
-                       'acl_range_cidr_block': None}
+    acl_ranges_dict = {'acl_range_cidr_block': None}
     self.assertRaises(errors.UnexpectedDataError,
                       self.data_validation_instance.ValidateRowDict,
                       'acl_ranges', acl_ranges_dict)
@@ -158,19 +157,13 @@ class TestDataValidation(unittest.TestCase):
                       'acl_ranges', acl_ranges_dict, False)
     self.data_validation_instance.ValidateRowDict('acl_ranges',
                                                   acl_ranges_dict, 
-                                                  none_ok=True)
-    
+                                                  none_ok=True)    
 
     acl_ranges_dict['acl_ranges_acl_name'] = u'name'
-
-    self.assertRaises(errors.UnexpectedDataError,
-                      self.data_validation_instance.ValidateRowDict,
-                      'acl_ranges',
-                      acl_ranges_dict, False)
+    
     self.data_validation_instance.ValidateRowDict('acl_ranges', acl_ranges_dict,
                                                   none_ok=True)
 
-    acl_ranges_dict['acl_range_allowed'] = 1
     acl_ranges_dict['acl_range_cidr_block'] = None
 
     self.assertRaises(errors.UnexpectedDataError,
