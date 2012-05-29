@@ -132,13 +132,12 @@ class Testdnslsauditlog(unittest.TestCase):
                   'action': None, 'data': None, 'success': None,
                   'audit_log_timestamp': None}
 
-    self.core_instance.MakeACL(u'acl1', u'192.168.1/24', 1)
+    self.core_instance.MakeACL(u'acl1', u'192.168.1/24')
     audit_dict['data'] = cPickle.dumps({'replay_args':
-                                            [u'acl1', u'192.168.1/24', 1],
+                                            [u'acl1', u'192.168.1/24'],
                                         'audit_args':
                                             {'cidr_block': u'192.168.1/24',
-                                             'range_allowed': 1, 'acl_name':
-                                             u'acl1'}})
+                                             'acl_name': u'acl1'}})
 
     self.db_instance.StartTransaction()
     try:
@@ -148,13 +147,12 @@ class Testdnslsauditlog(unittest.TestCase):
     entry1_timestamp = str(entry1[0]['audit_log_timestamp']).replace(' ', 'T')
 
     time.sleep(2)
-    self.core_instance.MakeACL(u'acl2', u'10.10.1/24', 0)
+    self.core_instance.MakeACL(u'acl2', u'10.10.1/24')
 
     audit_dict['data'] = cPickle.dumps({'replay_args':
-                                            [u'acl2', u'10.10.1/24', 0],
+                                            [u'acl2', u'10.10.1/24'],
                                         'audit_args':
                                             {'cidr_block': u'10.10.1/24',
-                                             'range_allowed': 0,
                                              'acl_name': u'acl2'}})
     self.db_instance.StartTransaction()
     try:
@@ -186,11 +184,9 @@ class Testdnslsauditlog(unittest.TestCase):
         "Action   Timestamp           Username Success Data\n"
         "--------------------------------------------------\n"
         "MakeACL  %s sharrell 1       "
-            "{'cidr_block': u'192.168.1/24', 'range_allowed': 1, " 
-            "'acl_name': u'acl1'}\n"
+            "{'cidr_block': u'192.168.1/24', 'acl_name': u'acl1'}\n"
         "MakeACL  %s sharrell 1       "
-            "{'cidr_block': u'10.10.1/24', 'range_allowed': 0, "
-            "'acl_name': u'acl2'}\n"
+            "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
         "MakeView %s sharrell 1       "
             "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
@@ -205,8 +201,7 @@ class Testdnslsauditlog(unittest.TestCase):
         "Action   Timestamp           Username Success Data\n"
         "--------------------------------------------------\n"
         "MakeACL  %s sharrell 1       "
-            "{'cidr_block': u'10.10.1/24', 'range_allowed': 0, "
-              "'acl_name': u'acl2'}\n"
+            "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
         "MakeView %s sharrell 1       "
           "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
           entry2_timestamp, entry3_timestamp))
@@ -220,12 +215,10 @@ class Testdnslsauditlog(unittest.TestCase):
         "Action  Timestamp           Username Success Data\n"
         "-------------------------------------------------\n"
         "MakeACL %s sharrell 1       "
-            "{'cidr_block': u'192.168.1/24', 'range_allowed': 1, "
-             "'acl_name': u'acl1'}\n"
+            "{'cidr_block': u'192.168.1/24', 'acl_name': u'acl1'}\n"
         "MakeACL %s sharrell 1       "
-            "{'cidr_block': u'10.10.1/24', 'range_allowed': 0, "
-             "'acl_name': u'acl2'}\n\n" % (entry1_timestamp,
-                                           entry2_timestamp))
+            "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n\n" % (
+              entry1_timestamp, entry2_timestamp))
     command.close()
     command = os.popen('python %s -a MakeACL --success 0 '
                        '-u %s -p %s --config-file %s -s %s '
@@ -245,11 +238,9 @@ class Testdnslsauditlog(unittest.TestCase):
         "Action   Timestamp           Username Success Data\n"
         "--------------------------------------------------\n"
         "MakeACL  %s sharrell 1       "
-            "{'cidr_block': u'192.168.1/24', 'range_allowed': 1, "
-            "'acl_name': u'acl1'}\n"
+            "{'cidr_block': u'192.168.1/24', 'acl_name': u'acl1'}\n"
         "MakeACL  %s sharrell 1       "
-            "{'cidr_block': u'10.10.1/24', 'range_allowed': 0, "
-            "'acl_name': u'acl2'}\n"
+            "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
         "MakeView %s sharrell 1       "
             "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
