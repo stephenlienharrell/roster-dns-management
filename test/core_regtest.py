@@ -487,6 +487,10 @@ class TestCore(unittest.TestCase):
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
+
+    self.assertRaises(errors.UnexpectedDataError, self.core_instance.MakeRecord,
+                                  u'ns', u'test-target', u'university.edu',
+                                  {u'name_server' : u'192.168.1.2'})
     self.core_instance.MakeRecord(u'mx', u'university_edu',
                                   u'university.edu',
                                   {u'priority': 10,
