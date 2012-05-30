@@ -201,7 +201,7 @@ class TestCheckConfig(unittest.TestCase):
         "temp_dir/set1_servers/named/test_view/sub.university.lcl.db failed: "
         "unknown class/type\n")
     output.close()
-
+    
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
         '%s/set1_servers/named/test_view/sub.university.lcl.db' % (
@@ -212,17 +212,15 @@ class TestCheckConfig(unittest.TestCase):
         '%s/set1_servers/named/test_view/sub.university.lcl.db' % (
             self.root_config_dir),
         ' 796 10800', ' 10800')
-    output = os.popen('python %s --config-file %s' % (
+    output = os.popen('python %s --config-file %s --verbose' % (
         EXEC, CONFIG_FILE))
-    # Replacement below to accomodate for later bind versions
-    self.assertEqual(output.read().replace(
-        'zone sub.university.lcl/IN: not loaded due to errors.\n', ''),
-        'ERROR: dns_rdata_fromtext: '
-        'temp_dir/set1_servers/named/test_view/sub.university.lcl.db:3: '
-        'near eol: unexpected end of input\n'
-        'zone sub.university.lcl/IN: loading from master file '
-        'temp_dir/set1_servers/named/test_view/sub.university.lcl.db '
-        'failed: unexpected end of input\n')
+    self.assertEqual(output.read(),
+        'Finished - temp_dir/set1_servers/named.conf\n'
+        'Finished - temp_dir/set1_servers/named/test_view/sub.university.lcl.db\n'
+        '--------------------------------------------------------------------\n'
+        'Checked 1 named.conf file(s) and 1 zone file(s)\n'
+        '\n'
+        'All checks successful\n')
     output.close()
 
     self.TarReplaceString(
