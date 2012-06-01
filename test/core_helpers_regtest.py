@@ -1045,6 +1045,13 @@ class TestCoreHelpers(unittest.TestCase):
                        u'assignment_host': u'host1.university.lcl.'}])
 
   def testProcessRecordsBatch(self):
+    self.assertRaises(errors.UnexpectedDataError, 
+                  self.core_helper_instance.ProcessRecordsBatch, 
+                  delete_records=None,
+                  add_records=[{'record_type' : u'ns', 'record_target' : u'host1', 
+                              'record_view_dependency': u'test_view_dep',
+                              'record_zone_name' : u'forward_zone',
+                              'record_arguments': {u'name_server' : u'192.168.1.2'}}])
     self.assertEqual(
         self.core_instance.ListRecords(record_type=u'a', target=u'host1'),
         [{'target': u'host1', 'ttl': 3600, 'record_type': u'a',

@@ -1037,6 +1037,10 @@ class CoreHelpers(object):
     changed_view_dep = []
     success = False
     try:
+      for record in add_records:
+        self.db_instance.ValidateRecordArgsDict(record[u'record_type'], 
+                                                record[u'record_arguments'])
+
       self.db_instance.StartTransaction()
       try:
         # REMOVE RECORDS
