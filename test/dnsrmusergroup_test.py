@@ -208,7 +208,7 @@ class Testdnsrmusergroup(unittest.TestCase):
   def testRemoveReverseRangeAssignment(self):
     self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
     self.core_instance.MakeGroup(u'testgroup')
-    output = os.popen('python %s reverse -g testgroup -z test_zone '
+    output = os.popen('python %s reverse -g testgroup '
                       '-b 192.168.1.4/30 --access-right rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -229,8 +229,8 @@ class Testdnsrmusergroup(unittest.TestCase):
   def testRemoveZoneAssignments(self):
     self.core_instance.MakeGroup(u'test_group')
     self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
-    output = os.popen('python %s reverse -z test_zone -b '
-                      '192.168.1.0/24 -g test_group --access-right rw '
+    output = os.popen('python %s reverse -b 192.168.1.0/24 '
+                      '-g test_group --access-right rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))

@@ -73,7 +73,7 @@ def main(args):
            '\t--access-right <access-right>\n'
            '\n'
            'To make a reverse range permission:\n'
-           '\t%s reverse -z <zone-name> -b <cidr-block> -g <group>\n'
+           '\t%s reverse -b <cidr-block> -g <group>\n'
            '\t--access-right <access-right>\n' % tuple(
                    [sys.argv[0] for _ in range(5)]))
   args_instance = Args(command,

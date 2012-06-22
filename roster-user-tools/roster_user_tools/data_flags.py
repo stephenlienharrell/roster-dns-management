@@ -391,7 +391,6 @@ class User(core_flags.CoreFlags):
                            help='String of the zone name (optional)',
                            metavar='<zone>', default=None)
     self.AddFlagRule('zone_name', required=not_list, command='forward')
-    self.AddFlagRule('zone_name', required=not_list, command='reverse')
     self.parser.add_option('--access-right', action='store',
                            dest='access_right',
                            help='String of the access right (r/rw)',

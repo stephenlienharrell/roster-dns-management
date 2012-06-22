@@ -220,6 +220,16 @@ class Testdnsmkusergroup(unittest.TestCase):
                           PASSWORD, USER_CONFIG))
     self.assertEqual(
         output.read(),
+        'CLIENT ERROR: The -z/--zone-name flag cannot be used with the reverse '
+        'command.\n')
+    output.close()
+    output = os.popen('python %s reverse -g testgroup '
+                      '-b 192.168.1.4/30 --access-right rw '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
         'ADDED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.1.4/30 '
         'group: testgroup access_right: rw\n')
     output.close()
@@ -240,6 +250,16 @@ class Testdnsmkusergroup(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
     output = os.popen('python %s reverse -z test_zone -b '
                       '192.168.1.0/24 -g test_group --access-right rw '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'CLIENT ERROR: The -z/--zone-name flag cannot be used with the reverse '
+        'command.\n')
+    output.close()
+    output = os.popen('python %s reverse -b 192.168.1.0/24 '
+                      '-g test_group --access-right rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
