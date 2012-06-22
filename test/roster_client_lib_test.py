@@ -42,6 +42,7 @@ __version__ = '#TRUNK#'
 
 import os
 import sys
+import stat
 import socket
 import threading
 import time
@@ -197,6 +198,19 @@ class TestRosterClientLib(unittest.TestCase):
     self.assertTrue(roster_client_lib.IsAuthenticated(
         USERNAME, CREDFILE, server_name=self.server_name))
 
+  def testDnsCredFileCreation(self):
+    os.remove(CREDFILE)
+    self.assertFalse(os.path.exists(CREDFILE))
+    roster_client_lib.GetCredentials(USERNAME, PASSWORD, credfile=CREDFILE,
+                                     server_name=self.server_name)
+    self.assertTrue(os.path.exists(CREDFILE))
+    cred_stat = os.stat(CREDFILE)
+
+    self.assertTrue(cred_stat.st_mode & stat.S_IRUSR and
+                    cred_stat.st_mode & stat.S_IWUSR)
+    self.assertFalse(cred_stat.st_mode & stat.S_IRWXG or
+                     cred_stat.st_mode & stat.S_IRWXO)
+ 
 
 if( __name__ == '__main__' ):
       unittest.main()

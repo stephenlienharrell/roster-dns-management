@@ -119,11 +119,15 @@ def RunFunction(function, user_name, credfile=None, credstring=None,
   elif( core_return['new_credential'] is not None and
     core_return['new_credential'] != '' ):
     if( os.path.exists(credfile) ):
-      credfile_handle = open(credfile, 'w')
+      save_umask = os.umask(077)
       try:
-        credfile_handle.writelines(core_return['new_credential'])
+        credfile_handle = open(credfile, 'w')
+        try:
+          credfile_handle.writelines(core_return['new_credential'])
+        finally:
+          credfile_handle.close()
       finally:
-        credfile_handle.close()
+        os.umask(save_umask)
 
   return core_return
 
@@ -151,6 +155,7 @@ def GetCredentials(user_name, password, credfile=None,
                                  credential['log_uuid_string'], 1)
   if( credfile is not None ):
     credfile = os.path.expanduser(credfile)
+    save_umask = os.umask(077)
     try:
       credfile_handle = open(credfile, 'w')
       try:
@@ -159,6 +164,8 @@ def GetCredentials(user_name, password, credfile=None,
         credfile_handle.close()
     except OSError:
       pass
+    finally:
+      os.umask(save_umask)
   if( credential == '' ):
     raise InvalidCredentials
 
