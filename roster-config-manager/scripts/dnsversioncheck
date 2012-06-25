@@ -122,6 +122,10 @@ def main(args):
   server_config_file.read(options.config_file)	
 
   versions = []
+  if( len(core_instance.ListDnsServers()) == 0 ):
+    print 'No DNS servers registered to check'
+    sys.exit(1)
+
   for dns_server in core_instance.ListDnsServers():
     version_string = CheckBINDVersion(options.ssh_port, options.ssh_id,
         options.ssh_username, dns_server)

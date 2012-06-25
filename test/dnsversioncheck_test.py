@@ -44,6 +44,8 @@ import socket
 import time
 import unittest
 
+import roster_core
+
 CONFIG_FILE = 'test_data/roster.conf'
 EXEC = '../roster-config-manager/scripts/dnsversioncheck'
 CORE_USERNAME = u'sharrell'
@@ -52,6 +54,13 @@ TEST_DNS_SERVER = u'localhost'
 CURRENT_BIND_VERSION = '9.9.0'
 
 class TestBINDVersion(unittest.TestCase):
+  def setUp(self):
+    config_instance = roster_core.Config(CONFIG_FILE)
+    core_instance = roster_core.Core(CORE_USERNAME, config_instance)
+
+    if( TEST_DNS_SERVER not in core_instance.ListDnsServers() ):
+      core_instance.MakeDnsServer(TEST_DNS_SERVER)
+
   def testVersion(self):    
     command = os.popen('service named status')
     words = command.read().strip('\n').split(' ')
@@ -60,7 +69,8 @@ class TestBINDVersion(unittest.TestCase):
       print 'named is not running, let me start it for you'
       os.system('sudo service named start')
 
-    command = os.popen('python %s --ssh-user-name %s --core-user-name %s --config-file %s' % (
+    command = os.popen('python %s --ssh-user-name %s --core-user-name '
+                       '%s --config-file %s' % (
             EXEC, SSH_USERNAME, CORE_USERNAME, CONFIG_FILE))
     lines = command.read().split('\n')
 
