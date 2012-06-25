@@ -1045,6 +1045,77 @@ class TestCoreHelpers(unittest.TestCase):
                        u'assignment_host': u'host1.university.lcl.'}])
 
   def testProcessRecordsBatch(self):
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+        u'cname', 
+         'this.is.a.super.long.target.host.name.'
+         'that.should.trip.the.length.check.in.'
+         'core.helpers.and.if.it.doesnt.we.have.'
+         'problems.and.need.to.fix.something.or.'
+         'roster.will.ship.with.bugs.but.software.'
+         'has.been.shipped.with.bugs.before.so.'
+         'maybe.it.wont.be.the.biggest.deal.but.'
+         'still.should.be.avoided.if.possible', 
+        u'forward_zone',
+        {u'assignment_host': u'blah.university.lcl.'}, view_name=u'test_view')
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+        u'cname', 
+        u'this.is.a.super.long.target.host.name.'
+         'that.should.trip.the.length.check.in.'
+         'core.helpers.and.if.it.doesnt.we.have.',
+        u'forward_zone',
+        {u'assignment_host': u'blah.university.lcl.'}, view_name=u'test_view')
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+        u'cname', 
+        'thisisanothersuperlongtargethostnamethatshouldtripthecheckincore.'
+        'helpers.for.having.a.component.that.is.too.long',
+        u'forward_zone',
+        {u'assignment_host': u'blah.university.lcl.'}, view_name=u'test_view')
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+        u'cname', 
+        u'thisisanothersuperlongtargethostname.thatshouldtripthecheckincore.',
+        u'forward_zone',
+        {u'assignment_host': u'blah.university.lcl.'}, view_name=u'test_view')
+
+    self.assertRaises(errors.InvalidInputError, self.core_helper_instance.ProcessRecordsBatch,
+      delete_records=None,
+      add_records=[{'record_type'  : u'cname', 
+                   'record_target' :  'this.is.a.super.long.target.host.name.'
+                                      'that.should.trip.the.length.check.in.'
+                                      'core.helpers.and.if.it.doesnt.we.have.'
+                                      'problems.and.need.to.fix.something.or.'
+                                      'roster.will.ship.with.bugs.but.software.'
+                                      'has.been.shipped.with.bugs.before.so.'
+                                      'maybe.it.wont.be.the.biggest.deal.but.'
+                                      'still.should.be.avoided.if.possible', 
+                    'record_view_dependency' : u'test_view_dep',
+                    'record_zone_name' : u'forward_zone',
+                    'record_arguments' : {u'assignment_host': u'blah.university.lcl.'}}])    
+    self.assertRaises(errors.InvalidInputError, self.core_helper_instance.ProcessRecordsBatch,
+      delete_records=None,
+      add_records=[{'record_type'  : u'cname', 
+                   'record_target' :  'thisisanothersuperlongtargethostnamethat'
+                                      'shouldtripthecheckincore.helpers.for.'
+                                      'having.a.component.that.is.too.long', 
+                    'record_view_dependency' : u'test_view_dep',
+                    'record_zone_name' : u'forward_zone',
+                    'record_arguments' : {u'assignment_host': u'blah.university.lcl.'}}])
+    self.assertRaises(errors.InvalidInputError, self.core_helper_instance.ProcessRecordsBatch,
+      delete_records=None,
+      add_records=[{'record_type'  : u'cname', 
+                   'record_target' : u'this.is.a.super.long.target.host.name.'
+                                      'that.should.trip.the.length.check.in.'
+                                      'core.helpers.and.if.it.doesnt.we.have.',
+                    'record_view_dependency' : u'test_view_dep',
+                    'record_zone_name' : u'forward_zone',
+                    'record_arguments' : {u'assignment_host': u'blah.university.lcl.'}}])    
+    self.assertRaises(errors.InvalidInputError, self.core_helper_instance.ProcessRecordsBatch,
+      delete_records=None,
+      add_records=[{'record_type'  : u'cname', 
+                   'record_target' : u'thisisanothersuper.long.target.host.name.that',
+                    'record_view_dependency' : u'test_view_dep',
+                    'record_zone_name' : u'forward_zone',
+                    'record_arguments' : {u'assignment_host': u'blah.university.lcl.'}}])
+  
     self.assertRaises(errors.UnexpectedDataError, 
                   self.core_helper_instance.ProcessRecordsBatch, 
                   delete_records=None,

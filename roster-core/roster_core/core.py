@@ -47,7 +47,6 @@ import errors
 import helpers_lib
 import user
 
-
 class Core(object):
   """Backend Roster interface.
 
@@ -2071,6 +2070,9 @@ class Core(object):
                         (example: {u'priority': 10,
                                    u'mail_server': 'mail.sub.university.edu.'})
     """
+    if( not self.db_instance.data_validation_instance.isTarget(target) ):
+      raise errors.InvalidInputError('Target hostname is invalid. %s' % target)  
+
     if( record_type != u'ptr' ):
       if( target.endswith('.') ):
         raise errors.InvalidInputError('"." not allowed as terminator in '

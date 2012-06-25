@@ -1079,6 +1079,13 @@ class CoreHelpers(object):
 
         # ADD RECORDS
         for record in add_records:
+
+          #Target length check
+          if( not self.db_instance.data_validation_instance.isTarget(
+              record[u'record_target']) ):
+            raise errors.InvalidInputError('Target hostname is invalid. %s' % (
+                record[u'record_target']))
+
           view_name = record['record_view_dependency']
           if( not record['record_view_dependency'].endswith('_dep') and record[
                 'record_view_dependency'] != u'any'):

@@ -35,7 +35,7 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
-
+import sys
 import cPickle
 import datetime
 import re
@@ -46,6 +46,7 @@ import constants
 import errors
 import helpers_lib
 
+from roster_core import punycode_lib
 
 class DataValidation(object):
 
@@ -207,6 +208,25 @@ class DataValidation(object):
       return True
     return False
 
+  def isTarget(self, target):
+    """Checks that a target and it's components have the correct length
+
+    Inputs:
+    target: target string
+
+    Outputs:
+    bool: if it is a valid target"""
+
+    target = punycode_lib.Uni2Puny(unicode(target))
+    
+    if( len(target) > 255 ):
+      return False
+
+    for component in target.split('.'):
+      if( len(component) > 63 ):
+        return False
+
+    return True
 
   def isHostname(self, host_name):
     """Checks that is a unicode string and that is properly dotted.
@@ -222,7 +242,8 @@ class DataValidation(object):
     if( self.isUnicodeStringNoSpaces(host_name) and
         host_name.endswith('.') and
         host_name.split('.') > 2 and
-        not host_name.startswith('.') ):
+        not host_name.startswith('.') and
+        self.isTarget(host_name) ):
       return True
     return False
 

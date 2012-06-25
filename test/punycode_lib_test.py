@@ -39,7 +39,7 @@ __version__ = '#TRUNK#'
 import codecs
 import unittest
 
-from roster_config_manager import punycode_lib
+from roster_core import punycode_lib
 
 class TestPunycodeLibModule(unittest.TestCase):
   def testPunycodeModule(self):

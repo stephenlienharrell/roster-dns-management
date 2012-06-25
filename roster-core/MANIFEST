@@ -14,4 +14,5 @@ roster_core/embedded_files.py
 roster_core/errors.py
 roster_core/table_enumeration.py
 roster_core/user.py
+roster_core/punycode_lib.py
 scripts/roster_database_bootstrap

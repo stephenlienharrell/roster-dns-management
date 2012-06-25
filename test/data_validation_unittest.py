@@ -41,7 +41,7 @@ import unittest
 from roster_core import data_validation
 from roster_core import helpers_lib
 from roster_core import errors
-
+from roster_core import punycode_lib
 
 class TestDataValidation(unittest.TestCase):
 
@@ -113,6 +113,64 @@ class TestDataValidation(unittest.TestCase):
     self.assertFalse(self.data_validation_instance.isUnsignedInt(-1))
     self.assertFalse(self.data_validation_instance.isUnsignedInt('not_valid'))
 
+  def testisTarget(self):
+    #Despite what I have written in these targets, don't actually read them
+    #and believe what they say.
+    target_too_long = '%s' % ('this.is.a.super.long.target.host.name.that.'
+                              'should.trip.the.length.check.in.core.helpers.'
+                              'and.if.it.doesnt.we.have.problems.and.need.to.'
+                              'fix.something.or.roster.will.ship.with.bugs.but.'
+                              'software.has.been.shipped.with.bugs.before.so.'
+                              'maybe.it.wont.be.too.bad.com')
+
+    ok_target_1 = '%s' % ('this.is.a.super.long.target.host.name.that.should.'
+                          'trip.the.length.check.in.core.helpers.and.if.it.'
+                          'doesnt.we.have.problems.and.need.to.fix.something.'
+                          'or.roster.will.ship.with.bugs.but.software.has.been.'
+                          'shipped.with.bugs.before.so.maybe.it.wont.be.too.'
+                          'bad.co')
+
+    target_component_too_long = '%s' % ('thisisanothersuperlongtargethostname'
+                                        'thatshouldtripthecheckincore.helpers.'
+                                        'for.having.a.component.that.is.too.'
+                                        'long')
+
+    ok_target_2 = '%s' % ('thisisanothersuperlongtargethostnamethatshouldtrip'
+                          'thecheckincor.helpers.for.having.a.component.that.'
+                          'is.too.long')
+
+    self.assertEqual(len(punycode_lib.Uni2Puny(ok_target_1)), 255)
+    self.assertTrue(self.data_validation_instance.isTarget(ok_target_1))
+
+    self.assertEqual(len(punycode_lib.Uni2Puny(target_too_long)), 256)
+    self.assertFalse(self.data_validation_instance.isTarget(target_too_long))
+
+    self.assertEqual(len(punycode_lib.Uni2Puny(ok_target_2.split('.')[0])), 63)
+    self.assertTrue(self.data_validation_instance.isTarget(ok_target_2))
+
+    self.assertEqual(
+      len(punycode_lib.Uni2Puny(target_component_too_long.split('.')[0])), 64)
+    self.assertFalse(
+      self.data_validation_instance.isTarget(target_component_too_long))
+
+    #Now we basically do the entire test over again but with unicode targets, 
+    #just to make sure. (I don't think it's necessary but whatever)
+
+    self.assertEqual(len(punycode_lib.Uni2Puny(unicode(ok_target_1))), 255)
+    self.assertTrue(self.data_validation_instance.isTarget(ok_target_1))
+
+    self.assertEqual(len(punycode_lib.Uni2Puny(unicode(target_too_long))), 256)
+    self.assertFalse(self.data_validation_instance.isTarget(target_too_long))
+
+    self.assertEqual(
+        len(punycode_lib.Uni2Puny(unicode(ok_target_2).split('.')[0])), 63)
+    self.assertTrue(self.data_validation_instance.isTarget(ok_target_2))
+
+    self.assertEqual(len(punycode_lib.Uni2Puny(
+        unicode(target_component_too_long).split('.')[0])), 64)
+    self.assertFalse(
+      self.data_validation_instance.isTarget(target_component_too_long))
+
   def testIsHostname(self):
     self.assertTrue(self.data_validation_instance.isHostname(
         u'university.edu.'))
@@ -123,6 +181,54 @@ class TestDataValidation(unittest.TestCase):
     self.assertFalse(self.data_validation_instance.isHostname(u'.edu.'))
     self.assertFalse(self.data_validation_instance.isHostname(u'not_valid'))
     self.assertFalse(self.data_validation_instance.isHostname(2))
+
+    #Despite what I have written in these hostnames, don't actually read them
+    #and believe what they say.
+    ok_hostname_1 = '%s' % (u'this.is.a.super.long.target.host.name.'
+                             'that.should.trip.the.length.check.in.'
+                             'core.helpers.and.if.it.doesnt.we.have.'
+                             'problems.and.need.to.fix.something.or.'
+                             'roster.will.ship.with.bugs.but.software.'
+                             'has.been.shipped.with.bugs.before.so.'
+                             'maybe.it.wont.be.too.awful.')
+
+    hostname_too_long = '%s' % (u'this.is.a.super.long.target.host.name.'
+                                 'that.should.trip.the.length.check.in.'
+                                 'core.helpers.and.if.it.doesnt.we.have.'
+                                 'problems.and.need.to.fix.something.or.'
+                                 'roster.will.ship.with.bugs.but.software.'
+                                 'has.been.shipped.with.bugs.before.so.'
+                                 'maybe.it.wont.be.tooo.awful.')
+
+    ok_hostname_2 = '%s' % (u'thisisanothersuperlongtargethostnamethat'
+                             'shouldtripthecheckincor.helpers.for.'
+                             'having.a.component.that.is.too.long.')
+
+    hostname_component_too_long = '%s' % (u'thisisanothersuperlongtargethost'
+                                           'namethatshouldtripthecheckincore.'
+                                           'helpers.for.having.a.component.'
+                                           'that.is.to.long.')
+
+    #Just long enough to be valid
+    self.assertEqual(len(punycode_lib.Uni2Puny(ok_hostname_1)), 255)
+    self.assertTrue(self.data_validation_instance.isHostname(ok_hostname_1))
+
+    #Just long enough to be invalid
+    self.assertEqual(len(punycode_lib.Uni2Puny(hostname_too_long)), 256)
+    self.assertFalse(
+        self.data_validation_instance.isHostname(hostname_too_long))
+
+    #First component is just long enough to be valid
+    self.assertEqual(len(punycode_lib.Uni2Puny(ok_hostname_2.split('.')[0])), 
+      63)
+    self.assertTrue(self.data_validation_instance.isHostname(ok_hostname_2))
+
+    #First component is just long enough to be invalid
+    self.assertEqual(
+        len(punycode_lib.Uni2Puny(hostname_component_too_long.split('.')[0])), 
+        64)
+    self.assertFalse(
+        self.data_validation_instance.isHostname(hostname_component_too_long))
 
   def testIsDateTime(self):
     self.assertTrue(self.data_validation_instance.isDateTime(
