@@ -1104,14 +1104,19 @@ class TestCoreHelpers(unittest.TestCase):
       add_records=[{'record_type'  : u'cname', 
                    'record_target' : u'this.is.a.super.long.target.host.name.'
                                       'that.should.trip.the.length.check.in.'
-                                      'core.helpers.and.if.it.doesnt.we.have.',
+                                      'core.helpers.and.if.it.doesnt.we.have.some'
+                                      'problems.that.we.need.to.attend.to.quickly.'
+                                      'as.to.not.ship.roster.with.any.bugs.but.they.'
+                                      'are.for.the.most.part.inevitable.but.we.still.'
+                                      'want.to.minimize.them.as.much.as.possible',
                     'record_view_dependency' : u'test_view_dep',
                     'record_zone_name' : u'forward_zone',
                     'record_arguments' : {u'assignment_host': u'blah.university.lcl.'}}])    
     self.assertRaises(errors.InvalidInputError, self.core_helper_instance.ProcessRecordsBatch,
       delete_records=None,
       add_records=[{'record_type'  : u'cname', 
-                   'record_target' : u'thisisanothersuper.long.target.host.name.that',
+                   'record_target' : u'thisisyetanothersuperlongtargethostnamethatshouldcausean'
+                                      'becauseit.exceeds.the.max.length.for.a.target.component',
                     'record_view_dependency' : u'test_view_dep',
                     'record_zone_name' : u'forward_zone',
                     'record_arguments' : {u'assignment_host': u'blah.university.lcl.'}}])
