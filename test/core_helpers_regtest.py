@@ -755,16 +755,17 @@ class TestCoreHelpers(unittest.TestCase):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
-        '192.168.1.4/30', num_ips=3), ['192.168.1.6'])
+        '192.168.1.4/30', num_ips=3), ['192.168.1.4','192.168.1.6'])
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
-        '192.168.0.0/29', num_ips=4), ['192.168.0.2', '192.168.0.3',
-                                       '192.168.0.4', '192.168.0.5'])
+        '192.168.0.0/29', num_ips=4), ['192.168.0.0','192.168.0.2', 
+                                       '192.168.0.3','192.168.0.4'])
     self.assertRaises(errors.CoreError,
          self.core_helper_instance.ListAvailableIpsInCIDR,
         '240.0.0.0/24', num_ips=10)
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
         '2001:0400::/64', num_ips=10),
-        ['2001:0400:0000:0000:0000:0000:0000:0001',
+        ['2001:0400:0000:0000:0000:0000:0000:0000',
+         '2001:0400:0000:0000:0000:0000:0000:0001',
          '2001:0400:0000:0000:0000:0000:0000:0002',
          '2001:0400:0000:0000:0000:0000:0000:0003',
          '2001:0400:0000:0000:0000:0000:0000:0004',
@@ -772,14 +773,14 @@ class TestCoreHelpers(unittest.TestCase):
          '2001:0400:0000:0000:0000:0000:0000:0006',
          '2001:0400:0000:0000:0000:0000:0000:0007',
          '2001:0400:0000:0000:0000:0000:0000:0008',
-         '2001:0400:0000:0000:0000:0000:0000:0009',
-         '2001:0400:0000:0000:0000:0000:0000:000a'])
+         '2001:0400:0000:0000:0000:0000:0000:0009'])
     self.assertRaises(errors.CoreError,
          self.core_helper_instance.ListAvailableIpsInCIDR,
         '4::/64', num_ips=10)
     self.assertEqual(self.core_helper_instance.ListAvailableIpsInCIDR(
         '2001:0400::/123', num_ips=10),
-        ['2001:0400:0000:0000:0000:0000:0000:0001',
+        ['2001:0400:0000:0000:0000:0000:0000:0000',
+         '2001:0400:0000:0000:0000:0000:0000:0001',
          '2001:0400:0000:0000:0000:0000:0000:0002',
          '2001:0400:0000:0000:0000:0000:0000:0003',
          '2001:0400:0000:0000:0000:0000:0000:0004',
@@ -787,8 +788,7 @@ class TestCoreHelpers(unittest.TestCase):
          '2001:0400:0000:0000:0000:0000:0000:0006',
          '2001:0400:0000:0000:0000:0000:0000:0007',
          '2001:0400:0000:0000:0000:0000:0000:0008',
-         '2001:0400:0000:0000:0000:0000:0000:0009',
-         '2001:0400:0000:0000:0000:0000:0000:000a'])
+         '2001:0400:0000:0000:0000:0000:0000:0009'])
 
   def testUnReverseIP(self):
     self.assertEqual(self.core_helper_instance.UnReverseIP(

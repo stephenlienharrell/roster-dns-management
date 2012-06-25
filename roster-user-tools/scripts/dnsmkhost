@@ -79,9 +79,14 @@ def main(args):
   cli_record_lib_instance = cli_record_lib.CliRecordLib(cli_common_lib_instance)
 
   if( command == 'findfirst' ):
-    options.ip_address = roster_client_lib.RunFunction(
+    available_ips_response = roster_client_lib.RunFunction(
         "ListAvailableIpsInCIDR", options.username, credfile=options.credfile,
-        server_name=options.server, args=[options.cidr_block])['core_return'][0]
+        server_name=options.server, args=[options.cidr_block])['core_return']
+    if( len(available_ips_response) == 0 ):
+      print 'No available IP\'s in %s.' % options.cidr_block
+      sys.exit(1)
+    else:
+      options.ip_address = available_ips_response[0]
 
   if( options.ip_address.find('.') != -1 ):
     version = 4

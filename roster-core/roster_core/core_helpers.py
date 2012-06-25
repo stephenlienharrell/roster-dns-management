@@ -678,13 +678,12 @@ class CoreHelpers(object):
       for ip in records[view]:
         taken_ips.append(ip)
     count = 0L
-    while( count < (cidr_block_ipy.len() - 1) ):
-      count += 1L
+    while( count < cidr_block_ipy.len() ):
       if( len(avail_ips) >= num_ips ):
         break
       if( cidr_block_ipy[count].strFullsize() not in taken_ips ):
         avail_ips.append(cidr_block_ipy[count].strFullsize())
-
+      count += 1L
     return avail_ips
 
   def ListRecordsByCIDRBlock(self, cidr_block, view_name=None, zone_name=None):

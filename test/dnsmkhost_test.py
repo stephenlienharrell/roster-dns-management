@@ -261,6 +261,12 @@ class TestDnsMkHost(unittest.TestCase):
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     output.close()
+    output = os.popen('python %s findfirst -q --cidr-block 192.168.1.25 -z '
+                      'forward_zone -t machine25 -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    output.close()
     self.assertEqual(self.core_instance.ListRecords(record_type=u'ptr'),
         [{'target': u'8', 'ttl': 3600, 'record_type': u'ptr',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -296,12 +302,16 @@ class TestDnsMkHost(unittest.TestCase):
           u'assignment_host': u'university.edu.'},
          {u'assignment_host': u'machine2.university.edu.',
           'last_user': u'sharrell', 'record_type': u'ptr',
-          'target': u'1', 'ttl': 3600, 'view_name': u'test_view',
+          'target': u'0', 'ttl': 3600, 'view_name': u'test_view',
           'zone_name': u'reverse_zone'},
          {u'assignment_host': u'machine3.university.edu.',
           'last_user': u'sharrell', 'record_type': u'ptr',
-          'target': u'2', 'ttl': 3600, 'view_name': u'test_view',
-          'zone_name': u'reverse_zone'}])
+          'target': u'1', 'ttl': 3600, 'view_name': u'test_view',
+          'zone_name': u'reverse_zone'},
+          {u'assignment_host': u'machine25.university.edu.',
+          'last_user': u'sharrell', 'record_type': u'ptr',
+          'target': u'25', 'ttl': 3600, 'view_name': u'test_view',
+          'zone_name': u'reverse_zone'},])
     self.assertEqual(self.core_instance.ListRecords(target=u'machine1'),
         [{'target': u'machine1', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
@@ -309,11 +319,15 @@ class TestDnsMkHost(unittest.TestCase):
     self.assertEqual(self.core_instance.ListRecords(target=u'machine2'),
         [{'target': u'machine2', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
-          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.1'}])
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.0'}])
     self.assertEqual(self.core_instance.ListRecords(target=u'machine3'),
         [{'target': u'machine3', 'ttl': 3600, 'record_type': u'a',
           'view_name': u'test_view', 'last_user': u'sharrell',
-          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.2'}])
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.1'}])
+    self.assertEqual(self.core_instance.ListRecords(target=u'machine25'),
+        [{'target': u'machine25', 'ttl': 3600, 'record_type': u'a',
+          'view_name': u'test_view', 'last_user': u'sharrell',
+          'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.25'}])
 
   def testMakeIPV6(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'ipv6zone',
@@ -384,6 +398,21 @@ class TestDnsMkHost(unittest.TestCase):
                      'argument. Reverse zones are handled automatically.\n')
     output.close()
 
+    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
+                                                      '192.168.1/24')
+    output = os.popen('python %s findfirst --cidr-block 192.168.1.25 -z '
+                      'forward_zone -t machine25 -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    output.close()
+    output = os.popen('python %s findfirst --cidr-block 192.168.1.25 -z '
+                      'forward_zone -t machine25 -v test_view -s %s -u %s '
+                      '-p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(), 'No available IP\'s in 192.168.1.25.\n')
+    output.close()
 
 if( __name__ == '__main__' ):
       unittest.main()
