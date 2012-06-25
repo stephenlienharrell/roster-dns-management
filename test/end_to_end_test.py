@@ -1292,7 +1292,7 @@ class TestComplete(unittest.TestCase):
         'cidr_block: 192.168.3/24 \n')
     command.close()
     ## User tool: dnsmkzone
-    ## dnsmkzone reverse -z test_zone5 -v test_view -t master --origin 5.168.192.in-addr.arpa.
+    ## dnsmkzone reverse -v test_view -t master --origin 5.168.192.in-addr.arpa.
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkzone '
         'forward -z test_zone5 -v test_view -t master --origin 5.168.192.in-addr.arpa. '
@@ -1305,7 +1305,7 @@ class TestComplete(unittest.TestCase):
         'view_name: test_view\n')
     command.close()
     ## User tool: dnsmkzone
-    ## dnsmkzone reverse -z test_zone4 -v test_view2 -t master --origin 6.168.192.in-addr.arpa.
+    ## dnsmkzone reverse -z test_zone6 -v test_view2 -t master --origin 6.168.192.in-addr.arpa.
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkzone '
         'reverse -z test_zone6 -v test_view2 -t master --origin 6.168.192.in-addr.arpa. '
@@ -1320,7 +1320,7 @@ class TestComplete(unittest.TestCase):
         'cidr_block: 192.168.6/24 \n')
     command.close()
     ## User tool: dnsmkzone
-    ## dnsmkzone reverse -z test_zone5 -v test_view -t master --origin 5.168.192.in-addr.arpa.
+    ## dnsmkzone reverse -v test_view -t master --origin 5.168.192.in-addr.arpa.
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkzone '
         'forward -z test_zone5 -v test_view -t master --origin 5.168.192.in-addr.arpa. '
@@ -1333,7 +1333,7 @@ class TestComplete(unittest.TestCase):
         ' (1062, "Duplicate entry \'test_zone5-test_view_dep\' for key 2"')
     command.close()
     ## User tool: dnsmkzone
-    ## dnsmkzone reverse -z test_zone4 -v test_view2 -t master --origin 6.168.192.in-addr.arpa.
+    ## dnsmkzone reverse -z test_zone6 -v test_view2 -t master --origin 6.168.192.in-addr.arpa.
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkzone '
         'reverse -z test_zone6 -v test_view2 -t master --origin 6.168.192.in-addr.arpa. '
@@ -1540,10 +1540,10 @@ class TestComplete(unittest.TestCase):
         'group: test_group access_right: rw\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup reverse -z test_zone -b 168.192.0.0/24 -g test_group --access-right rw
+    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group --access-right rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'reverse -z test_zone3 -b 168.192.2.0/24 -g test_group --access-right rw '
+        'reverse -b 168.192.2.0/24 -g test_group --access-right rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1597,10 +1597,10 @@ class TestComplete(unittest.TestCase):
         'group: test_group2 access_right: rw\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup reverse -z test_zone -b 168.192.0.0/24 -g test_group --access-right rw
+    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group --access-right rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'reverse -z test_zone3 -b 168.192.2.0/24 -g test_group2 --access-right rw '
+        'reverse -b 168.192.2.0/24 -g test_group2 --access-right rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1626,11 +1626,11 @@ class TestComplete(unittest.TestCase):
         'sharrell         128\n\n')
     command.close()
     ## User tool: dnsrmusergroup
-    ## dnsrmusergroup user reverse -z test_zone -b 192.168.2.0/24
+    ## dnsrmusergroup user reverse -b 192.168.2.0/24
     ## -g test_group2 --access-right rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmusergroup '
-        'reverse -z test_zone -b 192.168.2.0/24 -g test_group2 --access-right rw '
+        'reverse -b 192.168.2.0/24 -g test_group2 --access-right rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1767,11 +1767,11 @@ class TestComplete(unittest.TestCase):
         '---------------------------------\n'
         'test_group test_zone rw\n\n')
     command.close()
-    ## dnslsusergroup reverse -z test_zone -b 192.168.2.0/24 -g test_group
+    ## dnslsusergroup reverse -b 192.168.2.0/24 -g test_group
     ## --access-right rw
     command_string = (
         'python ../roster-user-tools/scripts/dnslsusergroup '
-        'reverse -z test_zone -b 168.192.2.0/24 -g test_group --access-right rw '
+        'reverse -b 168.192.2.0/24 -g test_group --access-right rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
