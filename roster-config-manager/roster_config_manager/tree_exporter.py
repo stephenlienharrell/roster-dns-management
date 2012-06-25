@@ -46,8 +46,8 @@ import os
 import StringIO
 import shutil
 import tarfile
-import punycode_lib
 
+from roster_core import punycode_lib
 from roster_core import audit_log
 from roster_core import config
 from roster_core import constants
