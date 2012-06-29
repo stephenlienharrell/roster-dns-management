@@ -62,13 +62,20 @@ class TestBINDVersion(unittest.TestCase):
       core_instance.MakeDnsServer(TEST_DNS_SERVER)
 
   def testVersion(self):    
-    command = os.popen('service named status')
-    words = command.read().strip('\n').split(' ')
+    command1 = os.popen('service named status')
+    command2 = os.popen('service bind9 status')
+    words1 = command1.read().strip('\n').split(' ')
+    words2 = command2.read().strip('\n').split(' ')
 
-    if( 'running...' not in words ):
-      print 'named is not running, let me start it for you'
+    if( 'running...' not in words1 and 'running...' not in words2 ):
+      print 'Neither named nor bind9 are running'
+      print 'Let me try to start them for you'
       os.system('sudo service named start')
+      os.system('sudo service bind9 start')
 
+    command1.close()
+    command2.close()
+      
     command = os.popen('python %s --ssh-user-name %s --core-user-name '
                        '%s --config-file %s' % (
             EXEC, SSH_USERNAME, CORE_USERNAME, CONFIG_FILE))
