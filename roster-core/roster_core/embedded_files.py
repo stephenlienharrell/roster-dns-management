@@ -693,7 +693,7 @@ INSERT INTO locks (lock_name) VALUES ('maintenance');
 INSERT INTO view_dependencies (view_dependency) VALUES ('any');
 INSERT INTO zone_types (zone_type) VALUES ('master'),('slave'),('forward'),
                                           ('hint');
-INSERT INTO data_types (data_type) VALUES ('UnicodeString'),('AccessRight'),
+INSERT INTO data_types (data_type) VALUES ('UnicodeString255'),('AccessRight'),
                                           ('AccessLevel'),('CIDRBlock'),
                                           ('IntBool'),('UnsignedInt'),
                                           ('Hostname'),('DateTime'),
@@ -705,9 +705,9 @@ INSERT INTO record_arguments (record_arguments_type, argument_name,
                               argument_order, argument_data_type) VALUES
     ('a', 'assignment_ip', '0', 'IPv4IPAddress'),
     ('aaaa', 'assignment_ip', '0', 'IPv6IPAddress'),
-    ('hinfo', 'hardware', '0', 'UnicodeString'),
-    ('hinfo', 'os', '1', 'UnicodeString'),
-    ('txt', 'quoted_text', '0', 'UnicodeString'),
+    ('hinfo', 'hardware', '0', 'UnicodeString255'),
+    ('hinfo', 'os', '1', 'UnicodeString255'),
+    ('txt', 'quoted_text', '0', 'UnicodeString255'),
     ('cname', 'assignment_host', '0', 'Hostname'),
     ('soa', 'name_server', '0', 'Hostname'),
     # An email address in this context looks exactly like a valid hostname

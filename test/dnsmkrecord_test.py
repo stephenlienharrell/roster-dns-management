@@ -635,8 +635,55 @@ class TestDnsMkRecord(unittest.TestCase):
 
   def testErrors(self):
     self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+
+    self.core_instance.MakeRecord(u'ns', u'machine1', u'test_zone',
+                                  {u'name_server': u'university.edu.'},
+                                  view_name=u'test_view')
+    command = os.popen('python %s '
+                       'hinfo --hardware thisisasuperlong'
+                       'stringthatshouldraiseanerrorthisisasuperlongstring'
+                       'thatshouldraiseanerrorthisisasuperlongstringthat'
+                       'shouldraiseanerrorthisisasuperlongstringthatshouldraise'
+                       'anerrorthisisasuperlongstringthatshouldraiseanerrorthis'
+                       'isasuperlongstringthatshouldrais --os ipear '
+                       '-q -t machine -v test_view -z test_zone -u '
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 
+        'USER ERROR: Invalid data type UnicodeString255: '
+        'thisisasuperlongstringthatshouldraiseanerrorthisisasuperlongstring'
+        'thatshouldraiseanerrorthisisasuperlongstringthatshouldraiseanerror'
+        'thisisasuperlongstringthatshouldraiseanerrorthisisasuperlongstring'
+        'thatshouldraiseanerrorthisisasuperlongstringthatshouldrais\n')
+    command.close()
+    command = os.popen('python %s '
+                       'txt --quoted-text thisisasuperlongstringthatshould'
+                       'raiseanerrorthisisasuperlongstringthatshouldraisean'
+                       'errorthisisasuperlongstringthatshouldraiseanerror'
+                       'thisisasuperlongstringthatshouldraiseanerrorthisis'
+                       'asuperlongstringthatshouldraiseanerrorthisisasuper'
+                       'longstringthatshouldrais -t machine -z test_zone '
+                       '-u %s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 
+        'USER ERROR: Invalid data type UnicodeString255: '
+        'thisisasuperlongstringthatshouldraiseanerrorthisisasuperlongstring'
+        'thatshouldraiseanerrorthisisasuperlongstringthatshouldraiseanerror'
+        'thisisasuperlongstringthatshouldraiseanerrorthisisasuperlongstring'
+        'thatshouldraiseanerrorthisisasuperlongstringthatshouldrais\n')
+    command.close()
     command = os.popen('python %s a -t t -u '
                        '%s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,

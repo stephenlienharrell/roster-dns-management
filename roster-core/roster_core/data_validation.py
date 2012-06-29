@@ -64,7 +64,7 @@ class DataValidation(object):
     
     Outputs:
       bool: bool if string or not
-    """
+    """     
     if( not isinstance(u_string, unicode) ):
       return False
     for word in self.reserved_words:
@@ -261,6 +261,19 @@ class DataValidation(object):
       return True
     return False
 
+  def isUnicodeString255(self, string):
+    """Checks that is a unicode string and that is less than 256 characters
+    long
+
+    Inputs:
+      string: string to validate
+
+    Outputs:
+      bool: if it is a valid unicode string of correct length"""
+
+    if( self.isUnicodeString(string) and len(string) < 256 ):
+      return True
+    return False
 
   def isDateTime(self, date_time):
     """Checks that is a unicode string and that is a valid time stamp.
@@ -311,7 +324,6 @@ class DataValidation(object):
       UnexpectedDataError: Need to fill out at least one value in dict
     """
     main_dict = helpers_lib.GetRowDict(table_name)
-
     for key in main_dict.iterkeys():
       if( key not in row_dict ):
         raise errors.UnexpectedDataError('Missing key %s in dictionary' % key)

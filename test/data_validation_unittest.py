@@ -50,6 +50,24 @@ class TestDataValidation(unittest.TestCase):
     self.data_validation_instance = data_validation.DataValidation(
         reserved_words)
 
+  def testisUnicodeString255(self):
+    self.assertFalse(self.data_validation_instance.isUnicodeString255(
+      12))
+    self.assertTrue(self.data_validation_instance.isUnicodeString255(
+      u'unicode_string'))
+    self.assertTrue(self.data_validation_instance.isUnicodeString255(
+      u'super_long_string_super_long_string_super_long_string_super_'
+       'long_string_super_long_string_super_long_string_super_long_'
+       'string_super_long_string_super_long_string_super_long_string_'
+       'super_long_string_super_long_string_super_long_string_super_'
+       'long_string_sup'))
+    self.assertFalse(self.data_validation_instance.isUnicodeString255(
+      u'super_long_string_super_long_string_super_long_string_super_'
+       'long_string_super_long_string_super_long_string_super_long_'
+       'string_super_long_string_super_long_string_super_long_string_'
+       'super_long_string_super_long_string_super_long_string_super_'
+       'long_string_supe'))
+
   def testisUnicodeString(self):
     self.assertTrue(self.data_validation_instance.isUnicodeString(
         u'unicode_string'))
