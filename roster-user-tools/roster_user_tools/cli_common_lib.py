@@ -231,38 +231,19 @@ def PrintColumns(print_list, first_line_header=False):
       print_string_list.append('%s\n' % ''.join(hyphen_list))
   return ''.join(print_string_list)
 
-def PrintRecords(records_dictionary, ip_address_list=None, print_headers=True):
-  """Prints records dictionary in a nice usable format.
+def PrintSortedHosts(hosts_dict, print_headers=True):
+  """Prints sorted hosts in a nice usable format
 
   Inputs:
-    records_dictionary: dictionary of records
-    ip_address_list: list of ip_addresses to use
+    hosts_dict: A dictionary of sort host lists keyed by views.
   """
-  if ip_address_list is None:
-    ip_address_list = []
-  if( ip_address_list == [] ):
-    for view in records_dictionary:
-      ip_address_list.extend(records_dictionary[view].keys())
-    ip_address_list = list(set(ip_address_list))
-
   print_list = []
-  if( len(records_dictionary) == 0 ):
-    for ip_address in ip_address_list:
-      print_list.append([ip_address, '--', '--', '--', '--'])
-  else:
-    for view in records_dictionary:
-      if( print_headers ):
-        print_list.append(['View:', view, '', '', ''])
-      for ip_address in ip_address_list:
-        if( ip_address in records_dictionary[view] ):
-          for record in records_dictionary[view][ip_address]:
-            direction = 'Reverse'
-            if( record['forward'] ):
-              direction = 'Forward'
-            print_list.append([ip_address, direction, record['host'],
-                                    record['record_zone_name'], view])
-        else:
-          print_list.append([ip_address, '--', '--', '--', '--'])
+  for view in hosts_dict:
+    if( print_headers ):
+      print_list.append(['View:', view, '', '', ''])
+    for host in hosts_dict[view]:
+      print_list.append([host['ip_address'], host['direction'], host['host'],
+                         host['record_zone_name'], view])
   return PrintColumns(print_list)
 
 def PrintHosts(records_dictionary, ip_address_list, view_name=None):
@@ -311,7 +292,7 @@ def PrintHosts(records_dictionary, ip_address_list, view_name=None):
                            '', '# No forward assignment'])
       for record in sorted_records[ip_address]['forward']:
         forward_zone_origin = record['zone_origin'].rstrip('.')
-        shorthost = record['host'].rsplit('.%s' % forward_zone_origin, 1)[0]
+        shorthost = record['host'].s('.%rsplit' % forward_zone_origin, 1)[0]
         longhost = record['host']
         if( longhost.startswith('@.') ):
           longhost = record['host'].lstrip('@.')

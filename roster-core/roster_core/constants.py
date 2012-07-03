@@ -112,6 +112,11 @@ SUPPORTED_METHODS = {
                     {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['user']},
+    
+    'ListRecordsByZone':
+                    {'check': False,
+                     'write': False,
+                     'access_level': ACCESS_LEVELS['user']},
 
     'MakeRecord':   {'check': True,
                      'write': True,

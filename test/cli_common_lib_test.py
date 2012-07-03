@@ -144,40 +144,49 @@ class Testdnslshost(unittest.TestCase):
         [['1', '2', '3'], ['long line', 'b', 'c']], first_line_header=True),
         '1         2 3\n-------------\nlong line b c\n')
 
-  def testPrintRecords(self):
-    records_dictionary = {
-        'test_view': {'192.168.1.5': [
-            {'forward': False, 'host': 'host3.university.edu',
-             'zone_origin': '1.168.192.in-addr.arpa.',
-             'record_zone_name': 'reverse_zone'}]},
-        'any': {'192.168.1.5': [
-            {'forward': True, 'host': 'host3.university.edu',
-             'zone_origin': 'university.edu.', 'record_zone_name': 'forward_zone'}],
-                '192.168.1.6': [
-            {'forward': True, 'host': 'host2.university.edu',
-             'zone_origin': 'university.edu.', 'record_zone_name': 'forward_zone'},
-            {'forward': False, 'host': 'host2.university.edu',
-             'zone_origin': '168.192.in-addr.arpa.', 'record_zone_name': 'reverse_zone'},
-            {'forward': True, 'host': 'www.host2.university.edu',
-             'zone_origin': 'university.edu.', 'record_zone_name': 'forward_zone'}]}}
-    options.server = self.server_name
-    self.assertEqual(cli_common_lib.PrintRecords(records_dictionary,
-                                                 print_headers=False),
-        '192.168.1.6 --      --                       --           --\n'
-        '192.168.1.5 Reverse host3.university.edu     reverse_zone test_view\n'
-        '192.168.1.6 Forward host2.university.edu     forward_zone any\n'
-        '192.168.1.6 Reverse host2.university.edu     reverse_zone any\n'
-        '192.168.1.6 Forward www.host2.university.edu forward_zone any\n'
-        '192.168.1.5 Forward host3.university.edu     forward_zone any\n')
-    self.assertEqual(cli_common_lib.PrintRecords(
-        records_dictionary, [u'192.168.1.5', u'192.168.1.6'],
+  def testPrintSortedHosts(self):
+    hosts_dict = {'any': [
+            {'record_zone_name': 'forward_zone', 'direction': 'Forward',
+             'ip_address': '192.168.1.6', 'host': 'host2.university.edu'},
+            {'record_zone_name': 'forward_zone', 'direction': 'Forward',
+             'ip_address': '192.168.1.5', 'host': 'host3.university.edu'},
+            {'record_zone_name': 'forward_zone', 'direction': 'Forward',
+             'ip_address': '192.168.1.6', 'host': 'www.host2.university.edu'}
+            ]}
+    self.assertEqual(cli_common_lib.PrintSortedHosts(hosts_dict, 
         print_headers=False),
-        u'192.168.1.5 Reverse host3.university.edu     reverse_zone test_view\n'
-        '192.168.1.6 --      --                       --           --\n'
-        '192.168.1.5 Forward host3.university.edu     forward_zone any\n'
-        '192.168.1.6 Forward host2.university.edu     forward_zone any\n'
-        '192.168.1.6 Reverse host2.university.edu     reverse_zone any\n'
-        '192.168.1.6 Forward www.host2.university.edu forward_zone any\n')
+            '192.168.1.6 Forward host2.university.edu     forward_zone any\n'
+            '192.168.1.5 Forward host3.university.edu     forward_zone any\n'
+            '192.168.1.6 Forward www.host2.university.edu forward_zone any\n')
+    hosts_dict = {'test_view': [
+            {'record_zone_name': 'reverse_zone', 'direction': 'Reverse',
+             'ip_address': '192.168.1.5', 'host': 'host3.university.edu'},
+            {'record_zone_name': '--', 'direction': '--',
+             'ip_address': '192.168.1.6', 'host': '--'}],
+         'any': [
+            {'record_zone_name': 'forward_zone', 'direction': 'Forward',
+             'ip_address': '192.168.1.5', 'host': 'host3.university.edu'},
+            {'record_zone_name': 'forward_zone', 'direction': 'Forward',
+             'ip_address': '192.168.1.6', 'host': 'host2.university.edu'},
+            {'record_zone_name': 'reverse_zone', 'direction': 'Reverse',
+             'ip_address': '192.168.1.6', 'host': 'host2.university.edu'},
+            {'record_zone_name': 'forward_zone', 'direction': 'Forward',
+             'ip_address': '192.168.1.6', 'host': 'www.host2.university.edu'}]}
+    self.assertEqual(cli_common_lib.PrintSortedHosts(hosts_dict, 
+        print_headers=False),
+            '192.168.1.5 Reverse host3.university.edu     reverse_zone '
+            'test_view\n'
+            '192.168.1.6 --      --                       --           '
+            'test_view\n'
+            '192.168.1.5 Forward host3.university.edu     forward_zone '
+            'any\n'
+            '192.168.1.6 Forward host2.university.edu     forward_zone '
+            'any\n'
+            '192.168.1.6 Reverse host2.university.edu     reverse_zone '
+            'any\n'
+            '192.168.1.6 Forward www.host2.university.edu forward_zone '
+            'any\n'
+            )
 
   def testPrintHosts(self):
     records_dictionary = {

@@ -878,6 +878,145 @@ class CoreHelpers(object):
 
     return parsed_record_dict
 
+  def ListRecordsByZone(self, zone_name, view_name=None):
+    """Lists records in a given zone.
+
+    Inputs:
+      zone_name: name of the zone
+      view_name: name of the view
+    
+    Output:
+      dict: A dictionary Keyed by view, keyed by IP, listed by record.
+            example:
+                {u'test_view':
+                    {u'192.168.1.8':
+                        [{u'forward': True,
+                          u'host': u'host6.university.edu',
+                          u'zone': u'forward_zone',
+                          u'zone_origin': u'university.edu.'},
+                         {u'forward': False,
+                          u'host': u'host6.university.edu',
+                          u'zone': u'reverse_zone',
+                          u'zone_origin': u'1.168.192.in-addr.arpa.'}]}}
+    """
+    self.user_instance.Authorize('ListRecordsByZone')
+    record_list = {}
+    
+    records_dict = self.db_instance.GetEmptyRowDict('records')
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_dict = self.db_instance.GetEmptyRowDict('zones')
+    zone_dict['zone_name'] = zone_name
+    record_arguments_records_assignments_dict = (
+        self.db_instance.GetEmptyRowDict(
+            'record_arguments_records_assignments'))
+    ipv4_index_dict = self.db_instance.GetEmptyRowDict('ipv4_index')
+    ipv6_index_dict = self.db_instance.GetEmptyRowDict('ipv6_index')
+    if( view_name is not None and
+        view_name.endswith('_dep') or view_name == u'any' ):
+      records_dict['record_view_dependency'] = view_name
+    elif( view_name is not None ):
+      records_dict['record_view_dependency'] = '%s_dep' % view_name
+
+    args_ipv4 = ['zone_view_assignments', zone_view_assignments_dict,
+                 'zones', zone_dict, 'records', records_dict,
+                 'record_arguments_records_assignments',
+                 record_arguments_records_assignments_dict]
+    args_ipv6 = args_ipv4 + ['ipv6_index', ipv6_index_dict]
+    args_ipv4.append('ipv4_index')
+    args_ipv4.append(ipv4_index_dict)
+    self.db_instance.StartTransaction()
+    try:
+      record_list = self.db_instance.ListRow(*args_ipv4)
+      record_list = record_list + self.db_instance.ListRow(*args_ipv6)
+    finally:
+      self.db_instance.EndTransaction()
+    #Parsing Records
+    parsed_record_dict = {}
+    for record_entry in record_list:
+      if( record_entry[u'record_type'] not in 
+          constants.RECORD_TYPES_INDEXED_BY_IP ):
+        raise errors.IPIndexError('Record type not indexable by '
+                                  'IP: %s' % record_entry)
+      if( record_entry[u'record_view_dependency'].endswith('_dep') ):
+        record_view = record_entry[u'record_view_dependency'][:-4]
+      else:
+        record_view = record_entry[u'record_view_dependency']
+      if( record_view not in parsed_record_dict ):
+          parsed_record_dict[record_view] = {}
+      if( u'ipv4_dec_address' in record_entry ):
+        record_ip = u'%s' % (
+            IPy.IP(record_entry[u'ipv4_dec_address']).strNormal(1))
+        if( record_ip not in parsed_record_dict[record_view] ):
+          parsed_record_dict[record_view][record_ip] = []
+      elif( u'ipv6_dec_upper' in record_entry ):
+        decimal_ip = (
+            (record_entry[u'ipv6_dec_upper'] << 64) +
+            (record_entry[u'ipv6_dec_lower']) )
+        record_ip = u'%s' % IPy.IP(decimal_ip).strFullsize(0)
+        if( record_ip not in parsed_record_dict[record_view] ):
+          parsed_record_dict[record_view][record_ip] = []
+      else:
+        raise errors.IPIndexError(
+            'Record type unknown. Missing ipv4 or ipv6 dec index: %s' % (
+            record_entry))
+      record_item = {}
+      record_item['records_id'] = record_entry['records_id']
+      record_item['record_type'] = record_entry['record_type']
+      record_item['record_target'] = record_entry['record_target']
+      record_item['record_ttl'] = record_entry['record_ttl']
+      record_item['record_zone_name'] = record_entry['record_zone_name']
+      record_item[u'zone_origin'] = record_entry[u'zone_origin']
+      record_item['record_view_dependency'] = record_entry[
+                                              'record_view_dependency']
+      record_item['record_last_user'] = record_entry['record_last_user']
+      if record_entry[u'record_view_dependency'].endswith('_dep'):
+        record_item[u'view_name'] = record_entry[u'record_view_dependency'][:-4]
+      else:
+        record_item[u'view_name'] = record_entry[u'record_view_dependency']
+      if( record_entry[u'record_type'] == u'a' or
+          record_entry[u'record_type'] == u'aaaa' ):
+        record_item[u'forward'] = True
+        record_item[u'host'] = '%s.%s' % (
+            record_entry[u'record_target'],
+            record_entry[u'zone_origin'][:-1])
+        record_item[u'zone_origin'] = record_entry['zone_origin']
+        record_item[u'record_target'] = record_entry['record_target']
+        record_item[u'record_args_dict'] = {
+            'assignment_ip': record_entry['argument_value']}
+        parsed_record_dict[record_view][record_ip].append(record_item)
+      elif( record_entry[u'record_type'] == u'ptr' ):
+        record_item[u'zone_origin'] = record_entry['zone_origin']
+        record_item[u'record_target'] = record_entry['record_target']
+        record_item[u'forward'] = False
+        record_item[u'host'] = record_entry[u'argument_value'][:-1]
+        assignment_ip = helpers_lib.UnReverseIP(
+            '%s.%s' % (
+                record_entry['record_target'],record_entry['zone_origin']))
+        record_item[u'record_args_dict'] = {'assignment_ip': assignment_ip}
+        parsed_record_dict[record_view][record_ip].insert(0, record_item )
+    return parsed_record_dict
+
+  def SortRecordsByHost(self, records_dict):
+    """Generates an IP list sorted by record's host
+    Inputs:
+      record_dict: dictionary keyed by view, then keyed by IP
+                   dictionary from ListRecordsByCIDRBlock
+                   and from ListRecordsByZone
+
+    Outputs:
+      sorted_list: list of sorted records
+    """
+    sorted_list = []
+    target_sort = []
+    for view in records_dict:
+      for ip in records_dict[view]:
+        for record in records_dict[view][ip]:
+          target_sort.append(dict({'ip_address':IPy.IP(ip).strFullsize()}.items() + 
+                                  record.items()))
+    sorted_list = sorted(target_sort, key=lambda x: x['host'])
+    return sorted_list
+
   def ListNamedConfGlobalOptionsClient(self, option_id=None,
                                        dns_server_set=None, timestamp=None):
     """Converts XMLRPC datetime to datetime object and runs
@@ -1187,4 +1326,57 @@ class CoreHelpers(object):
                                   current_args, success)
     return row_count
 
+  def ListSortedHostsByZone(self, zone_name, view_name=None):
+    records_dict = self.ListRecordsByZone(zone_name, view_name=view_name)
+    sorted_records = self.SortRecordsByHost(records_dict)
+    hosts_dict = {}
+    for record in sorted_records:
+      direction = 'Reverse'
+      if( record['forward'] ):
+        direction = 'Forward'
+      if( not hosts_dict.has_key(record[u'view_name']) ):
+        hosts_dict.update({record[u'view_name']: []})
+      new_record = record.copy()
+      new_record['direction'] = direction
+      hosts_dict[record[u'view_name']].append(new_record)
+    return hosts_dict
+
+  def ListSortedHostsByCIDR(self, cidr, zone_name=None, view_name=None):
+    records_dict = self.ListRecordsByCIDRBlock(cidr, zone_name=zone_name, 
+      view_name=view_name)
+    ip_address_list = self.CIDRExpand(cidr)
+    
+    if ip_address_list is None:
+      ip_address_list = []
+    if( ip_address_list == [] ):
+      for view in records_dict:
+        ip_address_list.extend(records_dict[view].keys())
+      ip_address_list = list(set(ip_address_list))
+
+    hosts_dict = {}
+    if( len(records_dict) == 0 ):
+      hosts_dict['--'] = []
+      for ip_address in ip_address_list:
+        hosts_dict['--'].append(
+            {'host': '--', 'direction': '--',
+             'ip_address': ip_address, 'record_zone_name': '--'})
+    else:
+      for view in records_dict:
+        if( not hosts_dict.has_key(view) ):
+          hosts_dict.update({view: []})
+        for ip_address in ip_address_list:
+          if( ip_address in records_dict[view] ):
+            for record in records_dict[view][ip_address]:
+              direction = 'Reverse'
+              if( record['forward'] ):
+                direction = 'Forward'
+              new_record = record.copy()
+              new_record['direction'] = direction
+              new_record['ip_address'] = ip_address
+              hosts_dict[view].append(new_record)
+          else:
+            hosts_dict[view].append(
+                {'ip_address': ip_address, 'direction': '--', 'host': '--',
+                 'record_zone_name': '--'})
+    return hosts_dict
 # vi: set ai aw sw=2:

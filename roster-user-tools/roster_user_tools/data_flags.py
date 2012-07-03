@@ -326,12 +326,19 @@ class Host(core_flags.CoreFlags):
                            metavar='<cidr-block>', default=None)
     if( self.action == 'Make' ):
       self.AddFlagRule('cidr_block', required=True, command='findfirst')
+    elif( not not_list ):
+      self.AddFlagRule('cidr_block', required=True, command='cidr')
     else:
       self.AddFlagRule('cidr_block', required=False)
     self.parser.add_option('-z', '--zone-name', action='store',
                            dest='zone_name', help='String of the zone name.',
                            metavar='<zone-name>', default=None)
-    self.AddFlagRule('zone_name', required=not_list)
+    if( not_list ):
+      self.AddFlagRule('zone_name', required=True)
+    else:
+      self.AddFlagRule('zone_name', required=True, command='zone')
+      self.AddFlagRule('zone_name', required=False, command='cidr')
+
     if( not_list ):
       default_view = u'any'
     else:

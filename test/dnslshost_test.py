@@ -225,7 +225,7 @@ class Testdnslshost(unittest.TestCase):
   def testListSingleIP(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
-    output = os.popen('python %s --cidr-block 192.168.1.5 --no-header '
+    output = os.popen('python %s cidr --cidr-block 192.168.1.5 --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
@@ -241,7 +241,7 @@ class Testdnslshost(unittest.TestCase):
         '192.168.1.5 Forward host3.university.edu forward_zone any\n\n'
     in lines)
     output.close()
-    output = os.popen('python %s --cidr-block 192.168.1.4 '
+    output = os.popen('python %s cidr --cidr-block 192.168.1.4 '
                       '-s %s -u %s -p %s --config-file %s --no-header' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
@@ -249,37 +249,133 @@ class Testdnslshost(unittest.TestCase):
         '192.168.1.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
     output.close()
 
+  def testListZone(self):
+    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
+                                                      u'192.168.1.0/24')
+    output = os.popen('python %s zone -z forward_zone --no-header '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                       EXEC, self.server_name, USERNAME,
+                       PASSWORD, USER_CONFIG))
+    lines = output.read()
+    self.assertEquals( len(lines), 733)
+    self.assertTrue(
+        '4321:0000:0001:0002:0003:0004:0567:89ab Forward host2.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    self.assertTrue(
+        '192.168.0.1                             Forward host1.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    self.assertTrue(
+        '192.168.1.11                            Forward host2.university.edu '
+        'forward_zone test_view3\n'
+        in lines)
+    self.assertTrue(
+        '192.168.1.5                             Forward host3.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    self.assertTrue(
+        '192.168.1.5                             Forward host3.university.edu '
+        'forward_zone any\n'
+        in lines)
+    self.assertTrue(
+        '192.168.1.10                            Forward host4.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    self.assertTrue(
+        '192.168.1.17                            Forward host5.university.edu '
+        'forward_zone test_view3\n'
+        in lines)
+    self.assertTrue(
+        '192.168.1.8                             Forward host6.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    output.close()
+
+    output = os.popen('python %s zone -z forward_zone --no-header '
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
+                       EXEC, self.server_name, USERNAME,
+                       PASSWORD, USER_CONFIG))
+    lines = output.read()
+    self.assertEquals( len(lines), 461)
+    self.assertTrue(
+        '192.168.1.5                             Forward host3.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    self.assertTrue(
+        '192.168.1.8                             Forward host6.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    self.assertTrue(
+        '192.168.1.10                            Forward host4.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    self.assertTrue(
+        '192.168.0.1                             Forward host1.university.edu '
+        'forward_zone test_view\n'
+        '4321:0000:0001:0002:0003:0004:0567:89ab Forward host2.university.edu '
+        'forward_zone test_view\n'
+        '192.168.1.5                             Forward host3.university.edu '
+        'forward_zone test_view\n'
+        in lines)
+    output.close()
+
+    output = os.popen('python %s zone -z forward_zone --no-header '
+                      '-v test_view3 -s %s -u %s -p %s --config-file %s' % (
+                       EXEC, self.server_name, USERNAME,
+                       PASSWORD, USER_CONFIG))
+    self.assertEqual( output.read(),
+        '192.168.1.11 Forward host2.university.edu forward_zone test_view3\n'
+        '192.168.1.17 Forward host5.university.edu forward_zone test_view3\n\n')
+    output.close()
+
+    output = os.popen('python %s zone -z forward_zone --no-header '
+                      '-v any -s %s -u %s -p %s --config-file %s' % (
+                       EXEC, self.server_name, USERNAME,
+                       PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+      '192.168.1.5 Forward host3.university.edu forward_zone any\n\n')
+    output.close()
+
+    output = os.popen('python %s zone -z forward_zone --no-header '
+                      '--cidr-block 192.168.56.0/29 -s %s -u %s -p %s '
+                      '--config-file %s' % (EXEC, self.server_name,
+                      USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'CLIENT ERROR: The --cidr-block flag cannot be used with '
+                     'the zone command.\n')
+    output.close()
+    
+    output = os.popen('python %s -z forward_zone --no-header '
+                      '--cidr-block 192.168.56.0/29 -s %s -u %s -p %s '
+                      '--config-file %s' % (EXEC, self.server_name,
+                      USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'CLIENT ERROR: A command must be specified.\n')
+    output.close()
+
   def testListCIDR(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.4/30')
-    output = os.popen('python %s --cidr-block 192.168.1.4/30 --no-header '
+    output = os.popen('python %s cidr --cidr-block 192.168.1.4/30 --no-header '
                       '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
     lines = output.read()
-    self.assertEquals(len(lines), 300 )
-    self.assertTrue(
-        '192.168.1.4 --      --                   --           --\n'
-        in lines)
-    self.assertTrue(
+    self.assertEquals(len(lines), 321 )
+    self.assertEqual(lines,
+        '192.168.1.4 --      --                   --           test_view\n'
         '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
-        in lines)
-    self.assertTrue(
         '192.168.1.5 Forward host3.university.edu forward_zone test_view\n'
-        in lines)
-    self.assertTrue(
-        '192.168.1.6 --      --                   --           --\n'
-        in lines)
-    self.assertTrue(
-        '192.168.1.7 --      --                   --           --\n\n'
-        in lines)
+        '192.168.1.6 --      --                   --           test_view\n'
+        '192.168.1.7 --      --                   --           test_view\n\n')
     output.close()
-    output = os.popen('python %s --cidr-block 192.168.1.4/30 '
+    output = os.popen('python %s cidr --cidr-block 192.168.1.4/30 '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
     lines = output.read()
-    self.assertEqual(len(lines), 873)
+    self.assertEqual(len(lines), 913)
     self.assertTrue(
         'View:       test_view2\n'
         in lines)
@@ -287,10 +383,10 @@ class Testdnslshost(unittest.TestCase):
         '192.168.1.4 Reverse    host2.university.edu reverse_zone test_view2\n'
         in lines)
     self.assertTrue(
-        '192.168.1.5 --         --                   --           --\n'
+        '192.168.1.5 --         --                   --           test_view2\n'
         in lines)
     self.assertTrue(
-        '192.168.1.6 --         --                   --           --\n'
+        '192.168.1.6 --         --                   --           test_view2\n'
         in lines)
     self.assertTrue(
         '192.168.1.7 Reverse    host5.university.edu reverse_zone test_view2\n'
@@ -299,7 +395,7 @@ class Testdnslshost(unittest.TestCase):
         'View:       test_view\n'
         in lines)
     self.assertTrue(
-        '192.168.1.4 --         --                   --           --\n'
+        '192.168.1.4 --         --                   --           test_view\n'
         in lines)
     self.assertTrue(
         '192.168.1.5 Reverse    host3.university.edu reverse_zone test_view\n'
@@ -308,39 +404,39 @@ class Testdnslshost(unittest.TestCase):
         '192.168.1.5 Forward    host3.university.edu forward_zone test_view\n'
         in lines)
     self.assertTrue(
-        '192.168.1.6 --         --                   --           --\n'
+        '192.168.1.6 --         --                   --           test_view\n'
         in lines)
     self.assertTrue(
-        '192.168.1.7 --         --                   --           --\n'
+        '192.168.1.7 --         --                   --           test_view\n'
         in lines)
     self.assertTrue(
         'View:       any\n'
         in lines)
     self.assertTrue(
-        '192.168.1.4 --         --                   --           --\n'
+        '192.168.1.4 --         --                   --           any\n'
         in lines)
     self.assertTrue(
         '192.168.1.5 Forward    host3.university.edu forward_zone any\n'
         in lines)
     self.assertTrue(
-        '192.168.1.6 --         --                   --           --\n'
+        '192.168.1.6 --         --                   --           any\n'
         in lines)
     self.assertTrue(
-        '192.168.1.7 --         --                   --           --\n\n'
+        '192.168.1.7 --         --                   --           any\n\n'
         in lines)
 
     output.close()
-    output = os.popen('python %s --cidr-block 192.168.1.4/30 --no-header '
+    output = os.popen('python %s cidr --cidr-block 192.168.1.4/30 --no-header '
                       '-v any -s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        '192.168.1.4 --      --                   --           --\n'
+        '192.168.1.4 --      --                   --           any\n'
         '192.168.1.5 Forward host3.university.edu forward_zone any\n'
-        '192.168.1.6 --      --                   --           --\n'
-        '192.168.1.7 --      --                   --           --\n\n')
+        '192.168.1.6 --      --                   --           any\n'
+        '192.168.1.7 --      --                   --           any\n\n')
     output.close()
-    output = os.popen('python %s --cidr-block 10.0.0.4/30 --no-header '
+    output = os.popen('python %s cidr --cidr-block 10.0.0.4/30 --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
@@ -350,12 +446,38 @@ class Testdnslshost(unittest.TestCase):
         '10.0.0.6 -- -- -- --\n'
         '10.0.0.7 -- -- -- --\n\n')
     output.close()
-    output = os.popen('python %s --cidr-block 192.168.1.4/32 --no-header '
+    output = os.popen('python %s cidr --cidr-block 192.168.1.4/32 --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         '192.168.1.4 Reverse host2.university.edu reverse_zone test_view2\n\n')
+    output.close()
+    output = os.popen('python %s cidr --cidr-block 192.168.1.4/30 --no-header '
+                      '-z forward_zone -s %s -u %s -p %s --config-file %s '
+                      '-v test_view' % (EXEC, self.server_name, USERNAME,
+                                        PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        '192.168.1.4 --      --                   --           test_view\n'
+        '192.168.1.5 Forward host3.university.edu forward_zone test_view\n'
+        '192.168.1.6 --      --                   --           test_view\n'
+        '192.168.1.7 --      --                   --           test_view\n\n')
+    output.close()
+    output = os.popen('python %s cidr --cidr-block 192.168.1.4/30 --no-header '
+                      '-z reverse_zone -s %s -u %s -p %s --config-file %s '
+                      '-v test_view' % (EXEC, self.server_name, USERNAME,
+                                        PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        '192.168.1.4 --      --                   --           test_view\n'
+        '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
+        '192.168.1.6 --      --                   --           test_view\n'
+        '192.168.1.7 --      --                   --           test_view\n\n')
+    output.close()
+    output = os.popen('python %s cidr -z forward_zone --no-header '
+                      ' -s %s -u %s -p %s --config-file %s' % 
+                      (EXEC, self.server_name, USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'CLIENT ERROR: The --cidr-block flag is required.\n')
     output.close()
 
 if( __name__ == '__main__' ):

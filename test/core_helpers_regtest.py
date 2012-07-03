@@ -45,6 +45,7 @@ import datetime
 import time
 import unittest
 import os
+import IPy
 
 import roster_core
 from roster_core import errors
@@ -751,6 +752,529 @@ class TestCoreHelpers(unittest.TestCase):
     self.assertRaises(errors.InvalidInputError,
         self.core_helper_instance.ListRecordsByCIDRBlock, '')
 
+  def testListRecordsByZone(self):
+    self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
+                                                      u'192.168.1.0/24')
+    returned_dict = self.core_helper_instance.ListRecordsByZone(u'forward_zone')
+    self.assertEqual( len(returned_dict), 2 )
+    self.assertEqual( len(returned_dict[u'test_view']), 3 )
+    self.assertEqual( len(returned_dict[u'test_view3']), 3 )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': u'host1.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.0.1' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host1',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 10,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.lcl.'} in 
+          returned_dict[u'test_view'][u'192.168.0.1'] )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': u'host4.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.10' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host4',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 13,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.lcl.'} in 
+          returned_dict[u'test_view'][u'192.168.1.10'] )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': u'host6.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.8' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host6',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 15,
+          u'view_name': u'test_view',
+          u'zone_origin': u'university.lcl.'} in 
+          returned_dict[u'test_view'][u'192.168.1.8'] )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': u'host2.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.11' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view3_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 11,
+          u'view_name': u'test_view3',
+          u'zone_origin': u'university.lcl.'} in 
+          returned_dict[u'test_view3'][u'192.168.1.11'] )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': u'host3.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.5' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host3',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view3_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 12,
+          u'view_name': u'test_view3',
+          u'zone_origin': u'university.lcl.'} in 
+          returned_dict[u'test_view3'][u'192.168.1.5'] )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': u'host5.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.17' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host5',
+          'record_ttl': 3600,
+          'record_type': u'a',
+          'record_view_dependency': u'test_view3_dep',
+          'record_zone_name': u'forward_zone',
+          'records_id': 14,
+          u'view_name': u'test_view3',
+          u'zone_origin': u'university.lcl.'} in 
+          returned_dict[u'test_view3'][u'192.168.1.17'] )
+
+    returned_dict = self.core_helper_instance.ListRecordsByZone(u'reverse_zone')
+    self.assertEqual( len(returned_dict), 2 )
+    self.assertEqual( len(returned_dict[u'test_view']), 1 )
+    self.assertEqual( len(returned_dict[u'test_view2']), 4 )
+    self.assertTrue( 
+        { u'forward': False,
+          u'host': u'host6.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.8' },
+          'record_last_user': u'sharrell',
+          'record_target': u'8',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 16,
+          u'view_name': u'test_view',
+          u'zone_origin': u'1.168.192.in-addr.arpa.'} in 
+          returned_dict[u'test_view'][u'192.168.1.8'] )
+    self.assertTrue( 
+        { u'forward': False,
+          u'host': u'host2.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.11' },
+          'record_last_user': u'sharrell',
+          'record_target': u'11',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view2_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 17,
+          u'view_name': u'test_view2',
+          u'zone_origin': u'1.168.192.in-addr.arpa.'} in 
+          returned_dict[u'test_view2'][u'192.168.1.11'] )
+    self.assertTrue( 
+        { u'forward': False,
+          u'host': u'host3.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.5' },
+          'record_last_user': u'sharrell',
+          'record_target': u'5',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view2_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 18,
+          u'view_name': u'test_view2',
+          u'zone_origin': u'1.168.192.in-addr.arpa.'} in 
+          returned_dict[u'test_view2'][u'192.168.1.5'] )
+    self.assertTrue( 
+        { u'forward': False,
+          u'host': u'host4.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.10' },
+          'record_last_user': u'sharrell',
+          'record_target': u'10',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view2_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 19,
+          u'view_name': u'test_view2',
+          u'zone_origin': u'1.168.192.in-addr.arpa.'} in 
+          returned_dict[u'test_view2'][u'192.168.1.10'] )
+    self.assertTrue( 
+        { u'forward': False,
+          u'host': u'host5.university.lcl',
+          u'record_args_dict': { 'assignment_ip': u'192.168.1.7' },
+          'record_last_user': u'sharrell',
+          'record_target': u'7',
+          'record_ttl': 3600,
+          'record_type': u'ptr',
+          'record_view_dependency': u'test_view2_dep',
+          'record_zone_name': u'reverse_zone',
+          'records_id': 20,
+          u'view_name': u'test_view2',
+          u'zone_origin': u'1.168.192.in-addr.arpa.'} in 
+          returned_dict[u'test_view2'][u'192.168.1.7'] )
+
+    returned_dict = self.core_helper_instance.ListRecordsByZone(u'ipv6zone')
+    self.assertEqual( len(returned_dict), 1 )
+    self.assertEqual( len(returned_dict[u'test_view']), 4 )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': 'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': 
+              u'4321:0000:0001:0002:0003:0004:0567:89ab' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 6,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in 
+          returned_dict[u'test_view'][
+              u'4321:0000:0001:0002:0003:0004:0567:89ab'] )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': 'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': 
+              u'4321:0000:0001:0002:0003:0004:0567:89ac' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 7,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in 
+          returned_dict[u'test_view'][
+              u'4321:0000:0001:0002:0003:0004:0567:89ac'] )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': 'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': 
+              u'4321:0001:0001:0002:0003:0004:0567:89ab' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 8,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in 
+          returned_dict[u'test_view'][
+              u'4321:0001:0001:0002:0003:0004:0567:89ab'] )
+    self.assertTrue( 
+        { u'forward': True,
+          u'host': 'host2.ipv6.net',
+          u'record_args_dict': { 'assignment_ip': 
+              u'4321:0001:0001:0002:0003:0004:0567:89ac' },
+          'record_last_user': u'sharrell',
+          'record_target': u'host2',
+          'record_ttl': 3600,
+          'record_type': u'aaaa',
+          'record_view_dependency': u'test_view_dep',
+          'record_zone_name': u'ipv6zone',
+          'records_id': 9,
+          u'view_name': u'test_view',
+          u'zone_origin': u'ipv6.net.'} in 
+          returned_dict[u'test_view'][
+              u'4321:0001:0001:0002:0003:0004:0567:89ac'] )
+    
+    mx_args = self.core_instance.GetEmptyRecordArgsDict(u'mx')
+    mx_args[u'priority'] = 10
+    mx_args[u'mail_server'] = u'mailserver.university.lcl.'
+    self.core_instance.MakeRecord(u'mx', u'mail', u'forward_zone', mx_args)
+    
+    db_instance = self.config_instance.GetDb()
+    ipv4_dict = db_instance.GetEmptyRowDict('ipv4_index')
+    ipv4_dict['ipv4_dec_address'] = IPy.IP('192.168.1.45').int()
+    record_dict = db_instance.GetEmptyRowDict('records')
+    record_dict['record_type'] = u'mx'
+    record_dict['record_zone_name'] = u'forward_zone'
+    record_dict['record_target'] = u'mail'
+    
+    db_instance.StartTransaction()
+    rows = db_instance.ListRow(u'records', record_dict)
+    ipv4_dict['ipv4_index_record_id'] = rows[0]['records_id']
+    index_id = db_instance.MakeRow(u'ipv4_index', ipv4_dict)
+    db_instance.EndTransaction()
+
+    self.assertRaises(errors.IPIndexError, 
+        self.core_helper_instance.ListRecordsByZone,
+        u'forward_zone')
+
+  def testSortRecordsByHost(self):
+    record_dict = {u'test_view': 
+        {u'4321:0000:0001:0002:0003:0004:0567:89ac': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host2.ipv6.net', u'forward': True, 
+            'record_type': u'aaaa', u'view_name': u'test_view', 
+            'records_id': 7, u'record_args_dict': 
+              {'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'}, 
+            'record_target': u'host2', 'record_zone_name': u'ipv6zone', 
+            u'zone_origin': u'ipv6.net.', 'record_view_dependency': 
+              u'test_view_dep'}], 
+         u'4321:0000:0001:0002:0003:0004:0567:89ab': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host2.ipv6.net', u'forward': True, 
+            'record_type': u'aaaa', u'view_name': u'test_view', 
+            'records_id': 6, u'record_args_dict': 
+              {'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'}, 
+            'record_target': u'host2', 'record_zone_name': u'ipv6zone', 
+            u'zone_origin': u'ipv6.net.', 'record_view_dependency': 
+              u'test_view_dep'}], 
+         u'4321:0001:0001:0002:0003:0004:0567:89ab': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host2.ipv6.net', u'forward': True, 
+            'record_type': u'aaaa', u'view_name': u'test_view', 
+            'records_id': 8, u'record_args_dict': 
+              {'assignment_ip': u'4321:0001:0001:0002:0003:0004:0567:89ab'}, 
+            'record_target': u'host2', 'record_zone_name': u'ipv6zone', 
+            u'zone_origin': u'ipv6.net.', 'record_view_dependency': 
+              u'test_view_dep'}], 
+         u'4321:0001:0001:0002:0003:0004:0567:89ac': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host2.ipv6.net', u'forward': True, 
+            'record_type': u'aaaa', u'view_name': u'test_view', 
+            'records_id': 9, u'record_args_dict': 
+              {'assignment_ip': u'4321:0001:0001:0002:0003:0004:0567:89ac'}, 
+            'record_target': u'host2', 'record_zone_name': u'ipv6zone', 
+            u'zone_origin': u'ipv6.net.', 'record_view_dependency': 
+              u'test_view_dep'}]}}
+    self.assertEqual( self.core_helper_instance.SortRecordsByHost(record_dict),
+        [{'record_type': u'aaaa', 'record_ttl': 3600, 
+          'record_last_user': u'sharrell', u'view_name': u'test_view', 
+          u'forward': True, 'record_target': u'host2', 
+          u'host': u'host2.ipv6.net', u'zone_origin': u'ipv6.net.', 
+          'records_id': 7, u'record_args_dict': 
+          {'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'}, 
+          'record_zone_name': u'ipv6zone', 
+          'ip_address': '4321:0000:0001:0002:0003:0004:0567:89ac', 
+          'record_view_dependency': u'test_view_dep'}, 
+         {'record_type': u'aaaa', 'record_ttl': 3600, 
+          'record_last_user': u'sharrell', u'view_name': u'test_view', 
+          u'forward': True, 'record_target': u'host2', 
+          u'host': u'host2.ipv6.net', u'zone_origin': u'ipv6.net.', 
+          'records_id': 6, u'record_args_dict': 
+            {'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'}, 
+          'record_zone_name': u'ipv6zone', 
+          'ip_address': '4321:0000:0001:0002:0003:0004:0567:89ab', 
+          'record_view_dependency': u'test_view_dep'}, 
+         {'record_type': u'aaaa', 'record_ttl': 3600, 
+          'record_last_user': u'sharrell', u'view_name': u'test_view', 
+          u'forward': True, 'record_target': u'host2', 
+          u'host': u'host2.ipv6.net', u'zone_origin': u'ipv6.net.', 
+          'records_id': 8, u'record_args_dict': 
+            {'assignment_ip': u'4321:0001:0001:0002:0003:0004:0567:89ab'}, 
+          'record_zone_name': u'ipv6zone', 
+          'ip_address': '4321:0001:0001:0002:0003:0004:0567:89ab', 
+          'record_view_dependency': u'test_view_dep'}, 
+         {'record_type': u'aaaa', 'record_ttl': 3600, 
+          'record_last_user': u'sharrell', u'view_name': u'test_view', 
+          u'forward': True, 'record_target': u'host2', 
+          u'host': u'host2.ipv6.net', u'zone_origin': u'ipv6.net.', 
+          'records_id': 9, u'record_args_dict': 
+          {'assignment_ip': u'4321:0001:0001:0002:0003:0004:0567:89ac'}, 
+          'record_zone_name': u'ipv6zone', 
+          'ip_address': '4321:0001:0001:0002:0003:0004:0567:89ac', 
+          'record_view_dependency': u'test_view_dep'}] )
+
+    record_dict = {u'test_view2': 
+          {u'192.168.1.7': 
+            [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+              u'host': u'host5.university.lcl', u'forward': False, 
+              'record_type': u'ptr', u'view_name': u'test_view2', 
+              'records_id': 20, u'record_args_dict': 
+                {'assignment_ip': u'192.168.1.7'}, 
+              'record_target': u'7', 'record_zone_name': u'reverse_zone', 
+              u'zone_origin': u'1.168.192.in-addr.arpa.', 
+              'record_view_dependency': u'test_view2_dep'}], 
+           u'192.168.1.11': 
+            [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+              u'host': u'host2.university.lcl', u'forward': False, 
+              'record_type': u'ptr', u'view_name': u'test_view2', 
+              'records_id': 17, u'record_args_dict': 
+                {'assignment_ip': u'192.168.1.11'}, 
+              'record_target': u'11', 'record_zone_name': u'reverse_zone', 
+              u'zone_origin': u'1.168.192.in-addr.arpa.', 
+              'record_view_dependency': u'test_view2_dep'}], 
+           u'192.168.1.10': 
+            [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+              u'host': u'host4.university.lcl', u'forward': False, 
+              'record_type': u'ptr', u'view_name': u'test_view2', 
+              'records_id': 19, u'record_args_dict': 
+                {'assignment_ip': u'192.168.1.10'}, 
+              'record_target': u'10', 'record_zone_name': u'reverse_zone', 
+              u'zone_origin': u'1.168.192.in-addr.arpa.', 
+              'record_view_dependency': u'test_view2_dep'}], 
+           u'192.168.1.5': 
+            [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+              u'host': u'host3.university.lcl', u'forward': False, 
+              'record_type': u'ptr', u'view_name': u'test_view2', 
+              'records_id': 18, u'record_args_dict': 
+                {'assignment_ip': u'192.168.1.5'}, 
+              'record_target': u'5', 'record_zone_name': u'reverse_zone', 
+              u'zone_origin': u'1.168.192.in-addr.arpa.', 
+              'record_view_dependency': u'test_view2_dep'}]}, 
+         u'test_view': 
+          {u'192.168.1.8': 
+            [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+              u'host': u'host6.university.lcl', u'forward': False, 
+              'record_type': u'ptr', u'view_name': u'test_view', 
+              'records_id': 16, u'record_args_dict': 
+                {'assignment_ip': u'192.168.1.8'}, 
+              'record_target': u'8', 'record_zone_name': u'reverse_zone', 
+              u'zone_origin': u'1.168.192.in-addr.arpa.', 
+              'record_view_dependency': u'test_view_dep'}]}}
+    self.assertEqual( self.core_helper_instance.SortRecordsByHost(record_dict),
+        [{'record_type': u'ptr', 
+          'record_ttl': 3600, 'record_last_user': u'sharrell', 
+          u'view_name': u'test_view2', u'forward': False, 
+          'record_target': u'11', u'host': u'host2.university.lcl', 
+          u'zone_origin': u'1.168.192.in-addr.arpa.', 'records_id': 17, 
+          u'record_args_dict': {'assignment_ip': u'192.168.1.11'}, 
+          'record_zone_name': u'reverse_zone', 'ip_address': '192.168.1.11', 
+          'record_view_dependency': u'test_view2_dep'}, 
+         {'record_type': u'ptr', 'record_ttl': 3600, 
+          'record_last_user': u'sharrell', u'view_name': u'test_view2', 
+          u'forward': False, 'record_target': u'5', 
+          u'host': u'host3.university.lcl', 
+          u'zone_origin': u'1.168.192.in-addr.arpa.', 
+          'records_id': 18, u'record_args_dict': 
+            {'assignment_ip': u'192.168.1.5'}, 
+          'record_zone_name': u'reverse_zone', 'ip_address': '192.168.1.5', 
+          'record_view_dependency': u'test_view2_dep'}, 
+         {'record_type': u'ptr', 'record_ttl': 3600, 
+          'record_last_user': u'sharrell', u'view_name': u'test_view2', 
+          u'forward': False, 'record_target': u'10', 
+          u'host': u'host4.university.lcl', 
+          u'zone_origin': u'1.168.192.in-addr.arpa.', 'records_id': 19, 
+          u'record_args_dict': {'assignment_ip': u'192.168.1.10'}, 
+          'record_zone_name': u'reverse_zone', 'ip_address': '192.168.1.10', 
+          'record_view_dependency': u'test_view2_dep'}, 
+         {'record_type': u'ptr', 'record_ttl': 3600, 
+          'record_last_user': u'sharrell', u'view_name': u'test_view2', 
+          u'forward': False, 'record_target': u'7', 
+          u'host': u'host5.university.lcl', 
+          u'zone_origin': u'1.168.192.in-addr.arpa.', 'records_id': 20, 
+          u'record_args_dict': {'assignment_ip': u'192.168.1.7'}, 
+          'record_zone_name': u'reverse_zone', 'ip_address': '192.168.1.7', 
+          'record_view_dependency': u'test_view2_dep'}, 
+         {'record_type': u'ptr', 'record_ttl': 3600, 
+           'record_last_user': u'sharrell', u'view_name': u'test_view', 
+           u'forward': False, 'record_target': u'8', 
+           u'host': u'host6.university.lcl', 
+           u'zone_origin': u'1.168.192.in-addr.arpa.', 'records_id': 16, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.8'}, 
+           'record_zone_name': u'reverse_zone', 'ip_address': '192.168.1.8', 
+           'record_view_dependency': u'test_view_dep'}] )
+
+    record_dict = {u'test_view': 
+        {u'192.168.0.1': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host1.university.lcl', u'forward': True, 
+            'record_type': u'a', u'view_name': u'test_view', 'records_id': 10, 
+            u'record_args_dict': {'assignment_ip': u'192.168.0.1'}, 
+            'record_target': u'host1', 'record_zone_name': u'forward_zone', 
+            u'zone_origin': u'university.lcl.', 
+            'record_view_dependency': u'test_view_dep'}], 
+         u'192.168.1.8': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host6.university.lcl', u'forward': True, 
+            'record_type': u'a', u'view_name': u'test_view', 'records_id': 15, 
+            u'record_args_dict': {'assignment_ip': u'192.168.1.8'}, 
+            'record_target': u'host6', 'record_zone_name': u'forward_zone', 
+            u'zone_origin': u'university.lcl.', 
+            'record_view_dependency': u'test_view_dep'}], 
+         u'192.168.1.10': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host4.university.lcl', u'forward': True, 
+            'record_type': u'a', u'view_name': u'test_view', 'records_id': 13, 
+            u'record_args_dict': {'assignment_ip': u'192.168.1.10'}, 
+            'record_target': u'host4', 'record_zone_name': u'forward_zone', 
+            u'zone_origin': u'university.lcl.', 
+            'record_view_dependency': u'test_view_dep'}]},
+      u'test_view3': 
+        {u'192.168.1.11': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host2.university.lcl', u'forward': True, 
+            'record_type': u'a', u'view_name': u'test_view3', 'records_id': 11,
+            u'record_args_dict': {'assignment_ip': u'192.168.1.11'}, 
+            'record_target': u'host2', 'record_zone_name': u'forward_zone', 
+            u'zone_origin': u'university.lcl.', 
+            'record_view_dependency': u'test_view3_dep'}], 
+         u'192.168.1.17': 
+          [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host5.university.lcl', u'forward': True, 
+            'record_type': u'a', u'view_name': u'test_view3', 'records_id': 14,
+            u'record_args_dict': {'assignment_ip': u'192.168.1.17'}, 
+            'record_target': u'host5', 'record_zone_name': u'forward_zone', 
+            u'zone_origin': u'university.lcl.', 
+            'record_view_dependency': u'test_view3_dep'}], 
+         u'192.168.1.5': [{'record_ttl': 3600, 'record_last_user': u'sharrell', 
+            u'host': u'host3.university.lcl', u'forward': True, 
+            'record_type': u'a', u'view_name': u'test_view3', 'records_id': 12, 
+            u'record_args_dict': {'assignment_ip': u'192.168.1.5'}, 
+            'record_target': u'host3', 'record_zone_name': u'forward_zone', 
+            u'zone_origin': u'university.lcl.', 
+            'record_view_dependency': u'test_view3_dep'}]}}
+    self.assertEqual( self.core_helper_instance.SortRecordsByHost(record_dict),
+      [{'record_type': u'a', 'record_ttl': 3600, 
+        'record_last_user': u'sharrell', u'view_name': u'test_view', 
+        u'forward': True, 'record_target': u'host1', 
+        u'host': u'host1.university.lcl', u'zone_origin': u'university.lcl.', 
+        'records_id': 10, u'record_args_dict': 
+          {'assignment_ip': u'192.168.0.1'}, 
+        'record_zone_name': u'forward_zone', 'ip_address': '192.168.0.1', 
+        'record_view_dependency': u'test_view_dep'}, 
+       {'record_type': u'a', 'record_ttl': 3600, 
+        'record_last_user': u'sharrell', u'view_name': u'test_view3', 
+        u'forward': True, 'record_target': u'host2', 
+        u'host': u'host2.university.lcl', u'zone_origin': u'university.lcl.', 
+        'records_id': 11, u'record_args_dict': 
+          {'assignment_ip': u'192.168.1.11'}, 
+        'record_zone_name': u'forward_zone', 'ip_address': '192.168.1.11', 
+        'record_view_dependency': u'test_view3_dep'}, 
+       {'record_type': u'a', 'record_ttl': 3600, 
+        'record_last_user': u'sharrell', u'view_name': u'test_view3', 
+        u'forward': True, 'record_target': u'host3', 
+        u'host': u'host3.university.lcl', u'zone_origin': u'university.lcl.', 
+        'records_id': 12, u'record_args_dict': 
+          {'assignment_ip': u'192.168.1.5'}, 
+        'record_zone_name': u'forward_zone', 'ip_address': '192.168.1.5', 
+        'record_view_dependency': u'test_view3_dep'}, 
+       {'record_type': u'a', 'record_ttl': 3600, 
+        'record_last_user': u'sharrell', u'view_name': u'test_view', 
+        u'forward': True, 'record_target': u'host4', 
+        u'host': u'host4.university.lcl', u'zone_origin': u'university.lcl.', 
+        'records_id': 13, u'record_args_dict': 
+          {'assignment_ip': u'192.168.1.10'}, 
+        'record_zone_name': u'forward_zone', 'ip_address': '192.168.1.10', 
+        'record_view_dependency': u'test_view_dep'}, 
+       {'record_type': u'a', 'record_ttl': 3600, 
+        'record_last_user': u'sharrell', u'view_name': u'test_view3', 
+        u'forward': True, 'record_target': u'host5', 
+        u'host': u'host5.university.lcl', u'zone_origin': u'university.lcl.', 
+        'records_id': 14, u'record_args_dict': 
+          {'assignment_ip': u'192.168.1.17'}, 
+        'record_zone_name': u'forward_zone', 'ip_address': '192.168.1.17', 
+        'record_view_dependency': u'test_view3_dep'}, 
+       {'record_type': u'a', 'record_ttl': 3600, 
+        'record_last_user': u'sharrell', u'view_name': u'test_view', 
+        u'forward': True, 'record_target': u'host6', 
+        u'host': u'host6.university.lcl', u'zone_origin': u'university.lcl.', 
+        'records_id': 15, u'record_args_dict': 
+          {'assignment_ip': u'192.168.1.8'}, 
+        'record_zone_name': u'forward_zone', 'ip_address': '192.168.1.8', 
+        'record_view_dependency': u'test_view_dep'}] )
+
   def testListAvailableIpsInCIDR(self):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                       u'192.168.1.0/24')
@@ -955,7 +1479,6 @@ class TestCoreHelpers(unittest.TestCase):
         errors.InvalidInputError,
         self.core_helper_instance.MakeIPv4ClasslessReverseDelegatedTargetZone,
         u'192.168.a8.1/26')
-
 
   def testListAccessRights(self):
     self.assertEqual(self.core_helper_instance.ListAccessRights(), ['rw', 'r'])
@@ -1178,6 +1701,198 @@ class TestCoreHelpers(unittest.TestCase):
              'record_zone_name': u'forward_zone',
              u'record_view_dependency': u'test_view', 'record_arguments':
                  {u'assignment_host': u'hostname.'}}])
+
+  def testListSortedHostsByZone(self):
+    self.assertEqual( 
+        self.core_helper_instance.ListSortedHostsByZone(u'forward_zone'),
+        {u'test_view': [
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host1.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view', 
+           'records_id': 10, 
+           u'record_args_dict': {'assignment_ip': u'192.168.0.1'}, 
+           'record_target': u'host1', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.0.1', 
+           'record_view_dependency': u'test_view_dep'},
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host4.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view', 
+           'records_id': 13, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.10'}, 
+           'record_target': u'host4', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.1.10', 
+           'record_view_dependency': u'test_view_dep'}, 
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host6.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view', 
+           'records_id': 15, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.8'}, 
+           'record_target': u'host6', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.1.8', 
+           'record_view_dependency': u'test_view_dep'}],
+        'test_view3': [
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host2.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view3', 
+           'records_id': 11, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.11'}, 
+           'record_target': u'host2', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.1.11', 
+           'record_view_dependency': u'test_view3_dep'}, 
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host3.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view3', 
+           'records_id': 12, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.5'}, 
+           'record_target': u'host3', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.1.5', 
+           'record_view_dependency': u'test_view3_dep'}, 
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host5.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view3', 
+           'records_id': 14, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.17'}, 
+           'record_target': u'host5', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.1.17', 
+           'record_view_dependency': u'test_view3_dep'}]})
+    self.assertEqual(self.core_helper_instance.\
+      ListSortedHostsByZone(u'forward_zone', u'test_view'), 
+        {u'test_view': [
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host1.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view', 'records_id': 10, 
+           u'record_args_dict': {'assignment_ip': u'192.168.0.1'}, 
+           'record_target': u'host1', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.0.1', 
+           'record_view_dependency': u'test_view_dep'}, 
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host4.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view', 'records_id': 13, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.10'}, 
+           'record_target': u'host4', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.1.10', 
+           'record_view_dependency': u'test_view_dep'}, 
+          {'record_last_user': u'sharrell', 'direction': 'Forward', 
+           'record_ttl': 3600, u'zone_origin': u'university.lcl.', 
+           u'host': u'host6.university.lcl', u'forward': True, 
+           'record_type': u'a', u'view_name': u'test_view', 'records_id': 15, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.8'}, 
+           'record_target': u'host6', 'record_zone_name': u'forward_zone', 
+           'ip_address': '192.168.1.8', 
+           'record_view_dependency': u'test_view_dep'}]})
+
+  def testListSortedHostsByCIDR(self):
+    self.assertEqual(self.core_helper_instance.ListSortedHostsByCIDR(\
+        '192.168.1.4/30'),
+        {u'test_view2': [
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.4', 'host': '--'}, 
+          {'direction': 'Reverse', 'record_ttl': 3600, 
+           u'zone_origin': u'1.168.192.in-addr.arpa.', 
+           u'view_name': u'test_view2', 'ip_address': u'192.168.1.5', 
+           'record_type': u'ptr', u'host': u'host3.university.lcl', 
+           'record_target': u'5', 'records_id': 18, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.5'}, 
+           u'forward': False, 'record_zone_name': u'reverse_zone', 
+           'record_last_user': u'sharrell', 
+           'record_view_dependency': u'test_view2_dep'}, 
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.6', 'host': '--'}, 
+          {'direction': 'Reverse', 'record_ttl': 3600, 
+           u'zone_origin': u'1.168.192.in-addr.arpa.', 
+           u'view_name': u'test_view2', 'ip_address': u'192.168.1.7', 
+           'record_type': u'ptr', u'host': u'host5.university.lcl', 
+           'record_target': u'7', 'records_id': 20, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.7'}, 
+           u'forward': False, 'record_zone_name': u'reverse_zone', 
+           'record_last_user': u'sharrell', 
+           'record_view_dependency': u'test_view2_dep'}], 
+        u'test_view3': [
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.4', 'host': '--'}, 
+          {'direction': 'Forward', 'record_ttl': 3600, 
+           u'zone_origin': u'university.lcl.', u'view_name': u'test_view3', 
+           'ip_address': u'192.168.1.5', 'record_type': u'a', 
+           u'host': u'host3.university.lcl', 'record_target': u'host3', 
+           'records_id': 12, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.5'}, 
+           u'forward': True, 'record_zone_name': u'forward_zone', 
+           'record_last_user': u'sharrell', 
+           'record_view_dependency': u'test_view3_dep'}, 
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.6', 'host': '--'}, 
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.7', 'host': '--'}]})
+    self.assertEqual(self.core_helper_instance.ListSortedHostsByCIDR(\
+        '192.168.1.4/30', zone_name=u'reverse_zone'),
+        {u'test_view2': [
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.4', 'host': '--'}, 
+          {'direction': 'Reverse', 'record_ttl': 3600, 
+           u'zone_origin': u'1.168.192.in-addr.arpa.', 
+           u'view_name': u'test_view2', 'ip_address': u'192.168.1.5', 
+           'record_type': u'ptr', u'host': u'host3.university.lcl', 
+           'record_target': u'5', 'records_id': 18, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.5'}, 
+           u'forward': False, 'record_zone_name': u'reverse_zone', 
+           'record_last_user': u'sharrell', 
+           'record_view_dependency': u'test_view2_dep'}, 
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.6', 'host': '--'}, 
+          {'direction': 'Reverse', 'record_ttl': 3600, 
+           u'zone_origin': u'1.168.192.in-addr.arpa.', 
+           u'view_name': u'test_view2', 'ip_address': u'192.168.1.7', 
+           'record_type': u'ptr', u'host': u'host5.university.lcl', 
+           'record_target': u'7', 'records_id': 20, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.7'}, 
+           u'forward': False, 'record_zone_name': u'reverse_zone', 
+           'record_last_user': u'sharrell', 
+           'record_view_dependency': u'test_view2_dep'}]})
+    self.assertEqual(self.core_helper_instance.ListSortedHostsByCIDR(\
+        '192.168.1.4/30', view_name=u'test_view2'),
+        {u'test_view2': [
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.4', 'host': '--'}, 
+          {'direction': 'Reverse', 'record_ttl': 3600, 
+           u'zone_origin': u'1.168.192.in-addr.arpa.', 
+           u'view_name': u'test_view2', 'ip_address': u'192.168.1.5', 
+           'record_type': u'ptr', u'host': u'host3.university.lcl', 
+           'record_target': u'5', 'records_id': 18, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.5'}, 
+           u'forward': False, 'record_zone_name': u'reverse_zone', 
+           'record_last_user': u'sharrell', 
+           'record_view_dependency': u'test_view2_dep'}, 
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.6', 'host': '--'}, 
+          {'direction': 'Reverse', 'record_ttl': 3600, 
+           u'zone_origin': u'1.168.192.in-addr.arpa.', 
+           u'view_name': u'test_view2', 'ip_address': u'192.168.1.7', 
+           'record_type': u'ptr', u'host': u'host5.university.lcl', 
+           'record_target': u'7', 'records_id': 20, 
+           u'record_args_dict': {'assignment_ip': u'192.168.1.7'}, 
+           u'forward': False, 'record_zone_name': u'reverse_zone', 
+           'record_last_user': u'sharrell', 
+           'record_view_dependency': u'test_view2_dep'}]})
+    self.assertEqual(self.core_helper_instance.ListSortedHostsByCIDR(\
+        '192.168.1.20/30', zone_name=u'reverse_zone', view_name=u'test_view'),
+        {'--': [
+          {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.20', 'host': '--'},
+           {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.21', 'host': '--'},
+           {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.22', 'host': '--'},
+           {'record_zone_name': '--', 'direction': '--', 
+           'ip_address': u'192.168.1.23', 'host': '--'},]})
+    pass
 
 if( __name__ == '__main__' ):
       unittest.main()
