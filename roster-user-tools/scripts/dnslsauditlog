@@ -100,16 +100,16 @@ def main(args):
               u'success': options.success,
               'begin_timestamp': options.begin_time,
               'end_timestamp': options.end_time})['core_return']
-
   print_list = []
   if( not options.no_header ):
-    print_list.append(['Action', 'Timestamp', 'Username', 'Success', 'Data'])
+    print_list.append(['ID', 'Action', 'Timestamp', 
+                       'Username', 'Success', 'Data'])
 
   for entry in log:
     date = datetime.datetime.strptime(
         entry['audit_log_timestamp'].value, "%Y%m%dT%H:%M:%S")
     print_list.append(
-        [entry['action'], str(date).replace(' ', 'T'),
+        [entry['audit_log_id'], entry['action'], str(date).replace(' ', 'T'),
          entry['audit_log_user_name'], entry['success'],
          str(cPickle.loads(entry['data'])['audit_args'])])
 

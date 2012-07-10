@@ -181,28 +181,28 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        "Action   Timestamp           Username Success Data\n"
-        "--------------------------------------------------\n"
-        "MakeACL  %s sharrell 1       "
+        "ID Action   Timestamp           Username Success Data\n"
+        "-----------------------------------------------------\n"
+        "1  MakeACL  %s sharrell 1       "
             "{'cidr_block': u'192.168.1/24', 'acl_name': u'acl1'}\n"
-        "MakeACL  %s sharrell 1       "
+        "2  MakeACL  %s sharrell 1       "
             "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
-        "MakeView %s sharrell 1       "
+        "3  MakeView %s sharrell 1       "
             "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
     command.close()
     command = os.popen('python %s -b %s -e %s '
                        '-u %s -p %s --config-file %s -s %s '
-                       '-c %s' % (EXEC, entry3_timestamp, entry3_timestamp,
+                       '-c %s' % (EXEC, entry2_timestamp, entry3_timestamp,
                                   USERNAME, self.password, USER_CONFIG,
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        "Action   Timestamp           Username Success Data\n"
-        "--------------------------------------------------\n"
-        "MakeACL  %s sharrell 1       "
+        "ID Action   Timestamp           Username Success Data\n"
+        "-----------------------------------------------------\n"
+        "2  MakeACL  %s sharrell 1       "
             "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
-        "MakeView %s sharrell 1       "
+        "3  MakeView %s sharrell 1       "
           "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
           entry2_timestamp, entry3_timestamp))
     command.close()
@@ -212,11 +212,11 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        "Action  Timestamp           Username Success Data\n"
-        "-------------------------------------------------\n"
-        "MakeACL %s sharrell 1       "
+        "ID Action  Timestamp           Username Success Data\n"
+        "----------------------------------------------------\n"
+        "1  MakeACL %s sharrell 1       "
             "{'cidr_block': u'192.168.1/24', 'acl_name': u'acl1'}\n"
-        "MakeACL %s sharrell 1       "
+        "2  MakeACL %s sharrell 1       "
             "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n\n" % (
               entry1_timestamp, entry2_timestamp))
     command.close()
@@ -226,8 +226,8 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        'Action Timestamp Username Success Data\n'
-        '--------------------------------------\n\n')
+        'ID Action Timestamp Username Success Data\n'
+        '-----------------------------------------\n\n')
     command.close()
     command = os.popen('python %s -U sharrell '
                        '-u %s -p %s --config-file %s -s %s '
@@ -235,13 +235,13 @@ class Testdnslsauditlog(unittest.TestCase):
                                   self.server_name, CREDFILE))
     self.assertEqual(
         command.read(),
-        "Action   Timestamp           Username Success Data\n"
-        "--------------------------------------------------\n"
-        "MakeACL  %s sharrell 1       "
+        "ID Action   Timestamp           Username Success Data\n"
+        "-----------------------------------------------------\n"
+        "1  MakeACL  %s sharrell 1       "
             "{'cidr_block': u'192.168.1/24', 'acl_name': u'acl1'}\n"
-        "MakeACL  %s sharrell 1       "
+        "2  MakeACL  %s sharrell 1       "
             "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
-        "MakeView %s sharrell 1       "
+        "3  MakeView %s sharrell 1       "
             "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
     command.close()
