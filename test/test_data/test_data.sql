@@ -27,29 +27,29 @@ INSERT INTO zones (zone_name) VALUES ('eas.university.edu');
 # Create Forward Zone Permissions
 INSERT INTO forward_zone_permissions
     (forward_zone_permissions_group_name, forward_zone_permissions_zone_name,
-     forward_zone_permissions_access_right)
+     forward_zone_permissions_group_permission)
   VALUES ('cs', 'cs.university.edu', 'rw');
 INSERT INTO forward_zone_permissions
     (forward_zone_permissions_group_name, forward_zone_permissions_zone_name,
-     forward_zone_permissions_access_right)
+     forward_zone_permissions_group_permission)
   VALUES ('cs', 'eas.university.edu', 'r');
 INSERT INTO forward_zone_permissions
     (forward_zone_permissions_group_name, forward_zone_permissions_zone_name,
-     forward_zone_permissions_access_right)
+     forward_zone_permissions_group_permission)
   VALUES ('bio', 'bio.university.edu', 'rw');
 
 # Create Reverse Range Permissions
 INSERT INTO reverse_range_permissions
     (reverse_range_permissions_group_name, reverse_range_permissions_cidr_block,
-     reverse_range_permissions_access_right)
+     reverse_range_permissions_group_permission)
   VALUES ('cs', '192.168.0.0/24', 'rw');
 INSERT INTO reverse_range_permissions
     (reverse_range_permissions_group_name, reverse_range_permissions_cidr_block,
-     reverse_range_permissions_access_right)
+     reverse_range_permissions_group_permission)
   VALUES ('bio', '192.168.0.0/24', 'r');
 INSERT INTO reverse_range_permissions
     (reverse_range_permissions_group_name, reverse_range_permissions_cidr_block,
-     reverse_range_permissions_access_right) 
+     reverse_range_permissions_group_permission) 
   VALUES ('bio', '192.168.1.0/24', 'rw');
 
 # vi: set ai aw sw=2:

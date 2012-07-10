@@ -1743,28 +1743,29 @@ class Core(object):
     return row_count
 
   def ListForwardZonePermissions(self, zone_name=None, group_name=None,
-                                 access_right=None):
+                                 group_permission=None):
     """List forward zone permisions.
 
     Inputs:
       zone_name: string of zone name
       group_name: string of group name
-      access_right: string of access rights defined as constants.ACCESS_RIGHTS
+      group_permission: string of group permissions defined as
+      constants.GROUP_PERMISSIONS
 
     Outputs:
       dictionary keyed by group name with values of lists of dictionaries
-      containing zone names and access rights
+      containing zone names and group permissions
         example: {'dept': [{'zone_name': 'sub.univeristy.edu',
-                            'access_right': 'rw'},
+                            'group_permission': 'rw'},
                            {'zone_name': 'othersub.university.edu',
-                            'access_right': 'r'}],
+                            'group_permission': 'r'}],
                   'otherdept': [{'zone_name': 'sub.university.edu',
-                                 'access_right': 'rw'}]}
+                                 'group_permission': 'rw'}]}
     """
     self.user_instance.Authorize('ListForwardZonePermissions')
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
                         'forward_zone_permissions_zone_name': zone_name,
-                        'forward_zone_permissions_access_right': access_right}
+                        'forward_zone_permissions_group_permission': group_permission}
 
     self.db_instance.StartTransaction()
     try:
@@ -1783,24 +1784,25 @@ class Core(object):
       forward_zone_perms_dict[
           row['forward_zone_permissions_group_name']].append(
               {'zone_name': row['forward_zone_permissions_zone_name'],
-               'access_right': row['forward_zone_permissions_access_right']})
+               'group_permission': row['forward_zone_permissions_group_permission']})
 
     return forward_zone_perms_dict
 
-  def MakeForwardZonePermission(self, zone_name, group_name, access_right):
+  def MakeForwardZonePermission(self, zone_name, group_name, group_permission):
     """Make forward zone permision.
 
     Inputs:
       zone_name: string of zone name
       group_name: string of group name
-      access_right: string of access rights defined as constants.ACCESS_RIGHTS
+      group_permission: string of group permissions defined as
+      constants.GROUP_PERMISSIONS
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
                         'forward_zone_permissions_zone_name': zone_name,
-                        'forward_zone_permissions_access_right': access_right}
+                        'forward_zone_permissions_group_permission': group_permission}
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -1816,13 +1818,14 @@ class Core(object):
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
 
-  def RemoveForwardZonePermission(self, zone_name, group_name, access_right):
+  def RemoveForwardZonePermission(self, zone_name, group_name, group_permission):
     """Remove forward zone permisions.
 
     Inputs:
       zone_name: string of zone name
       group_name: string of group name
-      access_right: string of access rights defined as constants.ACCESS_RIGHTS
+      group_permission: string of group permissions defined as
+      constants.GROUP_PERMISSIONS
 
     Outputs:
       int: number of rows affected
@@ -1832,7 +1835,7 @@ class Core(object):
 
     permissions_dict = {'forward_zone_permissions_group_name': group_name,
                         'forward_zone_permissions_zone_name': zone_name,
-                        'forward_zone_permissions_access_right': access_right}
+                        'forward_zone_permissions_group_permission': group_permission}
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -1851,28 +1854,29 @@ class Core(object):
 
 
   def ListReverseRangePermissions(self, cidr_block=None, group_name=None,
-                                 access_right=None):
+                                  group_permission=None):
     """List reverse range permisions.
 
     Inputs:
       cidr_block: string of cidr block
       group_name: string of group name
-      access_right: string of access rights defined as constants.ACCESS_RIGHTS
+      group_permission: string of group permissions defined as
+      constants.GROUP_PERMISSIONS
 
     Outputs:
       dictionary keyed by group name with values of lists of dictionaries
-      containing reverse ranges and access rights
+      containing reverse ranges and group permissions
         example: {'dept': [{'cidr_block': '192.168.0/24',
-                            'access_right': 'rw'},
+                            'group_permission': 'rw'},
                            {'cidr_block': '192.168.1/24',
-                            'access_right': 'r'}],
+                            'group_permission': 'r'}],
                   'otherdept': [{'cidr_block': '192.168.1/24',
-                                 'access_right': 'rw'}]}
+                                 'group_permission': 'rw'}]}
     """
     self.user_instance.Authorize('ListReverseRangePermissions')
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
                         'reverse_range_permissions_cidr_block': cidr_block,
-                        'reverse_range_permissions_access_right': access_right}
+                        'reverse_range_permissions_group_permission': group_permission}
 
     self.db_instance.StartTransaction()
     try:
@@ -1891,24 +1895,25 @@ class Core(object):
       reverse_range_perms_dict[
           row['reverse_range_permissions_group_name']].append(
               {'cidr_block': row['reverse_range_permissions_cidr_block'],
-               'access_right': row['reverse_range_permissions_access_right']})
+               'group_permission': row['reverse_range_permissions_group_permission']})
 
     return reverse_range_perms_dict
 
-  def MakeReverseRangePermission(self, cidr_block, group_name, access_right):
+  def MakeReverseRangePermission(self, cidr_block, group_name, group_permission):
     """Make reverse range permisions.
 
     Inputs:
       cidr_block: string of cidr block
       group_name: string of group name
-      access_right: string of access rights defined as constants.ACCESS_RIGHTS
+      group_permission: string of group permissions defined as
+      constants.GROUP_PERMISSIONS
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
                         'reverse_range_permissions_cidr_block': cidr_block,
-                        'reverse_range_permissions_access_right': access_right}
+                        'reverse_range_permissions_group_permission': group_permission}
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -1924,13 +1929,14 @@ class Core(object):
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
 
-  def RemoveReverseRangePermission(self, cidr_block, group_name, access_right):
+  def RemoveReverseRangePermission(self, cidr_block, group_name, group_permission):
     """Remove reverse range permisions.
 
     Inputs:
       cidr_block: string of cidr block
       group_name: string of group name
-      access_right: string of access rights defined as constants.ACCESS_RIGHTS
+      group_permission: string of group permissions defined as
+      constants.GROUP_PERMISSIONS
 
     Outputs:
       int: number of rows affected
@@ -1940,7 +1946,7 @@ class Core(object):
 
     permissions_dict = {'reverse_range_permissions_group_name': group_name,
                         'reverse_range_permissions_cidr_block': cidr_block,
-                        'reverse_range_permissions_access_right': access_right}
+                        'reverse_range_permissions_group_permission': group_permission}
     success = False
     try:
       self.db_instance.StartTransaction()

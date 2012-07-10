@@ -559,7 +559,7 @@ CREATE TABLE `forward_zone_permissions` (
   `forward_zone_permissions_id` mediumint unsigned NOT NULL auto_increment,
   `forward_zone_permissions_group_name` varchar(255) NOT NULL,
   `forward_zone_permissions_zone_name` varchar(255) NOT NULL,
-  `forward_zone_permissions_access_right` varchar(4) NOT NULL,
+  `forward_zone_permissions_group_permission` varchar(4) NOT NULL,
 
   PRIMARY KEY (`forward_zone_permissions_id`),
   UNIQUE KEY `forward_zone_permissions_unique_1`
@@ -567,7 +567,7 @@ CREATE TABLE `forward_zone_permissions` (
       `forward_zone_permissions_zone_name`),
   INDEX `group_name_2` (`forward_zone_permissions_group_name`),
   INDEX `zone_name_4` (`forward_zone_permissions_zone_name`),
-  INDEX `access_right_1` (`forward_zone_permissions_access_right`),
+  INDEX `group_permission_1` (`forward_zone_permissions_group_permission`),
 
   CONSTRAINT `group_name_2` FOREIGN KEY (`forward_zone_permissions_group_name`)
     REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -582,14 +582,14 @@ CREATE TABLE `reverse_range_permissions` (
   `reverse_range_permissions_id` mediumint unsigned NOT NULL auto_increment,
   `reverse_range_permissions_group_name` varchar(255) NOT NULL,
   `reverse_range_permissions_cidr_block` varchar(43) NOT NULL,
-  `reverse_range_permissions_access_right` varchar(4) NOT NULL,
+  `reverse_range_permissions_group_permission` varchar(4) NOT NULL,
 
   PRIMARY KEY (`reverse_range_permissions_id`),
   UNIQUE KEY `reverse_range_permissions_unique_1`
     (`reverse_range_permissions_group_name`,
      `reverse_range_permissions_cidr_block`),
   INDEX `group_name_3` (`reverse_range_permissions_group_name`),
-  INDEX `access_right_2` (`reverse_range_permissions_access_right`),
+  INDEX `group_permission_2` (`reverse_range_permissions_group_permission`),
 
   CONSTRAINT `group_name_3` FOREIGN KEY (`reverse_range_permissions_group_name`)
     REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE  
@@ -693,7 +693,8 @@ INSERT INTO locks (lock_name) VALUES ('maintenance');
 INSERT INTO view_dependencies (view_dependency) VALUES ('any');
 INSERT INTO zone_types (zone_type) VALUES ('master'),('slave'),('forward'),
                                           ('hint');
-INSERT INTO data_types (data_type) VALUES ('UnicodeString255'),('AccessRight'),
+INSERT INTO data_types (data_type) VALUES ('UnicodeString255'),
+                                          ('GroupPermission'),
                                           ('AccessLevel'),('CIDRBlock'),
                                           ('IntBool'),('UnsignedInt'),
                                           ('Hostname'),('DateTime'),

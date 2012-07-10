@@ -87,17 +87,17 @@ class DataValidation(object):
       return False
     return True
 
-  def isAccessRight(self, access_right):
-    """Checks to make sure that the string is a valid access right.
+  def isGroupPermission(self, group_permission):
+    """Checks to make sure that the string is a valid group permission.
   
     Inputs:
-      access_right: unicode string, and in constants.ACCESS_RIGHTS
+      group_permission: unicode string, and in constants.GROUP_PERMISSIONS
 
     Outputs:
-      bool: if access right is valid or not
+      bool: if group permission is valid or not
     """
-    if( self.isUnicodeString(access_right) and access_right in
-        constants.ACCESS_RIGHTS ):
+    if( self.isUnicodeString(group_permission) and group_permission in
+        constants.GROUP_PERMISSIONS ):
       return True
     return False
 

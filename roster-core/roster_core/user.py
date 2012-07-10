@@ -212,17 +212,17 @@ class User(object):
         {'user_access_level': '2',
          'user_name': 'shuey',
          'forward_zones': [
-             {'zone_name': 'cs.university.edu', 'access_right': 'rw'},
-             {'zone_name': 'eas.university.edu', 'access_right': 'r'},
-             {'zone_name': 'bio.university.edu', 'access_right': 'rw'}],
+             {'zone_name': 'cs.university.edu', 'group_permission': 'rw'},
+             {'zone_name': 'eas.university.edu', 'group_permission': 'r'},
+             {'zone_name': 'bio.university.edu', 'group_permission': 'rw'}],
          'groups': ['cs', 'bio'],
          'reverse_ranges': [
              {'cidr_block': '192.168.0.0/24',
-              'access_right': 'rw'},
+              'group_permission': 'rw'},
              {'cidr_block': '192.168.0.0/24',
-              'access_right': 'r'},
+              'group_permission': 'r'},
              {'cidr_block': '192.168.1.0/24',
-              'access_right': 'rw'}]}
+              'group_permission': 'rw'}]}
     """
     return self.user_perms
 

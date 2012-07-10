@@ -876,8 +876,8 @@ class dbAccess(object):
 
     Raises:
       UnexpectedDataError: Row did not contain
-                           reverse_range_permissions_access_right or
-                           forward_zone_permissions_access_right
+                           reverse_range_permissions_group_permission or
+                           forward_zone_permissions_group_permission
 
     Outputs:
       dict: dict with all the relevant information
@@ -885,17 +885,17 @@ class dbAccess(object):
         {'user_access_level': '2',
          'user_name': 'shuey',
          'forward_zones': [
-             {'zone_name': 'cs.university.edu', 'access_right': 'rw'},
-             {'zone_name': 'eas.university.edu', 'access_right': 'r'},
-             {'zone_name': 'bio.university.edu', 'access_right': 'rw'}],
+             {'zone_name': 'cs.university.edu', 'group_permission': 'rw'},
+             {'zone_name': 'eas.university.edu', 'group_permission': 'r'},
+             {'zone_name': 'bio.university.edu', 'group_permission': 'rw'}],
          'groups': ['cs', 'bio'],
          'reverse_ranges': [
              {'cidr_block': '192.168.0.0/24',
-              'access_right': 'rw'},
+              'group_permission': 'rw'},
              {'cidr_block': '192.168.0.0/24',
-              'access_right': 'r'},
+              'group_permission': 'r'},
              {'cidr_block': '192.168.1.0/24',
-              'access_right': 'rw'}]}
+              'group_permission': 'rw'}]}
     """
     auth_info_dict = {}
     db_data = []
@@ -945,34 +945,34 @@ class dbAccess(object):
 
     auth_info_dict['user_access_level'] = db_data[0]['access_level']
     for row in db_data:
-      if( row.has_key('forward_zone_permissions_access_right') ):
+      if( row.has_key('forward_zone_permissions_group_permission') ):
         if( not row['user_group_assignments_group_name'] in
             auth_info_dict['groups'] ):
           auth_info_dict['groups'].append(
               row['user_group_assignments_group_name'])
 
         if( not {'zone_name': row['forward_zone_permissions_zone_name'],
-                 'access_right': row['forward_zone_permissions_access_right']}
+                 'group_permission': row['forward_zone_permissions_group_permission']}
             in (auth_info_dict['forward_zones']) ):
           auth_info_dict['forward_zones'].append(
               {'zone_name': row['forward_zone_permissions_zone_name'],
-               'access_right': row['forward_zone_permissions_access_right']})
-      elif( row.has_key('reverse_range_permissions_access_right') ):
+               'group_permission': row['forward_zone_permissions_group_permission']})
+      elif( row.has_key('reverse_range_permissions_group_permission') ):
         if( not row['user_group_assignments_group_name'] in
             auth_info_dict['groups'] ):
           auth_info_dict['groups'].append(
               row['user_group_assignments_group_name'])
 
         if( not {'cidr_block': row['reverse_range_permissions_cidr_block'],
-                 'access_right': row['reverse_range_permissions_access_right']}
+                 'group_permission': row['reverse_range_permissions_group_permission']}
             in auth_info_dict['reverse_ranges'] ):
           auth_info_dict['reverse_ranges'].append(
               {'cidr_block': row['reverse_range_permissions_cidr_block'],
-               'access_right': row['reverse_range_permissions_access_right']})
+               'group_permission': row['reverse_range_permissions_group_permission']})
       else:
         raise errors.UnexpectedDataError(
-            'Row did not contain reverse_range_permissions_access_right or '
-            'forward_zone_permissions_access_right.')
+            'Row did not contain reverse_range_permissions_group_permission or '
+            'forward_zone_permissions_group_permission.')
     return auth_info_dict
 
   def GetZoneOrigin(self, zone_name, view_name):

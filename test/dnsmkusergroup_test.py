@@ -152,6 +152,48 @@ class Testdnsmkusergroup(unittest.TestCase):
                      {u'shuey': [u'bio', u'cs'], u'new_user': [u'cs'],
                       u'sharrell': [u'cs']})
 
+  def testMakeUserGroupUserGroupAssignmentsWithStringAccessLevel(self):
+    output = os.popen('python %s user -n new_dns_admin '
+                      '-a dns_admin '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'ADDED USER: username: new_dns_admin access_level: 128\n')
+    output.close()
+    output = os.popen('python %s user -n new_unlocked_user '
+                      '-a unlocked_user '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'ADDED USER: username: new_unlocked_user access_level: 64\n')
+    output.close()
+    output = os.popen('python %s user -n new_user '
+                      '-a user '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'ADDED USER: username: new_user access_level: 32\n')
+    output.close()
+
+    output = os.popen('python %s assignment -n new_user -g cs '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ADDED USER_GROUP_ASSIGNMENT: username: new_user group: cs\n')
+    output.close()
+    self.assertEqual(self.core_instance.ListUsers(),
+                     {u'shuey': 64, u'new_user': 128, u'jcollins': 32,
+                      u'tree_export_user': 0, u'sharrell': 128, u'new_dns_admin': 128,
+                      u'new_unlocked_user': 64, u'new_user': 32})
+    self.assertEqual(self.core_instance.ListGroups(), [u'bio', u'cs', u'eas'])
+    self.assertEqual(self.core_instance.ListUserGroupAssignments(),
+                     {u'shuey': [u'bio', u'cs'], u'new_user': [u'cs'],
+                      u'sharrell': [u'cs']})
+
   def testMakeUserWithZone(self):
     self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
     output = os.popen('python %s group -g testgroup '
@@ -179,24 +221,24 @@ class Testdnsmkusergroup(unittest.TestCase):
         'ADDED USER_GROUP_ASSIGNMENT: username: new_user group: testgroup\n')
     output.close()
     output = os.popen('python %s forward -z test_zone -g testgroup '
-                      '--access-right rw '
+                      '--group-permission rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     self.assertEqual(
         output.read(),
         'ADDED FORWARD_ZONE_PERMISSION: zone_name: test_zone group: '
-        'testgroup access_right: rw\n')
+        'testgroup group_permission: rw\n')
     output.close()
     self.assertEqual(self.core_instance.ListForwardZonePermissions(),
                      {u'bio': [{'zone_name': u'bio.university.edu',
-                                'access_right': u'rw'}],
+                                'group_permission': u'rw'}],
                       u'testgroup': [{'zone_name': u'test_zone',
-                                      'access_right': u'rw'}],
+                                      'group_permission': u'rw'}],
                       u'cs': [{'zone_name': u'cs.university.edu',
-                                 'access_right': u'rw'},
+                                 'group_permission': u'rw'},
                                 {'zone_name': u'eas.university.edu',
-                                 'access_right': u'r'}]})
+                                 'group_permission': u'r'}]})
     output = os.popen('python %s user -n newuser --access-level 128 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -214,7 +256,7 @@ class Testdnsmkusergroup(unittest.TestCase):
         'ADDED USER_GROUP_ASSIGNMENT: username: newuser group: testgroup\n')
     output.close()
     output = os.popen('python %s reverse -g testgroup -z test_zone '
-                      '-b 192.168.1.4/30 --access-right rw '
+                      '-b 192.168.1.4/30 --group-permission rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -224,32 +266,32 @@ class Testdnsmkusergroup(unittest.TestCase):
         'command.\n')
     output.close()
     output = os.popen('python %s reverse -g testgroup '
-                      '-b 192.168.1.4/30 --access-right rw '
+                      '-b 192.168.1.4/30 --group-permission rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(
         output.read(),
         'ADDED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.1.4/30 '
-        'group: testgroup access_right: rw\n')
+        'group: testgroup group_permission: rw\n')
     output.close()
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio':
                           [{'cidr_block': u'192.168.0.0/24',
-                            'access_right': u'r'},
+                            'group_permission': u'r'},
                            {'cidr_block': u'192.168.1.0/24',
-                            'access_right': u'rw'}],
+                            'group_permission': u'rw'}],
                       u'testgroup':
                           [{'cidr_block': u'192.168.1.4/30',
-                            'access_right': u'rw'}],
+                            'group_permission': u'rw'}],
                       u'cs': [{'cidr_block': u'192.168.0.0/24',
-                                 'access_right': u'rw'}]})
+                                 'group_permission': u'rw'}]})
 
   def testMakeZoneAssignments(self):
     self.core_instance.MakeGroup(u'test_group')
     self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
     output = os.popen('python %s reverse -z test_zone -b '
-                      '192.168.1.0/24 -g test_group --access-right rw '
+                      '192.168.1.0/24 -g test_group --group-permission rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -259,27 +301,27 @@ class Testdnsmkusergroup(unittest.TestCase):
         'command.\n')
     output.close()
     output = os.popen('python %s reverse -b 192.168.1.0/24 '
-                      '-g test_group --access-right rw '
+                      '-g test_group --group-permission rw '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(
         output.read(),
         'ADDED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.1.0/24 '
-        'group: test_group access_right: rw\n')
+        'group: test_group group_permission: rw\n')
     output.close()
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio':
                           [{'cidr_block': u'192.168.0.0/24',
-                            'access_right': u'r'},
+                            'group_permission': u'r'},
                            {'cidr_block': u'192.168.1.0/24',
-                            'access_right': u'rw'}],
+                            'group_permission': u'rw'}],
                       u'test_group':
                           [{'cidr_block': u'192.168.1.0/24',
-                            'access_right': u'rw'}],
+                            'group_permission': u'rw'}],
                       u'cs':
                           [{'cidr_block': u'192.168.0.0/24',
-                            'access_right': u'rw'}]})
+                            'group_permission': u'rw'}]})
 
   def testMakeGroup(self):
     output = os.popen('python %s group -g test_group '
@@ -299,6 +341,13 @@ class Testdnsmkusergroup(unittest.TestCase):
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
         'CLIENT ERROR: The -a/--access-level flag is required.\n')
+    output.close()
+    output = os.popen('python %s user -n dchayes '
+                      '-s %s -u %s -a super-user -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ERROR: KeyError: \'super-user\'\n')
     output.close()
     output = os.popen('python %s user -n jcollins -g cs '
                       '-s %s -u %s -p %s --config-file %s' % (
@@ -326,12 +375,12 @@ class Testdnsmkusergroup(unittest.TestCase):
     self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
     self.core_instance.MakeGroup(u'testgroup')
     output = os.popen('python %s forward '
-                      '-g testgroup -z test_zone --access-right x '
+                      '-g testgroup -z test_zone --group-permission x '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        'CLIENT ERROR: An access right of either rw|r '
+        'CLIENT ERROR: A group permission of either rw|r '
         'is required if specifying a zone.\n')
     output.close()
 

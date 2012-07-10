@@ -1528,28 +1528,28 @@ class TestComplete(unittest.TestCase):
         'sharrell         128\n\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup forward -z test_zone -g test_group --access-right rw
+    ## dnsmkusergroup forward -z test_zone -g test_group --group-permission rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'forward -z test_zone -g test_group --access-right rw '
+        'forward -z test_zone -g test_group --group-permission rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED FORWARD_ZONE_PERMISSION: zone_name: test_zone '
-        'group: test_group access_right: rw\n')
+        'group: test_group group_permission: rw\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group --access-right rw
+    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group --group-permission rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'reverse -b 168.192.2.0/24 -g test_group --access-right rw '
+        'reverse -b 168.192.2.0/24 -g test_group --group-permission rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED REVERSE_RANGE_PERMISSION: cidr_block: 168.192.2.0/24 '
-        'group: test_group access_right: rw\n')
+        'group: test_group group_permission: rw\n')
     command.close()
     ## User tool: dnsmkusergroup
     ## dnsmkusergroup group -g test_group2
@@ -1585,28 +1585,28 @@ class TestComplete(unittest.TestCase):
         'ADDED USER_GROUP_ASSIGNMENT: username: test_user2 group: test_group2\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup forward -z test_zone -g test_group2 --access-right rw
+    ## dnsmkusergroup forward -z test_zone -g test_group2 --group-permission rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'forward -z test_zone -g test_group2 --access-right rw '
+        'forward -z test_zone -g test_group2 --group-permission rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED FORWARD_ZONE_PERMISSION: zone_name: test_zone '
-        'group: test_group2 access_right: rw\n')
+        'group: test_group2 group_permission: rw\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group --access-right rw
+    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group --group-permission rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'reverse -b 168.192.2.0/24 -g test_group2 --access-right rw '
+        'reverse -b 168.192.2.0/24 -g test_group2 --group-permission rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED REVERSE_RANGE_PERMISSION: cidr_block: 168.192.2.0/24 '
-        'group: test_group2 access_right: rw\n')
+        'group: test_group2 group_permission: rw\n')
     command.close()
     ## User tool: dnslsusergroup
     ## dnslsusergroup user
@@ -1627,28 +1627,28 @@ class TestComplete(unittest.TestCase):
     command.close()
     ## User tool: dnsrmusergroup
     ## dnsrmusergroup user reverse -b 192.168.2.0/24
-    ## -g test_group2 --access-right rw
+    ## -g test_group2 --group-permission rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmusergroup '
-        'reverse -b 192.168.2.0/24 -g test_group2 --access-right rw '
+        'reverse -b 192.168.2.0/24 -g test_group2 --group-permission rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.2.0/24 '
-        'group: test_group2 access_right: rw\n')
+        'group: test_group2 group_permission: rw\n')
     command.close()
     ## User tool: dnsrmusergroup
-    ## dnsrmusergroup forward -z test_zone -g test_group2 --access-right rw
+    ## dnsrmusergroup forward -z test_zone -g test_group2 --group-permission rw
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmusergroup '
-        'forward -z test_zone -g test_group2 --access-right rw '
+        'forward -z test_zone -g test_group2 --group-permission rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'REMOVED FORWARD_ZONE_PERMISSION: zone_name: test_zone '
-        'group: test_group2 access_right: rw\n')
+        'group: test_group2 group_permission: rw\n')
     command.close()
     ## User tool: dnsrmusergroup
     ## dnsrmusergroup assignment -n test_user2 -g test_group2
@@ -1763,21 +1763,21 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'group      zone_name access_right\n'
-        '---------------------------------\n'
+        'group      zone_name group_permission\n'
+        '-------------------------------------\n'
         'test_group test_zone rw\n\n')
     command.close()
     ## dnslsusergroup reverse -b 192.168.2.0/24 -g test_group
-    ## --access-right rw
+    ## --group-permission rw
     command_string = (
         'python ../roster-user-tools/scripts/dnslsusergroup '
-        'reverse -b 168.192.2.0/24 -g test_group --access-right rw '
+        'reverse -b 168.192.2.0/24 -g test_group --group-permission rw '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'group      cidr_block     access_right\n'
-        '--------------------------------------\n'
+        'group      cidr_block     group_permission\n'
+        '------------------------------------------\n'
         'test_group 168.192.2.0/24 rw\n\n')
     command.close()
 

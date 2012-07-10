@@ -105,13 +105,13 @@ def GetRowDict(table_name):
   return row_dict
 
 
-def ListAccessRights():
-  """Lists access rights.
+def ListGroupPermissions():
+  """Lists group permissions.
 
   Output:
-    list: list of access rights. ex: ['rw', 'r']
+    list: list of group permissions. ex: ['rw', 'r']
   """
-  return constants.ACCESS_RIGHTS
+  return constants.GROUP_PERMISSIONS
 
 
 def ReverseIP(ip_address):

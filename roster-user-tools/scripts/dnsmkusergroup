@@ -70,11 +70,11 @@ def main(args):
            '\n'
            'To make a forward zone permission:\n'
            '\t%s forward -z <zone-name> -g <group>\n'
-           '\t--access-right <access-right>\n'
+           '\t--group-permission <group-permission>\n'
            '\n'
            'To make a reverse range permission:\n'
            '\t%s reverse -b <cidr-block> -g <group>\n'
-           '\t--access-right <access-right>\n' % tuple(
+           '\t--group-permission <group-permission>\n' % tuple(
                    [sys.argv[0] for _ in range(5)]))
   args_instance = Args(command,
       ['user', 'group', 'assignment', 'forward', 'reverse'], args, usage)
@@ -85,6 +85,17 @@ def main(args):
   except cli_common_lib.ArgumentError, error:
     print 'ERROR: %s' % error
     sys.exit(1)
+
+  if( options.access_level ):
+    access_level_dict = roster_client_lib.RunFunction(
+        u'ListAccessLevels', options.username, credfile=options.credfile,
+        credstring=options.credstring, server_name=options.server)[
+            'core_return']
+    try:
+      options.access_level = access_level_dict[options.access_level]
+    except KeyError, error:
+      print 'ERROR: KeyError: %s' % error
+      sys.exit(1)
 
   if( options.zone_name ):
     zones = roster_client_lib.RunFunction(u'ListZones', options.username,
@@ -107,12 +118,12 @@ def main(args):
         credstring=options.credstring, server_name=options.server,
         args=[options.new_user])['core_return']
 
-  if( options.access_right ):
-    access_rights = roster_client_lib.RunFunction(
-        u'ListAccessRights', options.username, credfile=options.credfile,
+  if( options.group_permission ):
+    group_permissions = roster_client_lib.RunFunction(
+        u'ListGroupPermissions', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server)[
             'core_return']
-    access_rights_string = '|'.join(access_rights)
+    group_permissions_string = '|'.join(group_permissions)
 
   if( command == 'user' ):
     if( options.new_user in users ):
@@ -153,11 +164,11 @@ def main(args):
   elif( command == 'reverse' ):
     if( options.group not in groups ):
       cli_common_lib.DnsError('Group does not exist.', 1)
-    if( options.access_right is None or
-        options.access_right not in access_rights ):
-      cli_common_lib.DnsError('An access right of either %s is '
+    if( options.group_permission is None or
+        options.group_permission not in group_permissions ):
+      cli_common_lib.DnsError('A group permission of either %s is '
                               'required if specifying a zone.' % (
-                                  access_rights_string), 1)
+                                  group_permissions_string), 1)
 
     roster_client_lib.RunFunction(u'MakeReverseRangePermission',
                                   options.username,
@@ -165,29 +176,29 @@ def main(args):
                                   credstring=options.credstring,
                                   server_name=options.server,
                                   args=[options.cidr_block, options.group,
-                                        options.access_right])
+                                        options.group_permission])
     print ('ADDED REVERSE_RANGE_PERMISSION: cidr_block: %s group: %s '
-           'access_right: %s' % (options.cidr_block, options.group,
-                                 options.access_right))
+           'group_permission: %s' % (options.cidr_block, options.group,
+                                     options.group_permission))
 
   elif( command == 'forward' ):
     if( options.group not in groups ):
       cli_common_lib.DnsError('Group does not exist.', 1)
-    if( options.access_right is None or
-        options.access_right not in access_rights ):
-      cli_common_lib.DnsError('An access right of either %s is '
+    if( options.group_permission is None or
+        options.group_permission not in group_permissions ):
+      cli_common_lib.DnsError('A group permission of either %s is '
                               'required if specifying a zone.' % (
-                                  access_rights_string), 1)
+                                  group_permissions_string), 1)
 
     roster_client_lib.RunFunction(
         u'MakeForwardZonePermission', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server, args=[options.zone_name, options.group,
-                                          options.access_right])
+                                          options.group_permission])
     if( not options.quiet ):
       print ('ADDED FORWARD_ZONE_PERMISSION: zone_name: %s group: %s '
-             'access_right: %s' % (options.zone_name, options.group,
-                                   options.access_right))
+             'group_permission: %s' % (options.zone_name, options.group,
+                                   options.group_permission))
 
   else:
     cli_common_lib.DnsError(

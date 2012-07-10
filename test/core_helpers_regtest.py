@@ -1480,8 +1480,8 @@ class TestCoreHelpers(unittest.TestCase):
         self.core_helper_instance.MakeIPv4ClasslessReverseDelegatedTargetZone,
         u'192.168.a8.1/26')
 
-  def testListAccessRights(self):
-    self.assertEqual(self.core_helper_instance.ListAccessRights(), ['rw', 'r'])
+  def testListGroupPermissions(self):
+    self.assertEqual(self.core_helper_instance.ListGroupPermissions(), ['rw', 'r'])
 
   def testRevertNamedConfig(self):
     self.core_instance.MakeDnsServerSet(u'set1')

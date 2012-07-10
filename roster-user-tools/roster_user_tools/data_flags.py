@@ -383,7 +383,8 @@ class User(core_flags.CoreFlags):
     self.parser.add_option('-a', '--access-level', action='store',
                            dest='access_level',
                            help='Access level of new user.',
-                           metavar='<access-level>', default=None, type='int')
+                           metavar='<access-level>',
+                           default=None)
     self.AddFlagRule('access_level', required=self.action=='Make',
                      command='user')
     self.parser.add_option('-g', '--group', action='store', dest='group',
@@ -398,12 +399,12 @@ class User(core_flags.CoreFlags):
                            help='String of the zone name (optional)',
                            metavar='<zone>', default=None)
     self.AddFlagRule('zone_name', required=not_list, command='forward')
-    self.parser.add_option('--access-right', action='store',
-                           dest='access_right',
-                           help='String of the access right (r/rw)',
+    self.parser.add_option('--group-permission', action='store',
+                           dest='group_permission',
+                           help='String of the group permission (r/rw)',
                            metavar='r|rw', default=None)
-    self.AddFlagRule('access_right', required=not_list, command='forward')
-    self.AddFlagRule('access_right', required=not_list, command='reverse')
+    self.AddFlagRule('group_permission', required=not_list, command='forward')
+    self.AddFlagRule('group_permission', required=not_list, command='reverse')
     self.parser.add_option('-b', '--cidr-block', action='store',
                            dest='cidr_block', help='String of CIDR block.',
                            metavar='<cidr-block>', default=None)

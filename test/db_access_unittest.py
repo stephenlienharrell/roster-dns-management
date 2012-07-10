@@ -223,17 +223,17 @@ class TestdbAccess(unittest.TestCase):
         {'user_access_level': 64,
          'user_name': 'shuey',
          'forward_zones': [
-             {'zone_name': 'cs.university.edu', 'access_right': 'rw'},
-             {'zone_name': 'eas.university.edu', 'access_right': 'r'},
-             {'zone_name': 'bio.university.edu', 'access_right': 'rw'}],
+             {'zone_name': 'cs.university.edu', 'group_permission': 'rw'},
+             {'zone_name': 'eas.university.edu', 'group_permission': 'r'},
+             {'zone_name': 'bio.university.edu', 'group_permission': 'rw'}],
          'groups': ['cs', 'bio'],
          'reverse_ranges': [
              {'cidr_block': '192.168.0.0/24',
-              'access_right': 'rw'},
+              'group_permission': 'rw'},
              {'cidr_block': '192.168.0.0/24',
-              'access_right': 'r'},
+              'group_permission': 'r'},
              {'cidr_block': '192.168.1.0/24',
-              'access_right': 'rw'}]})
+              'group_permission': 'rw'}]})
 
   def testGetUserAuthorizationInfoSSL(self):
     self.db_instance.close()
@@ -265,17 +265,17 @@ class TestdbAccess(unittest.TestCase):
         {'user_access_level': 64,
          'user_name': 'shuey',
          'forward_zones': [
-             {'zone_name': 'cs.university.edu', 'access_right': 'rw'},
-             {'zone_name': 'eas.university.edu', 'access_right': 'r'},
-             {'zone_name': 'bio.university.edu', 'access_right': 'rw'}],
+             {'zone_name': 'cs.university.edu', 'group_permission': 'rw'},
+             {'zone_name': 'eas.university.edu', 'group_permission': 'r'},
+             {'zone_name': 'bio.university.edu', 'group_permission': 'rw'}],
          'groups': ['cs', 'bio'],
          'reverse_ranges': [
              {'cidr_block': '192.168.0.0/24',
-              'access_right': 'rw'},
+              'group_permission': 'rw'},
              {'cidr_block': '192.168.0.0/24',
-              'access_right': 'r'},
+              'group_permission': 'r'},
              {'cidr_block': '192.168.1.0/24',
-              'access_right': 'rw'}]})
+              'group_permission': 'rw'}]})
 
   def testRowFuncs(self):
     self.assertRaises(errors.InvalidInputError, self.db_instance.MakeRow,
@@ -399,47 +399,47 @@ class TestdbAccess(unittest.TestCase):
         sorted(
         ({'user_group_assignments_user_name': u'sharrell',
           'forward_zone_permissions_group_name': u'cs', 'access_level': 128,
-          'forward_zone_permissions_access_right': u'rw', 'user_name':
+          'forward_zone_permissions_group_permission': u'rw', 'user_name':
           u'sharrell', 'user_group_assignments_group_name': u'cs',
           'forward_zone_permissions_zone_name': u'cs.university.edu'},
           {'user_group_assignments_user_name': u'shuey',
             'forward_zone_permissions_group_name': u'cs', 'access_level': 64,
-            'forward_zone_permissions_access_right': u'rw', 'user_name':
+            'forward_zone_permissions_group_permission': u'rw', 'user_name':
             u'shuey', 'user_group_assignments_group_name': u'cs',
             'forward_zone_permissions_zone_name': u'cs.university.edu'},
           {'user_group_assignments_user_name': u'shuey',
             'forward_zone_permissions_group_name': u'cs', 'access_level': 64,
-            'forward_zone_permissions_access_right': u'rw', 'user_name':
+            'forward_zone_permissions_group_permission': u'rw', 'user_name':
             u'shuey', 'user_group_assignments_group_name': u'bio',
             'forward_zone_permissions_zone_name': u'cs.university.edu'},
           {'user_group_assignments_user_name': u'sharrell',
             'forward_zone_permissions_group_name': u'cs', 'access_level': 128,
-            'forward_zone_permissions_access_right': u'r', 'user_name':
+            'forward_zone_permissions_group_permission': u'r', 'user_name':
             u'sharrell', 'user_group_assignments_group_name': u'cs',
             'forward_zone_permissions_zone_name': u'eas.university.edu'},
           {'user_group_assignments_user_name': u'shuey',
             'forward_zone_permissions_group_name': u'cs', 'access_level': 64,
-            'forward_zone_permissions_access_right': u'r', 'user_name':
+            'forward_zone_permissions_group_permission': u'r', 'user_name':
             u'shuey', 'user_group_assignments_group_name': u'cs',
             'forward_zone_permissions_zone_name': u'eas.university.edu'},
           {'user_group_assignments_user_name': u'shuey',
             'forward_zone_permissions_group_name': u'cs', 'access_level': 64,
-            'forward_zone_permissions_access_right': u'r', 'user_name':
+            'forward_zone_permissions_group_permission': u'r', 'user_name':
             u'shuey', 'user_group_assignments_group_name': u'bio',
             'forward_zone_permissions_zone_name': u'eas.university.edu'},
           {'user_group_assignments_user_name': u'sharrell',
             'forward_zone_permissions_group_name': u'bio', 'access_level': 128,
-            'forward_zone_permissions_access_right': u'rw', 'user_name':
+            'forward_zone_permissions_group_permission': u'rw', 'user_name':
             u'sharrell', 'user_group_assignments_group_name': u'cs',
             'forward_zone_permissions_zone_name': u'bio.university.edu'},
           {'user_group_assignments_user_name': u'shuey',
             'forward_zone_permissions_group_name': u'bio', 'access_level': 64,
-            'forward_zone_permissions_access_right': u'rw', 'user_name':
+            'forward_zone_permissions_group_permission': u'rw', 'user_name':
             u'shuey', 'user_group_assignments_group_name': u'cs',
             'forward_zone_permissions_zone_name': u'bio.university.edu'},
           {'user_group_assignments_user_name': u'shuey',
             'forward_zone_permissions_group_name': u'bio', 'access_level': 64,
-            'forward_zone_permissions_access_right': u'rw', 'user_name':
+            'forward_zone_permissions_group_permission': u'rw', 'user_name':
             u'shuey', 'user_group_assignments_group_name': u'bio',
             'forward_zone_permissions_zone_name': u'bio.university.edu'})))
                                               

@@ -57,12 +57,12 @@ RECORD_RATIO = 20
 # Any access level used in the code should be listed here.
 # Access levels are represented as an unsigned small int in the database.
 ACCESS_LEVELS = {'dns_admin': 128,
-                 'domain_admin': 64,
+                 'unlocked_user': 64,
                  'user': 32,
                  'noop': 0}
 
-# Valid access rights for forward or reverse perms in the database.
-ACCESS_RIGHTS = ['rw', 'r']
+# Valid group permissions for forward or reverse perms in the database.
+GROUP_PERMISSIONS = ['rw', 'r']
 
 # This is a list of tables that are not audit logged when changes are made.
 # it is important not to overwrite these tables when doing a partial replay
@@ -145,7 +145,7 @@ SUPPORTED_METHODS = {
 
     'ListViews':    {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'GetViewsByUser':
                     {'check': False,
@@ -167,7 +167,7 @@ SUPPORTED_METHODS = {
     'ListViewAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeViewAssignment':
                     {'check': False,
@@ -182,7 +182,7 @@ SUPPORTED_METHODS = {
     'ListDnsServers':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeDnsServer':
                     {'check': False,
@@ -202,7 +202,7 @@ SUPPORTED_METHODS = {
     'ListDnsServerSets':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeDnsServerSet':
                     {'check': False,
@@ -222,7 +222,7 @@ SUPPORTED_METHODS = {
     'ListDnsServerSetViewAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeDnsServerSetViewAssignments':
                     {'check': False,
@@ -237,7 +237,7 @@ SUPPORTED_METHODS = {
     'ListDnsServerSetAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeDnsServerSetAssignments':
                     {'check': False,
@@ -261,7 +261,7 @@ SUPPORTED_METHODS = {
 
     'ListACLs':     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeACL':      {'check': False,
                      'write': True,
@@ -279,7 +279,7 @@ SUPPORTED_METHODS = {
     'ListViewToACLAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeViewToACLAssignments':
                     {'check': False,
@@ -294,7 +294,7 @@ SUPPORTED_METHODS = {
     'ListReverseRangeZoneAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeReverseRangeZoneAssignment':
                     {'check': False,
@@ -309,7 +309,7 @@ SUPPORTED_METHODS = {
     'ListForwardZonePermissions':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeForwardZonePermission':
                     {'check': False,
@@ -324,7 +324,7 @@ SUPPORTED_METHODS = {
     'ListReverseRangePermissions':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeReverseRangePermission':
                     {'check': False,
@@ -348,7 +348,7 @@ SUPPORTED_METHODS = {
 
     'ListZones':    {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeZone':     {'check': False,
                      'write': True,
@@ -364,7 +364,7 @@ SUPPORTED_METHODS = {
 
     'ListUsers':    {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeUser':     {'check': False,
                      'write': True,
@@ -380,7 +380,7 @@ SUPPORTED_METHODS = {
 
     'ListGroups':   {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeGroup':    {'check': False,
                      'write': True,
@@ -397,7 +397,7 @@ SUPPORTED_METHODS = {
     'ListUserGroupAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeUserGroupAssignment':
                     {'check': False,
@@ -422,7 +422,7 @@ SUPPORTED_METHODS = {
     'ListReservedWords':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['domain_admin']},
+                     'access_level': ACCESS_LEVELS['unlocked_user']},
 
     'MakeReservedWord':
                     {'check': False,
@@ -553,12 +553,12 @@ TABLES = {
     'forward_zone_permissions':
         {'forward_zone_permissions_group_name': 'UnicodeString',
          'forward_zone_permissions_zone_name': 'UnicodeString',
-         'forward_zone_permissions_access_right': 'AccessRight'},
+         'forward_zone_permissions_group_permission': 'GroupPermission'},
 
     'reverse_range_permissions':
         {'reverse_range_permissions_group_name': 'UnicodeString',
          'reverse_range_permissions_cidr_block': 'CIDRBlock',
-          'reverse_range_permissions_access_right': 'AccessRight'},
+          'reverse_range_permissions_group_permission': 'GroupPermission'},
 
     'reverse_range_zone_assignments':
         {'reverse_range_zone_assignments_zone_name': 'UnicodeString',

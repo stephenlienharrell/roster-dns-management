@@ -410,66 +410,66 @@ class TestCore(unittest.TestCase):
     self.assertEqual(self.core_instance.ListForwardZonePermissions(),
                      {u'bio': [
                        {'zone_name': u'bio.university.edu',
-                        'access_right': u'rw'}],
+                        'group_permission': u'rw'}],
                       u'cs': [
                        {'zone_name': u'cs.university.edu',
-                        'access_right': u'rw'},
+                        'group_permission': u'rw'},
                        {'zone_name': u'eas.university.edu',
-                        'access_right': u'r'}]})
+                        'group_permission': u'r'}]})
     self.core_instance.MakeForwardZonePermission(u'eas.university.edu', u'bio',
                                                  u'r')
     self.assertEqual(self.core_instance.ListForwardZonePermissions(),
                      {u'bio': [
                        {'zone_name': u'bio.university.edu',
-                        'access_right': u'rw'},
+                        'group_permission': u'rw'},
                        {'zone_name': u'eas.university.edu',
-                        'access_right': u'r'}],
+                        'group_permission': u'r'}],
                       u'cs': [
                        {'zone_name': u'cs.university.edu',
-                        'access_right': u'rw'},
+                        'group_permission': u'rw'},
                        {'zone_name': u'eas.university.edu',
-                        'access_right': u'r'}]})
+                        'group_permission': u'r'}]})
     self.assertTrue(self.core_instance.RemoveForwardZonePermission(
         u'eas.university.edu', u'bio', u'r'))
     self.assertEqual(self.core_instance.ListForwardZonePermissions(),
                      {u'bio': [
                        {'zone_name': u'bio.university.edu',\
-                        'access_right': u'rw'}],
+                        'group_permission': u'rw'}],
                       u'cs': [
                        {'zone_name': u'cs.university.edu',
-                        'access_right': u'rw'},
+                        'group_permission': u'rw'},
                        {'zone_name': u'eas.university.edu',
-                        'access_right': u'r'}]})
+                        'group_permission': u'r'}]})
 
   def testReverseRangePermissionsListMakeRemove(self):
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio': [
-                       {'cidr_block': u'192.168.0.0/24', 'access_right': u'r'},
+                       {'cidr_block': u'192.168.0.0/24', 'group_permission': u'r'},
                        {'cidr_block': u'192.168.1.0/24',
-                        'access_right': u'rw'}],
+                        'group_permission': u'rw'}],
                      u'cs': [
                        {'cidr_block': u'192.168.0.0/24',
-                        'access_right': u'rw'}]})
+                        'group_permission': u'rw'}]})
     self.core_instance.MakeReverseRangePermission(u'10/8', u'bio',
                                                   u'r')
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio': [
-                       {'cidr_block': u'192.168.0.0/24', 'access_right': u'r'},
-                       {'cidr_block': u'192.168.1.0/24', 'access_right': u'rw'},
-                       {'cidr_block': u'10/8', 'access_right': u'r'}],
+                       {'cidr_block': u'192.168.0.0/24', 'group_permission': u'r'},
+                       {'cidr_block': u'192.168.1.0/24', 'group_permission': u'rw'},
+                       {'cidr_block': u'10/8', 'group_permission': u'r'}],
                      u'cs': [
                        {'cidr_block': u'192.168.0.0/24',
-                        'access_right': u'rw'}]})
+                        'group_permission': u'rw'}]})
     self.assertTrue(self.core_instance.RemoveReverseRangePermission(
         u'10/8', u'bio', u'r'))
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio': [
-                       {'cidr_block': u'192.168.0.0/24', 'access_right': u'r'},
+                       {'cidr_block': u'192.168.0.0/24', 'group_permission': u'r'},
                        {'cidr_block': u'192.168.1.0/24',
-                        'access_right': u'rw'}],
+                        'group_permission': u'rw'}],
                      u'cs': [
                        {'cidr_block': u'192.168.0.0/24',
-                        'access_right': u'rw'}]})
+                        'group_permission': u'rw'}]})
 
   def testRecordMakeRemoveListUpdate(self):
     self.core_instance.MakeView(u'test_view')

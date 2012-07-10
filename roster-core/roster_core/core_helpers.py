@@ -58,8 +58,8 @@ class CoreHelpers(object):
 
   ### These functions just expose helpers_lib functions for the 
   ### XML-RPC server. For doc strings see helpers_lib
-  def ListAccessRights(self):
-    return helpers_lib.ListAccessRights()
+  def ListGroupPermissions(self):
+    return helpers_lib.ListGroupPermissions()
 
   def ReverseIP(self, ip_address):
     return helpers_lib.ReverseIP(ip_address)
@@ -448,10 +448,10 @@ class CoreHelpers(object):
     Inputs:
       long_target: String of long PTR target
       view_name: String of view name
-    
+
     Raises:
       InvalidInputError: No suitable reverse range zone assignments found.
-    Ouptuts:
+    Outputs:
       string: String of short PTR target
     """
     if( not long_target.endswith('in-addr.arpa.') and not
@@ -638,7 +638,23 @@ class CoreHelpers(object):
     zone_type = u'master'
     zone_origin = u'%s.' % zone_name
     self.core_instance.MakeZone(zone_name, zone_type, zone_origin)
- 
+
+  def ListAccessLevels(self):
+    """Lists access levels from constants for both integer and string keys
+
+    Outputs:
+      dict: dictionary of access levels with both string and integer-string keys
+
+    Example:
+      {'32': 32, '64': 64, '128': 128, 'user': 32, 'unlocked_user': 64,
+       'dns_admin': 128}
+    """
+    access_levels_dict = {}
+    for key, value in constants.ACCESS_LEVELS.iteritems():
+      access_levels_dict[str(value)] = value
+      access_levels_dict[key] = value
+    return access_levels_dict
+
   def ListAvailableIpsInCIDR(self, cidr_block, num_ips=1, view_name=None,
                              zone_name=None):
     """Finds first available ips. Only lists as many IPs as are available.
