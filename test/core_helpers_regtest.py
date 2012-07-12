@@ -1483,6 +1483,15 @@ class TestCoreHelpers(unittest.TestCase):
   def testListGroupPermissions(self):
     self.assertEqual(self.core_helper_instance.ListGroupPermissions(), ['rw', 'r'])
 
+  def testListNamedConfGlobalOptionsClient(self):
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test;')
+    named_conf_options = self.core_helper_instance.ListNamedConfGlobalOptionsClient()
+    self.assertEqual(len(named_conf_options), 1)
+    self.assertEqual(named_conf_options[0]['options'], u'test;')
+    self.assertEqual(named_conf_options[0]['dns_server_set_name'], u'set1')
+    self.assertEqual(named_conf_options[0]['id'], 1)
+
   def testRevertNamedConfig(self):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'test_options;')
