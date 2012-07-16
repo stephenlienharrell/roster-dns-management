@@ -62,7 +62,7 @@ class AuditLog(object):
     self.log_to_file = log_to_file
     self.log_file_name = log_file_name
 
-  def LogAction(self, user, action, data, success):
+  def LogAction(self, user, action, data, success, current_transaction=False):
     """Logs action to places specified in initalizer.
 
     Inputs:
@@ -74,6 +74,7 @@ class AuditLog(object):
                             'range_allowed': 1,
                             'acl_name': u'test_acl'}}
       success: bool of success of action
+      current_transaction: boolean for if a transaction is already started
     """
     current_datetime = datetime.datetime.now()
     current_timestamp = current_datetime.strftime('%Y-%m-%d %H:%M:%S')
@@ -83,7 +84,7 @@ class AuditLog(object):
 
     if( self.log_to_db ):
       audit_log_id = self._LogToDatabase(user, action, data, success,
-                                         current_datetime)
+                                         current_datetime, current_transaction)
 
     if( self.log_to_syslog ):
       self._LogToSyslog(pretty_print_log_string)
@@ -110,7 +111,8 @@ class AuditLog(object):
     finally:
       syslog.closelog()
 
-  def _LogToDatabase(self, user, action, data, success, current_timestamp):
+  def _LogToDatabase(self, user, action, data, success, 
+                     current_timestamp, current_transaction):
     """Writes log data to db.
     
     Inputs:
@@ -119,6 +121,7 @@ class AuditLog(object):
       data: string of data
       success: bool of success of action
       current_timestamp: string of mysql formated time stamp
+      current_transaction: boolean for if a transaction is already started
     """
     if( success ):
       success = 1
@@ -131,15 +134,15 @@ class AuditLog(object):
                 'data': data,
                 'success': success,
                 'audit_log_timestamp': current_timestamp}
-
-    self.db_instance.StartTransaction()
+    if( not current_transaction ):
+      self.db_instance.StartTransaction()
     try:
       audit_log_id = self.db_instance.MakeRow('audit_log', log_dict)
     except:
       self.db_instance.EndTransaction(rollback=True)
       raise
-
-    self.db_instance.EndTransaction()
+    if( not current_transaction ):
+      self.db_instance.EndTransaction()
 
     return audit_log_id
 

@@ -124,7 +124,7 @@ class TestAuditLog(unittest.TestCase):
   def testLogToDatabase(self):
     audit_log_id = self.audit_log_instance._LogToDatabase(
         u'sharrell', u'MakeUser', u'user=ahoward user_level=64', True,
-        datetime.datetime(2009, 4, 28, 10, 46, 50))
+        datetime.datetime(2009, 4, 28, 10, 46, 50), False)
     self.assertEqual(audit_log_id, 1)
 
     audit_log_dict = self.db_instance.GetEmptyRowDict('audit_log')
@@ -140,6 +140,26 @@ class TestAuditLog(unittest.TestCase):
       self.assertEqual(audit_row[0]['success'], 1)
     finally:
       self.db_instance.EndTransaction()
+
+    self.db_instance.StartTransaction()
+    try:
+      audit_log_id = self.audit_log_instance._LogToDatabase(
+          u'sharrell', u'MakeUser', u'user=scook user_level=64', True,
+          datetime.datetime(2009, 4, 28, 10, 49, 50), True)
+      self.assertEqual(audit_log_id, 2)
+      audit_log_dict = self.db_instance.GetEmptyRowDict('audit_log')
+      audit_log_dict['audit_log_id'] = audit_log_id
+      audit_row = self.db_instance.ListRow('audit_log', audit_log_dict)
+      self.assertEqual(audit_row[0]['action'], u'MakeUser')
+      self.assertEqual(audit_row[0]['audit_log_timestamp'],
+                       datetime.datetime(2009, 4, 28, 10, 49, 50))
+      self.assertEqual(cPickle.loads(str(audit_row[0]['data'])),
+                      u'user=scook user_level=64')
+      self.assertEqual(audit_row[0]['audit_log_user_name'], u'sharrell')
+      self.assertEqual(audit_row[0]['success'], 1)
+    finally:
+        self.db_instance.EndTransaction()
+
 
   def testLogToFile(self):
     current_time = time.time()

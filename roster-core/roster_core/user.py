@@ -179,20 +179,20 @@ class User(object):
 
           # fail to find a matching IP range with appropriate perms
           self.log_instance.LogAction(self.user_name, function_name,
-                                      current_args, False)
+                                      current_args, False, current_transaction)
           raise errors.AuthorizationError(auth_fail_string)
 
         except ValueError:
           # fail to find a matching zone with appropriate perms
           self.log_instance.LogAction(self.user_name, function_name,
-                                      current_args, False)
+                                      current_args, False, current_transaction)
           raise errors.AuthorizationError(auth_fail_string)
       else:
         return
     else:
       # fail to find a matching method
       self.log_instance.LogAction(self.user_name, function_name,
-                                  current_args, False)
+                                  current_args, False, current_transaction)
       raise errors.AuthorizationError(auth_fail_string)
 
   def GetUserName(self):
