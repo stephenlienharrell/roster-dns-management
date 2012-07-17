@@ -1204,7 +1204,7 @@ class CoreHelpers(object):
               record_data = {
                   'target': record['record_target'],
                   'zone_name': record['record_zone_name'],
-                  'view_name': record_dict['record_view_dependency'],
+                  'view_name': record['record_view_dependency'],
                   'record_type': record['record_type']},
               current_transaction=True)
           record_dict['records_id'] = record['records_id']
