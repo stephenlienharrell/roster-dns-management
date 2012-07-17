@@ -78,9 +78,6 @@ def main(args):
   parser.add_option('--run-as-username', action='store', dest='run_as_username',
                     help='Username roster server should run as.',
                     default='nobody')
-  parser.add_option('--lock-file', action='store', dest='lock_file',
-                    help='Location of roster server lock file.',
-                    default='/var/lock/roster')
   parser.add_option('--infinite-renew-time', action='store',
                     dest='infinite_renew_time', metavar='<time>',
                     help='Time in seconds to renew infinite credentials.',
@@ -268,7 +265,11 @@ def main(args):
     config_parser.set('server', 'inf_renew_time', options.infinite_renew_time)
     config_parser.set('server', 'core_die_time', options.core_die_time)
     config_parser.set('server', 'run_as_username', options.run_as_username)
-    config_parser.set('server', 'lock_file', options.lock_file)
+    config_parser.set('server', 
+          '# If you change lock_file from the default value,', '')
+    config_parser.set('server', 
+          '# then you will need to change it in the init script as well.', '')
+    config_parser.set('server', 'lock_file', '/var/lock/roster')
     config_parser.set('server', 'ssl_cert_file', options.ssl_cert)
     config_parser.set('server', 'ssl_key_file', options.ssl_key)
     config_parser.set('server', 'server_log_file', options.server_log_file)
