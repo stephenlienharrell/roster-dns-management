@@ -122,13 +122,13 @@ class TestUser(unittest.TestCase):
                               'record_type': u'ptr'}
 
     # good reverse zone data (subset of ip range in bigger zone)
-    good_10_reverse_record_data = {'target': u'5.10',
+    good_10_reverse_record_data = {'target': u'10.5',
                                    'zone_name': u'10.10.rev',
                                    'view_name': u'any',
                                    'record_type': u'ptr'}
 
     # bad reverse zone data (subset of ip range in bigger zone)
-    no_10_reverse_record_data = {'target': u'4.10',
+    no_10_reverse_record_data = {'target': u'10.4',
                                  'zone_name': u'10.10.rev',
                                  'view_name': u'any',
                                  'record_type': u'ptr'}

@@ -167,8 +167,8 @@ class User(object):
         # construct an ip address
        
         ip_address = helpers_lib.UnReverseIP('%s.%s' % (
-          record_data['target'][::-1], self.zone_origin_cache[
-                record_data['zone_name']]))
+          record_data['target'], self.zone_origin_cache[
+            record_data['zone_name']]))
         try:
           ip = IPy.IP(ip_address)
 
