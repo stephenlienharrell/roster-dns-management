@@ -2,21 +2,21 @@
 
 # Copyright (c) 2009, Purdue University
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # Redistributions of source code must retain the above copyright notice, this
 # list of conditions and the following disclaimer.
 #
 # Redistributions in binary form must reproduce the above copyright notice, this
 # list of conditions and the following disclaimer in the documentation and/or
 # other materials provided with the distribution.
-# 
+#
 # Neither the name of the Purdue University nor the names of its contributors
 # may be used to endorse or promote products derived from this software without
 # specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -69,6 +69,7 @@ class TestUser(unittest.TestCase):
     self.db_instance.StartTransaction()
     self.db_instance.cursor.execute(data)
     self.db_instance.EndTransaction()
+
     self.log_instance = audit_log.AuditLog(log_to_syslog=True)
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
 
@@ -92,46 +93,91 @@ class TestUser(unittest.TestCase):
     good_record_data = {'target': u'good',
                         'zone_name': u'cs.university.edu',
                         'view_name': u'any',
-                        'record_type': u'a'}
+                        'record_type': u'a',
+                        'record_args_dict' : { u'assignment_ip' : u'10.10.5.69' }
+                        }
 
     txt_record_data = {'target': u'good',
                         'zone_name': u'cs.university.edu',
                         'view_name': u'any',
-                        'record_type': u'txt'}
+                        'record_type': u'txt',
+                        'record_args_dict' : { u'quoted_text' : u'Hello World' }
+                        }
+
 
     mx_record_data = {'target': u'good',
-                        'zone_name': u'cs.university.edu',
-                        'view_name': u'any',
-                        'record_type': u'mx'}
+                      'zone_name': u'cs.university.edu',
+                      'view_name': u'any',
+                      'record_type': u'mx',
+                      'record_args_dict' : { u'mail_server' : u'192.168.0.1' }
+                      }
 
     # bad forward zone data
+    bad_forward_record_data = {'target': u'good',
+                          'zone_name': u'bio.university.edu',
+                          'view_name': u'any',
+                          'record_type': u'a',
+                          'record_args_dict' : { 
+                              u'assignment_ip' : u'173.194.75.99'}
+                          }
+
     no_forward_record_data = {'target': u'noforward',
                               'zone_name': u'bio.university.edu',
                               'view_name': u'any',
-                              'record_type': u'a'}
+                              'record_type': u'a',
+                              'record_args_dict' : { 
+                                  u'assignment_ip' : u'192.168.0.1'}
+                              }
 
     # good reverse zone data
     good_reverse_record_data = {'target': u'1',
                                 'zone_name': u'192.168.0.rev',
                                 'view_name': u'any',
-                                'record_type': u'ptr'}
+                                'record_type': u'ptr',
+                                'record_args_dict' : { 
+                                    u'assignment_host' : u'hello.cs.university.edu.'
+                                    }
+                                }
+
+    no_record_args_dict_data = {'target': u'good',
+                                'zone_name': u'cs.university.edu',
+                                'view_name': u'any',
+                                'record_type': u'a'}
+
+    bad_reverse_record_data = {'target': u'1',
+                               'zone_name': u'192.168.0.rev',
+                               'view_name': u'any',
+                               'record_type': u'ptr',
+                               'record_args_dict' : { 
+                                   u'assignment_host' : u'c1.google.com.'}
+                               }
     # bad reverse zone data
     no_reverse_record_data = {'target': u'1',
                               'zone_name': u'192.168.1.rev',
                               'view_name': u'any',
-                              'record_type': u'ptr'}
+                              'record_type': u'ptr',
+                              'record_args_dict' : { 
+                                  u'assignment_host' : u'john.cs.university.edu.'}
+                              }
 
     # good reverse zone data (subset of ip range in bigger zone)
     good_10_reverse_record_data = {'target': u'10.5',
                                    'zone_name': u'10.10.rev',
                                    'view_name': u'any',
-                                   'record_type': u'ptr'}
+                                   'record_type': u'ptr',
+                                   'record_args_dict' : { 
+                                     u'assignment_host' : u'good.cs.university.edu.'
+                                     }
+                                   }
 
     # bad reverse zone data (subset of ip range in bigger zone)
     no_10_reverse_record_data = {'target': u'10.4',
                                  'zone_name': u'10.10.rev',
                                  'view_name': u'any',
-                                 'record_type': u'ptr'}
+                                 'record_type': u'ptr',
+                                 'record_args_dict' : { 
+                                     u'assignment_host' : u'bad.cs.university.edu.' }
+                                 }
 
     # test success with admin user
     user_instance = user.User(u'sharrell', self.db_instance, self.log_instance)
@@ -139,6 +185,7 @@ class TestUser(unittest.TestCase):
     user_instance.Authorize(u'MakeRecord', good_record_data)
     user_instance.Authorize(u'MakeRecord', txt_record_data)
     user_instance.Authorize(u'MakeRecord', mx_record_data)
+    user_instance.Authorize(u'MakeRecord', bad_reverse_record_data)
 
     # test maintenance mode
     # maintainenance flag doesn't apply to admins
@@ -150,7 +197,7 @@ class TestUser(unittest.TestCase):
                       u'MakeRecord', txt_record_data)
     self.assertRaises(errors.AuthorizationError, user_instance.Authorize,
                       u'MakeRecord', mx_record_data)
-                                           
+
     self.core_instance.SetMaintenanceFlag(True)
     self.assertRaises(errors.MaintenanceError, user_instance.Authorize,
                       u'MakeRecord', good_record_data)
@@ -158,7 +205,7 @@ class TestUser(unittest.TestCase):
                       u'MakeRecord', mx_record_data)
     self.core_instance.SetMaintenanceFlag(False)
 
-    # test missing record_data on certain methods, and make sure it passes 
+    # test missing record_data on certain methods, and make sure it passes
     # on the others
     user_instance.Authorize(u'MakeRecord', good_record_data)
     self.assertRaises(errors.MissingDataTypeError, user_instance.Authorize, u'MakeRecord')
@@ -193,6 +240,15 @@ class TestUser(unittest.TestCase):
     self.assertRaises(errors.AuthorizationError, user_instance.Authorize, u'FakeRecord',
                       good_reverse_record_data)
 
+    # test bad record_args_dict, i.e. assignment_ip/hosts that are not in a roster zone
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize, u'MakeRecord',
+                      bad_forward_record_data)
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize, u'MakeRecord',
+                      bad_reverse_record_data)
+
+    # check to make sure Authorize only accepts record_data with a record_args_dict
+    self.assertRaises(errors.MissingDataTypeError, user_instance.Authorize, u'MakeRecord',
+                      no_record_args_dict_data)
 
   def testGetUserName(self):
     user_instance = user.User(u'jcollins', self.db_instance, self.log_instance)
@@ -200,7 +256,7 @@ class TestUser(unittest.TestCase):
 
   def testGetPermissions(self):
     user_instance = user.User(u'jcollins', self.db_instance, self.log_instance)
-    self.assertEquals(user_instance.GetPermissions(), 
+    self.assertEquals(user_instance.GetPermissions(),
                       {'user_access_level': 32, 'user_name': u'jcollins',
                        'forward_zones': [], 'groups': [], 'reverse_ranges': []})
 

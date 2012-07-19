@@ -110,10 +110,14 @@ class TestdbAccess(unittest.TestCase):
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
     self.db_instance = db_instance
 
+    self.core_instance.RemoveZone(u'eas.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'cs.university.edu')
+
   def tearDown(self):
-    for fname in os.listdir('.'):
+    for fname in os.listdir('./test_data/backup_dir'):
       if( fname.endswith('.bz2') ):
-        os.remove(fname)
+        os.remove('./test_data/backup_dir/%s' % fname)
 
   def testPushBackup(self):
     self.assertFalse(self.core_instance.ListRecords())
@@ -160,9 +164,9 @@ class TestdbAccess(unittest.TestCase):
 
     old_stdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.db_recovery_instance.PushBackup(9)
+    self.db_recovery_instance.PushBackup(12)
     self.assertEqual(sys.stdout.flush(),
-                     'Loading database from backup with ID 9\n')
+                     'Loading database from backup with ID 12\n')
     sys.stdout = old_stdout
 
     self.assertEqual(self.core_instance.ListRecords(),
@@ -193,17 +197,23 @@ class TestdbAccess(unittest.TestCase):
     self.assertEqual(self.core_instance.ListZones(), {})
     old_stdout = sys.stdout
     sys.stdout = StdOutStream()
-    self.db_recovery_instance.RunAuditStep(1)
-    self.db_recovery_instance.RunAuditStep(2)
+    for i in range(5):
+        self.db_recovery_instance.RunAuditStep(i + 1)
     self.assertEqual(
         sys.stdout.flush(),
-        u"Replaying action with id 1: MakeView\n"
-         "with arguments: [u'test_view', None]\n"
-         "Replaying action with id 2: MakeZone\n"
-         "with arguments: [u'university.edu', u'master', "
-         "u'university.edu.', u'test_view', None, True]\n")
+        u'Replaying action with id 1: RemoveZone\n'
+         'with arguments: [u\'eas.university.edu\', None]\n'
+         'Replaying action with id 2: RemoveZone\n'
+         'with arguments: [u\'bio.university.edu\', None]\n'
+         'Replaying action with id 3: RemoveZone\n'
+         'with arguments: [u\'cs.university.edu\', None]\n'
+         'Replaying action with id 4: MakeView\n'
+         'with arguments: [u\'test_view\', None]\n'
+         'Replaying action with id 5: MakeZone\n'
+         'with arguments: [u\'university.edu\', '
+         'u\'master\', u\'university.edu.\', u\'test_view\', None, True]\n')
     sys.stdout = old_stdout
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': ''})
+    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
     self.assertEqual(
         self.core_instance.ListZones(),
         {u'university.edu':
@@ -244,7 +254,7 @@ class TestdbAccess(unittest.TestCase):
     sys.stdout = StdOutStream()
     self.db_recovery_instance.RunAuditRange(10)
     self.assertEqual(sys.stdout.flush(),
-        'Loading database from backup with ID 9\n')
+        'Loading database from backup with ID 12\n')
     sys.stdout = old_stdout
     self.assertEqual(self.core_instance.ListRecords(), 
         [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
@@ -272,7 +282,7 @@ class TestdbAccess(unittest.TestCase):
     sys.stdout = StdOutStream()
     self.db_recovery_instance.RunAuditStep(log_id)
     self.assertEqual(sys.stdout.flush(),
-        'Not replaying action with id 13, action was unsuccessful.\n')
+        'Not replaying action with id 16, action was unsuccessful.\n')
     sys.stdout = old_stdout
 
 if( __name__ == '__main__' ):

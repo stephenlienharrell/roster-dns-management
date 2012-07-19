@@ -114,6 +114,9 @@ class TestDnsRecover(unittest.TestCase):
     self.db_instance = db_instance
 
   def testFullRecovery(self):
+    self.core_instance.RemoveZone(u'cs.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
     self.assertFalse(self.core_instance.ListRecords())
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'university.edu', u'master',
@@ -146,7 +149,7 @@ class TestDnsRecover(unittest.TestCase):
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
-        'Loading database from backup with ID 9\n')
+        'Loading database from backup with ID 12\n')
     output.close()
     self.assertEqual(self.core_instance.ListRecords(),
         [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
@@ -176,10 +179,12 @@ class TestDnsRecover(unittest.TestCase):
                       '-u %s --config-file %s' % (
                           EXEC, log_id, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
-        'Not replaying action with id 13, action was unsuccessful.\n')
+        'Not replaying action with id 16, action was unsuccessful.\n')
     output.close()
 
   def testRunAuditStep(self):
+    for zone in self.core_instance.ListZones():
+        self.core_instance.RemoveZone(zone)
     self.core_instance.MakeView(u'test_view')
     self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
     self.core_instance.MakeZone(u'university.edu', u'master',
@@ -197,19 +202,19 @@ class TestDnsRecover(unittest.TestCase):
     self.core_instance.RemoveZone(u'university.edu')
     self.assertEqual(self.core_instance.ListViews(), {})
     self.assertEqual(self.core_instance.ListZones(), {})
-    output = os.popen('python %s -i 1 --single '
+    output = os.popen('python %s -i 4 --single '
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
-        u"Replaying action with id 1: MakeView\n"
+        u"Replaying action with id 4: MakeView\n"
          "with arguments: [u'test_view', None]\n")
     output.close()
     self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
-    output = os.popen('python %s -i 2 --single '
+    output = os.popen('python %s -i 5 --single '
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
-         "Replaying action with id 2: MakeZone\n"
+         "Replaying action with id 5: MakeZone\n"
          "with arguments: [u'university.edu', u'master', "
          "u'university.edu.', u'test_view', None, True]\n")
     output.close()

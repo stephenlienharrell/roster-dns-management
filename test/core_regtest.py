@@ -344,6 +344,9 @@ class TestCore(unittest.TestCase):
                      u'not_test_view', u'test_acl', 1))
 
   def testZoneMakeRemoveListUpdate(self):
+    self.core_instance.RemoveZone(u'cs.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
     self.core_instance.MakeView(u'test_view')
     self.assertFalse(self.core_instance.ListZones())
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.')

@@ -355,56 +355,57 @@ class TestDnsMassAdd(unittest.TestCase):
         '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n'
         '4 aaaa computer3                                 forward_zone test_view\n'
         '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n\n'))
-
     command.close()
     
     ## Check output of replaced hosts
     self.assertEqual(
-        self.core_instance.ListRecords(view_name=u'test_view'),
-        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1',
-        u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
-        'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
-        'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'forward_zone', u'admin_email': u'admin.university.edu.',
-        u'expiry_seconds': 5},
-        {u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1',
-        u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 'ttl': 3600,
-        u'minimum_seconds': 5, 'record_type': u'soa', 'view_name': u'test_view',
-        'last_user': u'sharrell', 'zone_name': u'reverse_zone',
-        u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-        {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
-        u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 'ttl': 3600,
-        u'minimum_seconds': 5, 'record_type': u'soa', 'view_name': u'test_view',
-        'last_user': u'sharrell', 'zone_name': u'foward_zone_ipv6',
-        u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-        {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
-        u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 'ttl': 3600,
-        u'minimum_seconds': 5, 'record_type': u'soa', 'view_name': u'test_view',
-        'last_user': u'sharrell', 'zone_name': u'reverse_zone_ipv6',
-        u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-        {'target': u'4', 'ttl': 3600, 'record_type': u'ptr',
-        'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'reverse_zone', u'assignment_host': u'host3.university.edu.'},
-        {'target': u'computer1', 'ttl': 3600, 'record_type': u'a',
-        'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
-        {'target': u'5', 'ttl': 3600, 'record_type': u'ptr',
-        'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'reverse_zone', u'assignment_host': u'computer1.university.edu'},
-        {'target': u'computer2', 'ttl': 3600, 'record_type': u'aaaa',
-        'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'forward_zone', u'assignment_ip': u'4321::1:2:3:4:567:89ab'},
-        {'target': u'b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1',
-        'ttl': 3600, 'record_type': u'ptr', 'view_name': u'test_view',
-        'last_user': u'sharrell', 'zone_name': u'reverse_zone_ipv6',
-        u'assignment_host': u'computer2.university.edu'},
-        {'target': u'computer3', 'ttl': 3600, 'record_type': u'aaaa',
-        'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'forward_zone', u'assignment_ip': u'4321::1:2:3:4:567:89ac'},
-        {'target': u'c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1', 'ttl': 3600,
-        'record_type': u'ptr', 'view_name': u'test_view',
-        'last_user': u'sharrell', 'zone_name': u'reverse_zone_ipv6',
-        u'assignment_host': u'computer3.university.edu'}])
+        self.core_instance.ListRecords(view_name=u'test_view'), 
+        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1', 
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
+           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
+           'view_name': u'test_view', 'last_user': u'sharrell', 
+           'zone_name': u'forward_zone', u'admin_email': 
+          u'admin.university.edu.', u'expiry_seconds': 5}, 
+         {u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1', 
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
+           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
+           'view_name': u'test_view', 'last_user': u'sharrell', 
+           'zone_name': u'reverse_zone', u'admin_email': 
+          u'admin.university.edu.', u'expiry_seconds': 5}, 
+         {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+          u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
+           'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
+           'view_name': u'test_view', 'last_user': u'sharrell', 'zone_name':
+          u'foward_zone_ipv6', u'admin_email': u'admin.university.edu.', 
+          u'expiry_seconds': 5}, {u'serial_number': 3, u'refresh_seconds': 5,
+           'target': u'soa1', u'name_server': u'ns1.university.edu.', 
+          u'retry_seconds': 5, 'ttl': 3600, u'minimum_seconds': 5, 
+           'record_type': u'soa', 'view_name': u'test_view', 'last_user': 
+          u'sharrell', 'zone_name': u'reverse_zone_ipv6', u'admin_email': 
+          u'admin.university.edu.', u'expiry_seconds': 5}, {'target': u'4',
+           'ttl': 3600, 'record_type': u'ptr', 'view_name': u'test_view', 
+           'last_user': u'sharrell', 'zone_name': u'reverse_zone', 
+          u'assignment_host': u'host3.university.edu.'}, {'target': 
+          u'computer1', 'ttl': 3600, 'record_type': u'a', 'view_name': 
+          u'test_view', 'last_user': u'sharrell', 'zone_name': 
+          u'forward_zone', u'assignment_ip': u'192.168.1.5'}, {'target': 
+          u'5', 'ttl': 3600, 'record_type': u'ptr', 'view_name': u'test_view', 
+           'last_user': u'sharrell', 'zone_name': u'reverse_zone', 
+          u'assignment_host': u'computer1.university.edu.'}, {'target': 
+          u'computer2', 'ttl': 3600, 'record_type': u'aaaa', 'view_name': 
+          u'test_view', 'last_user': u'sharrell', 'zone_name': u'forward_zone',
+          u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'}, 
+          {'target': u'b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1', 'ttl': 3600,
+           'record_type': u'ptr', 'view_name': u'test_view', 'last_user':
+          u'sharrell', 'zone_name': u'reverse_zone_ipv6', u'assignment_host':
+          u'computer2.university.edu.'}, {'target': u'computer3', 'ttl': 3600, 
+           'record_type': u'aaaa', 'view_name': u'test_view', 'last_user': 
+          u'sharrell', 'zone_name': u'forward_zone', u'assignment_ip': 
+          u'4321:0000:0001:0002:0003:0004:0567:89ac'}, 
+          {'target': u'c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1', 'ttl': 3600, 
+           'record_type': u'ptr', 'view_name': u'test_view', 'last_user': u'sharrell',
+           'zone_name': u'reverse_zone_ipv6', 
+          u'assignment_host': u'computer3.university.edu.'}])
 
     ## Run script against running database, but fail
     command = os.popen(('python %s -v %s -z %s --commit '
@@ -448,21 +449,21 @@ class TestDnsMassAdd(unittest.TestCase):
         'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
         {'target': u'5', 'ttl': 3600, 'record_type': u'ptr',
         'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'reverse_zone', u'assignment_host': u'computer1.university.edu'},
+        'zone_name': u'reverse_zone', u'assignment_host': u'computer1.university.edu.'},
         {'target': u'computer2', 'ttl': 3600, 'record_type': u'aaaa',
         'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'forward_zone', u'assignment_ip': u'4321::1:2:3:4:567:89ab'},
+        'zone_name': u'forward_zone', u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
         {'target': u'b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1',
         'ttl': 3600, 'record_type': u'ptr', 'view_name': u'test_view',
         'last_user': u'sharrell', 'zone_name': u'reverse_zone_ipv6',
-        u'assignment_host': u'computer2.university.edu'},
+        u'assignment_host': u'computer2.university.edu.'},
         {'target': u'computer3', 'ttl': 3600, 'record_type': u'aaaa',
         'view_name': u'test_view', 'last_user': u'sharrell',
-        'zone_name': u'forward_zone', u'assignment_ip': u'4321::1:2:3:4:567:89ac'},
+        'zone_name': u'forward_zone', u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'},
         {'target': u'c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1', 'ttl': 3600,
         'record_type': u'ptr', 'view_name': u'test_view',
         'last_user': u'sharrell', 'zone_name': u'reverse_zone_ipv6',
-        u'assignment_host': u'computer3.university.edu'}])
+        u'assignment_host': u'computer3.university.edu.'}])
 
     command.close()
 

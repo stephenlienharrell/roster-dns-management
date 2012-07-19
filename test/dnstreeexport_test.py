@@ -1148,11 +1148,18 @@ class TestDnsMkHost(unittest.TestCase):
     # COMMIT
     db_instance.EndTransaction()
 
+    self.core_instance.RemoveZone(u'cs.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+
   def tearDown(self):
     if( os.path.exists(self.bind_config_dir) ):
       shutil.rmtree(self.bind_config_dir)
     if( os.path.exists('dns_tree-1.tar.bz2') ):
       os.remove('dns_tree-1.tar.bz2')
+    for fname in os.listdir('./test_data/backup_dir'):
+      if( fname.endswith('.bz2') ):
+        os.remove('./test_data/backup_dir/%s' % fname)
 
   def testMakeFilesFromDB(self):
     output = os.popen('python %s -c %s' % (
@@ -1161,7 +1168,7 @@ class TestDnsMkHost(unittest.TestCase):
     for fname in os.listdir(self.backup_dir):
       if( not fname.endswith('.tar.bz2') ):
         continue
-      if( fname.split('-')[1].split('.')[0] == '1' ):
+      if( 'dns_tree' in fname ):
         tar = tarfile.open('%s/%s' % (self.backup_dir, fname))
         tar.extractall()
         tar.close()

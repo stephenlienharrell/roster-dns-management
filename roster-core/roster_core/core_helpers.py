@@ -1156,6 +1156,34 @@ class CoreHelpers(object):
                                   current_args, success)
     return row_count
 
+  def ConstructRecordArgsDictFromRecordID(self, record_id):
+    """Constructs the records_arg_dict from the Roster database given only 
+    the record id.
+
+    Inputs:
+    record_id: int of record id
+
+    Outputs:
+    record_args_dict: dictionary of arguments and their values
+    """
+
+    record_args_db_row = self.db_instance.GetEmptyRowDict(
+      'record_arguments_records_assignments')
+    record_args_db_row[
+        'record_arguments_records_assignments_record_id'] = record_id
+    record_args_db_dict = self.db_instance.ListRow(
+      'record_arguments_records_assignments', record_args_db_row)
+
+    record_args_dict = {}
+    for key in record_args_db_dict:
+      key_entry = key['argument_value']
+      if( key_entry.isdigit() ):
+        key_entry = int(key_entry)
+      record_args_dict[
+        key['record_arguments_records_assignments_argument_name']] = key_entry
+
+    return record_args_dict
+
   def ProcessRecordsBatch(self, delete_records=None, add_records=None,
                           zone_import=False):
     """Proccess batches of records
@@ -1200,13 +1228,6 @@ class CoreHelpers(object):
         # REMOVE RECORDS
         for record in delete_records:
           record_dict = self.db_instance.GetEmptyRowDict('records')
-          self.user_instance.Authorize('ProcessRecordsBatch',
-              record_data = {
-                  'target': record['record_target'],
-                  'zone_name': record['record_zone_name'],
-                  'view_name': record['record_view_dependency'],
-                  'record_type': record['record_type']},
-              current_transaction=True)
           record_dict['records_id'] = record['records_id']
           record_dict['record_type'] = record['record_type']
           record_dict['record_target'] = record['record_target']
@@ -1220,6 +1241,18 @@ class CoreHelpers(object):
                 '%s_dep' % record['record_view_dependency'])
           record_dict['record_zone_name'] = record['record_zone_name']
           record_dict['record_last_user'] = record['record_last_user']
+          record_args_dict = self.ConstructRecordArgsDictFromRecordID(
+              record['records_id'])
+
+          self.user_instance.Authorize('ProcessRecordsBatch',
+              record_data = {
+                  'target': record['record_target'],
+                  'zone_name': record['record_zone_name'],
+                  'view_name': record_dict['record_view_dependency'],
+                  'record_type': record['record_type'],
+                  'record_args_dict': record_args_dict},
+              current_transaction=True)
+
           rows_deleted = self.db_instance.RemoveRow('records', record_dict)
           log_dict['delete'].append(record)
           row_count += 1
@@ -1250,7 +1283,8 @@ class CoreHelpers(object):
                   'target': record['record_target'],
                   'zone_name': record['record_zone_name'],
                   'view_name': view_name,
-                  'record_type': record['record_type']},
+                  'record_type': record['record_type'],
+                  'record_args_dict': record['record_arguments']},
               current_transaction=True)
           if( record['record_type'] == u'ptr' ):
             if( record['record_arguments'][

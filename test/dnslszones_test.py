@@ -121,6 +121,10 @@ class TestDnslszones(unittest.TestCase):
     roster_client_lib.GetCredentials(USERNAME, u'test', credfile=CREDFILE,
                                      server_name=self.server_name)
 
+    self.core_instance.RemoveZone(u'cs.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
+
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)

@@ -577,8 +577,8 @@ class TestComplete(unittest.TestCase):
     output = command.read()
     output = re.sub("\s+"," ",output)
     output = output.split(' ')
-    self.assertEqual(output[9:14],
-        ['0', '{\'dns_server_name\':', 'u\'%s\',' % TEST_DNS_SERVER2, '\'dns_server_set_name\':', 'u\'set4\'}'])
+    self.assertEqual(output[10:16],
+        ['shuey', '0', "{'dns_server_name':", "u'%s'," % TEST_DNS_SERVER2, "'dns_server_set_name':", "u'set4'}"])
     command.close()
     ## User tool: dnsauditlog
     ## dnslsauditlog --success 1
@@ -591,10 +591,13 @@ class TestComplete(unittest.TestCase):
     output = command.read()
     output = re.sub("\s+"," ",output)
     output = output.split(' ')
-    self.assertEqual(output[8:13],
-        ['shuey', '1', '{\'dns_server_name\':', 'u\'%s\'}'%TEST_DNS_SERVER, 'MakeDnsServer'])
-    self.assertEqual(output[20:25],
-        ['shuey', '1', '{\'dns_server_set_name\':', 'u\'set1\'}', 'MakeDnsServerSetAssignments'])
+    #output[9] is a timestamp that will change every time the test is run
+    self.assertEqual(output[7:14],
+        ['1', 'MakeDnsServer', output[9], 'shuey', '1', 
+         '{\'dns_server_name\':', u"u\'%s\'}" % TEST_DNS_SERVER])
+    self.assertEqual(output[24:30],
+        ['shuey', '1', '{\'dns_server_set_name\':', 'u\'set1\'}', 
+         '4', 'MakeDnsServerSetAssignments'])
     command.close()
 
     ## User tool: dnsmkreservedword
@@ -2588,33 +2591,32 @@ class TestComplete(unittest.TestCase):
     ## dnslshost --cidr-block 192.168.2.0/29
     command_string = (
         'python ../roster-user-tools/scripts/dnslshost '
-        '--cidr-block 192.168.2.0/29 '
+        'cidr --cidr-block 192.168.2.0/29 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'View:       any\n'
-        '192.168.2.0 --        --                              --         --\n'
-        #'192.168.2.1 Reverse   university.edu                  test_zone3 any\n'
+        '192.168.2.0 --        --                              --         any\n'
         '192.168.2.1 Forward   machine1.2.168.192.in-addr.arpa test_zone3 any\n'
         '192.168.2.2 Forward   machine2.2.168.192.in-addr.arpa test_zone3 any\n'
-        '192.168.2.3 --        --                              --         --\n'
-        '192.168.2.4 --        --                              --         --\n'
-        '192.168.2.5 --        --                              --         --\n'
-        '192.168.2.6 --        --                              --         --\n'
-        #'192.168.2.6 Reverse   university.edu                  test_zone3 any\n'
-        '192.168.2.7 --        --                              --         --\n'
+        '192.168.2.3 --        --                              --         any\n'
+        '192.168.2.4 --        --                              --         any\n'
+        '192.168.2.5 --        --                              --         any\n'
+        '192.168.2.6 --        --                              --         any\n'
+        '192.168.2.7 --        --                              --         any\n'
         'View:       test_view\n'
         '192.168.2.0 Reverse   university.edu                  test_zone3 test_view\n'
         '192.168.2.0 Forward   @.university.edu                test_zone  test_view\n'
         '192.168.2.1 Reverse   university.edu                  test_zone3 test_view\n'
         '192.168.2.1 Forward   @.university.edu                test_zone  test_view\n'
-        '192.168.2.2 --        --                              --         --\n'
-        '192.168.2.3 --        --                              --         --\n'
-        '192.168.2.4 --        --                              --         --\n'
-        '192.168.2.5 --        --                              --         --\n'
-        '192.168.2.6 --        --                              --         --\n'
-        '192.168.2.7 --        --                              --         --\n\n')
+        '192.168.2.2 --        --                              --         test_view\n'
+        '192.168.2.3 --        --                              --         test_view\n'
+        '192.168.2.4 --        --                              --         test_view\n'
+        '192.168.2.5 --        --                              --         test_view\n'
+        '192.168.2.6 --        --                              --         test_view\n'
+        '192.168.2.7 --        --                              --         test_view\n'
+        '\n')
     command.close()
     ## User tool: dnsrmhost
     ## dnsrmhost --ip-address 192.168.2.1 -t @ -z test_zone
@@ -2633,37 +2635,33 @@ class TestComplete(unittest.TestCase):
     ## dnslshost --cidr-block 192.168.2.0/29
     command_string = (
         'python ../roster-user-tools/scripts/dnslshost '
-        '--cidr-block 192.168.2.0/29 '
+        'cidr --cidr-block 192.168.2.0/29 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
+
     self.assertEqual(set(command.read().split('\n')),
-        set('View:       test_view\n'
-        '192.168.2.0 Reverse   university.edu                  test_zone3 test_view\n'
-        '192.168.2.0 Forward   @.university.edu                test_zone  test_view\n'
-        #'192.168.2.1 Reverse   university.edu                  test_zone3 test_view\n'
-        #'192.168.2.1 Forward   @.university.edu                test_zone  test_view\n'
-        '192.168.2.1 --        --                              --         --\n'
-        '192.168.2.2 --        --                              --         --\n'
-        '192.168.2.3 --        --                              --         --\n'
-        '192.168.2.4 --        --                              --         --\n'
-        '192.168.2.5 --        --                              --         --\n'
-        '192.168.2.6 --        --                              --         --\n'
-        '192.168.2.7 --        --                              --         --\n'
-        'View:       any\n'
-        '192.168.2.0 --        --                              --         --\n'
-        #'192.168.2.1 Reverse   university.edu                  test_zone3 any\n'
-        '192.168.2.1 Forward   machine1.2.168.192.in-addr.arpa test_zone3 any\n'
-        '192.168.2.2 Forward   machine2.2.168.192.in-addr.arpa test_zone3 any\n'
-        '192.168.2.3 --        --                              --         --\n'
-        '192.168.2.4 --        --                              --         --\n'
-        '192.168.2.5 --        --                              --         --\n'
-        '192.168.2.6 --        --                              --         --\n'
-        #'192.168.2.6 Reverse   university.edu                  test_zone3 any\n'
-        '192.168.2.7 --        --                              --         --\n\n'.split('\n')))
+    set(['View:       test_view',
+        '192.168.2.0 Reverse   university.edu                  test_zone3 test_view',
+        '192.168.2.0 Forward   @.university.edu                test_zone  test_view',
+        '192.168.2.1 --        --                              --         test_view',
+        '192.168.2.2 --        --                              --         test_view',
+        '192.168.2.3 --        --                              --         test_view',
+        '192.168.2.4 --        --                              --         test_view',
+        '192.168.2.5 --        --                              --         test_view',
+        '192.168.2.6 --        --                              --         test_view',
+        '192.168.2.7 --        --                              --         test_view',
+        'View:       any',
+        '192.168.2.0 --        --                              --         any',
+        '192.168.2.1 Forward   machine1.2.168.192.in-addr.arpa test_zone3 any',
+        '192.168.2.2 Forward   machine2.2.168.192.in-addr.arpa test_zone3 any',
+        '192.168.2.3 --        --                              --         any',
+        '192.168.2.4 --        --                              --         any',
+        '192.168.2.5 --        --                              --         any',
+        '192.168.2.6 --        --                              --         any',
+        '192.168.2.7 --        --                              --         any',
+        '']))
     command.close()
-
-
     ## User tool: dnsuphosts
     ## dnsuphosts dump -r 192.168.2.0/29 -f backup_dir/hosts_out
     command_string = (

@@ -148,8 +148,6 @@ class TestCheckConfig(unittest.TestCase):
         'server']['lock_file']
 
     db_instance = self.config_instance.GetDb()
-    self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
-
     db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
@@ -158,6 +156,11 @@ class TestCheckConfig(unittest.TestCase):
     db_instance.EndTransaction()
     db_instance.close()
     self.db_instance = db_instance
+
+    self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
+    self.core_instance.RemoveZone(u'cs.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
 
   def tearDown(self):
     fabric_api.local('killall named', capture=True)

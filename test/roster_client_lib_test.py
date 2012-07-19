@@ -132,6 +132,9 @@ class TestRosterClientLib(unittest.TestCase):
     self.daemon_thread.start()
     self.core_instance = roster_core.Core(USERNAME, self.config_instance)
     self.password = 'test'
+    self.core_instance.RemoveZone(u'cs.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
     time.sleep(1)
     roster_client_lib.GetCredentials(USERNAME, PASSWORD, credfile=CREDFILE,
                                      server_name=self.server_name)

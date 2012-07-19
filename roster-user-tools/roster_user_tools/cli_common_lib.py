@@ -292,7 +292,7 @@ def PrintHosts(records_dictionary, ip_address_list, view_name=None):
                            '', '# No forward assignment'])
       for record in sorted_records[ip_address]['forward']:
         forward_zone_origin = record['zone_origin'].rstrip('.')
-        shorthost = record['host'].s('.%rsplit' % forward_zone_origin, 1)[0]
+        shorthost = record['host'].rsplit('.%s' % forward_zone_origin, 1)[0]
         longhost = record['host']
         if( longhost.startswith('@.') ):
           longhost = record['host'].lstrip('@.')

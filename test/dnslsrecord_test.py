@@ -107,6 +107,9 @@ class TestDnslsRecord(unittest.TestCase):
     self.password = 'test'
     time.sleep(1)
 
+    self.core_instance.RemoveZone(u'cs.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
                                 view_name=u'test_view')

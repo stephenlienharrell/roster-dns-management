@@ -1137,6 +1137,10 @@ class TestTreeExporter(unittest.TestCase):
     # COMMIT
     db_instance.EndTransaction()
 
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
+    self.core_instance.RemoveZone(u'cs.university.edu')
+
     # get data
     self.tree_exporter_instance.db_instance.StartTransaction()
     self.data = self.tree_exporter_instance.GetRawData()
@@ -1491,77 +1495,60 @@ class TestTreeExporter(unittest.TestCase):
           'view_dependency_assignments_view_name':u'private'}))
 
     self.assertEqual(raw_data[0]['zone_view_assignments'],
-         ({'zone_origin': u'university.edu.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'university.edu',
-         'zone_view_assignments_view_dependency': u'any',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university.edu.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'university.edu',
-         'zone_view_assignments_view_dependency': u'internal_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university.edu.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'university.edu',
-         'zone_view_assignments_view_dependency': u'external_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university.edu.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'university.edu',
-         'zone_view_assignments_view_dependency': u'private_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university2.edu.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'int.university.edu',
-         'zone_view_assignments_view_dependency': u'internal_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university2.edu.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'int.university.edu',
-         'zone_view_assignments_view_dependency': u'private_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university3.edu.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'priv.university.edu',
-         'zone_view_assignments_view_dependency': u'private_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'168.192.in-addr.arpa.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
-         'zone_view_assignments_view_dependency': u'internal_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'168.192.in-addr.arpa.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
-         'zone_view_assignments_view_dependency': u'external_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'168.192.in-addr.arpa.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
-         'zone_view_assignments_view_dependency': u'private_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'4.3.2.1.in-addr.arpa.',
-         'zone_view_assignments_zone_type': u'master',
-         'zone_view_assignments_zone_name': u'4.3.2.1.in-addr.arpa',
-         'zone_view_assignments_view_dependency': u'external_dep',
-         'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university4.edu.',
-         'zone_view_assignments_zone_type': u'slave',
-         'zone_view_assignments_zone_name': u'bio.university.edu',
-         'zone_view_assignments_view_dependency': u'external_dep',
-         'zone_options': u'(dp1\nVallow-transfer\np2\n(dp3\nVany\np4\nI01\nss.'}))
+        ({'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
+         u'master', 'zone_view_assignments_zone_name': u'university.edu', 
+          'zone_view_assignments_view_dependency': u'any', 'zone_options': 
+         u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
+         {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
+         u'master', 'zone_view_assignments_zone_name': u'university.edu', 
+          'zone_view_assignments_view_dependency': u'internal_dep', 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+         {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type':
+         u'master', 'zone_view_assignments_zone_name': u'university.edu', 
+          'zone_view_assignments_view_dependency': u'external_dep', 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+         {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
+         u'master', 'zone_view_assignments_zone_name': u'university.edu', 
+          'zone_view_assignments_view_dependency': u'private_dep', 'zone_options':
+         u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, {'zone_origin':
+         u'university2.edu.', 'zone_view_assignments_zone_type': u'master', 
+          'zone_view_assignments_zone_name': u'int.university.edu', 
+          'zone_view_assignments_view_dependency': u'internal_dep', 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+         {'zone_origin': u'university2.edu.', 'zone_view_assignments_zone_type':
+         u'master', 'zone_view_assignments_zone_name': u'int.university.edu',
+          'zone_view_assignments_view_dependency': u'private_dep', 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+         {'zone_origin': u'university3.edu.', 'zone_view_assignments_zone_type':
+         u'master', 'zone_view_assignments_zone_name': u'priv.university.edu',
+          'zone_view_assignments_view_dependency': u'private_dep', 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+         {'zone_origin': u'168.192.in-addr.arpa.', 
+          'zone_view_assignments_zone_type': u'master', 
+          'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
+          'zone_view_assignments_view_dependency': u'internal_dep', 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+         {'zone_origin': u'168.192.in-addr.arpa.', 
+          'zone_view_assignments_zone_type': u'master', 
+          'zone_view_assignments_zone_name': u'168.192.in-addr.arpa', 
+          'zone_view_assignments_view_dependency': u'external_dep', 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
+         {'zone_origin': u'168.192.in-addr.arpa.', 'zone_view_assignments_zone_type':
+         u'master', 'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
+          'zone_view_assignments_view_dependency': u'private_dep', 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
+         {'zone_origin': u'4.3.2.1.in-addr.arpa.', 'zone_view_assignments_zone_type':
+         u'master', 'zone_view_assignments_zone_name': u'4.3.2.1.in-addr.arpa', 
+          'zone_view_assignments_view_dependency': u'external_dep', 'zone_options': 
+         u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}))
 
     ## Testing the RawDump raw_data[1]
     self.assertEqual(raw_data[1]['zones']['rows'],
-        [{'zone_name': "'168.192.in-addr.arpa'", 'zones_id': '7'},
-         {'zone_name': "'4.3.2.1.in-addr.arpa'", 'zones_id': '8'},
-         {'zone_name': "'bio.university.edu'", 'zones_id': '2'},
-         {'zone_name': "'cs.university.edu'", 'zones_id': '1'},
-         {'zone_name': "'eas.university.edu'", 'zones_id': '3'},
-         {'zone_name': "'int.university.edu'", 'zones_id': '5'},
-         {'zone_name': "'priv.university.edu'", 'zones_id': '6'},
-         {'zone_name': "'university.edu'", 'zones_id': '4'}])
+            [{'zone_name': u"'168.192.in-addr.arpa'", 'zones_id': u'7'},
+             {'zone_name': u"'4.3.2.1.in-addr.arpa'", 'zones_id': u'8'},
+             {'zone_name': u"'int.university.edu'", 'zones_id': u'5'},
+             {'zone_name': u"'priv.university.edu'", 'zones_id': u'6'},
+             {'zone_name': u"'university.edu'", 'zones_id': u'4'}])
 
     self.assertEqual(raw_data[1]['reserved_words']['columns'],
         [u'reserved_word_id', u'reserved_word'])

@@ -45,7 +45,6 @@ import constants
 import errors
 import helpers_lib
 
-
 class User(object):
   """Representation of a user, with basic manipulation methods.
   Note that is it not necessary to authenticate a user to construct this
@@ -65,7 +64,6 @@ class User(object):
     self.db_instance = db_instance
     self.log_instance = log_instance
     self.zone_origin_cache = {}
-
 
     # pull a pile of authentication info from the database here
     self.user_perms = self.db_instance.GetUserAuthorizationInfo(user_name)
@@ -89,14 +87,17 @@ class User(object):
 
     Inputs:
       method:	what the user's trying to do
-      record_data: dictionary of target, zone_name, view_name, and record_type 
-                   for record that is being modified.
+      record_data: dictionary of target, zone_name, view_name, record_type, 
+                   and record_args_dict for the record that is being modified.
                    {'target': 'test_target',
                     'zone_name': 'test_zone',
                     'view_name': 'test_view',
-                    'record_type': 'a'
+                    'record_type': 'a',
+                    'record_args_dict' : {
+                        u'assignment_ip' : '192.168.1.1'
+                     }
                    }
-      current_transaction: bool of if this function is run from inside a 
+      current_transaction: bool of if this function is run from inside a
                            transaction in the db_access class
 
     Raises:
@@ -132,11 +133,12 @@ class User(object):
       target_string = ''
     auth_fail_string = ('User %s is not allowed to use %s%s' %
                         (self.user_name, method, target_string))
+    #authorizing method
     if( self.abilities.has_key(method) ):
       method_hash = self.abilities[method]
       if( int(self.user_access_level) >= constants.ACCESS_LEVELS['dns_admin'] ):
         return
-      
+
       if( method_hash['check'] ):
         # Secondary check - ensure the target is in a range delegated to
         # the user
@@ -145,27 +147,79 @@ class User(object):
               'No record data provided for access method '
               '%s' % method)
         elif( not record_data.has_key('zone_name') or
-            record_data['zone_name'] is None or 
+            record_data['zone_name'] is None or
             not record_data.has_key('view_name') or
             record_data['view_name'] is None or
-            not record_data.has_key('target') or 
+            not record_data.has_key('target') or
             record_data['target'] is None or
-            not record_data.has_key('record_type') or 
-            record_data['record_type'] is None ):
+            not record_data.has_key('record_type') or
+            record_data['record_type'] is None or
+            not record_data.has_key('record_args_dict') or
+            record_data['record_args_dict'] is None ):
           raise errors.MissingDataTypeError(
               'Incomplete record data provided for access '
               'method %s' % method)
-          
         elif( record_data['record_type'] not in constants.USER_LEVEL_RECORDS and
             int(self.user_access_level) <= constants.ACCESS_LEVELS['user'] ):
           raise errors.AuthorizationError(auth_fail_string)
 
-        for zone in self.forward_zones:
-          if( record_data['zone_name'] == zone['zone_name'] ):
+        if( int(self.user_access_level) < 
+          constants.ACCESS_LEVELS['unlocked_user'] ):
+
+          #if a or aaaa
+          if( record_data['record_args_dict'].has_key(u'assignment_ip') ):
+            ip = IPy.IP(record_data['record_args_dict'][u'assignment_ip'])
+            for reverse_range in self.reverse_ranges:
+              if( IPy.IP(reverse_range['cidr_block']).overlaps(ip) ):
+                break
+            else:
+              raise errors.AuthorizationError(auth_fail_string)
+
+          #if cname or ptr
+          elif( record_data['record_args_dict'].has_key(u'assignment_host') ):
+            hostname = record_data['record_args_dict'][u'assignment_host']
+            smallest_zone = hostname
+
+            found = False
+            while( smallest_zone ):
+              for domain in self.zone_origin_cache:
+                if( self.zone_origin_cache[domain] ):
+                  domain = self.zone_origin_cache[domain]
+                else:
+                  raise errors.MissingDataTypeError(
+                        'Zone %s has no zone origin' % domain)
+                if( smallest_zone == domain ):
+                  found = True
+              if( not found ):
+                try:
+                  smallest_zone = smallest_zone.split('.', 1)[1]
+                except IndexError:
+                  raise errors.AuthorizationError(auth_fail_string)
+              else:
+                break
+            if( not found ):
+              raise errors.AuthorizationError(auth_fail_string)
+
+            for zone in self.forward_zones:
+              if( self.zone_origin_cache.has_key(zone['zone_name']) ):
+                if( smallest_zone == self.zone_origin_cache[
+                    zone['zone_name']] ):
+                  break
+            else:
+              raise errors.AuthorizationError(auth_fail_string)
+
+          else:
+            raise errors.MissingDataTypeError(
+                'Incomplete or invalid record data provided for access '
+                'method %s' % method)
+
+        for forward_zone in self.forward_zones:
+          if( record_data['zone_name'] == forward_zone['zone_name'] ):
             return
+
         # Can't find it in forward zones, maybe it's a reverse, lets try to
         # construct an ip address
-       
+
         ip_address = helpers_lib.UnReverseIP('%s.%s' % (
           record_data['target'], self.zone_origin_cache[
             record_data['zone_name']]))

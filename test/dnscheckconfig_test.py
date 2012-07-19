@@ -104,8 +104,6 @@ class TestCheckConfig(unittest.TestCase):
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
-    self.core_instance = roster_core.Core(USERNAME, self.config_instance)
-
     db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
@@ -115,6 +113,10 @@ class TestCheckConfig(unittest.TestCase):
     db_instance.close()
     self.db_instance = db_instance
 
+    self.core_instance = roster_core.Core(USERNAME, self.config_instance)
+    self.core_instance.RemoveZone(u'cs.university.edu')
+    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'eas.university.edu')
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'sub.university.lcl', u'master',
                                 u'sub.university.lcl.', view_name=u'test_view')
@@ -160,7 +162,7 @@ class TestCheckConfig(unittest.TestCase):
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
 
-    output = os.popen('python %s -i 9 --config-file %s' % (
+    output = os.popen('python %s -i 12 --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), '')

@@ -66,6 +66,7 @@ def main(args):
       record_type = u'a'
     elif( record_type == 6 ):
       record_type = u'aaaa'
+      ip_address = IPy.IP(ip_address).strFullsize()
     ## ADD TO ADDLIST
     record_dict = {
         'record_type': record_type,
@@ -87,12 +88,12 @@ def main(args):
       cli_common_lib.DnsError('Zone "%s" not found in "%s" view.' % (
           options.zone_name, options.view_name), 1)
     zone_origin = zone_list[options.zone_name][options.view_name][
-        'zone_origin'].rstrip('.')
-    if( host_name.rstrip('.').endswith(zone_origin) ):
+        'zone_origin']
+    if( host_name.rstrip('.').endswith(zone_origin.rstrip('.')) ):
       cli_common_lib.DnsError(
           'Hostname cannot end with domain name.', 1)
-    if( zone_origin.endswith('.in-addr.arpa') or
-        zone_origin.endswith('.ip6.arpa') ):
+    if( zone_origin.endswith('.in-addr.arpa.') or
+        zone_origin.endswith('.ip6.arpa.') ):
       cli_common_lib.DnsError(
           'This tool requires a forward zone as an argument. '
           'Reverse zones are handled automatically.', 1)
@@ -126,7 +127,7 @@ def main(args):
         'record_view_dependency': options.view_name,
         'record_zone_name': reverse_zone_name,
         'record_arguments': {
-            'assignment_host': '%s.%s' % (host_name, zone_origin)}}
+        'assignment_host': '%s.%s' % (host_name, zone_origin)}}
     records_to_add.append(ptr_dict)
 
     ## FIND CONFLICTING RECORDS
@@ -174,7 +175,7 @@ def main(args):
     print_list.append(record_list)
   print cli_common_lib.PrintColumns(
       print_list=print_list, first_line_header=True)
-
+    
   if options.commit:
     roster_client_lib.RunFunction(
         "ProcessRecordsBatch", options.username, credfile=options.credfile,
