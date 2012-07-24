@@ -518,7 +518,7 @@ class NamedGlobals(core_flags.CoreFlags):
     self.AddFlagRule('dns_server_set', required=True, command='update')
     self.AddFlagRule('dns_server_set', required=True, command='list')
     self.AddFlagRule('dns_server_set', required=True, command='revert')
-    self.AddFlagRule('dns_server_set', required=True, command='edit')
+    self.AddFlagRule('dns_server_set', required=False, command='edit')
     self.parser.add_option('-i', '--option-id', action='store',
                            dest='option_id',
                            help='Integer of option id.', metavar='<option-id>',
@@ -526,9 +526,10 @@ class NamedGlobals(core_flags.CoreFlags):
     self.AddFlagRule('option_id', required=False, command='list')
     self.AddFlagRule('option_id', required=False, command='dump')
     self.AddFlagRule('option_id', required=True, command='revert')
+    self.AddFlagRule('option_id', required=False, command='edit')
     self.parser.add_option('-t', '--timestamp', action='store',
                            dest='timestamp',
-                           help='String of timestamp in YYYY/MM/DD/HH/MM/SS '
+                           help='String of timestamp in YYYY-MM-DDTHH:MM:SS '
                                 'format.', metavar='<timestamp>', default=None)
     self.AddFlagRule('timestamp', required=False, command='list')
     self.AddFlagRule('timestamp', required=False, command='dump')
