@@ -72,6 +72,9 @@ def main(args):
     print 'ERROR: %s' % error
     sys.exit(1)
 
+  if( options.view_name is None ):
+    options.view_name = u'any'
+
   records_file_string = unicode(open(options.records_file, 'r').read())
 
   added_records = roster_client_lib.RunFunction(
