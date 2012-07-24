@@ -119,7 +119,7 @@ class Server(object):
     if( clean_time is None ):
       self.clean_time = self.core_die_time
     self.cred_cache_instance = credentials.CredCache(self.config_instance,
-                                   inf_renew_time, unit_test)
+                                   self.inf_renew_time, unit_test)
     self.unittest_timestamp = unittest_timestamp
     self.core_store = [] # {'user': user, 'last_used': last_used, 'instance': }
     self.get_credentials_wait = {} # {'user1': 3, 'user2': 4}
