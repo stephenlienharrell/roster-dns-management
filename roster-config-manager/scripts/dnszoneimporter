@@ -47,9 +47,8 @@ def main(args):
   usage = ('\n'
            '\n'
            'To import zone files:\n'
-           '\t%s -c <config-file> -z <zone-view>\n'
-           '\t(-d <directory> | -f <file>)\n'
-           '\t[-v <records-view>] [-z <zone-view>] [-u <username>]\n' % (
+           '\t%s -c <config-file> -z <zone-view> -v <records-view>\n'
+           '\t(-d <directory> | -f <file>) [-u <username>]\n' % (
                sys.argv[0]))
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
