@@ -50,21 +50,22 @@ from roster_core import punycode_lib
 
 class DataValidation(object):
 
-  def __init__(self, reserved_words):
+  def __init__(self, reserved_words, group_permissions):
     self.reserved_words = reserved_words
+    self.group_permissions = group_permissions
 
   def isUnicodeString(self, u_string):
     """Checks that a string is unicode.
   
     Inputs:
       u_string: unicode string
-    
+ 
     Raises:
       ReservedWordError: Reserved word found, unable to complete request.
-    
+ 
     Outputs:
       bool: bool if string or not
-    """     
+    """
     if( not isinstance(u_string, unicode) ):
       return False
     for word in self.reserved_words:
@@ -91,13 +92,15 @@ class DataValidation(object):
     """Checks to make sure that the string is a valid group permission.
   
     Inputs:
-      group_permission: unicode string, and in constants.GROUP_PERMISSIONS
+      group_permission: unicode string of a group permission
 
     Outputs:
       bool: if group permission is valid or not
     """
-    if( self.isUnicodeString(group_permission) and group_permission in
-        constants.GROUP_PERMISSIONS ):
+    group_permissions_list = [
+        permission.lower() for permission in self.group_permissions]
+    if( self.isUnicodeString(group_permission) and
+        group_permission.lower() in group_permissions_list ):
       return True
     return False
 
@@ -304,6 +307,13 @@ class DataValidation(object):
       return False
     return True
 
+  def ListGroupPermissions(self):
+    """Returns a list of group permissions pulled from the database
+
+    Outputs:
+      list: list of string group permissions
+    """
+    return self.group_permissions
 
   def ValidateRowDict(self, table_name, row_dict, none_ok=False,
                       all_none_ok=False):
@@ -336,9 +346,8 @@ class DataValidation(object):
       if( not 'is%s' % main_dict[key] in dir(self) ):
         raise errors.FunctionError('No function to check data '
                                           'type: %s' % main_dict[key])
-
       if( not getattr(self, 'is%s' % main_dict[key])(value) ):
-        if( (not none_ok and not key.endswith('_id')) or 
+        if( (not none_ok and not key.endswith('_id')) or
             (none_ok and value is not None) ):
           raise errors.UnexpectedDataError('Invalid data type %s for %s: %s' % (
               main_dict[key], key, value))

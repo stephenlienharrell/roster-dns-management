@@ -369,9 +369,44 @@ class DnsServer(core_flags.CoreFlags):
                      command='dns_server_set')
     self.AddFlagRule('dns_server_set', required=not_list, command='assignment')
 
+class Group(core_flags.CoreFlags):
+  """Command line group flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    not_list = self.action != 'List'
+    self.parser.add_option('-g', '--group', action='store', dest='group',
+                           help='String of the group name to create or assign.',
+                           metavar='<group>', default=None)
+    self.AddFlagRule('group', required=not_list, command='group')
+    self.AddFlagRule('group', required=not_list, command='assignment')
+    self.AddFlagRule('group', required=not_list, command='forward')
+    self.AddFlagRule('group', required=not_list, command='reverse')
+    self.parser.add_option('-z', '--zone-name', action='store',
+                           dest='zone_name',
+                           help='String of the zone name (optional)',
+                           metavar='<zone>', default=None)
+    self.AddFlagRule('zone_name', required=not_list, command='forward')
+    self.parser.add_option('--group-permission', action='store',
+                           dest='group_permission',
+                           help='String of comma-separated group permissions, '
+                                'e.g., a,aaaa,cname',
+                           metavar='<group-permission>', default=None)
+    self.AddFlagRule('group_permission', required=not_list, command='forward')
+    self.AddFlagRule('group_permission', required=not_list, command='reverse')
+    self.parser.add_option('-b', '--cidr-block', action='store',
+                           dest='cidr_block', help='String of CIDR block.',
+                           metavar='<cidr-block>', default=None)
+    self.AddFlagRule('cidr_block', required=not_list, command='reverse')
 
-class User(core_flags.CoreFlags):
-  """Command line user flags"""
+class User(Group):
+  """Command line user flags
+    The User class inherits all of Group's flags so dnsupusergroup has the 
+    option of not including flags it doesn't need. So know that if you call
+    User.SetDataFlags(), you'll get both Users' and Group's
+
+  Used by:
+    dnsupusergroup
+  """
   def SetDataFlags(self):
     """Sets flags for self.parser"""
     not_list = self.action != 'List'
@@ -387,29 +422,7 @@ class User(core_flags.CoreFlags):
                            default=None)
     self.AddFlagRule('access_level', required=self.action=='Make',
                      command='user')
-    self.parser.add_option('-g', '--group', action='store', dest='group',
-                           help='String of the group name to create or assign.',
-                           metavar='<group>', default=None)
-    self.AddFlagRule('group', required=not_list, command='group')
-    self.AddFlagRule('group', required=not_list, command='assignment')
-    self.AddFlagRule('group', required=not_list, command='forward')
-    self.AddFlagRule('group', required=not_list, command='reverse')
-    self.parser.add_option('-z', '--zone-name', action='store',
-                           dest='zone_name',
-                           help='String of the zone name (optional)',
-                           metavar='<zone>', default=None)
-    self.AddFlagRule('zone_name', required=not_list, command='forward')
-    self.parser.add_option('--group-permission', action='store',
-                           dest='group_permission',
-                           help='String of the group permission (r/rw)',
-                           metavar='r|rw', default=None)
-    self.AddFlagRule('group_permission', required=not_list, command='forward')
-    self.AddFlagRule('group_permission', required=not_list, command='reverse')
-    self.parser.add_option('-b', '--cidr-block', action='store',
-                           dest='cidr_block', help='String of CIDR block.',
-                           metavar='<cidr-block>', default=None)
-    self.AddFlagRule('cidr_block', required=not_list, command='reverse')
-
+    super(User, self).SetDataFlags()
 
 class Hosts(core_flags.CoreFlags):
   """Command line uphost flags"""

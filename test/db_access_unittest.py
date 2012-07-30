@@ -220,20 +220,42 @@ class TestdbAccess(unittest.TestCase):
          'reverse_ranges': []})
 
     self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'shuey'),
-        {'user_access_level': 64,
-         'user_name': 'shuey',
-         'forward_zones': [
-             {'zone_name': 'cs.university.edu', 'group_permission': 'rw'},
-             {'zone_name': 'eas.university.edu', 'group_permission': 'r'},
-             {'zone_name': 'bio.university.edu', 'group_permission': 'rw'}],
-         'groups': ['cs', 'bio'],
-         'reverse_ranges': [
-             {'cidr_block': '192.168.0.0/24',
-              'group_permission': 'rw'},
-             {'cidr_block': '192.168.0.0/24',
-              'group_permission': 'r'},
-             {'cidr_block': '192.168.1.0/24',
-              'group_permission': 'rw'}]})
+        {'user_access_level': 64, 
+         'user_name': u'shuey', 
+         'forward_zones': [{'zone_name': u'cs.university.edu', 
+                            'group_permission': u'a'}, 
+                           {'zone_name': u'cs.university.edu', 
+                            'group_permission': u'aaaa'}, 
+                           {'zone_name': u'cs.university.edu', 
+                            'group_permission': u'cname'}, 
+                           {'zone_name': u'cs.university.edu', 
+                            'group_permission': u'ns'}, 
+                           {'zone_name': u'cs.university.edu', 
+                            'group_permission': u'soa'}, 
+
+                           {'zone_name': u'eas.university.edu', 
+                            'group_permission': u'a'}, 
+                           {'zone_name': u'eas.university.edu', 
+                            'group_permission': u'aaaa'}, 
+                           {'zone_name': u'eas.university.edu', 
+                            'group_permission': u'cname'},
+
+                           {'zone_name': u'bio.university.edu',
+                            'group_permission': u'a'},
+                           {'zone_name': u'bio.university.edu', 
+                            'group_permission': u'aaaa'}], 
+                            
+         'groups': [u'cs', u'bio'], 
+         'reverse_ranges': [{'group_permission': u'cname', 
+                             'cidr_block': u'192.168.0.0/24'}, 
+                            {'group_permission': u'ns', 
+                             'cidr_block': u'192.168.0.0/24'}, 
+                            {'group_permission': u'ptr', 
+                             'cidr_block': u'192.168.0.0/24'}, 
+                            {'group_permission': u'soa', 
+                             'cidr_block': u'192.168.0.0/24'}, 
+                            {'group_permission': u'ptr', 
+                             'cidr_block': u'192.168.1.0/24'}]})
 
   def testGetUserAuthorizationInfoSSL(self):
     self.db_instance.close()
@@ -262,21 +284,39 @@ class TestdbAccess(unittest.TestCase):
          'reverse_ranges': []})
 
     self.assertEquals(self.db_instance.GetUserAuthorizationInfo(u'shuey'),
-        {'user_access_level': 64,
-         'user_name': 'shuey',
-         'forward_zones': [
-             {'zone_name': 'cs.university.edu', 'group_permission': 'rw'},
-             {'zone_name': 'eas.university.edu', 'group_permission': 'r'},
-             {'zone_name': 'bio.university.edu', 'group_permission': 'rw'}],
-         'groups': ['cs', 'bio'],
-         'reverse_ranges': [
-             {'cidr_block': '192.168.0.0/24',
-              'group_permission': 'rw'},
-             {'cidr_block': '192.168.0.0/24',
-              'group_permission': 'r'},
-             {'cidr_block': '192.168.1.0/24',
-              'group_permission': 'rw'}]})
-
+        {'user_access_level': 64, 
+         'user_name': u'shuey', 
+         'forward_zones': [{'zone_name': u'cs.university.edu', 
+                            'group_permission': u'a'}, 
+                           {'zone_name': u'cs.university.edu', 
+                            'group_permission': u'aaaa'}, 
+                           {'zone_name': u'cs.university.edu', 
+                            'group_permission': u'cname'}, 
+                           {'zone_name': u'cs.university.edu', 
+                            'group_permission': u'ns'}, 
+                           {'zone_name': u'cs.university.edu', 
+                            'group_permission': u'soa'}, 
+                           {'zone_name': u'eas.university.edu', 
+                            'group_permission': u'a'}, 
+                           {'zone_name': u'eas.university.edu', 
+                            'group_permission': u'aaaa'}, 
+                           {'zone_name': u'eas.university.edu', 
+                            'group_permission': u'cname'}, 
+                           {'zone_name': u'bio.university.edu', 
+                            'group_permission': u'a'}, 
+                           {'zone_name': u'bio.university.edu', 
+                            'group_permission': u'aaaa'}], 
+         'groups': [u'cs', u'bio'], 
+         'reverse_ranges': [{'group_permission': u'cname', 
+                             'cidr_block': u'192.168.0.0/24'}, 
+                            {'group_permission': u'ns', 
+                             'cidr_block': u'192.168.0.0/24'}, 
+                            {'group_permission': u'ptr', 
+                             'cidr_block': u'192.168.0.0/24'}, 
+                            {'group_permission': u'soa', 
+                             'cidr_block': u'192.168.0.0/24'}, 
+                            {'group_permission': u'ptr', 
+                             'cidr_block': u'192.168.1.0/24'}]})
   def testRowFuncs(self):
     self.assertRaises(errors.InvalidInputError, self.db_instance.MakeRow,
                       'notinlist', {})
@@ -396,53 +436,61 @@ class TestdbAccess(unittest.TestCase):
                             user_group_assignments_dict,
                             'forward_zone_permissions',
                             forward_zone_permissions_dict)),
-        sorted(
-        ({'user_group_assignments_user_name': u'sharrell',
-          'forward_zone_permissions_group_name': u'cs', 'access_level': 128,
-          'forward_zone_permissions_group_permission': u'rw', 'user_name':
-          u'sharrell', 'user_group_assignments_group_name': u'cs',
-          'forward_zone_permissions_zone_name': u'cs.university.edu'},
-          {'user_group_assignments_user_name': u'shuey',
-            'forward_zone_permissions_group_name': u'cs', 'access_level': 64,
-            'forward_zone_permissions_group_permission': u'rw', 'user_name':
-            u'shuey', 'user_group_assignments_group_name': u'cs',
-            'forward_zone_permissions_zone_name': u'cs.university.edu'},
-          {'user_group_assignments_user_name': u'shuey',
-            'forward_zone_permissions_group_name': u'cs', 'access_level': 64,
-            'forward_zone_permissions_group_permission': u'rw', 'user_name':
-            u'shuey', 'user_group_assignments_group_name': u'bio',
-            'forward_zone_permissions_zone_name': u'cs.university.edu'},
-          {'user_group_assignments_user_name': u'sharrell',
-            'forward_zone_permissions_group_name': u'cs', 'access_level': 128,
-            'forward_zone_permissions_group_permission': u'r', 'user_name':
-            u'sharrell', 'user_group_assignments_group_name': u'cs',
-            'forward_zone_permissions_zone_name': u'eas.university.edu'},
-          {'user_group_assignments_user_name': u'shuey',
-            'forward_zone_permissions_group_name': u'cs', 'access_level': 64,
-            'forward_zone_permissions_group_permission': u'r', 'user_name':
-            u'shuey', 'user_group_assignments_group_name': u'cs',
-            'forward_zone_permissions_zone_name': u'eas.university.edu'},
-          {'user_group_assignments_user_name': u'shuey',
-            'forward_zone_permissions_group_name': u'cs', 'access_level': 64,
-            'forward_zone_permissions_group_permission': u'r', 'user_name':
-            u'shuey', 'user_group_assignments_group_name': u'bio',
-            'forward_zone_permissions_zone_name': u'eas.university.edu'},
-          {'user_group_assignments_user_name': u'sharrell',
-            'forward_zone_permissions_group_name': u'bio', 'access_level': 128,
-            'forward_zone_permissions_group_permission': u'rw', 'user_name':
-            u'sharrell', 'user_group_assignments_group_name': u'cs',
-            'forward_zone_permissions_zone_name': u'bio.university.edu'},
-          {'user_group_assignments_user_name': u'shuey',
-            'forward_zone_permissions_group_name': u'bio', 'access_level': 64,
-            'forward_zone_permissions_group_permission': u'rw', 'user_name':
-            u'shuey', 'user_group_assignments_group_name': u'cs',
-            'forward_zone_permissions_zone_name': u'bio.university.edu'},
-          {'user_group_assignments_user_name': u'shuey',
-            'forward_zone_permissions_group_name': u'bio', 'access_level': 64,
-            'forward_zone_permissions_group_permission': u'rw', 'user_name':
-            u'shuey', 'user_group_assignments_group_name': u'bio',
-            'forward_zone_permissions_zone_name': u'bio.university.edu'})))
-                                              
+        sorted([{'user_group_assignments_user_name': u'shuey', 
+                 'forward_zone_permissions_group_name': u'bio', 
+                 'access_level': 64, 
+                 'forward_zone_permissions_id': 3, 
+                 'user_name': u'shuey', 
+                 'user_group_assignments_group_name': u'bio', 
+                 'forward_zone_permissions_zone_name': u'bio.university.edu'}, 
+                {'user_group_assignments_user_name': u'shuey', 
+                 'forward_zone_permissions_group_name': u'bio', 
+                 'access_level': 64, 'forward_zone_permissions_id': 3, 
+                 'user_name': u'shuey', 
+                 'user_group_assignments_group_name': u'cs', 
+                 'forward_zone_permissions_zone_name': u'bio.university.edu'}, 
+                {'user_group_assignments_user_name': u'shuey', 
+                 'forward_zone_permissions_group_name': u'cs', 
+                 'access_level': 64, 'forward_zone_permissions_id': 1, 
+                 'user_name': u'shuey', 
+                 'user_group_assignments_group_name': u'bio', 
+                 'forward_zone_permissions_zone_name': u'cs.university.edu'}, 
+                {'user_group_assignments_user_name': u'shuey', 
+                 'forward_zone_permissions_group_name': u'cs', 
+                 'access_level': 64, 'forward_zone_permissions_id': 1, 
+                 'user_name': u'shuey', 
+                 'user_group_assignments_group_name': u'cs', 
+                 'forward_zone_permissions_zone_name': u'cs.university.edu'}, 
+                {'user_group_assignments_user_name': u'shuey', 
+                 'forward_zone_permissions_group_name': u'cs', 
+                 'access_level': 64, 'forward_zone_permissions_id': 2, 
+                 'user_name': u'shuey', 
+                 'user_group_assignments_group_name': u'bio', 
+                 'forward_zone_permissions_zone_name': u'eas.university.edu'}, 
+                {'user_group_assignments_user_name': u'shuey', 
+                 'forward_zone_permissions_group_name': u'cs', 
+                 'access_level': 64, 'forward_zone_permissions_id': 2, 
+                 'user_name': u'shuey', 
+                 'user_group_assignments_group_name': u'cs', 
+                 'forward_zone_permissions_zone_name': u'eas.university.edu'}, 
+                {'user_group_assignments_user_name': u'sharrell', 
+                 'forward_zone_permissions_group_name': u'bio', 
+                 'access_level': 128, 'forward_zone_permissions_id': 3, 
+                 'user_name': u'sharrell', 
+                 'user_group_assignments_group_name': u'cs', 
+                 'forward_zone_permissions_zone_name': u'bio.university.edu'}, 
+                {'user_group_assignments_user_name': u'sharrell', 
+                 'forward_zone_permissions_group_name': u'cs', 
+                 'access_level': 128, 'forward_zone_permissions_id': 1, 
+                 'user_name': u'sharrell', 
+                 'user_group_assignments_group_name': u'cs', 
+                 'forward_zone_permissions_zone_name': u'cs.university.edu'}, 
+                {'user_group_assignments_user_name': u'sharrell', 
+                 'forward_zone_permissions_group_name': u'cs', 
+                 'access_level': 128, 'forward_zone_permissions_id': 2, 
+                 'user_name': u'sharrell', 
+                 'user_group_assignments_group_name': u'cs', 
+                 'forward_zone_permissions_zone_name': u'eas.university.edu'}])) 
     self.db_instance.EndTransaction()
 
   def testGetRecordArgsDict(self):
@@ -497,7 +545,7 @@ class TestdbAccess(unittest.TestCase):
     search_data_type_dict = self.db_instance.GetEmptyRowDict('data_types')
     data_type_dicts = self.db_instance.ListRow('data_types',
                                                search_data_type_dict)
-    data_validation_methods = dir(data_validation.DataValidation([]))
+    data_validation_methods = dir(data_validation.DataValidation([], []))
     for data_type_dict in data_type_dicts:
       # If something goes wrong uncomment this next line to see what happened.
       # print 'Searching for %s tester' % data_type_dict['data_type']
@@ -512,19 +560,18 @@ class TestdbAccess(unittest.TestCase):
     self.db_instance.StartTransaction()
     self.assertEqual(
       self.db_instance.ListTableNames(),
-      [u'acl_ranges', u'acls', u'audit_log', u'credentials', u'data_types',
-       u'dns_server_set_assignments', u'dns_server_set_view_assignments',
-       u'dns_server_sets', u'dns_servers', u'forward_zone_permissions',
-       u'groups', u'ipv4_index', u'ipv6_index', u'locks',
-       u'named_conf_global_options', u'record_arguments',
-       u'record_arguments_records_assignments', u'record_types', u'records',
-       u'reserved_words', u'reverse_range_permissions',
-       u'reverse_range_zone_assignments', u'user_group_assignments', u'users',
-       u'view_acl_assignments', u'view_dependencies',
-       u'view_dependency_assignments', u'views', u'zone_types',
-       u'zone_view_assignments', u'zones'])
+      [u'acl_ranges', u'acls', u'audit_log', u'credentials', u'data_types', 
+       u'dns_server_set_assignments', u'dns_server_set_view_assignments', 
+       u'dns_server_sets', u'dns_servers', u'forward_zone_permissions', 
+       u'group_forward_permissions', u'group_reverse_permissions', u'groups', 
+       u'ipv4_index', u'ipv6_index', u'locks', u'named_conf_global_options', 
+       u'record_arguments', u'record_arguments_records_assignments', 
+       u'record_types', u'records', u'reserved_words', 
+       u'reverse_range_permissions', u'reverse_range_zone_assignments', 
+       u'user_group_assignments', u'users', u'view_acl_assignments', 
+       u'view_dependencies', u'view_dependency_assignments', u'views', 
+       u'zone_types', u'zone_view_assignments', u'zones'])
     self.db_instance.EndTransaction()
-
 
   def testCheckMaintenanceFlag(self):
     self.db_instance.StartTransaction()

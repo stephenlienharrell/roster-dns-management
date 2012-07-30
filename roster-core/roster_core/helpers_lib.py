@@ -105,15 +105,6 @@ def GetRowDict(table_name):
   return row_dict
 
 
-def ListGroupPermissions():
-  """Lists group permissions.
-
-  Output:
-    list: list of group permissions. ex: ['rw', 'r']
-  """
-  return constants.GROUP_PERMISSIONS
-
-
 def ReverseIP(ip_address):
   """Reverse an IP address
 
@@ -179,10 +170,11 @@ def UnReverseIP(ip_address):
     while len(ip_array):
       ip_parts.append('%s%s%s%s' % (ip_array.pop(), ip_array.pop(),
                                     ip_array.pop(), ip_array.pop()))
+
     new_ip = ':'.join(ip_parts)
   else:
     new_ip = ip_address
-
+  
   return new_ip
 
 

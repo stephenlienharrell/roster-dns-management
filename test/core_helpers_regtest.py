@@ -1481,7 +1481,9 @@ class TestCoreHelpers(unittest.TestCase):
         u'192.168.a8.1/26')
 
   def testListGroupPermissions(self):
-    self.assertEqual(self.core_helper_instance.ListGroupPermissions(), ['rw', 'r'])
+    self.assertEqual(self.core_helper_instance.ListGroupPermissions(), [
+                         'a', 'aaaa', 'cname', 'hinfo', 'mx', 'ns', 'ptr',
+                         'soa', 'srv', 'txt'])
 
   def testListNamedConfGlobalOptionsClient(self):
     self.core_instance.MakeDnsServerSet(u'set1')

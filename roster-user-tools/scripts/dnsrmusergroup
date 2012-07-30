@@ -165,11 +165,11 @@ def main(args):
   elif( command == 'reverse' ):
     if( options.group not in groups ):
       cli_common_lib.DnsError('Group does not exist.', 1)
-    if( options.group_permission is None or
-        options.group_permission not in group_permissions ):
-      cli_common_lib.DnsError('An group permission of either %s is '
-                              'required if specifying a zone.' % (
-                                  group_permissions_string), 1)
+    group_permission_list = None
+    if( options.group_permission ):
+      group_permission_list = []
+      for permission in options.group_permission.split(','):
+        group_permission_list.append(permission.strip())
 
     roster_client_lib.RunFunction(u'RemoveReverseRangePermission',
                                   options.username,
@@ -177,29 +177,39 @@ def main(args):
                                   credstring=options.credstring,
                                   server_name=options.server,
                                   args=[options.cidr_block, options.group,
-                                        options.group_permission])
-    print ('REMOVED REVERSE_RANGE_PERMISSION: cidr_block: %s group: %s '
-           'group_permission: %s' % (options.cidr_block, options.group,
-                                     options.group_permission))
-
+                                        group_permission_list])
+    if( not options.quiet ):
+      if( options.group_permission ):
+        print ('REMOVED REVERSE_RANGE_PERMISSION: cidr_block: %s group: %s '
+               'group_permission: %s' % (options.cidr_block, options.group,
+                                         group_permission_list))
+      else:
+        print ('REMOVED REVERSE_RANGE_PERMISSION: cidr_block: %s group: %s' % (
+                   options.cidr_block, options.group))
   elif( command == 'forward' ):
     if( options.group not in groups ):
       cli_common_lib.DnsError('Group does not exist.', 1)
-    if( options.group_permission is None or
-        options.group_permission not in group_permissions ):
-      cli_common_lib.DnsError('An group permission of either %s is '
-                              'required if specifying a zone.' % (
-                                  group_permissions_string), 1)
+    group_permission_list = None
+    if( options.group_permission ):
+      group_permission_list = []
+      for permission in options.group_permission.split(','):
+        group_permission_list.append(permission.strip())
 
-    roster_client_lib.RunFunction(
-        u'RemoveForwardZonePermission', options.username,
-        credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.zone_name, options.group,
-                                          options.group_permission])
+    roster_client_lib.RunFunction(u'RemoveForwardZonePermission',
+                                  options.username,
+                                  credfile=options.credfile,
+                                  credstring=options.credstring,
+                                  server_name=options.server,
+                                  args=[options.zone_name, options.group,
+                                        group_permission_list])
     if( not options.quiet ):
-      print ('REMOVED FORWARD_ZONE_PERMISSION: zone_name: %s group: %s '
-             'group_permission: %s' % (options.zone_name, options.group,
-                                       options.group_permission))
+      if( options.group_permission ):
+        print ('REMOVED FORWARD_ZONE_PERMISSION: zone_name: %s group: %s '
+               'group_permission: %s' % (options.zone_name, options.group,
+                                         group_permission_list))
+      else:
+        print ('REMOVED FORWARD_ZONE_PERMISSION: zone_name: %s group: %s' % (
+                   options.zone_name, options.group))
 
   else:
     cli_common_lib.DnsError(

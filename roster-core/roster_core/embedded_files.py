@@ -130,7 +130,9 @@ DROP TABLE IF EXISTS `audit_log`;
 DROP TABLE IF EXISTS `reserved_words`;
 DROP TABLE IF EXISTS `named_conf_global_options`;
 DROP TABLE IF EXISTS `reverse_range_zone_assignments`;
+DROP TABLE IF EXISTS `group_reverse_permissions`;
 DROP TABLE IF EXISTS `reverse_range_permissions`;
+DROP TABLE IF EXISTS `group_forward_permissions`;
 DROP TABLE IF EXISTS `forward_zone_permissions`;
 DROP TABLE IF EXISTS `user_group_assignments`;
 DROP TABLE IF EXISTS `groups`;
@@ -559,7 +561,6 @@ CREATE TABLE `forward_zone_permissions` (
   `forward_zone_permissions_id` mediumint unsigned NOT NULL auto_increment,
   `forward_zone_permissions_group_name` varchar(255) NOT NULL,
   `forward_zone_permissions_zone_name` varchar(255) NOT NULL,
-  `forward_zone_permissions_group_permission` varchar(4) NOT NULL,
 
   PRIMARY KEY (`forward_zone_permissions_id`),
   UNIQUE KEY `forward_zone_permissions_unique_1`
@@ -567,12 +568,32 @@ CREATE TABLE `forward_zone_permissions` (
       `forward_zone_permissions_zone_name`),
   INDEX `group_name_2` (`forward_zone_permissions_group_name`),
   INDEX `zone_name_4` (`forward_zone_permissions_zone_name`),
-  INDEX `group_permission_1` (`forward_zone_permissions_group_permission`),
 
   CONSTRAINT `group_name_2` FOREIGN KEY (`forward_zone_permissions_group_name`)
     REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `zone_name_4` FOREIGN KEY (`forward_zone_permissions_zone_name`)
-    REFERENCES `zones` (`zone_name`) ON DELETE CASCADE ON UPDATE CASCADE  
+    REFERENCES `zones` (`zone_name`) ON DELETE CASCADE ON UPDATE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `group_forward_permissions` (
+
+  `group_forward_permissions_id` mediumint unsigned NOT NULL auto_increment,
+  `group_forward_permissions_forward_zone_permissions_id` mediumint
+    unsigned NOT NULL,
+  `group_forward_permissions_group_permission` varchar(15) NOT NULL,
+
+  PRIMARY KEY (`group_forward_permissions_id`),
+  INDEX `permissions_id_1` (`group_forward_permissions_forward_zone_permissions_id`),
+
+  CONSTRAINT `forward_group_permission_1` FOREIGN KEY
+    (`group_forward_permissions_group_permission`)
+    REFERENCES `record_types` (`record_type`),
+  CONSTRAINT `forward_zone_permissions_id_1` FOREIGN KEY
+    (`group_forward_permissions_forward_zone_permissions_id`)
+    REFERENCES `forward_zone_permissions` (`forward_zone_permissions_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -582,23 +603,43 @@ CREATE TABLE `reverse_range_permissions` (
   `reverse_range_permissions_id` mediumint unsigned NOT NULL auto_increment,
   `reverse_range_permissions_group_name` varchar(255) NOT NULL,
   `reverse_range_permissions_cidr_block` varchar(43) NOT NULL,
-  `reverse_range_permissions_group_permission` varchar(4) NOT NULL,
 
   PRIMARY KEY (`reverse_range_permissions_id`),
   UNIQUE KEY `reverse_range_permissions_unique_1`
     (`reverse_range_permissions_group_name`,
      `reverse_range_permissions_cidr_block`),
   INDEX `group_name_3` (`reverse_range_permissions_group_name`),
-  INDEX `group_permission_2` (`reverse_range_permissions_group_permission`),
 
   CONSTRAINT `group_name_3` FOREIGN KEY (`reverse_range_permissions_group_name`)
-    REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE  
+    REFERENCES `groups` (`group_name`) ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+CREATE TABLE `group_reverse_permissions` (
+
+  `group_reverse_permissions_id` mediumint unsigned NOT NULL auto_increment,
+  `group_reverse_permissions_reverse_range_permissions_id` mediumint
+    unsigned NOT NULL,
+  `group_reverse_permissions_group_permission` varchar(15) NOT NULL,
+
+  PRIMARY KEY (`group_reverse_permissions_id`),
+  INDEX `permissions_id_2` (`group_reverse_permissions_reverse_range_permissions_id`),
+
+  CONSTRAINT `reverse_group_permission_1` FOREIGN KEY
+    (`group_reverse_permissions_group_permission`)
+    REFERENCES `record_types` (`record_type`),
+  CONSTRAINT `reverse_zone_permissions_id_1` FOREIGN KEY
+    (`group_reverse_permissions_reverse_range_permissions_id`)
+    REFERENCES `reverse_range_permissions` (`reverse_range_permissions_id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
 CREATE TABLE `reverse_range_zone_assignments` (
 
-  `reverse_range_zone_assignments_id` mediumint unsigned NOT NULL 
+  `reverse_range_zone_assignments_id` mediumint unsigned NOT NULL
       auto_increment,
   `reverse_range_zone_assignments_zone_name` varchar(255) NOT NULL,
   `reverse_range_zone_assignments_cidr_block` varchar(43) NOT NULL,
@@ -609,11 +650,12 @@ CREATE TABLE `reverse_range_zone_assignments` (
      `reverse_range_zone_assignments_cidr_block`),
   INDEX `zone_name_5` (`reverse_range_zone_assignments_zone_name`),
   
-  CONSTRAINT `zone_name_5` FOREIGN KEY 
-    (`reverse_range_zone_assignments_zone_name`) REFERENCES `zones` 
+  CONSTRAINT `zone_name_5` FOREIGN KEY
+    (`reverse_range_zone_assignments_zone_name`) REFERENCES `zones`
     (`zone_name`) ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 CREATE TABLE `named_conf_global_options` (
 
@@ -624,9 +666,9 @@ CREATE TABLE `named_conf_global_options` (
 
   PRIMARY KEY (`named_conf_global_options_id`),
 
-  CONSTRAINT `dns_server_set_3` FOREIGN KEY 
+  CONSTRAINT `dns_server_set_3` FOREIGN KEY
     (`named_conf_global_options_dns_server_set_name`) REFERENCES
-    `dns_server_sets` (`dns_server_set_name`) ON DELETE CASCADE 
+    `dns_server_sets` (`dns_server_set_name`) ON DELETE CASCADE
     ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -148,17 +148,18 @@ def main(args):
       print_list.append([user, users[user]])
 
   elif( command == 'reverse' ):
-    if( options.group_permission and
-        options.group_permission not in group_permissions ):
-      cli_common_lib.DnsError('A group permission must be %s.' % (
-                                  group_permissions_string), 1)
+    group_permission_list = None
+    if( options.group_permission ):
+      group_permission_list = []
+      for permission in options.group_permission.split(','):
+        group_permission_list.append(permission.strip())
 
     permissions = roster_client_lib.RunFunction(
         u'ListReverseRangePermissions', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
         kwargs={'cidr_block': options.cidr_block, 'group_name': options.group,
-                'group_permission': options.group_permission})['core_return']
+                'group_permission': group_permission_list})['core_return']
     if( not options.no_header ):
       print_list = [['group', 'cidr_block', 'group_permission']]
     for group in permissions:
@@ -167,10 +168,11 @@ def main(args):
                            permission['group_permission']])
 
   elif( command == 'forward' ):
-    if( options.group_permission and
-        options.group_permission not in group_permissions ):
-      cli_common_lib.DnsError('A group permission must be %s.' % (
-                                  group_permissions_string), 1)
+    group_permission_list = None
+    if( options.group_permission ):
+      group_permission_list = []
+      for permission in options.group_permission.split(','):
+        group_permission_list.append(permission.strip())
 
     permissions = roster_client_lib.RunFunction(
         u'ListForwardZonePermissions', options.username,
@@ -178,7 +180,7 @@ def main(args):
         server_name=options.server,
         kwargs={'zone_name': options.zone_name,
                 'group_name': options.group,
-                'group_permission': options.group_permission})['core_return']
+                'group_permission': group_permission_list})['core_return']
     if( not options.no_header ):
       print_list = [['group', 'zone_name', 'group_permission']]
     for group in permissions:

@@ -86,7 +86,8 @@ class TestUser(unittest.TestCase):
     self.core_instance.MakeZone(u'10.10.rev', u'master',
                                 u'10.10.IN-ADDR.ARPA.')
     self.core_instance.MakeReverseRangeZoneAssignment(u'10.10.rev', u'10.10/16')
-    self.core_instance.MakeReverseRangePermission(u'10.10.5/24', u'cs', u'rw')
+    self.core_instance.MakeReverseRangePermission(u'10.10.5/24', u'cs', 
+                                                  [u'ptr', u'cname'])
     self.core_instance.MakeUserGroupAssignment(u'jcollins', u'cs')
 
     # good forward zone data
@@ -94,7 +95,7 @@ class TestUser(unittest.TestCase):
                         'zone_name': u'cs.university.edu',
                         'view_name': u'any',
                         'record_type': u'a',
-                        'record_args_dict' : { u'assignment_ip' : u'10.10.5.69' }
+                        'record_args_dict' : { u'assignment_ip' : u'192.168.0.1' }
                         }
 
     txt_record_data = {'target': u'good',
@@ -130,8 +131,8 @@ class TestUser(unittest.TestCase):
                               }
 
     # good reverse zone data
-    good_reverse_record_data = {'target': u'1',
-                                'zone_name': u'192.168.0.rev',
+    good_reverse_record_data = {'target': u'5.5',
+                                'zone_name': u'10.10.rev',
                                 'view_name': u'any',
                                 'record_type': u'ptr',
                                 'record_args_dict' : { 

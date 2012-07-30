@@ -87,6 +87,7 @@ class TestHelpersLib(unittest.TestCase):
     self.assertEqual(helpers_lib.UnReverseIP(
         '168.192.in-addr.arpa.'), '192.168/16')
     self.assertEqual(helpers_lib.UnReverseIP('notvalid'), 'notvalid')
+    self.assertEqual(helpers_lib.UnReverseIP('google.com'), 'google.com')
 
   def testCIDRExpand(self):
     self.assertEquals(helpers_lib.CIDRExpand('192.168.0/31'),

@@ -43,7 +43,7 @@ from roster_user_tools import cli_common_lib
 class FlagsError(Exception):
   pass
 
-class CoreFlags:
+class CoreFlags(object):
   """Command line common library"""
   def __init__(self, command, commands, args, usage, bootstrapper=False):
     """Initializes parser, sets flags for all classes"""

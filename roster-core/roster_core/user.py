@@ -129,10 +129,31 @@ class User(object):
       target_string = ' with %s on %s of type %s' % (record_data['target'],
                                           record_data['zone_name'],
                                           record_data['record_type'])
+
+      user_group_perms = []
+
+      ip_address = helpers_lib.UnReverseIP('%s.%s' % (
+          record_data['target'],
+          self.zone_origin_cache[record_data['zone_name']]))
+      
+      #Looking for permissions in the forward zones
+      for zone in self.user_perms['forward_zones']:
+        if( zone['zone_name'] == record_data['zone_name'] ):
+          user_group_perms.append(zone['group_permission'])
+    
+      #If we haven't found any, look in the reverse ranges
+      if( user_group_perms == [] ):
+        validation_instance = self.db_instance.data_validation_instance
+        if( validation_instance.isIPv4IPAddress(ip_address) or 
+            validation_instance.isIPv6IPAddress(ip_address) ):
+          for cidr in self.user_perms['reverse_ranges']:
+            if( IPy.IP(cidr['cidr_block']).overlaps(ip_address) ):
+              user_group_perms.append(cidr['group_permission'])
     else:
       target_string = ''
     auth_fail_string = ('User %s is not allowed to use %s%s' %
                         (self.user_name, method, target_string))
+
     #authorizing method
     if( self.abilities.has_key(method) ):
       method_hash = self.abilities[method]
@@ -159,11 +180,12 @@ class User(object):
           raise errors.MissingDataTypeError(
               'Incomplete record data provided for access '
               'method %s' % method)
-        elif( record_data['record_type'] not in constants.USER_LEVEL_RECORDS and
-            int(self.user_access_level) <= constants.ACCESS_LEVELS['user'] ):
+        elif( record_data['record_type'] not in user_group_perms and
+            int(self.user_access_level) <= constants.ACCESS_LEVELS[
+                'unlocked_user'] ):
           raise errors.AuthorizationError(auth_fail_string)
 
-        if( int(self.user_access_level) < 
+        if( int(self.user_access_level) <
           constants.ACCESS_LEVELS['unlocked_user'] ):
 
           #if a or aaaa
@@ -217,12 +239,7 @@ class User(object):
           if( record_data['zone_name'] == forward_zone['zone_name'] ):
             return
 
-        # Can't find it in forward zones, maybe it's a reverse, lets try to
-        # construct an ip address
-
-        ip_address = helpers_lib.UnReverseIP('%s.%s' % (
-          record_data['target'], self.zone_origin_cache[
-            record_data['zone_name']]))
+        # Can't find it in forward zones, maybe it's a reverse
         try:
           ip = IPy.IP(ip_address)
 

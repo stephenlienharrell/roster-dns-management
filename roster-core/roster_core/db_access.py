@@ -316,24 +316,28 @@ class dbAccess(object):
     self.locked_db = False
 
   def InitDataValidation(self):
-    """Get all reserved words and return them.
-
-    Outputs:
-      list of reserved words.
-        example: ['cordova', 'jischke']
+    """Get all reserved words and group permissions and init the
+    data_validation_instance
     """
     cursor = self.connection.cursor()
     try:
       if( DEBUG == True ):
         print 'SELECT reserved_word FROM reserved_words'
       cursor.execute('SELECT reserved_word FROM reserved_words')
-      rows = cursor.fetchall()
+      reserved_words_rows = cursor.fetchall()
+
+      if( DEBUG == True ):
+        print 'SELECT record_type FROM record_types'
+      cursor.execute('SELECT record_type FROM record_types')
+      record_types_rows = cursor.fetchall()
     finally:
       cursor.close()
 
-    words = [row[0] for row in rows]
+    words = [row[0] for row in reserved_words_rows]
+    record_types = [row[0] for row in record_types_rows]
 
-    self.data_validation_instance = data_validation.DataValidation(words)
+    self.data_validation_instance = data_validation.DataValidation(
+        words, record_types)
 
   def MakeRow(self, table_name, row_dict):
     """Creates a row in the database using the table name and row dict
@@ -747,7 +751,7 @@ class dbAccess(object):
     if( self.data_validation_instance is None ):
       self.InitDataValidation()
     
-    data_validation_methods = dir(data_validation.DataValidation([]))
+    data_validation_methods = dir(data_validation.DataValidation([], []))
     for record_arg_name in record_args_dict.keys():
       if( not 'is%s' % record_type_dict[record_arg_name] in
           data_validation_methods ):
@@ -876,8 +880,8 @@ class dbAccess(object):
 
     Raises:
       UnexpectedDataError: Row did not contain
-                           reverse_range_permissions_group_permission or
-                           forward_zone_permissions_group_permission
+                           reverse_range_permissions or
+                           forward_zone_permissions
 
     Outputs:
       dict: dict with all the relevant information
@@ -885,17 +889,20 @@ class dbAccess(object):
         {'user_access_level': '2',
          'user_name': 'shuey',
          'forward_zones': [
-             {'zone_name': 'cs.university.edu', 'group_permission': 'rw'},
-             {'zone_name': 'eas.university.edu', 'group_permission': 'r'},
-             {'zone_name': 'bio.university.edu', 'group_permission': 'rw'}],
+             {'zone_name': 'cs.university.edu',
+              'group_permission': ['a', 'aaaa']},
+             {'zone_name': 'eas.university.edu',
+              'group_permission': ['a', 'aaaa', 'cname']},
+             {'zone_name': 'bio.university.edu',
+              'group_permission': ''a', 'ns'}],
          'groups': ['cs', 'bio'],
          'reverse_ranges': [
              {'cidr_block': '192.168.0.0/24',
-              'group_permission': 'rw'},
+              'group_permission': ['ptr', 'cname']},
              {'cidr_block': '192.168.0.0/24',
-              'group_permission': 'r'},
+              'group_permission': ['ptr']},
              {'cidr_block': '192.168.1.0/24',
-              'group_permission': 'rw'}]}
+              'group_permission': ['ptr', 'cname']}]}
     """
     auth_info_dict = {}
     db_data = []
@@ -908,6 +915,10 @@ class dbAccess(object):
         'forward_zone_permissions')
     reverse_range_permissions_dict = self.GetEmptyRowDict(
         'reverse_range_permissions')
+    group_forward_permissions_dict = self.GetEmptyRowDict(
+        'group_forward_permissions')
+    group_reverse_permissions_dict = self.GetEmptyRowDict(
+        'group_reverse_permissions')
 
     auth_info_dict['user_name'] = user
     auth_info_dict['groups'] = []
@@ -921,14 +932,18 @@ class dbAccess(object):
                                   'user_group_assignments',
                                   user_group_assignments_dict,
                                   'forward_zone_permissions',
-                                  forward_zone_permissions_dict))
+                                  forward_zone_permissions_dict,
+                                  'group_forward_permissions',
+                                  group_forward_permissions_dict))
 
       db_data.extend(self.ListRow('users', users_dict,
                                   'groups', groups_dict,
                                   'user_group_assignments',
                                   user_group_assignments_dict,
                                   'reverse_range_permissions',
-                                  reverse_range_permissions_dict))
+                                  reverse_range_permissions_dict,
+                                  'group_reverse_permissions',
+                                  group_reverse_permissions_dict))
       if( not db_data ):
         self.cursor_execute('SELECT access_level FROM users '
                             'WHERE user_name="%s"' % user)
@@ -945,34 +960,50 @@ class dbAccess(object):
 
     auth_info_dict['user_access_level'] = db_data[0]['access_level']
     for row in db_data:
-      if( row.has_key('forward_zone_permissions_group_permission') ):
+      if( row.has_key('group_forward_permissions_group_permission') ):
         if( not row['user_group_assignments_group_name'] in
             auth_info_dict['groups'] ):
           auth_info_dict['groups'].append(
               row['user_group_assignments_group_name'])
 
         if( not {'zone_name': row['forward_zone_permissions_zone_name'],
-                 'group_permission': row['forward_zone_permissions_group_permission']}
+                 'group_permission': row[
+                     'group_forward_permissions_group_permission']}
             in (auth_info_dict['forward_zones']) ):
           auth_info_dict['forward_zones'].append(
               {'zone_name': row['forward_zone_permissions_zone_name'],
-               'group_permission': row['forward_zone_permissions_group_permission']})
-      elif( row.has_key('reverse_range_permissions_group_permission') ):
+               'group_permission': row[
+                 'group_forward_permissions_group_permission']})
+      elif( row.has_key('group_reverse_permissions_group_permission') ):
         if( not row['user_group_assignments_group_name'] in
             auth_info_dict['groups'] ):
           auth_info_dict['groups'].append(
               row['user_group_assignments_group_name'])
 
         if( not {'cidr_block': row['reverse_range_permissions_cidr_block'],
-                 'group_permission': row['reverse_range_permissions_group_permission']}
+                 'group_permission': row[
+                     'group_reverse_permissions_group_permission']}
             in auth_info_dict['reverse_ranges'] ):
           auth_info_dict['reverse_ranges'].append(
               {'cidr_block': row['reverse_range_permissions_cidr_block'],
-               'group_permission': row['reverse_range_permissions_group_permission']})
+               'group_permission': row[
+                   'group_reverse_permissions_group_permission']})
+      elif( auth_info_dict.has_key('forward_zones') and auth_info_dict[
+                'user_access_level'] >= 64 ):
+        if( {'zone_name': row['forward_zone_permissions_zone_name'],
+             'group_permission': []} not in auth_info_dict['forward_zones'] ):
+          auth_info_dict['forward_zones'].append(
+              {'zone_name': row['forward_zone_permissions_zone_name'],
+               'group_permission': []})
+      elif( auth_info_dict.has_key('reverse_ranges') and auth_info_dict[
+                'user_access_level'] >= 64 ):
+        if( {'cidr_block': row['reverse_permissions_cidr_block'],
+             'group_permission': []} not in auth_info_dict['reverse_ranges'] ):
+          auth_info_dict['reverse_ranges'].append(
+              {'cidr_block': row['reverse_range_permissions_cidr_block'],
+               'group_permission': []})
       else:
-        raise errors.UnexpectedDataError(
-            'Row did not contain reverse_range_permissions_group_permission or '
-            'forward_zone_permissions_group_permission.')
+        raise errors.RecordError('Returned row is corrupt.')
     return auth_info_dict
 
   def GetZoneOrigin(self, zone_name, view_name):

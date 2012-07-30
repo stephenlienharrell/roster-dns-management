@@ -59,7 +59,7 @@ class CoreHelpers(object):
   ### These functions just expose helpers_lib functions for the 
   ### XML-RPC server. For doc strings see helpers_lib
   def ListGroupPermissions(self):
-    return helpers_lib.ListGroupPermissions()
+    return self.db_instance.data_validation_instance.ListGroupPermissions()
 
   def ReverseIP(self, ip_address):
     return helpers_lib.ReverseIP(ip_address)

@@ -1745,71 +1745,61 @@ class Core(object):
 
   def ListForwardZonePermissions(self, zone_name=None, group_name=None,
                                  group_permission=None):
-    """List forward zone permisions.
+    """List forward zone permissions.
 
     Inputs:
       zone_name: string of zone name
       group_name: string of group name
-      group_permission: string of group permissions defined as
-      constants.GROUP_PERMISSIONS
+      group_permission: list group permissions, i.e., ['a', 'aaaa', 'cname']
 
     Outputs:
       dictionary keyed by group name with values of lists of dictionaries
       containing zone names and group permissions
         example: {'dept': [{'zone_name': 'sub.univeristy.edu',
-                            'group_permission': 'rw'},
+                            'group_permission': ['a', 'aaaa', 'cname']},
                            {'zone_name': 'othersub.university.edu',
-                            'group_permission': 'r'}],
+                            'group_permission': ['a', 'aaaa', 'cname', 'soa']}],
                   'otherdept': [{'zone_name': 'sub.university.edu',
-                                 'group_permission': 'rw'}]}
-    """
-    self.user_instance.Authorize('ListForwardZonePermissions')
-    permissions_dict = {'forward_zone_permissions_group_name': group_name,
-                        'forward_zone_permissions_zone_name': zone_name,
-                        'forward_zone_permissions_group_permission': group_permission}
-
-    self.db_instance.StartTransaction()
-    try:
-      permission_rows = self.db_instance.ListRow('forward_zone_permissions',
-                                                 permissions_dict)
-    finally:
-      self.db_instance.EndTransaction()
-
-    forward_zone_perms_dict = {}
-    for row in permission_rows:
-      if( not row['forward_zone_permissions_group_name'] in
-          forward_zone_perms_dict ):
-        forward_zone_perms_dict[
-            row['forward_zone_permissions_group_name']] = []
-
-      forward_zone_perms_dict[
-          row['forward_zone_permissions_group_name']].append(
-              {'zone_name': row['forward_zone_permissions_zone_name'],
-               'group_permission': row['forward_zone_permissions_group_permission']})
-
-    return forward_zone_perms_dict
-
-  def MakeForwardZonePermission(self, zone_name, group_name, group_permission):
-    """Make forward zone permision.
-
-    Inputs:
-      zone_name: string of zone name
-      group_name: string of group name
-      group_permission: string of group permissions defined as
-      constants.GROUP_PERMISSIONS
+                                 'group_permission': ['a', 'aaaa']}]}
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
-    permissions_dict = {'forward_zone_permissions_group_name': group_name,
-                        'forward_zone_permissions_zone_name': zone_name,
-                        'forward_zone_permissions_group_permission': group_permission}
+    forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'forward_zone_permissions')
+    forward_zone_permissions_dict['forward_zone_permissions_group_name'] = (
+        group_name)
+    forward_zone_permissions_dict['forward_zone_permissions_zone_name'] = (
+        zone_name)
+
+    group_forward_permissions_dicts = []
+    forward_zone_permissions_rows = []
+    group_forward_permissions_rows_dict = {}
+    group_forward_permissions = {}
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        self.db_instance.MakeRow('forward_zone_permissions',
-                                 permissions_dict)
+        forward_zone_permissions_rows = self.db_instance.ListRow(
+            'forward_zone_permissions', forward_zone_permissions_dict)
+
+        for row in forward_zone_permissions_rows:
+          group_forward_permissions_dict = self.db_instance.GetEmptyRowDict(
+              'group_forward_permissions')
+          group_forward_permissions_dict[
+              'group_forward_permissions_forward_zone_permissions_id'] = row[
+                  'forward_zone_permissions_id']
+          group_permissions_row_permission_list = []
+          for group_permissions_row in self.db_instance.ListRow(
+                  'group_forward_permissions',
+                  group_forward_permissions_dict):
+            group_permissions_row_permission_list.append(group_permissions_row[
+                'group_forward_permissions_group_permission'])
+          if( group_permission is None or group_permission == (
+                  group_permissions_row_permission_list) ):
+            group_forward_permissions_rows_dict.update({
+                str(row['forward_zone_permissions_id']): (
+                    group_permissions_row_permission_list)})
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -1819,14 +1809,158 @@ class Core(object):
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
 
-  def RemoveForwardZonePermission(self, zone_name, group_name, group_permission):
-    """Remove forward zone permisions.
+    ## Construct dict to return
+    forward_zone_perms_dict = {}
+    for row in forward_zone_permissions_rows:
+      if( str(row['forward_zone_permissions_id']) in (
+              group_forward_permissions_rows_dict) ):
+        if( row['forward_zone_permissions_group_name'] not in
+                forward_zone_perms_dict ):
+          forward_zone_perms_dict[
+              row['forward_zone_permissions_group_name']] = []
+
+        forward_zone_perms_dict[
+            row['forward_zone_permissions_group_name']].append(
+                {'zone_name': row['forward_zone_permissions_zone_name'],
+                 'group_permission': group_forward_permissions_rows_dict[
+                     str(row['forward_zone_permissions_id'])]})
+
+    return forward_zone_perms_dict
+
+  def MakeForwardZonePermission(self, zone_name, group_name,
+                                group_permission=None):
+    """Make forward zone permission.
 
     Inputs:
       zone_name: string of zone name
       group_name: string of group name
-      group_permission: string of group permissions defined as
-      constants.GROUP_PERMISSIONS
+      group_permission: list group permissions, i.e., ['a', 'aaaa', 'cname']
+    """
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
+
+    forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'forward_zone_permissions')
+    forward_zone_permissions_dict['forward_zone_permissions_group_name'] = (
+        group_name)
+    forward_zone_permissions_dict['forward_zone_permissions_zone_name'] = (
+        zone_name)
+
+    success = False
+    try:
+      self.db_instance.StartTransaction()
+      try:
+        forward_zone_perm_id = self.db_instance.MakeRow(
+            'forward_zone_permissions', forward_zone_permissions_dict)
+
+        ## Add associated group_forward_permissions
+        for group_perm in group_permission:
+          group_forward_permissions_dict = self.db_instance.GetEmptyRowDict(
+              'group_forward_permissions')
+          group_forward_permissions_dict[
+              'group_forward_permissions_forward_zone_permissions_id'] = (
+                  forward_zone_perm_id)
+          group_forward_permissions_dict[
+              'group_forward_permissions_group_permission'] = (
+                  group_perm)
+          self.db_instance.MakeRow('group_forward_permissions',
+                                   group_forward_permissions_dict)
+      except:
+        self.db_instance.EndTransaction(rollback=True)
+        raise
+      success = True
+      self.db_instance.EndTransaction()
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
+
+  def UpdateGroupForwardPermission(self, zone_name, group_name, 
+                                   new_permissions):
+    """Updates forward zone group permissions
+
+    Inputs:
+      zone_name: string of zone name
+      group_name: string of group name
+      new_permissions: list of permissions. (ex [u'a', u'aaaa', u'cname'])
+
+    Raises:
+      AuthorizationError: Group does not have access to supplied zone
+    """
+
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
+
+    forward_zone_permissions = self.ListForwardZonePermissions(zone_name, 
+                                                               group_name)
+    if( group_name not in forward_zone_permissions ):
+      raise errors.AuthorizationError('Trying to update permissions on zone '
+                                      '%s not assigned to group %s.' % (
+                                      zone_name, group_name))
+    else:
+      current_permissions = forward_zone_permissions[group_name]
+      for permission in current_permissions:
+        if( permission['zone_name'] == zone_name ):
+          current_permissions = permission['group_permission']
+          break
+      else:
+        raise errors.AuthorizationError('Trying to update permissions on zone '
+                                        '%s not assigned to group %s.' % (
+                                        zone_name, group_name))
+
+    add_permissions = list(set(new_permissions).difference(set(
+        current_permissions)))
+    remove_permissions = list(set(current_permissions).difference(set(
+        new_permissions)))
+
+    forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'forward_zone_permissions')
+    group_forward_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'group_forward_permissions')
+
+    forward_zone_permissions_dict[
+        'forward_zone_permissions_group_name'] = group_name
+    forward_zone_permissions_dict[
+        'forward_zone_permissions_zone_name'] = zone_name
+
+    success = False
+    try:
+      self.db_instance.StartTransaction()
+      try:       
+        forward_zone_permissions_row = self.db_instance.ListRow(
+            'forward_zone_permissions', forward_zone_permissions_dict)
+
+        id = forward_zone_permissions_row[0]['forward_zone_permissions_id']
+        group_forward_permissions_dict[
+            'group_forward_permissions_forward_zone_permissions_id'] = id
+
+        for permission in remove_permissions:
+          group_forward_permissions_dict[
+              'group_forward_permissions_group_permission'] = permission
+          self.db_instance.RemoveRow('group_forward_permissions',
+                                     group_forward_permissions_dict)
+
+        for permission in add_permissions:
+          group_forward_permissions_dict[
+              'group_forward_permissions_group_permission'] = permission
+          self.db_instance.MakeRow('group_forward_permissions',
+                                     group_forward_permissions_dict)
+      except:
+        self.db_instance.EndTransaction(rollback=True)
+        raise
+      self.db_instance.EndTransaction()
+      success = True
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
+
+  def RemoveForwardZonePermission(self, zone_name, group_name,
+                                  group_permission):
+    """Remove forward zone permissions.
+
+    Inputs:
+      zone_name: string of zone name
+      group_name: string of group name
+      group_permission: list of group permissions, i.e., ['a', 'aaaa', 'cname']
 
     Outputs:
       int: number of rows affected
@@ -1834,15 +1968,57 @@ class Core(object):
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
-    permissions_dict = {'forward_zone_permissions_group_name': group_name,
-                        'forward_zone_permissions_zone_name': zone_name,
-                        'forward_zone_permissions_group_permission': group_permission}
+    forward_zone_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'forward_zone_permissions')
+    forward_zone_permissions_dict['forward_zone_permissions_group_name'] = (
+        group_name)
+    forward_zone_permissions_dict['forward_zone_permissions_zone_name'] = (
+        zone_name)
+
+    row_count = 0
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        row_count = self.db_instance.RemoveRow('forward_zone_permissions',
-                                               permissions_dict)
+        group_forward_permission_rows = []
+        forward_zone_permissions_rows = self.db_instance.ListRow(
+            'forward_zone_permissions', forward_zone_permissions_dict)
+        if( len(forward_zone_permissions_rows) == 0 ):
+          for permission in group_permission:
+            group_forward_permissions_dict = self.db_instance.GetEmptyRowDict(
+                'group_forward_permissions')
+            group_forward_permissions_dict[
+                'group_forward_permissions_group_permission'] = permission
+            group_forward_permissions_rows.append(self.db_instance.ListRow(
+                'group_forward_permissions',
+                group_forward_permissions_dict))
+
+        for row in forward_zone_permissions_rows:
+          forward_zone_permissions_dict['forward_zone_permissions_id'] = row[
+              'forward_zone_permissions_id']
+          group_forward_permissions_list = []
+
+          if( group_permission is not None ):
+            for permission in group_permission:
+              group_forward_permissions_dict = {
+                  'group_forward_permissions_forward_zone_permissions_id': (
+                      row['forward_zone_permissions_id']),
+                  'group_forward_permissions_group_permission': permission}
+              group_forward_permissions_rows = self.db_instance.ListRow(
+                  'group_forward_permissions',
+                  group_forward_permissions_dict)
+              for group_forward_permissions_row in (
+                      group_forward_permissions_rows):
+                group_forward_permissions_list.append(
+                    group_forward_permissions_row[
+                        'group_forward_permissions_group_permission'])
+              if( group_permission == group_forward_permissions_list ):
+                row_count = row_count + self.db_instance.RemoveRow(
+                    'forward_zone_permissions', forward_zone_permissions_dict)
+          else:
+            row_count = row_count + self.db_instance.RemoveRow(
+                'forward_zone_permissions', forward_zone_permissions_dict)
+ 	  ## Associated group_forward_permissions deleted by CASCADE in DB
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -1851,76 +2027,67 @@ class Core(object):
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
-    return row_count
 
+    return row_count
 
   def ListReverseRangePermissions(self, cidr_block=None, group_name=None,
                                   group_permission=None):
-    """List reverse range permisions.
+    """List reverse range permissions.
 
     Inputs:
       cidr_block: string of cidr block
       group_name: string of group name
-      group_permission: string of group permissions defined as
-      constants.GROUP_PERMISSIONS
+      group_permission: list group permissions, i.e., ['a', 'aaaa', 'cname']
 
     Outputs:
       dictionary keyed by group name with values of lists of dictionaries
       containing reverse ranges and group permissions
         example: {'dept': [{'cidr_block': '192.168.0/24',
-                            'group_permission': 'rw'},
+                            'group_permission': [u'cname', u'ptr']},
                            {'cidr_block': '192.168.1/24',
-                            'group_permission': 'r'}],
+                            'group_permission': [u'ptr']}],
                   'otherdept': [{'cidr_block': '192.168.1/24',
-                                 'group_permission': 'rw'}]}
-    """
-    self.user_instance.Authorize('ListReverseRangePermissions')
-    permissions_dict = {'reverse_range_permissions_group_name': group_name,
-                        'reverse_range_permissions_cidr_block': cidr_block,
-                        'reverse_range_permissions_group_permission': group_permission}
-
-    self.db_instance.StartTransaction()
-    try:
-      permission_rows = self.db_instance.ListRow('reverse_range_permissions',
-                                                 permissions_dict)
-    finally:
-      self.db_instance.EndTransaction()
-
-    reverse_range_perms_dict = {}
-    for row in permission_rows:
-      if( not row['reverse_range_permissions_group_name'] in
-          reverse_range_perms_dict ):
-        reverse_range_perms_dict[
-            row['reverse_range_permissions_group_name']] = []
-
-      reverse_range_perms_dict[
-          row['reverse_range_permissions_group_name']].append(
-              {'cidr_block': row['reverse_range_permissions_cidr_block'],
-               'group_permission': row['reverse_range_permissions_group_permission']})
-
-    return reverse_range_perms_dict
-
-  def MakeReverseRangePermission(self, cidr_block, group_name, group_permission):
-    """Make reverse range permisions.
-
-    Inputs:
-      cidr_block: string of cidr block
-      group_name: string of group name
-      group_permission: string of group permissions defined as
-      constants.GROUP_PERMISSIONS
+                                 'group_permission': [u'cname', u'ns', u'ptr',
+                                                      u'soa']}]}
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
-    permissions_dict = {'reverse_range_permissions_group_name': group_name,
-                        'reverse_range_permissions_cidr_block': cidr_block,
-                        'reverse_range_permissions_group_permission': group_permission}
+    reverse_range_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'reverse_range_permissions')
+    reverse_range_permissions_dict['reverse_range_permissions_group_name'] = (
+        group_name)
+    reverse_range_permissions_dict['reverse_range_permissions_cidr_block'] = (
+        cidr_block)
+
+    group_reverse_permissions_dicts = []
+    reverse_range_permissions_rows = []
+    group_reverse_permissions_rows_dict = {}
+    group_reverse_permissions = {}
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        self.db_instance.MakeRow('reverse_range_permissions',
-                                 permissions_dict)
+        reverse_range_permissions_rows = self.db_instance.ListRow(
+            'reverse_range_permissions', reverse_range_permissions_dict)
+
+        for row in reverse_range_permissions_rows:
+          group_reverse_permissions_dict = self.db_instance.GetEmptyRowDict(
+              'group_reverse_permissions')
+          group_reverse_permissions_dict[
+              'group_reverse_permissions_reverse_range_permissions_id'] = row[
+                  'reverse_range_permissions_id']
+          group_permissions_row_permission_list = []
+          for group_permissions_row in self.db_instance.ListRow(
+                  'group_reverse_permissions',
+                  group_reverse_permissions_dict):
+            group_permissions_row_permission_list.append(group_permissions_row[
+                'group_reverse_permissions_group_permission'])
+          if( group_permission is None or group_permission == (
+                  group_permissions_row_permission_list) ):
+            group_reverse_permissions_rows_dict.update({
+                str(row['reverse_range_permissions_id']): (
+                    group_permissions_row_permission_list)})
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -1930,14 +2097,157 @@ class Core(object):
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
 
-  def RemoveReverseRangePermission(self, cidr_block, group_name, group_permission):
-    """Remove reverse range permisions.
+    ## Construct dict to return
+    reverse_range_perms_dict = {}
+    for row in reverse_range_permissions_rows:
+      if( str(row['reverse_range_permissions_id']) in (
+              group_reverse_permissions_rows_dict) ):
+        if( row['reverse_range_permissions_group_name'] not in
+                reverse_range_perms_dict ):
+          reverse_range_perms_dict[
+              row['reverse_range_permissions_group_name']] = []
+
+        reverse_range_perms_dict[
+            row['reverse_range_permissions_group_name']].append(
+                {'cidr_block': row['reverse_range_permissions_cidr_block'],
+                 'group_permission': group_reverse_permissions_rows_dict[
+                     str(row['reverse_range_permissions_id'])]})
+
+    return reverse_range_perms_dict
+
+  def MakeReverseRangePermission(self, cidr_block, group_name,
+                                 group_permission=None):
+    """Make reverse range permission.
 
     Inputs:
       cidr_block: string of cidr block
       group_name: string of group name
-      group_permission: string of group permissions defined as
-      constants.GROUP_PERMISSIONS
+      group_permission: list of group permissions, i.e., ['cname', 'ptr']
+    """
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
+
+    reverse_range_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'reverse_range_permissions')
+    reverse_range_permissions_dict['reverse_range_permissions_group_name'] = (
+        group_name)
+    reverse_range_permissions_dict['reverse_range_permissions_cidr_block'] = (
+        cidr_block)
+
+    success = False
+    try:
+      self.db_instance.StartTransaction()
+      try:
+        reverse_range_perm_id = self.db_instance.MakeRow(
+            'reverse_range_permissions', reverse_range_permissions_dict)
+
+        ## Add associated group_forward_permissions
+        for group_perm in group_permission:
+          group_reverse_permissions_dict = self.db_instance.GetEmptyRowDict(
+              'group_reverse_permissions')
+          group_reverse_permissions_dict[
+              'group_reverse_permissions_reverse_range_permissions_id'] = (
+                  reverse_range_perm_id)
+          group_reverse_permissions_dict[
+              'group_reverse_permissions_group_permission'] = (
+                  group_perm)
+          self.db_instance.MakeRow('group_reverse_permissions',
+                                   group_reverse_permissions_dict)
+      except:
+        self.db_instance.EndTransaction(rollback=True)
+        raise
+      success = True
+      self.db_instance.EndTransaction()
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
+
+  def UpdateGroupReversePermission(self, cidr_block, group_name, 
+                                   new_permissions):
+    """Updates forward zone group permissions
+
+    Inputs:
+      cidr_block: string of cidr_block
+      group_name: string of group name
+      new_permissions: list of permissions. (ex [u'a', u'aaaa', u'cname'])
+
+    Raises:
+      AuthorizationError: Group does not have access to supplied cidr block
+    """
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
+
+    reverse_range_permissions = self.ListReverseRangePermissions(cidr_block, 
+                                                                 group_name)
+    if( group_name not in reverse_range_permissions ):
+      raise errors.AuthorizationError('Trying to update permissions on cidr '
+                                      '%s not assigned to group %s.' % (
+                                      cidr_block, group_name))
+    else:
+      current_permissions = reverse_range_permissions[group_name]
+      for permission in current_permissions:
+        if( permission['cidr_block'] == cidr_block ):
+          current_permissions = permission['group_permission']
+          break
+      else:
+        raise errors.AuthorizationError('Trying to update permissions on cidr '
+                                        '%s not assigned to group %s.' % (
+                                        cidr_block, group_name))
+
+    add_permissions = list(set(new_permissions).difference(set(
+        current_permissions)))
+    remove_permissions = list(set(current_permissions).difference(set(
+        new_permissions)))
+
+    reverse_range_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'reverse_range_permissions')
+    group_reverse_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'group_reverse_permissions')
+
+    reverse_range_permissions_dict[
+        'reverse_range_permissions_group_name'] = group_name
+    reverse_range_permissions_dict[
+        'reverse_range_permissions_cidr_block'] = cidr_block
+
+    success = False
+    try:
+      self.db_instance.StartTransaction()
+      try:       
+        reverse_range_permissions_row = self.db_instance.ListRow(
+            'reverse_range_permissions', reverse_range_permissions_dict)
+
+        id = reverse_range_permissions_row[0]['reverse_range_permissions_id']
+        group_reverse_permissions_dict[
+            'group_reverse_permissions_reverse_range_permissions_id'] = id
+
+        for permission in remove_permissions:
+          group_reverse_permissions_dict[
+              'group_reverse_permissions_group_permission'] = permission
+          self.db_instance.RemoveRow('group_reverse_permissions',
+                                      group_reverse_permissions_dict)
+
+        for permission in add_permissions:
+          group_reverse_permissions_dict[
+              'group_reverse_permissions_group_permission'] = permission
+          self.db_instance.MakeRow('group_reverse_permissions',
+                                    group_reverse_permissions_dict)
+      except:
+        self.db_instance.EndTransaction(rollback=True)
+        raise
+      self.db_instance.EndTransaction()
+      success = True
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
+
+  def RemoveReverseRangePermission(self, cidr_block, group_name,
+                                   group_permission):
+    """Remove reverse range permissions.
+
+    Inputs:
+      cidr_block: string of cidr block
+      group_name: string of group name
+      group_permission: list of group permissions, i.e., ['a', 'aaaa', 'cname']
 
     Outputs:
       int: number of rows affected
@@ -1945,15 +2255,57 @@ class Core(object):
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
-    permissions_dict = {'reverse_range_permissions_group_name': group_name,
-                        'reverse_range_permissions_cidr_block': cidr_block,
-                        'reverse_range_permissions_group_permission': group_permission}
+    reverse_range_permissions_dict = self.db_instance.GetEmptyRowDict(
+        'reverse_range_permissions')
+    reverse_range_permissions_dict['reverse_range_permissions_group_name'] = (
+        group_name)
+    reverse_range_permissions_dict['reverse_range_permissions_cidr_block'] = (
+        cidr_block)
+
+    row_count = 0
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        row_count = self.db_instance.RemoveRow('reverse_range_permissions',
-                                               permissions_dict)
+        group_reverse_permissions_rows = []
+        reverse_range_permissions_rows = self.db_instance.ListRow(
+            'reverse_range_permissions', reverse_range_permissions_dict)
+        if( len(reverse_range_permissions_rows) == 0 ):
+          for permission in group_permission:
+            group_reverse_permissions_dict = self.db_instance.GetEmptyRowDict(
+                'group_reverse_permissions')
+            group_reverse_permissions_dict[
+                'group_reverse_permissions_group_permission'] = permission
+            group_reverse_permissions_rows.append(self.db_instance.ListRow(
+                'group_reverse_permissions',
+                group_reverse_permissions_dict))
+
+        for row in reverse_range_permissions_rows:
+          reverse_range_permissions_dict['reverse_range_permissions_id'] = row[
+              'reverse_range_permissions_id']
+          group_reverse_permissions_list = []
+
+          if( group_permission is not None ):
+            for permission in group_permission:
+              group_reverse_permissions_dict = {
+                  'group_reverse_permissions_reverse_range_permissions_id': (
+                      row['reverse_range_permissions_id']),
+                  'group_reverse_permissions_group_permission': permission}
+              group_reverse_permissions_rows = self.db_instance.ListRow(
+                  'group_reverse_permissions',
+                  group_reverse_permissions_dict)
+              for group_reverse_permissions_row in (
+                      group_reverse_permissions_rows):
+                group_reverse_permissions_list.append(
+                    group_reverse_permissions_row[
+                        'group_reverse_permissions_group_permission'])
+              if( group_permission == group_reverse_permissions_list ):
+                row_count = row_count + self.db_instance.RemoveRow(
+                    'reverse_range_permissions', reverse_range_permissions_dict)
+          else:
+            row_count = row_count + self.db_instance.RemoveRow(
+                'reverse_range_permissions', reverse_range_permissions_dict)
+          ## Associated group_reverse_permissions deleted by CASCADE in DB
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -1962,6 +2314,7 @@ class Core(object):
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
+
     return row_count
 
   def GetEmptyRecordArgsDict(self, record_type):
@@ -2031,7 +2384,7 @@ class Core(object):
     if( record_args_dict ):
       if( record_type is None ):
         raise errors.UnexpectedDataError('Must specify record_type with '
-                                 'record_args_dict')
+                                         'record_args_dict')
       self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict,
                                               none_ok=True)
     else:
@@ -2083,7 +2436,7 @@ class Core(object):
     if( record_type != u'ptr' ):
       if( target.endswith('.') ):
         raise errors.InvalidInputError('"." not allowed as terminator in '
-                                 'non-ptr target.')
+                                       'non-ptr target.')
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.db_instance.ValidateRecordArgsDict(record_type, record_args_dict)
     if( view_name is None or view_name == u'any'):
@@ -2144,7 +2497,7 @@ class Core(object):
         records_dict['record_last_user'] = self.user_instance.GetUserName()
 
         for record in current_records:
-          for arg in record_args_dict.keys():
+          for arg in record_args_dict:
             if( arg not in record ):
               break
             if( record_args_dict[arg] != record[arg] ):
@@ -2154,12 +2507,12 @@ class Core(object):
 
         records_dict['record_type'] = record_type
         record_id = self.db_instance.MakeRow('records', records_dict)
-        for k in record_args_dict.keys():
+        for arg_name in record_args_dict:
           record_argument_assignments_dict = {
              'record_arguments_records_assignments_record_id': record_id,
              'record_arguments_records_assignments_type': record_type,
-             'record_arguments_records_assignments_argument_name': k,
-             'argument_value': unicode(record_args_dict[k])}
+             'record_arguments_records_assignments_argument_name': arg_name,
+             'argument_value': unicode(record_args_dict[arg_name])}
           self.db_instance.MakeRow('record_arguments_records_assignments',
                                    record_argument_assignments_dict)
         if( record_type in constants.RECORD_TYPES_INDEXED_BY_IP ):
@@ -2329,7 +2682,7 @@ class Core(object):
         update_records_dict['record_ttl'] = update_ttl
 
         for record in current_records:
-          for arg in update_record_args_dict.keys():
+          for arg in update_record_args_dict:
             if( record[arg] is None ):
               continue
             if( update_record_args_dict[arg] != record[arg] ):

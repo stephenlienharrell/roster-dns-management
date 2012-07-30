@@ -61,15 +61,9 @@ ACCESS_LEVELS = {'dns_admin': 128,
                  'user': 32,
                  'noop': 0}
 
-# Valid group permissions for forward or reverse perms in the database.
-GROUP_PERMISSIONS = ['rw', 'r']
-
 # This is a list of tables that are not audit logged when changes are made.
 # it is important not to overwrite these tables when doing a partial replay
 TABLES_NOT_AUDIT_LOGGED = ['audit_log', 'locks']
-
-# This is a list of ronly ecord types that can be modified by user level.
-USER_LEVEL_RECORDS = ['a', 'aaaa', 'ptr', 'cname']
 
 # This is a list of record types that can be indexed by IP address.
 RECORD_TYPES_INDEXED_BY_IP = ['ptr', 'a', 'aaaa']
@@ -145,7 +139,7 @@ SUPPORTED_METHODS = {
 
     'ListViews':    {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['user']},
 
     'GetViewsByUser':
                     {'check': False,
@@ -294,7 +288,7 @@ SUPPORTED_METHODS = {
     'ListReverseRangeZoneAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['user']},
 
     'MakeReverseRangeZoneAssignment':
                     {'check': False,
@@ -309,7 +303,12 @@ SUPPORTED_METHODS = {
     'ListForwardZonePermissions':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['user']},
+
+    'UpdateGroupForwardPermission':
+                    {'check': False,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
 
     'MakeForwardZonePermission':
                     {'check': False,
@@ -324,7 +323,12 @@ SUPPORTED_METHODS = {
     'ListReverseRangePermissions':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['user']},
+
+    'UpdateGroupReversePermission':
+                    {'check': False,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
 
     'MakeReverseRangePermission':
                     {'check': False,
@@ -348,7 +352,7 @@ SUPPORTED_METHODS = {
 
     'ListZones':    {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['user']},
 
     'MakeZone':     {'check': False,
                      'write': True,
@@ -551,14 +555,22 @@ TABLES = {
          'user_group_assignments_user_name': 'UnicodeString'},
 
     'forward_zone_permissions':
-        {'forward_zone_permissions_group_name': 'UnicodeString',
-         'forward_zone_permissions_zone_name': 'UnicodeString',
-         'forward_zone_permissions_group_permission': 'GroupPermission'},
+        {'forward_zone_permissions_id': 'UnsignedInt',
+         'forward_zone_permissions_group_name': 'UnicodeString',
+         'forward_zone_permissions_zone_name': 'UnicodeString'},
+
+    'group_forward_permissions':
+        {'group_forward_permissions_forward_zone_permissions_id': 'UnsignedInt',
+         'group_forward_permissions_group_permission': 'GroupPermission'},
 
     'reverse_range_permissions':
-        {'reverse_range_permissions_group_name': 'UnicodeString',
-         'reverse_range_permissions_cidr_block': 'CIDRBlock',
-          'reverse_range_permissions_group_permission': 'GroupPermission'},
+        {'reverse_range_permissions_id': 'UnsignedInt',
+         'reverse_range_permissions_group_name': 'UnicodeString',
+         'reverse_range_permissions_cidr_block': 'CIDRBlock'},
+
+    'group_reverse_permissions':
+        {'group_reverse_permissions_reverse_range_permissions_id': 'UnsignedInt',
+         'group_reverse_permissions_group_permission': 'GroupPermission'},
 
     'reverse_range_zone_assignments':
         {'reverse_range_zone_assignments_zone_name': 'UnicodeString',

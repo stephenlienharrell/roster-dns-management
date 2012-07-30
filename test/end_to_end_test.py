@@ -164,6 +164,8 @@ class TestComplete(unittest.TestCase):
       shutil.rmtree('%s/named' % self.named_dir)
     if( os.path.exists('%s/named.conf' % self.named_dir) ):
       os.remove('%s/named.conf' % self.named_dir)
+    if( os.path.exists('./temp_dir') ):
+      shutil.rmtree('./temp_dir')
 
   def testEndToEnd(self):
     ## Bootstraps
@@ -1531,28 +1533,30 @@ class TestComplete(unittest.TestCase):
         'sharrell         128\n\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup forward -z test_zone -g test_group --group-permission rw
+    ## dnsmkusergroup forward -z test_zone -g test_group
+    ## --group-permission=a,aaaa
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'forward -z test_zone -g test_group --group-permission rw '
+        'forward -z test_zone -g test_group --group-permission=a,aaaa '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED FORWARD_ZONE_PERMISSION: zone_name: test_zone '
-        'group: test_group group_permission: rw\n')
+        'ADDED FORWARD_ZONE_PERMISSION: zone_name: test_zone group: '
+        'test_group group_permission: [\'a\', \'aaaa\']\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group --group-permission rw
+    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group 
+    ## --group-permission=ptr,cname
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'reverse -b 168.192.2.0/24 -g test_group --group-permission rw '
+        'reverse -b 168.192.2.0/24 -g test_group --group-permission=ptr,cname '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED REVERSE_RANGE_PERMISSION: cidr_block: 168.192.2.0/24 '
-        'group: test_group group_permission: rw\n')
+        'group: test_group group_permission: [\'ptr\', \'cname\']\n')
     command.close()
     ## User tool: dnsmkusergroup
     ## dnsmkusergroup group -g test_group2
@@ -1588,28 +1592,30 @@ class TestComplete(unittest.TestCase):
         'ADDED USER_GROUP_ASSIGNMENT: username: test_user2 group: test_group2\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup forward -z test_zone -g test_group2 --group-permission rw
+    ## dnsmkusergroup forward -z test_zone -g test_group2
+    ## --group-permission=a,aaaa
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'forward -z test_zone -g test_group2 --group-permission rw '
+        'forward -z test_zone -g test_group2 --group-permission=a,aaaa '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED FORWARD_ZONE_PERMISSION: zone_name: test_zone '
-        'group: test_group2 group_permission: rw\n')
+        'group: test_group2 group_permission: [\'a\', \'aaaa\']\n')
     command.close()
     ## User tool: dnsmkusergroup
-    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group --group-permission rw
+    ## dnsmkusergroup reverse -b 168.192.0.0/24 -g test_group 
+    ## --group-permission=ptr,cname
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkusergroup '
-        'reverse -b 168.192.2.0/24 -g test_group2 --group-permission rw '
+        'reverse -b 168.192.2.0/24 -g test_group2 --group-permission=ptr,cname '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED REVERSE_RANGE_PERMISSION: cidr_block: 168.192.2.0/24 '
-        'group: test_group2 group_permission: rw\n')
+        'group: test_group2 group_permission: [\'ptr\', \'cname\']\n')
     command.close()
     ## User tool: dnslsusergroup
     ## dnslsusergroup user
@@ -1630,28 +1636,29 @@ class TestComplete(unittest.TestCase):
     command.close()
     ## User tool: dnsrmusergroup
     ## dnsrmusergroup user reverse -b 192.168.2.0/24
-    ## -g test_group2 --group-permission rw
+    ## -g test_group2 --group-permission=ptr,cname
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmusergroup '
-        'reverse -b 192.168.2.0/24 -g test_group2 --group-permission rw '
+        'reverse -b 192.168.2.0/24 -g test_group2 --group-permission=ptr,cname '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.2.0/24 '
-        'group: test_group2 group_permission: rw\n')
+        "group: test_group2 group_permission: ['ptr', 'cname']\n")
     command.close()
     ## User tool: dnsrmusergroup
-    ## dnsrmusergroup forward -z test_zone -g test_group2 --group-permission rw
+    ## dnsrmusergroup forward -z test_zone -g test_group2
+    ## --group-permission=a,aaaa
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmusergroup '
-        'forward -z test_zone -g test_group2 --group-permission rw '
+        'forward -z test_zone -g test_group2 --group-permission=a,aaaa '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'REMOVED FORWARD_ZONE_PERMISSION: zone_name: test_zone '
-        'group: test_group2 group_permission: rw\n')
+        "group: test_group2 group_permission: ['a', 'aaaa']\n")
     command.close()
     ## User tool: dnsrmusergroup
     ## dnsrmusergroup assignment -n test_user2 -g test_group2
@@ -1768,20 +1775,19 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'group      zone_name group_permission\n'
         '-------------------------------------\n'
-        'test_group test_zone rw\n\n')
+        'test_group test_zone [\'a\', \'aaaa\']\n\n')
     command.close()
     ## dnslsusergroup reverse -b 192.168.2.0/24 -g test_group
-    ## --group-permission rw
     command_string = (
         'python ../roster-user-tools/scripts/dnslsusergroup '
-        'reverse -b 168.192.2.0/24 -g test_group --group-permission rw '
+        'reverse -b 168.192.2.0/24 -g test_group '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'group      cidr_block     group_permission\n'
         '------------------------------------------\n'
-        'test_group 168.192.2.0/24 rw\n\n')
+        'test_group 168.192.2.0/24 [\'ptr\', \'cname\']\n\n')
     command.close()
 
     #dnscredential
@@ -1988,7 +1994,6 @@ class TestComplete(unittest.TestCase):
         'machine1 3600 a           any       shuey     test_zone3 192.168.2.1\n'
         'machine2 3600 a           any       shuey     test_zone3 192.168.2.2\n\n')
     command.close()
-
     ## User tool: dnsmkrecord
     ## dnsmkrecord aaaa --assignment-ip ::ffff:168.192.2.0 -t machine2 -z test_zone3
     command_string = (
@@ -2485,7 +2490,6 @@ class TestComplete(unittest.TestCase):
         '------------------------------------------------------------------------\n'
         '@      ns.university.edu. 3600 ns          any       shuey     test_zone3\n\n')
     command.close()
-
     ## User tool: dnsmkrecord
     ## dnsmkrecord mx --mail-server "university.edu." --priority 5 -t machine2 -z test_zone
     command_string = (
@@ -2969,7 +2973,6 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'Maintenance mode is OFF\n')
     command.close()
-
     ## dnstreeexport -f --config-file ./completeconfig.conf
     os.system('rm -rf temp_dir')
     command_string = (
@@ -3060,26 +3063,25 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         '')
     command.close()
-    os.rename('%s/full_database_dump-141.bz2' % self.backup_dir,'%s/origdb.bz2' % self.backup_dir)
-    dbdump = glob.glob('%s/*-141.*' % self.backup_dir)
+    os.rename('%s/full_database_dump-143.bz2' % (self.backup_dir),                            '%s/origdb.bz2' % self.backup_dir)
+    dbdump = glob.glob('%s/*-143.*' % self.backup_dir)
     for db in dbdump:
       if( os.path.exists(db) ):
         os.remove(db)
-
     ## dnsrecover
     command_string = (
         'python ../roster-config-manager/scripts/dnsrecover '
         ' -i %s '
-        '-u %s --config-file %s ' % (141,
+        '-u %s --config-file %s ' % (143,
             USERNAME, self.userconfig))
     command = os.popen(command_string)
-
+    time.sleep(10)
     self.assertEqual(command.read(),
-        'Loading database from backup with ID 138\n'
-        'Replaying action with id 139: MakeZone\n'
+        'Loading database from backup with ID 140\n'
+        'Replaying action with id 141: MakeZone\n'
         'with arguments: [u\'sub.university.edu\', '
         'u\'master\', u\'sub.university.edu.\', u\'test_view\', None, True]\n'
-        'Replaying action with id 140: ProcessRecordsBatch\n'
+        'Replaying action with id 142: ProcessRecordsBatch\n'
         'with arguments: [[], [{u\'record_arguments\': '
         '{u\'refresh_seconds\': 10800L, u\'expiry_seconds\': '
         '3600000L, u\'name_server\': u\'ns.university.lcl.\', '
@@ -3163,9 +3165,7 @@ class TestComplete(unittest.TestCase):
         'u\'ttl\': 3600L, u\'record_target\': u\'mail2\', '
         'u\'record_zone_name\': u\'sub.university.edu\', '
         'u\'record_view_dependency\': u\'test_view\'}], True]\n')
-      
     command.close()
-
     ## dnstreeexport -f --config-file ./completeconfig.conf
     command_string = (
         'python ../roster-config-manager/scripts/dnstreeexport '
@@ -3183,8 +3183,9 @@ class TestComplete(unittest.TestCase):
         '[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}',
         ' ', origdump)
     origdb.close()
-
-    newdb = bz2.BZ2File('%s/full_database_dump-144.bz2' % self.backup_dir)
+    os.remove('%s/origdb.bz2' % self.backup_dir)
+    
+    newdb = bz2.BZ2File('%s/full_database_dump-146.bz2' % self.backup_dir)
     newdump = newdb.read()
     newdump = re.sub(
         '[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}',
@@ -3194,7 +3195,7 @@ class TestComplete(unittest.TestCase):
     for line in newdump.split('\n'):
       if( line.startswith('INSERT INTO audit_log') ):
         number = int(line.split()[5].strip('(').strip(',').strip())
-        if( number < 141 ):
+        if( number < 143 ):
           newdump_list.append(line)
       else:
         newdump_list.append(line)

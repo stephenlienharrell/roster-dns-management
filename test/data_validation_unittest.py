@@ -47,8 +47,9 @@ class TestDataValidation(unittest.TestCase):
 
   def setUp(self):
     reserved_words = ['blue']
+    group_permissions = [u'a', u'aaaa', u'cname', u'ns', u'ptr', u'soa', u'srv']
     self.data_validation_instance = data_validation.DataValidation(
-        reserved_words)
+        reserved_words, group_permissions)
 
   def testisUnicodeString255(self):
     self.assertFalse(self.data_validation_instance.isUnicodeString255(
@@ -248,6 +249,23 @@ class TestDataValidation(unittest.TestCase):
     self.assertFalse(
         self.data_validation_instance.isHostname(hostname_component_too_long))
 
+  def testIsGroupPermission(self):
+    self.assertTrue(self.data_validation_instance.isGroupPermission(u'a'))
+    self.assertTrue(self.data_validation_instance.isGroupPermission(u'soa'))
+    self.assertTrue(self.data_validation_instance.isGroupPermission(u'ptr'))
+
+    self.assertFalse(self.data_validation_instance.isGroupPermission(u'x'))
+    self.assertFalse(self.data_validation_instance.isGroupPermission(u'123'))
+    self.assertFalse(self.data_validation_instance.isGroupPermission(u'bbbb'))
+
+    self.assertTrue(self.data_validation_instance.isGroupPermission(u'srv'))
+    self.assertTrue(self.data_validation_instance.isGroupPermission(u'ns'))
+    self.assertTrue(self.data_validation_instance.isGroupPermission(u'aaaa'))
+
+    self.assertFalse(self.data_validation_instance.isGroupPermission(u'r'))
+    self.assertFalse(self.data_validation_instance.isGroupPermission(u'128'))
+    self.assertFalse(self.data_validation_instance.isGroupPermission(u'deny'))
+
   def testIsDateTime(self):
     self.assertTrue(self.data_validation_instance.isDateTime(
                         datetime.datetime.now()))
@@ -305,7 +323,7 @@ class TestDataValidation(unittest.TestCase):
       for v in row_dict.values():
         if( not v in data_types ):
           data_types.append(v)
-    data_validation_methods = dir(data_validation.DataValidation([])) 
+    data_validation_methods = dir(data_validation.DataValidation([], [])) 
 
     for data_type in data_types:
       # This means youa are missing a method in data_validation or 
