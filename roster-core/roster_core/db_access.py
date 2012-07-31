@@ -333,7 +333,11 @@ class dbAccess(object):
     try:
       if( self.db_debug ):
         if( self.db_debug_log ):
-          debug_log_handle = open(self.db_debug_log, 'a')
+          #If the execution_string contains a unicode character we must account
+          #for it. So we need to use the codecs package to write to a utf-8 log
+          #file, instead of ASCII like the 'normal' open() results in.
+          debug_log_handle = codecs.open(self.db_debug_log, encoding='utf-8',
+              mode='a')
           debug_log_handle.write('SELECT reserved_word FROM reserved_words')
           debug_log_handle.write('\n')
           debug_log_handle.close()
@@ -342,8 +346,15 @@ class dbAccess(object):
       cursor.execute('SELECT reserved_word FROM reserved_words')
       reserved_words_rows = cursor.fetchall()
 
-      if( DEBUG == True ):
-        print 'SELECT record_type FROM record_types'
+      if( self.db_debug ):
+        if( self.db_debug_log ):
+          debug_log_handle = codecs.open(self.db_debug_log, encoding='utf-8',
+              mode='a')
+          debug_log_handle.write('SELECT record_type FROM record_types')
+          debug_log_handle.write('\n')
+          debug_log_handle.close()
+        else:
+          print 'SELECT record_type FROM record_types'
       cursor.execute('SELECT record_type FROM record_types')
       record_types_rows = cursor.fetchall()
     finally:
