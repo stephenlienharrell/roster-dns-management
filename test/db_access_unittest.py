@@ -500,6 +500,22 @@ class TestdbAccess(unittest.TestCase):
     self.assertRaises(errors.InvalidInputError,
                       self.db_instance.GetRecordArgsDict, u'not_a_record_type')
 
+  def testDebugLogFile(self):
+    self.db_instance.db_debug = True
+    self.db_instance.db_debug_log = 'test_data/db_access_unittest_logfile.txt'
+    self.db_instance.GetRecordArgsDict(u'mx')
+    self.db_instance.db_debug = False
+
+    log_file_handle = open('test_data/db_access_unittest_logfile.txt', 'r')
+    log_file_read = log_file_handle.read()
+    log_file_handle.close()
+    os.system('rm -f test_data/db_access_unittest_logfile.txt')
+    self.assertEquals(log_file_read, 
+        'DO 0\n'
+        'SELECT `locked`, `lock_last_updated`, NOW() as `now` from `locks` WHERE `lock_name`="db_lock_lock"\n'
+        'SELECT reserved_word FROM reserved_words\n'
+        'SELECT record_arguments.record_arguments_type,record_arguments.argument_name,record_arguments.argument_data_type,record_arguments.argument_order FROM record_arguments WHERE record_arguments_type=mx\n')
+
   def testValidateRecordArgsDict(self):
     record_args_dict = self.db_instance.GetEmptyRecordArgsDict(u'mx')
     self.assertRaises(errors.UnexpectedDataError,

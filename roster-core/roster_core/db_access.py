@@ -82,10 +82,7 @@ import data_validation
 import embedded_files
 import errors
 import helpers_lib
-
-
-DEBUG = False
-
+import codecs
 
 class dbAccess(object):
   """This class provides the primary interface for connecting and interacting
@@ -94,7 +91,8 @@ class dbAccess(object):
 
   def __init__(self, db_host, db_user, db_passwd, db_name, big_lock_timeout,
                big_lock_wait, thread_safe=True, ssl=False, ssl_ca=None,
-               ssl_cert=None, ssl_key=None, ssl_capath=None, ssl_cipher=None):
+               ssl_cert=None, ssl_key=None, ssl_capath=None, ssl_cipher=None,
+               db_debug=False, db_debug_log=None):
     """Instantiates the db_access class.
 
     Inputs:
@@ -117,6 +115,8 @@ class dbAccess(object):
     self.ssl = ssl
     self.ssl_ca = ssl_ca
     self.ssl_settings = {}
+    self.db_debug = db_debug
+    self.db_debug_log = db_debug_log
     if( self.ssl ):
       if( self.ssl_ca ):
         self.ssl_settings['ca'] = ssl_ca
@@ -153,8 +153,18 @@ class dbAccess(object):
       execution_string: mysql command string
       values: dictionary of values for mysql command
     """
-    if( DEBUG == True ):
-      print execution_string % values
+    if( self.db_debug ):
+      if( self.db_debug_log ):
+        #If the execution_string contains a unicode character we must account
+        #for it. So we need to use the codecs package to write to a utf-8 log
+        #file, instead of ASCII like the 'normal' open() results in.
+        debug_log_handle = codecs.open(self.db_debug_log, encoding='utf-8', 
+            mode='a')
+        debug_log_handle.write(execution_string % values)
+        debug_log_handle.write('\n')
+        debug_log_handle.close()
+      else:
+        print execution_string % values
     try:
       self.cursor.execute(execution_string, values)
     except MySQLdb.ProgrammingError:
@@ -321,8 +331,14 @@ class dbAccess(object):
     """
     cursor = self.connection.cursor()
     try:
-      if( DEBUG == True ):
-        print 'SELECT reserved_word FROM reserved_words'
+      if( self.db_debug ):
+        if( self.db_debug_log ):
+          debug_log_handle = open(self.db_debug_log, 'a')
+          debug_log_handle.write('SELECT reserved_word FROM reserved_words')
+          debug_log_handle.write('\n')
+          debug_log_handle.close()
+        else:
+          print 'SELECT reserved_word FROM reserved_words'
       cursor.execute('SELECT reserved_word FROM reserved_words')
       reserved_words_rows = cursor.fetchall()
 
