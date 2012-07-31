@@ -1980,7 +1980,7 @@ class Core(object):
     try:
       self.db_instance.StartTransaction()
       try:
-        group_forward_permission_rows = []
+        group_forward_permissions_rows = []
         forward_zone_permissions_rows = self.db_instance.ListRow(
             'forward_zone_permissions', forward_zone_permissions_dict)
         if( len(forward_zone_permissions_rows) == 0 ):

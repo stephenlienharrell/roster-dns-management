@@ -510,12 +510,13 @@ class TestdbAccess(unittest.TestCase):
     log_file_read = log_file_handle.read()
     log_file_handle.close()
     os.system('rm -f test_data/db_access_unittest_logfile.txt')
-    self.assertEquals(log_file_read, 
+    self.assertEquals(log_file_read,
         'DO 0\n'
         'SELECT `locked`, `lock_last_updated`, NOW() as `now` from `locks` WHERE `lock_name`="db_lock_lock"\n'
         'SELECT reserved_word FROM reserved_words\n'
+        'SELECT record_type FROM record_types\n'
         'SELECT record_arguments.record_arguments_type,record_arguments.argument_name,record_arguments.argument_data_type,record_arguments.argument_order FROM record_arguments WHERE record_arguments_type=mx\n')
-
+     
   def testValidateRecordArgsDict(self):
     record_args_dict = self.db_instance.GetEmptyRecordArgsDict(u'mx')
     self.assertRaises(errors.UnexpectedDataError,

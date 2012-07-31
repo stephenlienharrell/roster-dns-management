@@ -145,6 +145,12 @@ def main(args):
   parser.add_option('--server-host', action='store', dest='host',
                     help='Host server will start with.',
                     default='localhost')
+  parser.add_option('--db_debug', action='store', dest='db_debug',
+                    help='Print MySQL commands to stdout or a file',
+                    default='off')
+  parser.add_option('--db_debug_log', action='store', dest='db_debug_log',
+                    help='Log file to send MySQL commands to, if blank, stdout '
+                    'is used.', default='')
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -253,6 +259,8 @@ def main(args):
     config_parser.set('database', 'big_lock_wait', options.big_lock_wait)
     config_parser.set('database', 'ssl', 'on' if options.db_ssl else 'off')
     config_parser.set('database', 'ssl_ca', options.db_ssl_ca)
+    config_parser.set('database', 'db_debug', options.db_debug)
+    config_parser.set('database', 'db_debug_log', options.db_debug_log)
 
     config_parser.add_section('exporter')
     config_parser.set('exporter', 'backup_dir', options.backup_dir)
