@@ -819,7 +819,7 @@ class TestComplete(unittest.TestCase):
     ## dnsmkview dns_server_set -v test_view -e set1
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view -e set1 --allow '
+        'dns_server_set -v test_view -e set1 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -853,7 +853,7 @@ class TestComplete(unittest.TestCase):
     ## dnsmkview dns_server_set -v test_view2 -e set1
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view2 -e set1 --allow '
+        'dns_server_set -v test_view2 -e set1 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -864,7 +864,7 @@ class TestComplete(unittest.TestCase):
     ## dnsmkview dns_server_set -v test_view2 -e set2
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view2 -e set2 --allow '
+        'dns_server_set -v test_view2 -e set2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -875,7 +875,7 @@ class TestComplete(unittest.TestCase):
     ## dnsmkview dns_server_set -v test_view2 -e set3
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view2 -e set3 --allow '
+        'dns_server_set -v test_view2 -e set3 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -898,7 +898,7 @@ class TestComplete(unittest.TestCase):
     ## dnsmkview dns_server_set -v test_view3 -e set3
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view3 -e set3 --allow '
+        'dns_server_set -v test_view3 -e set3 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1070,7 +1070,7 @@ class TestComplete(unittest.TestCase):
     ## dnsmkview view_subset -v test_view4 -V test_view
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'view_subset -V test_subview -v test_view --allow '
+        'view_subset -V test_subview -v test_view '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1208,7 +1208,7 @@ class TestComplete(unittest.TestCase):
     ## dnsmkview dns_server_set -v test_view2 -e set1 
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view2 -e set1 --allow '
+        'dns_server_set -v test_view2 -e set1 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1232,7 +1232,7 @@ class TestComplete(unittest.TestCase):
     ## dnsmkview dns_server_set -v test_view -e set1
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view -e set3 --allow '
+        'dns_server_set -v test_view -e set3 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)

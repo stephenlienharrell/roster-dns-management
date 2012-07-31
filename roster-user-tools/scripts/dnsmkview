@@ -65,14 +65,15 @@ def main(args):
            '\n'
            'To make dns server set view assignments:\n'
            '\t%s dns_server_set -v <view-name> \n'
-           '\t-e <dns-server-set> [--allow/--deny]\n'
+           '\t-e <dns-server-set>\n'
            '\n'
            'To make acl view assignments:\n'
-           '\t%s acl -v <view-name> -a <acl-name> [--allow/--deny]\n'
+           '\t%s acl -v <view-name> -a <acl-name> '
+           '[--allow/--deny]\n'
            '\n'
            'To make view assignments:\n'
            '\t%s view_subset -v <view-superset-name>\n'
-           '\t-V <view-subset-name> [--allow/--deny]\n' % tuple(
+           '\t-V <view-subset-name>\n' % tuple(
                [sys.argv[0] for _ in range(4)]))
 
   args_instance = Args(command,

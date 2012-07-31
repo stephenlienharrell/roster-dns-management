@@ -157,7 +157,7 @@ class Testdnsmkview(unittest.TestCase):
 
   def testMakeViewAssignment(self):
     command = os.popen('python %s view_subset -v test_view -V test_view2 '
-                       '-u %s -p %s --config-file %s -s %s --allow' % (
+                       '-u %s -p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
@@ -166,7 +166,7 @@ class Testdnsmkview(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeView(u'test_view2')
     command = os.popen('python %s view_subset -v test_view -V test_view2 '
-                       '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
@@ -178,13 +178,7 @@ class Testdnsmkview(unittest.TestCase):
     self.core_instance.MakeACL(u'outside', u'192.168.1.0/24')
     self.core_instance.MakeDnsServerSet(u'set2')
     command = os.popen('python %s dns_server_set -v test_view -e set2 '
-                       '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
-                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
-                           self.server_name))
-    self.assertEqual(command.read(),
-                     'CLIENT ERROR: View "test_view" does not exist.\n')
-    command = os.popen('python %s dns_server_set -v test_view -e set2 '
-                       '-c %s -u %s -p %s --config-file %s -s %s --deny' % (
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
@@ -194,11 +188,10 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-                     'CLIENT ERROR: Either --allow or --deny must be used.\n')
-    command.close()
+                     'CLIENT ERROR: View "test_view" does not exist.\n')
     self.core_instance.MakeView(u'test_view')
     command = os.popen('python %s dns_server_set -v test_view -e set1 '
-                       '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
@@ -207,7 +200,7 @@ class Testdnsmkview(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set1')
     command = os.popen('python %s dns_server_set -v test_view -e set1 '
                        '-c %s -u %s -p %s '
-                       '--config-file %s -s %s --allow' % (
+                       '--config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),

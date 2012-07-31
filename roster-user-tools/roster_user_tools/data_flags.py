@@ -292,7 +292,9 @@ class View(core_flags.CoreFlags):
     self.parser.add_option('--deny', action='store_true', dest='deny',
                            help='Deny ACL in view.', default=None)
     self.AddFlagRule(('allow', 'deny'), required=self.action=='Make',
-                     flag_type='independent_args')
+                     flag_type='independent_args', command='view')
+    self.AddFlagRule(('allow', 'deny'), required=self.action=='Make',
+                     flag_type='independent_args', command='acl')
     if( self.action != 'Remove' ):
       self.AddFlagRule('acl', required=not_list, command='view')
     self.AddFlagRule('acl', required=not_list, command='acl')
