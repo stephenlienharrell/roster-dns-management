@@ -131,10 +131,16 @@ class User(object):
                                           record_data['record_type'])
 
       user_group_perms = []
+      record_target = record_data['target']
 
-      ip_address = helpers_lib.UnReverseIP('%s.%s' % (
-          record_data['target'],
-          self.zone_origin_cache[record_data['zone_name']]))
+      if( record_target == u'@' ):
+        ip_address = helpers_lib.UnReverseIP(
+            self.zone_origin_cache[record_data['zone_name']])
+      else:
+        ip_address = helpers_lib.UnReverseIP('%s.%s' % (
+            record_target,
+            self.zone_origin_cache[record_data['zone_name']]))
+      print 'ip_address: %s' % ip_address
       
       #Looking for permissions in the forward zones
       for zone in self.user_perms['forward_zones']:
