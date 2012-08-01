@@ -124,7 +124,7 @@ class Config(object):
       kwargs['ssl'] = True
       kwargs['ssl_ca'] = self.config_file['database']['ssl_ca']
     if( self.config_file['database']['db_debug'] ):
-      kwargs['db_debug'] = self.config_file['database']['db)debug']
+      kwargs['db_debug'] = self.config_file['database']['db_debug']
       kwargs['db_debug_log'] = self.config_file['database']['db_debug_log']
     
     return db_access.dbAccess(*args, **kwargs)
