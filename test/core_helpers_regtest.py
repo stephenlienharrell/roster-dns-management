@@ -1326,6 +1326,8 @@ class TestCoreHelpers(unittest.TestCase):
         '0.168.192.in-addr.arpa.'), '192.168.0/24')
     self.assertEqual(self.core_helper_instance.UnReverseIP(
         '168.192.in-addr.arpa.'), '192.168/16')
+    self.assertEqual(self.core_helper_instance.UnReverseIP(
+        '8.0.e.f.f.3.ip6.arpa.'), '3ffe:08::/24')
 
   def testReverseIP(self):
     self.assertEqual(self.core_helper_instance.ReverseIP(

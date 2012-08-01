@@ -165,16 +165,28 @@ def UnReverseIP(ip_address):
     elif( octets < 4 ):
       new_ip = '%s/%s' % (new_ip, octets * 8)
   elif( ip_address.endswith('ip6.arpa.') ):
-    ip_array = ip_address.split('.')[:-3]
-    ip_parts = []
-    while len(ip_array):
-      ip_parts.append('%s%s%s%s' % (ip_array.pop(), ip_array.pop(),
-                                    ip_array.pop(), ip_array.pop()))
+    if( len(ip_address.split('.')[:-3]) == 32 ):
+      ip_array = ip_address.split('.')[:-3]
+      ip_parts = []
+      while len(ip_array):
+        ip_parts.append('%s%s%s%s' % (ip_array.pop(), ip_array.pop(),
+                                      ip_array.pop(), ip_array.pop()))
 
-    new_ip = ':'.join(ip_parts)
+      new_ip = ':'.join(ip_parts)
+    else:
+      ip_array = ip_address.split('.')[:-3]
+      ip_parts = []
+      while( len(ip_array) > 3 ): 
+        ip_parts.append('%s%s%s%s' % (ip_array.pop(), ip_array.pop(),
+                                      ip_array.pop(), ip_array.pop()))
+      if( len(ip_array) > 0 ):
+        ip_parts.append('%s' % (''.join(ip_array[::-1])))
+
+      new_ip = ':'.join(ip_parts)
+      new_ip = '%s::/%s' % (new_ip, len(ip_address.split('.')[:-3] * 4))
   else:
     new_ip = ip_address
-  
+ 
   return new_ip
 
 
