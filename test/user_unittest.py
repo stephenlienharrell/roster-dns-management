@@ -113,6 +113,14 @@ class TestUser(unittest.TestCase):
                       'record_args_dict' : { u'mail_server' : u'192.168.0.1' }
                       }
 
+
+    ns_record_data = {'target': u'good',
+                      'zone_name': u'cs.university.edu',
+                      'view_name': u'any',
+                      'record_type': u'ns',
+                      'record_args_dict' : {
+        u'name_server' : u'goodns.example.com'}}
+
     # bad forward zone data
     bad_forward_record_data = {'target': u'good',
                           'zone_name': u'bio.university.edu',
@@ -186,6 +194,7 @@ class TestUser(unittest.TestCase):
     user_instance.Authorize(u'MakeRecord', good_record_data)
     user_instance.Authorize(u'MakeRecord', txt_record_data)
     user_instance.Authorize(u'MakeRecord', mx_record_data)
+    user_instance.Authorize(u'MakeRecord', ns_record_data)
     user_instance.Authorize(u'MakeRecord', bad_reverse_record_data)
 
     # test maintenance mode
@@ -198,12 +207,16 @@ class TestUser(unittest.TestCase):
                       u'MakeRecord', txt_record_data)
     self.assertRaises(errors.AuthorizationError, user_instance.Authorize,
                       u'MakeRecord', mx_record_data)
+    self.assertRaises(errors.AuthorizationError, user_instance.Authorize,
+                      u'MakeRecord', ns_record_data)
 
     self.core_instance.SetMaintenanceFlag(True)
     self.assertRaises(errors.MaintenanceError, user_instance.Authorize,
                       u'MakeRecord', good_record_data)
     self.assertRaises(errors.MaintenanceError, user_instance.Authorize,
                       u'MakeRecord', mx_record_data)
+    self.assertRaises(errors.MaintenanceError, user_instance.Authorize,
+                      u'MakeRecord', ns_record_data)
     self.core_instance.SetMaintenanceFlag(False)
 
     # test missing record_data on certain methods, and make sure it passes

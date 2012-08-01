@@ -102,7 +102,6 @@ class User(object):
 
     Raises:
       MaintenanceError: Roster is currently under maintenance.
-      MissingDataTypeError: No record data provided for access method.
       MissingDataTypeError: Incomplete record data provided for access method.
       AuthorizationError: Authorization failure.
     """
@@ -193,7 +192,7 @@ class User(object):
         if( int(self.user_access_level) <
           constants.ACCESS_LEVELS['unlocked_user'] ):
 
-          #if a or aaaa
+          # if a or aaaa
           if( record_data['record_args_dict'].has_key(u'assignment_ip') ):
             ip = IPy.IP(record_data['record_args_dict'][u'assignment_ip'])
             for reverse_range in self.reverse_ranges:
@@ -202,9 +201,17 @@ class User(object):
             else:
               raise errors.AuthorizationError(auth_fail_string)
 
-          #if cname or ptr
-          elif( record_data['record_args_dict'].has_key(u'assignment_host') ):
-            hostname = record_data['record_args_dict'][u'assignment_host']
+          # if cname, mx, ns, or ptr
+          elif( record_data['record_args_dict'].has_key(u'assignment_host') or
+                record_data['record_args_dict'].has_key(u'mail_server') or
+                record_data['record_args_dict'].has_key(u'name_server') ):
+            hostname = None
+            if( record_data['record_args_dict'].has_key(u'assignment_host') ):
+              hostname = record_data['record_args_dict'][u'assignment_host']
+            elif( record_data['record_args_dict'].has_key(u'mail_server') ):
+              hostname = record_data['record_args_dict'][u'mail_server']
+            elif( record_data['record_args_dict'].has_key(u'name_server') ):
+              hostname = record_data['record_args_dict'][u'name_server']
             smallest_zone = hostname
 
             found = False
@@ -234,11 +241,6 @@ class User(object):
                   break
             else:
               raise errors.AuthorizationError(auth_fail_string)
-
-          else:
-            raise errors.MissingDataTypeError(
-                'Incomplete or invalid record data provided for access '
-                'method %s' % method)
 
         for forward_zone in self.forward_zones:
           if( record_data['zone_name'] == forward_zone['zone_name'] ):
