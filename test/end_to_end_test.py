@@ -1639,7 +1639,7 @@ class TestComplete(unittest.TestCase):
     ## -g test_group2 --group-permission=ptr,cname
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmusergroup '
-        'reverse -b 192.168.2.0/24 -g test_group2 --group-permission=ptr,cname '
+        'reverse -b 192.168.2.0/24 -g test_group2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1652,7 +1652,7 @@ class TestComplete(unittest.TestCase):
     ## --group-permission=a,aaaa
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmusergroup '
-        'forward -z test_zone -g test_group2 --group-permission=a,aaaa '
+        'forward -z test_zone -g test_group2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)

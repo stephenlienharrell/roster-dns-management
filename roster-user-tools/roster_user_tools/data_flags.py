@@ -388,13 +388,15 @@ class Group(core_flags.CoreFlags):
                            help='String of the zone name (optional)',
                            metavar='<zone>', default=None)
     self.AddFlagRule('zone_name', required=not_list, command='forward')
-    self.parser.add_option('--group-permission', action='store',
-                           dest='group_permission',
-                           help='String of comma-separated group permissions, '
-                                'e.g., a,aaaa,cname',
-                           metavar='<group-permission>', default=None)
-    self.AddFlagRule('group_permission', required=not_list, command='forward')
-    self.AddFlagRule('group_permission', required=not_list, command='reverse')
+    spouse_classes = [base.__name__ for base in self.__class__.__bases__]
+    if( 'Remove' not in spouse_classes ):
+      self.parser.add_option('--group-permission', action='store',
+                             dest='group_permission',
+                             help='String of comma-separated group permissions, '
+                                  'e.g., a,aaaa,cname',
+                             metavar='<group-permission>', default=None)
+      self.AddFlagRule('group_permission', required=not_list, command='forward')
+      self.AddFlagRule('group_permission', required=not_list, command='reverse')
     self.parser.add_option('-b', '--cidr-block', action='store',
                            dest='cidr_block', help='String of CIDR block.',
                            metavar='<cidr-block>', default=None)

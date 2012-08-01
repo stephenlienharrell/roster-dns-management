@@ -189,7 +189,6 @@ class Testdnsrmusergroup(unittest.TestCase):
                                                  [u'a', u'aaaa', u'cname',
                                                   u'ns'])
     output = os.popen('python %s forward -z test_zone -g testgroup '
-                      '--group-permission a,aaaa,cname,ns '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
@@ -209,10 +208,24 @@ class Testdnsrmusergroup(unittest.TestCase):
                                                       u'cname']}]})
 
   def testRemoveReverseRangeAssignment(self):
-    self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
     self.core_instance.MakeGroup(u'testgroup')
+    self.core_instance.MakeReverseRangePermission('192.168.1.4/30', u'testgroup',
+                                                 [u'cname', u'ptr', u'soa'])
+
+    self.assertEqual(self.core_instance.ListReverseRangePermissions(),
+                     {u'cs': [{'cidr_block': u'192.168.0.0/24',
+                               'group_permission': [u'cname', u'ns', u'ptr',
+                                                    u'soa']}],
+                      u'bio': [{'cidr_block': u'192.168.0.0/24',
+                                'group_permission': [u'cname', u'ptr']},
+                               {'cidr_block': u'192.168.1.0/24',
+                                'group_permission': [u'ptr']}],
+                      u'testgroup': [{'cidr_block': u'192.168.1.4/30',
+                                      'group_permission': [u'cname', 
+                                                           u'ptr', 
+                                                           u'soa']}]})
     output = os.popen('python %s reverse -g testgroup '
-                      '-b 192.168.1.4/30 --group-permission cname,ptr,soa '
+                      '-b 192.168.1.4/30 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
@@ -231,29 +244,41 @@ class Testdnsrmusergroup(unittest.TestCase):
                                 'group_permission': [u'ptr']}]})
 
   def testRemoveZoneAssignments(self):
-    self.core_instance.MakeGroup(u'test_group')
-    self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
+    self.core_instance.MakeGroup(u'testgroup')
+    self.core_instance.MakeReverseRangePermission('192.168.1.4/30', u'testgroup',
+                                                 [u'cname', u'ptr', u'soa'])
+
+    self.assertEqual(self.core_instance.ListReverseRangePermissions(),
+                     {u'cs': [{'cidr_block': u'192.168.0.0/24',
+                               'group_permission': [u'cname', u'ns', u'ptr',
+                                                    u'soa']}],
+                      u'bio': [{'cidr_block': u'192.168.0.0/24',
+                                'group_permission': [u'cname', u'ptr']},
+                               {'cidr_block': u'192.168.1.0/24',
+                                'group_permission': [u'ptr']}],
+                      u'testgroup': [{'cidr_block': u'192.168.1.4/30',
+                                      'group_permission': [u'cname', 
+                                                           u'ptr', 
+                                                           u'soa']}]})
     output = os.popen('python %s reverse -b 192.168.1.0/24 '
-                      '-g test_group --group-permission cname,ns,ptr,soa '
+                      '-g testgroup '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(
         output.read(),
         'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.1.0/24 '
-        'group: test_group group_permission: [\'cname\', \'ns\', \'ptr\', '
-                                              '\'soa\']\n')
+        'group: testgroup group_permission: [\'cname\', \'ptr\', \'soa\']\n')
     output.close()
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
-                     {u'bio':
-                          [{'cidr_block': u'192.168.0.0/24',
-                            'group_permission': [u'cname', u'ptr']},
-                           {'cidr_block': u'192.168.1.0/24',
-                            'group_permission': [u'ptr']}],
-                      u'cs':
-                          [{'cidr_block': u'192.168.0.0/24',
-                            'group_permission': [u'cname', u'ns', u'ptr',
-                                                 u'soa']}]})
+        {u'cs': [{'group_permission': [u'cname', u'ns', u'ptr', u'soa'], 
+                  'cidr_block': u'192.168.0.0/24'}], 
+         u'bio': [{'group_permission': [u'cname', u'ptr'], 
+                   'cidr_block': u'192.168.0.0/24'}, 
+                  {'group_permission': [u'ptr'], 
+                   'cidr_block': u'192.168.1.0/24'}], 
+         u'testgroup': [{'group_permission': [u'cname', u'ptr', u'soa'], 
+                         'cidr_block': u'192.168.1.4/30'}]})
 
   def testErrors(self):
     output = os.popen('python %s user -n jcollins -g cs '
@@ -278,18 +303,6 @@ class Testdnsrmusergroup(unittest.TestCase):
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'CLIENT ERROR: Group does not exist.\n')
-    output.close()
-    self.core_instance.MakeZone(u'test_zone', u'master', u'here.')
-    self.core_instance.MakeGroup(u'testgroup')
-    output = os.popen('python %s forward '
-                      '-g testgroup -z test_zone --group-permission x '
-                      '-s %s -u %s -p %s --config-file %s' % (
-                          EXEC, self.server_name, USERNAME,
-                          PASSWORD, USER_CONFIG))
-    self.assertEqual(
-        output.read(),
-        'USER ERROR: Invalid data type GroupPermission for '
-        'group_forward_permissions_group_permission: x\n')
     output.close()
 
 if( __name__ == '__main__' ):
