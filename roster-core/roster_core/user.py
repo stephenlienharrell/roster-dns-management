@@ -76,6 +76,16 @@ class User(object):
     self.reverse_ranges = self.user_perms['reverse_ranges']
     self.user_access_level = ual = self.user_perms['user_access_level']
 
+    # Pull zone origins for cache
+    self.db_instance.StartTransaction()
+    try:
+      for zone in self.forward_zones:
+        self.zone_origin_cache[
+            zone['zone_name']] = self.db_instance.GetZoneOrigin(
+                zone['zone_name'], None)
+    finally:
+      self.db_instance.EndTransaction()
+
     # Build a hash of methods, using the supported_method hash
     self.abilities = {}
     for method in constants.SUPPORTED_METHODS.keys():
@@ -219,9 +229,6 @@ class User(object):
               for domain in self.zone_origin_cache:
                 if( self.zone_origin_cache[domain] ):
                   domain = self.zone_origin_cache[domain]
-                else:
-                  raise errors.MissingDataTypeError(
-                        'Zone %s has no zone origin' % domain)
                 if( smallest_zone == domain ):
                   found = True
               if( not found ):
