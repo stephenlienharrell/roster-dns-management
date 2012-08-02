@@ -1,4 +1,26 @@
 Current Release
+- Added functions to do classless reverse delegation
+- Removed redundant authorize on ListNamedConfGlobalOptionsClient
+- Updated SCHEMA_FILE in embeded_files.py so that it works with SQL::Translator
+- Added autogenerating developer documentation when creating a release
+- Fixed bug where a large amount of records added at once was not getting logged
+- Moved allow/deny flag for ACLs to be view specific so when creating opposing views there is no repeated ACL
+- Changed the default opperation of AddFormatedRecords to auto generate SOAs for every zone/view that is associated with the view dependency 'any' if the view 'any' is given in args
+- Fixing bug in ProcessRecordsBatch that previously allowed adding an NS record with as an IP Address instead of a hostname
+- Fixed off by one error in ListAvailableIpsInCIDR
+- Added lengh limits ascii records per RFC 1035
+- Moved punylib.py to the core adn added length checking for RFC 2181
+hostnames
+- Fixed bug in audit logging that could cause a deadlock if a certain error was raised.
+- Fixed a bug in Authorize that was denying correct reverse range requests
+- Removed lock file option in roster_database_boostrap 
+- Added permissions checking for user(32) that limits where records can point to
+- Changed permissions system such that a user(32) can only edit specified
+record types in the zones that they have permissions in
+- Added db_debug flag to the roster server config file which logs every database query when on
+- Fixed problem in Authorize that would fail if the record target was @
+- Fixed problem in UnreverseIP that would fail if an ipv6 reverse was a CIDR
+Block and not a full IP address
 
 2012-05-04 release-0.16
 - Fixed core_helpers functions not getting replayed restore

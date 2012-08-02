@@ -1,4 +1,15 @@
 Current Release
+- Added autogenerating developer documentation when creating a release
+- Removed zone flag from dnsmkusergroup and dnsrmusergroup tools for reverse
+assignments
+- Fixed issue where generated dns cred file was world-readable
+- Added ability to lists hosts by zone in dnslshost
+- Added ID to columns displayed from dnslsauditlog
+- Changed access level flag for dns[mk/rm/ls]usergroup tools to allow string values
+- Fixed error with timestamp parsing in dnsupnamedglobals
+- Fixed error with dnscredentials when trying to make infinite credential
+- Added dnsupusergroup which allows easier permission changes
+- Fixed dnsmkrecord to allow it to create PTR records
 
 2012-05-04 release-0.16
 - Listing zones when no zones are availible no longer raises an error and instead notifies that there are no zones.

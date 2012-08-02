@@ -1,4 +1,5 @@
 Current Release
+- Added autogenerating developer documentation when creating a release
 
 2012-05-04 release-0.16
 - Fixes to the auth_pam module.

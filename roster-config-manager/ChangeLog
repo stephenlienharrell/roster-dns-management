@@ -1,4 +1,7 @@
 Current Release
+- Added autogenerating developer documentation when creating a release
+- Fixed a bug where the zone importer atempts to increment an non-existant SOA serial
+- Added a BIND version check script
 
 2012-05-04 release-0.16
 - Fixed dnsconfigsync and end to end tests
