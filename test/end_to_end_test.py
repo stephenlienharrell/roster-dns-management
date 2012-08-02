@@ -2798,7 +2798,7 @@ class TestComplete(unittest.TestCase):
     output = command.read()
     output = output.splitlines()
     output=output[2].split(' ')
-    self.assertEqual(output[11],'set1')
+    self.assertEqual(output[10],'set1')
     self.assertEqual(output[0],'1')
     command.close()
     ## User tool: dnsupnamedglobals

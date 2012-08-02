@@ -158,7 +158,7 @@ class TestDnsMkHost(unittest.TestCase):
     self.assertEqual(output.read(),
                      'ADDED NAMED_CONF_GLOBAL_OPTION: test_data/test_named\n')
     output.close()
-    timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%dT%H:%M:%S')
     # Print the file list of set1 from the database
     output = os.popen('python %s list -d set1 -t "%s" --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (
@@ -284,7 +284,7 @@ class TestDnsMkHost(unittest.TestCase):
     self.assertEqual(output.read(),
                      'ADDED NAMED_CONF_GLOBAL_OPTION: %s\n' % TEST_FILE)
     output.close()
-    timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%dT%H:%M:%S')
     # Print the file list of set1 from the database
     output = os.popen('python %s list -d set1 -t "%s" --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (

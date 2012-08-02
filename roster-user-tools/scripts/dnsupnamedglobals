@@ -111,7 +111,7 @@ def main(args):
   if( options.timestamp is not None ):
     try:
       timestamp = datetime.datetime.strptime(options.timestamp,
-                                             '%Y-%m-%d %H:%M:%S')
+                                             '%Y-%m-%dT%H:%M:%S')
     except ValueError:
       cli_common_lib.DnsError('Timestamp incorrectly formatted.', 1)
 
@@ -136,7 +136,7 @@ def main(args):
       print_list.append([option['id'],
         datetime.datetime.strptime(option['timestamp'].value,
                                    "%Y%m%dT%H:%M:%S").strftime(
-                                       '%Y-%m-%d %H:%M:%S'),
+                                       '%Y-%m-%dT%H:%M:%S'),
         option['dns_server_set_name']])
     print cli_common_lib.PrintColumns(
         print_list, first_line_header=not options.no_header)
