@@ -1,4 +1,6 @@
 Current Release
+
+2012-08-02 release-0.17
 - Added functions to do classless reverse delegation
 - Removed redundant authorize on ListNamedConfGlobalOptionsClient
 - Updated SCHEMA_FILE in embeded_files.py so that it works with SQL::Translator
