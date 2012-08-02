@@ -3063,8 +3063,9 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         '')
     command.close()
-    os.rename('%s/full_database_dump-143.bz2' % (self.backup_dir),                            '%s/origdb.bz2' % self.backup_dir)
-    dbdump = glob.glob('%s/*-143.*' % self.backup_dir)
+    os.rename('%s/full_database_dump-145.bz2' % (self.backup_dir),
+                                '%s/origdb.bz2' % self.backup_dir)
+    dbdump = glob.glob('%s/*-145.*' % self.backup_dir)
     for db in dbdump:
       if( os.path.exists(db) ):
         os.remove(db)
@@ -3072,16 +3073,16 @@ class TestComplete(unittest.TestCase):
     command_string = (
         'python ../roster-config-manager/scripts/dnsrecover '
         ' -i %s '
-        '-u %s --config-file %s ' % (143,
+        '-u %s --config-file %s ' % (145,
             USERNAME, self.userconfig))
     command = os.popen(command_string)
-    time.sleep(10)
+    time.sleep(1)
     self.assertEqual(command.read(),
-        'Loading database from backup with ID 140\n'
-        'Replaying action with id 141: MakeZone\n'
+        'Loading database from backup with ID 142\n'
+        'Replaying action with id 143: MakeZone\n'
         'with arguments: [u\'sub.university.edu\', '
         'u\'master\', u\'sub.university.edu.\', u\'test_view\', None, True]\n'
-        'Replaying action with id 142: ProcessRecordsBatch\n'
+        'Replaying action with id 144: ProcessRecordsBatch\n'
         'with arguments: [[], [{u\'record_arguments\': '
         '{u\'refresh_seconds\': 10800L, u\'expiry_seconds\': '
         '3600000L, u\'name_server\': u\'ns.university.lcl.\', '
@@ -3184,8 +3185,8 @@ class TestComplete(unittest.TestCase):
         ' ', origdump)
     origdb.close()
     os.remove('%s/origdb.bz2' % self.backup_dir)
-    
-    newdb = bz2.BZ2File('%s/full_database_dump-146.bz2' % self.backup_dir)
+  
+    newdb = bz2.BZ2File('%s/full_database_dump-148.bz2' % self.backup_dir)
     newdump = newdb.read()
     newdump = re.sub(
         '[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}',
@@ -3195,7 +3196,7 @@ class TestComplete(unittest.TestCase):
     for line in newdump.split('\n'):
       if( line.startswith('INSERT INTO audit_log') ):
         number = int(line.split()[5].strip('(').strip(',').strip())
-        if( number < 143 ):
+        if( number < 145 ):
           newdump_list.append(line)
       else:
         newdump_list.append(line)
