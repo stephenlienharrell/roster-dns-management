@@ -1,0 +1,281 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_core.audit_log &mdash; Roster Core v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Core v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_core.audit_log</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c"># </span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c"># </span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c"># </span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c"># </span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;This module is used to create an audit log of activities executed on the</span>
+<span class="sd">dnsManagement core and user libs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;#TRUNK#&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">cPickle</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">syslog</span>
+<span class="kn">import</span> <span class="nn">unicodedata</span>
+
+
+<div class="viewcode-block" id="AuditLog"><a class="viewcode-back" href="../../roster_core.html#roster_core.audit_log.AuditLog">[docs]</a><span class="k">class</span> <span class="nc">AuditLog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_to_syslog</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">log_to_db</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">db_instance</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="n">log_to_file</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">log_file_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets where log messages get sent.</span>
+<span class="sd">    </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      log_to_syslog: bool of if syslog is used</span>
+<span class="sd">      log_to_db: bool of if db is used</span>
+<span class="sd">      db_instance: instance of DbAccess class</span>
+<span class="sd">      log_to_file: bool of if file is used</span>
+<span class="sd">      log_file: string of file name to log to</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log_to_syslog</span> <span class="o">=</span> <span class="n">log_to_syslog</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log_to_db</span> <span class="o">=</span> <span class="n">log_to_db</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span> <span class="o">=</span> <span class="n">db_instance</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log_to_file</span> <span class="o">=</span> <span class="n">log_to_file</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log_file_name</span> <span class="o">=</span> <span class="n">log_file_name</span>
+
+<div class="viewcode-block" id="AuditLog.LogAction"><a class="viewcode-back" href="../../roster_core.html#roster_core.audit_log.AuditLog.LogAction">[docs]</a>  <span class="k">def</span> <span class="nf">LogAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> <span class="n">current_transaction</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Logs action to places specified in initalizer.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      user: string of user name</span>
+<span class="sd">      action: string of function name that is being logged</span>
+<span class="sd">      data: dictionary of arguments</span>
+<span class="sd">        ex: {&#39;replay_args&#39;: [u&#39;test_acl&#39;, u&#39;192.168.0/24&#39;, 1],</span>
+<span class="sd">             &#39;audit_args&#39;: {&#39;cidr_block&#39;: u&#39;192.168.0/24&#39;,</span>
+<span class="sd">                            &#39;range_allowed&#39;: 1,</span>
+<span class="sd">                            &#39;acl_name&#39;: u&#39;test_acl&#39;}}</span>
+<span class="sd">      success: bool of success of action</span>
+<span class="sd">      current_transaction: boolean for if a transaction is already started</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">current_datetime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">current_timestamp</span> <span class="o">=</span> <span class="n">current_datetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&#39;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S&#39;</span><span class="p">)</span>
+    <span class="n">pretty_print_log_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PrettyPrintLogString</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span>
+                                                         <span class="n">success</span><span class="p">,</span>
+                                                         <span class="n">current_timestamp</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_to_db</span> <span class="p">):</span>
+      <span class="n">audit_log_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_LogToDatabase</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span>
+                                         <span class="n">current_datetime</span><span class="p">,</span> <span class="n">current_transaction</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_to_syslog</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_LogToSyslog</span><span class="p">(</span><span class="n">pretty_print_log_string</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_to_file</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_LogToFile</span><span class="p">(</span><span class="n">pretty_print_log_string</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_to_db</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="n">audit_log_id</span>
+</div>
+  <span class="k">def</span> <span class="nf">_LogToSyslog</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes log string to syslog.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      log_string: string of message to write to syslog </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">syslog</span><span class="o">.</span><span class="n">openlog</span><span class="p">(</span><span class="s">&#39;dnsManagement&#39;</span><span class="p">)</span>
+    <span class="c"># Convert the unicode strings to ascii if needed</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">log_string</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">log_string</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s">&#39;NFKD&#39;</span><span class="p">,</span> <span class="n">log_string</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+          <span class="s">&#39;ASCII&#39;</span><span class="p">,</span> <span class="s">&#39;replace&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">syslog</span><span class="o">.</span><span class="n">syslog</span><span class="p">(</span><span class="n">log_string</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">syslog</span><span class="o">.</span><span class="n">closelog</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_LogToDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> 
+                     <span class="n">current_timestamp</span><span class="p">,</span> <span class="n">current_transaction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes log data to db.</span>
+<span class="sd">    </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      user: string of user name</span>
+<span class="sd">      action: string of action</span>
+<span class="sd">      data: string of data</span>
+<span class="sd">      success: bool of success of action</span>
+<span class="sd">      current_timestamp: string of mysql formated time stamp</span>
+<span class="sd">      current_transaction: boolean for if a transaction is already started</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">success</span> <span class="p">):</span>
+      <span class="n">success</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">success</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">cPickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">log_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;audit_log_id&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="s">&#39;audit_log_user_name&#39;</span><span class="p">:</span> <span class="n">user</span><span class="p">,</span>
+                <span class="s">&#39;action&#39;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span>
+                <span class="s">&#39;data&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+                <span class="s">&#39;success&#39;</span><span class="p">:</span> <span class="n">success</span><span class="p">,</span>
+                <span class="s">&#39;audit_log_timestamp&#39;</span><span class="p">:</span> <span class="n">current_timestamp</span><span class="p">}</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">current_transaction</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">audit_log_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">MakeRow</span><span class="p">(</span><span class="s">&#39;audit_log&#39;</span><span class="p">,</span> <span class="n">log_dict</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">(</span><span class="n">rollback</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+      <span class="k">raise</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">current_transaction</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">audit_log_id</span>
+
+  <span class="k">def</span> <span class="nf">_LogToFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes log string to file.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      log_string: string of message to write to file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_file_name</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">log_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">log_string</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">log_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+      <span class="n">log_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_PrettyPrintLogString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span>
+                            <span class="n">current_timestamp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Formats data into human readable string.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      user: string of user name</span>
+<span class="sd">      action: string of action</span>
+<span class="sd">      data: string of data</span>
+<span class="sd">      success: bool of success of action</span>
+<span class="sd">      current_timestamp: string of mysql formated time stamp</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string of log message</span>
+<span class="sd">        example: User sharrell SUCCEEDED while executing MakeUser with data</span>
+<span class="sd">                     user_name: ahoward access_level: 64 at 2009-04-22 16:20:18</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">success</span> <span class="p">):</span>
+      <span class="n">success_string</span> <span class="o">=</span> <span class="s">&#39;SUCCEEDED&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">success_string</span> <span class="o">=</span> <span class="s">&#39;FAILED&#39;</span>
+
+    <span class="k">return</span> <span class="s">&#39;User </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s"> while executing </span><span class="si">%s</span><span class="s"> with data </span><span class="si">%s</span><span class="s"> at </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">user</span><span class="p">,</span> <span class="n">success_string</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;audit_args&#39;</span><span class="p">],</span> <span class="n">current_timestamp</span><span class="p">)</span>
+
+
+<span class="c"># vi: set ai aw sw=2:</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

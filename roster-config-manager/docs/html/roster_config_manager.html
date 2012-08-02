@@ -1,0 +1,564 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_config_manager Package &mdash; Roster Config Manager v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Roster Config Manager v0.17 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to Roster Config Manager’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Roster Config Manager’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="roster-config-manager-package">
+<h1>roster_config_manager Package<a class="headerlink" href="#roster-config-manager-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-roster_config_manager.db_recovery">
+<span id="db-recovery-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">db_recovery</span></tt> Module<a class="headerlink" href="#module-roster_config_manager.db_recovery" title="Permalink to this headline">¶</a></h2>
+<p>This module contains all of the logic for the recovery system.</p>
+<p>It should be only called by the roster recovery system.</p>
+<dl class="class">
+<dt id="roster_config_manager.db_recovery.Recover">
+<em class="property">class </em><tt class="descclassname">roster_config_manager.db_recovery.</tt><tt class="descname">Recover</tt><big>(</big><em>username</em>, <em>config_instance</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/db_recovery.html#Recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.db_recovery.Recover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Roster Recovery</p>
+<p>This class contains methods pertaining to recover roster after
+catastrophic failure.</p>
+<dl class="method">
+<dt id="roster_config_manager.db_recovery.Recover.PushBackup">
+<tt class="descname">PushBackup</tt><big>(</big><em>audit_log_id</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/db_recovery.html#Recover.PushBackup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.db_recovery.Recover.PushBackup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores database from sql backup with specified audit log id</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>audit_log_id: integer of audit log id</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.db_recovery.Recover.RunAuditRange">
+<tt class="descname">RunAuditRange</tt><big>(</big><em>audit_log_id</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/db_recovery.html#Recover.RunAuditRange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.db_recovery.Recover.RunAuditRange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a range of audit steps</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>audit_log_id: integer of audit_log_id</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.db_recovery.Recover.RunAuditStep">
+<tt class="descname">RunAuditStep</tt><big>(</big><em>audit_log_id</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/db_recovery.html#Recover.RunAuditStep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.db_recovery.Recover.RunAuditStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a step from the audit_log</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>audit_log_id: integer of audit_log_id</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_config_manager.tree_exporter">
+<span id="tree-exporter-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">tree_exporter</span></tt> Module<a class="headerlink" href="#module-roster_config_manager.tree_exporter" title="Permalink to this headline">¶</a></h2>
+<p>This module is used for exporting data in the database for all hosts
+to a BIND readable text form.</p>
+<dl class="class">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport">
+<em class="property">class </em><tt class="descclassname">roster_config_manager.tree_exporter.</tt><tt class="descname">BindTreeExport</tt><big>(</big><em>config_file_name</em>, <em>directory=None</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>This class exports zones</p>
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.AddToTarFile">
+<tt class="descname">AddToTarFile</tt><big>(</big><em>tar_file</em>, <em>file_name</em>, <em>file_string</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.AddToTarFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.AddToTarFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds file string to tarfile object</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>tarfile: tarfile object
+file_name: string of filename to add
+file_string: string of file</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.CookData">
+<tt class="descname">CookData</tt><big>(</big><em>data</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.CookData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.CookData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cooks data for zone exporter</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>data: dictionary of raw data from database</dd>
+<dt>Outputs:</dt>
+<dd><p class="first">dict: dictionary keyed by dns_server_set ex:
+{u&#8217;external_dns&#8217;: {</p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt>&#8216;dns_servers&#8217;: [u&#8217;[ns1.university.edu]&#8217;, u&#8217;[dns2.university.edu]&#8217;,</dt>
+<dd>u&#8217;[dns3.university.edu]&#8217;],</dd>
+<dt>&#8216;views&#8217;: {u&#8217;external&#8217;:</dt>
+<dd><dl class="first last docutils">
+<dt>{u&#8217;university.edu&#8217;: {&#8216;records&#8217;:</dt>
+<dd><dl class="first last docutils">
+<dt>[{u&#8217;serial_number&#8217;: 20091227, u&#8217;refresh_seconds&#8217;: 5,</dt>
+<dd><blockquote class="first">
+<div>&#8216;target&#8217;: u&#8217;university.edu.&#8217;,
+u&#8217;name_server&#8217;: u&#8217;ns1.university.edu.&#8217;, u&#8217;retry_seconds&#8217;: 5,
+&#8216;ttl&#8217;: 3600, u&#8217;minimum_seconds&#8217;: 5, &#8216;record_type&#8217;: u&#8217;soa&#8217;,
+&#8216;view_name&#8217;: u&#8217;external&#8217;, &#8216;last_user&#8217;: u&#8217;sharrell&#8217;,
+&#8216;zone_name&#8217;: u&#8217;university.edu&#8217;,
+u&#8217;admin_email&#8217;: <a class="reference external" href="mailto:u'admin&#37;&#52;&#48;university&#46;edu">u'admin<span>&#64;</span>university<span>&#46;</span>edu</a>.&#8217;,
+u&#8217;expiry_seconds&#8217;: 5},</div></blockquote>
+<dl class="last docutils">
+<dt>{&#8216;target&#8217;: u&#8217;computer1&#8217;, &#8216;ttl&#8217;: 3600, &#8216;record_type&#8217;: u&#8217;a&#8217;,</dt>
+<dd>&#8216;view_name&#8217;: u&#8217;external&#8217;, &#8216;last_user&#8217;: u&#8217;sharrell&#8217;,
+&#8216;zone_name&#8217;: u&#8217;university.edu&#8217;,
+u&#8217;assignment_ip&#8217;: u&#8216;1.2.3.5&#8217;},
+&#8216;zone_origin&#8217;: u&#8217;example.&#8217;, &#8216;zone_type&#8217;: u&#8217;master&#8217;}}}}}</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.CookRawDump">
+<tt class="descname">CookRawDump</tt><big>(</big><em>raw_dump</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.CookRawDump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.CookRawDump" title="Permalink to this definition">¶</a></dt>
+<dd><p>This takes raw data from the database and turns it into a
+mysqldump-like output.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd><dl class="first last docutils">
+<dt>raw_dump: list of dictionaries that contain all of the tables</dt>
+<dd>and their associated metadata</dd>
+</dl>
+</dd>
+<dt>Outputs:</dt>
+<dd>list: tuple of list of strings to be concatenated into mysql dump files</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.ExportAllBindTrees">
+<tt class="descname">ExportAllBindTrees</tt><big>(</big><em>force=False</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.ExportAllBindTrees"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.ExportAllBindTrees" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports bind trees to files</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd><dl class="first last docutils">
+<dt>force: boolean of if the export should continue if no changes are found</dt>
+<dd>in the database</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.GetRawData">
+<tt class="descname">GetRawData</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.GetRawData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.GetRawData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets raw data from database</p>
+<blockquote>
+<div><blockquote>
+<div><dl class="docutils">
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>tuple of two dictionaries:</dt>
+<dd><dl class="first last docutils">
+<dt>dictionary of raw data keyed by data name with values of dicts</dt>
+<dd>containing values of that type&#8217;s attributes</dd>
+<dt>dictionary of the raw dump keyed by data name with values of</dt>
+<dd>dicts containing the db dump keyed by row, column, and schema</dd>
+</dl>
+</dd>
+<dt>example:</dt>
+<dd><dl class="first last docutils">
+<dt>({&#8216;view_acl_assignments&#8217;: ({</dt>
+<dd>&#8216;view_acl_assignments_view_name&#8217;: u&#8217;external&#8217;,
+&#8216;view_acl_assignments_acl_name&#8217;: u&#8217;public&#8217;,
+&#8216;view_acl_assignments_acl_range_allowed&#8217;: 1})},</dd>
+<dt>{ u&#8217;zones&#8217;:</dt>
+<dd><dl class="first last docutils">
+<dt>{&#8216;rows&#8217;:[{}],</dt>
+<dd><p class="first">&#8216;columns&#8217;: [u&#8217;zones_id&#8217;, u&#8217;zone_name&#8217;],
+&#8216;schema&#8217;:(</p>
+<blockquote class="last">
+<div>u&#8217;CREATE TABLE <cite>zones</cite> (</div></blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt><cite>zones_id</cite> mediumint(8) &#8216;,</dt>
+<dd>&#8216;unsigned NOT NULL auto_increment,</dd>
+<dt><cite>zone_name</cite> varchar(255) &#8216;,</dt>
+<dd>&#8216;NOT NULL,</dd>
+</dl>
+<p>PRIMARY KEY  (<cite>zones_id</cite>),
+UNIQUE KEY ;</p>
+<blockquote>
+<div>&#8216;<cite>zone_name</cite> (<cite>zone_name</cite>),</div></blockquote>
+<dl class="docutils">
+<dt>KEY <cite>zone_name_1</cite> &#8216;</dt>
+<dd>&#8216;(<cite>zone_name</cite>)</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt>) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT &#8216;,</dt>
+<dd>&#8216;CHARSET=utf8&#8217;)}}),</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.ListACLNamesByView">
+<tt class="descname">ListACLNamesByView</tt><big>(</big><em>data</em>, <em>view</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.ListACLNamesByView"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.ListACLNamesByView" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists acl names</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>data: data from GetRawData
+view: string of view name</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>list: list of acl names ex:</dt>
+<dd>[&#8216;private&#8217;, &#8216;public&#8217;]</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.ListLatestNamedConfGlobalOptions">
+<tt class="descname">ListLatestNamedConfGlobalOptions</tt><big>(</big><em>data</em>, <em>dns_server_set</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.ListLatestNamedConfGlobalOptions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.ListLatestNamedConfGlobalOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists latest named.conf global options</p>
+<p>This function is duplicated in roster-core/roster_core/core_helpers.py</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>data: data from GetRawData
+dns_server_set: string of dns server set name</dd>
+<dt>Outputs:</dt>
+<dd>string: string of latest named.conf global options</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.ListRecordArgumentDefinitions">
+<tt class="descname">ListRecordArgumentDefinitions</tt><big>(</big><em>record_arguments</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.ListRecordArgumentDefinitions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.ListRecordArgumentDefinitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists record argument definitions given table from database</p>
+<p>This function is duplicated in roster-core/roster_core/core.py</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>record_arguments: record arguments from database</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>dictionary keyed by record type with values of lists</dt>
+<dd><p class="first">of lists of record arguments sorted by argument order.
+example: {&#8216;mx&#8217;: [{&#8216;argument_name&#8217;: u&#8217;priority&#8217;,</p>
+<blockquote class="last">
+<div><blockquote>
+<div>&#8216;record_arguments_type&#8217;: u&#8217;mx&#8217;,
+&#8216;argument_data_type&#8217;: u&#8217;UnsignedInt&#8217;,
+&#8216;argument_order&#8217;: 0},</div></blockquote>
+<dl class="docutils">
+<dt>{&#8216;argument_name&#8217;: u&#8217;mail_server&#8217;,</dt>
+<dd>&#8216;record_arguments_type&#8217;: u&#8217;mx&#8217;,
+&#8216;argument_data_type&#8217;: u&#8217;Hostname&#8217;,
+&#8216;argument_order&#8217;: 1}]}</dd>
+</dl>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.MakeNamedConf">
+<tt class="descname">MakeNamedConf</tt><big>(</big><em>data</em>, <em>cooked_data</em>, <em>dns_server_set</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.MakeNamedConf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.MakeNamedConf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes named.conf file strings</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>data: data from GetRawData
+cooked_data: data from cooked_data
+dns_server_set: string of dns_server_set</dd>
+<dt>Outputs:</dt>
+<dd>string: string of named.conf file</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.NamedHeaderChangeDirectory">
+<tt class="descname">NamedHeaderChangeDirectory</tt><big>(</big><em>named_conf_header</em>, <em>new_directory</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.NamedHeaderChangeDirectory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.NamedHeaderChangeDirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds/Changes directory in named.conf header</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>named_conf_header: string of namedconf header
+new_directory: {}</dd>
+<dt>Outputs:</dt>
+<dd>string: string of namedconf header</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.tree_exporter.BindTreeExport.SortRecords">
+<tt class="descname">SortRecords</tt><big>(</big><em>records</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#BindTreeExport.SortRecords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.BindTreeExport.SortRecords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts records for zone exporter</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>records: list of records</dd>
+<dt>Outputs:</dt>
+<dd><p class="first">dict: dictionary keyed by tuple (zone, view_dep)
+ex:
+{(u&#8217;university.edu&#8217;, u&#8217;internal_dep&#8217;):</p>
+<blockquote class="last">
+<div><dl class="docutils">
+<dt>{11: {&#8216;target&#8217;: u&#8217;computer4&#8217;, &#8216;ttl&#8217;: 3600, &#8216;record_type&#8217;: u&#8217;a&#8217;,</dt>
+<dd><blockquote class="first">
+<div>&#8216;view_name&#8217;: u&#8217;internal&#8217;, &#8216;last_user&#8217;: u&#8217;sharrell&#8217;,
+&#8216;zone_name&#8217;: u&#8217;university.edu&#8217;,
+u&#8217;assignment_ip&#8217;: u&#8216;192.168.1.4&#8217;},</div></blockquote>
+<dl class="last docutils">
+<dt>12: {u&#8217;serial_number&#8217;: 20091225, u&#8217;refresh_seconds&#8217;: 5,</dt>
+<dd>&#8216;target&#8217;: u&#8217;university.edu.&#8217;,
+u&#8217;name_server&#8217;: u&#8217;ns1.university.edu.&#8217;, u&#8217;retry_seconds&#8217;: 5,
+&#8216;ttl&#8217;: 3600, u&#8217;minimum_seconds&#8217;: 5, &#8216;record_type&#8217;: u&#8217;soa&#8217;,
+&#8216;view_name&#8217;: u&#8217;internal&#8217;, &#8216;last_user&#8217;: u&#8217;sharrell&#8217;,
+&#8216;zone_name&#8217;: u&#8217;university.edu&#8217;,
+u&#8217;admin_email&#8217;: <a class="reference external" href="mailto:u'admin&#37;&#52;&#48;university&#46;edu">u'admin<span>&#64;</span>university<span>&#46;</span>edu</a>.&#8217;,
+u&#8217;expiry_seconds&#8217;: 5}}}</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_config_manager.tree_exporter.ChangesNotFoundError">
+<em class="property">exception </em><tt class="descclassname">roster_config_manager.tree_exporter.</tt><tt class="descname">ChangesNotFoundError</tt><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#ChangesNotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.ChangesNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_config_manager.tree_exporter.Error" title="roster_config_manager.tree_exporter.Error"><tt class="xref py py-class docutils literal"><span class="pre">roster_config_manager.tree_exporter.Error</span></tt></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_config_manager.tree_exporter.Error">
+<em class="property">exception </em><tt class="descclassname">roster_config_manager.tree_exporter.</tt><tt class="descname">Error</tt><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">roster_core.errors.CoreError</span></tt></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_config_manager.tree_exporter.MaintenanceError">
+<em class="property">exception </em><tt class="descclassname">roster_config_manager.tree_exporter.</tt><tt class="descname">MaintenanceError</tt><a class="reference internal" href="_modules/roster_config_manager/tree_exporter.html#MaintenanceError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.tree_exporter.MaintenanceError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_config_manager.tree_exporter.Error" title="roster_config_manager.tree_exporter.Error"><tt class="xref py py-class docutils literal"><span class="pre">roster_config_manager.tree_exporter.Error</span></tt></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_config_manager.zone_exporter_lib">
+<span id="zone-exporter-lib-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">zone_exporter_lib</span></tt> Module<a class="headerlink" href="#module-roster_config_manager.zone_exporter_lib" title="Permalink to this headline">¶</a></h2>
+<p>This module contains all of the logic for the zone exporter.</p>
+<p>It should be only called by the exporter.</p>
+<dl class="exception">
+<dt id="roster_config_manager.zone_exporter_lib.DuplicateRecordError">
+<em class="property">exception </em><tt class="descclassname">roster_config_manager.zone_exporter_lib.</tt><tt class="descname">DuplicateRecordError</tt><a class="reference internal" href="_modules/roster_config_manager/zone_exporter_lib.html#DuplicateRecordError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_exporter_lib.DuplicateRecordError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_config_manager.zone_exporter_lib.Error" title="roster_config_manager.zone_exporter_lib.Error"><tt class="xref py py-class docutils literal"><span class="pre">roster_config_manager.zone_exporter_lib.Error</span></tt></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_config_manager.zone_exporter_lib.Error">
+<em class="property">exception </em><tt class="descclassname">roster_config_manager.zone_exporter_lib.</tt><tt class="descname">Error</tt><a class="reference internal" href="_modules/roster_config_manager/zone_exporter_lib.html#Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_exporter_lib.Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">roster_core.errors.CoreError</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_config_manager.zone_exporter_lib.FormatRecordsForZone">
+<tt class="descclassname">roster_config_manager.zone_exporter_lib.</tt><tt class="descname">FormatRecordsForZone</tt><big>(</big><em>unsorted_records</em>, <em>origin</em>, <em>zone_name</em>, <em>view_name</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/zone_exporter_lib.html#FormatRecordsForZone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_exporter_lib.FormatRecordsForZone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the records from the db and sorts them.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>unsorted_records: unsorted records dictionary
+origin: string of zone origin
+zone_name: string of zone name
+view_name: string of view name</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>dictionary keyed by record type with values of sorted lists of</dt>
+<dd>record dictionaries.</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_config_manager.zone_exporter_lib.MakeZoneString">
+<tt class="descclassname">roster_config_manager.zone_exporter_lib.</tt><tt class="descname">MakeZoneString</tt><big>(</big><em>records</em>, <em>zone_origin</em>, <em>argument_definitions</em>, <em>zone_name</em>, <em>view_name</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/zone_exporter_lib.html#MakeZoneString"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_exporter_lib.MakeZoneString" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes zone string that can be written to a file.
+Inputs:</p>
+<blockquote>
+<div>records: dictionary of sorted records
+zone_origin: string of zone origin
+argument_definitions: dictionary of argument definitions
+zone_name: string of zone name
+view_name: string of view name</div></blockquote>
+<dl class="docutils">
+<dt>Outputs:</dt>
+<dd>string of exported zone file.</dd>
+</dl>
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_config_manager.zone_exporter_lib.ZoneError">
+<em class="property">exception </em><tt class="descclassname">roster_config_manager.zone_exporter_lib.</tt><tt class="descname">ZoneError</tt><a class="reference internal" href="_modules/roster_config_manager/zone_exporter_lib.html#ZoneError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_exporter_lib.ZoneError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_config_manager.zone_exporter_lib.Error" title="roster_config_manager.zone_exporter_lib.Error"><tt class="xref py py-class docutils literal"><span class="pre">roster_config_manager.zone_exporter_lib.Error</span></tt></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_config_manager.zone_importer_lib">
+<span id="zone-importer-lib-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">zone_importer_lib</span></tt> Module<a class="headerlink" href="#module-roster_config_manager.zone_importer_lib" title="Permalink to this headline">¶</a></h2>
+<p>This module contains all of the logic for the zone importer.</p>
+<p>It should be only called by the importer.</p>
+<dl class="exception">
+<dt id="roster_config_manager.zone_importer_lib.Error">
+<em class="property">exception </em><tt class="descclassname">roster_config_manager.zone_importer_lib.</tt><tt class="descname">Error</tt><a class="reference internal" href="_modules/roster_config_manager/zone_importer_lib.html#Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_importer_lib.Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_config_manager.zone_importer_lib.ZoneImport">
+<em class="property">class </em><tt class="descclassname">roster_config_manager.zone_importer_lib.</tt><tt class="descname">ZoneImport</tt><big>(</big><em>zone_file_name</em>, <em>config_file_name</em>, <em>user_name</em>, <em>view</em>, <em>zone_name</em><big>)</big><a class="reference internal" href="_modules/roster_config_manager/zone_importer_lib.html#ZoneImport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_importer_lib.ZoneImport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>This class will only import one zone per init. It will load the zone
+from a file using dns.zone and then use the core API to put it in
+the database.</p>
+<dl class="method">
+<dt id="roster_config_manager.zone_importer_lib.ZoneImport.MakeRecordsFromZone">
+<tt class="descname">MakeRecordsFromZone</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_config_manager/zone_importer_lib.html#ZoneImport.MakeRecordsFromZone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_importer_lib.ZoneImport.MakeRecordsFromZone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes records in the database from dns.zone class.</p>
+<dl class="docutils">
+<dt>Outputs:</dt>
+<dd>int: Amount of records added to db.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_config_manager.zone_importer_lib.ZoneImport.ReverseZoneToCIDRBlock">
+<tt class="descname">ReverseZoneToCIDRBlock</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_config_manager/zone_importer_lib.html#ZoneImport.ReverseZoneToCIDRBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_config_manager.zone_importer_lib.ZoneImport.ReverseZoneToCIDRBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates CIDR block from reverse zone name.</p>
+<dl class="docutils">
+<dt>Outputs:</dt>
+<dd>string of cidr block</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">roster_config_manager Package</a><ul>
+<li><a class="reference internal" href="#module-roster_config_manager.db_recovery"><tt class="docutils literal"><span class="pre">db_recovery</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_config_manager.tree_exporter"><tt class="docutils literal"><span class="pre">tree_exporter</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_config_manager.zone_exporter_lib"><tt class="docutils literal"><span class="pre">zone_exporter_lib</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_config_manager.zone_importer_lib"><tt class="docutils literal"><span class="pre">zone_importer_lib</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Roster Config Manager&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/roster_config_manager.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Roster Config Manager’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

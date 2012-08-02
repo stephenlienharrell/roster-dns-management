@@ -1,0 +1,235 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_config_manager.zone_importer_lib &mdash; Roster Config Manager v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Config Manager v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_config_manager.zone_importer_lib</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;This module contains all of the logic for the zone importer.</span>
+
+<span class="sd">It should be only called by the importer.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">dns.zone</span>
+<span class="kn">import</span> <span class="nn">IPy</span>
+<span class="kn">import</span> <span class="nn">roster_core</span>
+
+
+<span class="n">roster_core</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CheckCoreVersionMatches</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Error"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_importer_lib.Error">[docs]</a><span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ZoneImport"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_importer_lib.ZoneImport">[docs]</a><span class="k">class</span> <span class="nc">ZoneImport</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;This class will only import one zone per init. It will load the zone</span>
+<span class="sd">  from a file using dns.zone and then use the core API to put it in</span>
+<span class="sd">  the database.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zone_file_name</span><span class="p">,</span> <span class="n">config_file_name</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">view</span><span class="p">,</span>
+               <span class="n">zone_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets self.core_instance, self.zone self.domain and self.view.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      zone_file_name: name of zone file to impport</span>
+<span class="sd">      config_file_name: name of config file to load db info from</span>
+<span class="sd">      user_name: username of person running the script</span>
+<span class="sd">      view: view name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config_instance</span> <span class="o">=</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">config_file_name</span><span class="p">)</span>
+
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">core_instance</span> <span class="o">=</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">Core</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">config_instance</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">core_helper_instance</span> <span class="o">=</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">CoreHelpers</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">core_instance</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">zone_file_string</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">zone_file_name</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">zone_name</span> <span class="o">=</span> <span class="n">zone_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">view</span>
+  
+    <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_instance</span><span class="o">.</span><span class="n">ListZones</span><span class="p">(</span><span class="n">zone_name</span><span class="o">=</span><span class="n">zone_name</span><span class="p">)[</span>
+        <span class="n">zone_name</span><span class="p">][</span><span class="n">view</span><span class="p">][</span><span class="s">u&#39;zone_origin&#39;</span><span class="p">]</span>
+        
+    <span class="bp">self</span><span class="o">.</span><span class="n">all_views</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_instance</span><span class="o">.</span><span class="n">ListZones</span><span class="p">(</span><span class="n">zone_name</span><span class="o">=</span><span class="n">zone_name</span><span class="p">)[</span>
+        <span class="n">zone_name</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="ZoneImport.ReverseZoneToCIDRBlock"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_importer_lib.ZoneImport.ReverseZoneToCIDRBlock">[docs]</a>  <span class="k">def</span> <span class="nf">ReverseZoneToCIDRBlock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates CIDR block from reverse zone name.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string of cidr block</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;in-addr.arpa.&#39;</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">ip_parts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.in-&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+      <span class="n">ip_parts</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+      <span class="k">for</span> <span class="n">ip_part</span> <span class="ow">in</span> <span class="n">ip_parts</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">ip_part</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a reverse zone.&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_name</span><span class="p">)</span>
+
+      <span class="n">cidr_block</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip_parts</span><span class="p">)</span>
+      <span class="n">ip_octets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_parts</span><span class="p">)</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="n">ip_octets</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">ip_octets</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a reverse zone.&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_name</span><span class="p">)</span>
+
+      <span class="n">cidr_block</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cidr_block</span><span class="p">,</span> <span class="n">ip_octets</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+
+    <span class="k">elif</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;ip6.arpa.&#39;</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">ip_parts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.ip6&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+      <span class="n">ip_parts</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+      <span class="n">ip_quartets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_parts</span><span class="p">)</span>
+
+      <span class="k">for</span> <span class="n">ip_part</span> <span class="ow">in</span> <span class="n">ip_parts</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="nb">int</span><span class="p">(</span><span class="n">ip_part</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;Invalid hexidecimal number in ipv6 origin: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                      <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
+      <span class="c"># fill out the rest of the ipv6 address</span>
+      <span class="n">ip_parts</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s">&#39;0&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">32</span><span class="o">-</span><span class="n">ip_quartets</span><span class="p">)])</span>
+
+      <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>
+        <span class="c"># Put colons every 4 quartets</span>
+        <span class="n">ip_parts</span><span class="o">.</span><span class="n">insert</span><span class="p">((</span><span class="n">x</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span><span class="o">+</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="s">&#39;:&#39;</span><span class="p">)</span>
+      <span class="n">cidr_block</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip_parts</span><span class="p">)</span>
+
+      <span class="n">cidr_block</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cidr_block</span><span class="p">,</span> <span class="n">ip_quartets</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a reverse zone.&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cidr_block</span>
+    </div>
+<div class="viewcode-block" id="ZoneImport.MakeRecordsFromZone"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_importer_lib.ZoneImport.MakeRecordsFromZone">[docs]</a>  <span class="k">def</span> <span class="nf">MakeRecordsFromZone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Makes records in the database from dns.zone class.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      int: Amount of records added to db.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_helper_instance</span><span class="o">.</span><span class="n">AddFormattedRecords</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zone_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_file_string</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">view</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1157 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_core.db_access &mdash; Roster Core v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Core v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_core.db_access</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c"># </span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c"># </span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c"># </span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c"># </span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;This module is an API to access the dnsManagement database.</span>
+
+<span class="sd">This module should only be run by servers with authentication layers</span>
+<span class="sd">that are active. This module does not include authentication, but does</span>
+<span class="sd">include authorization.</span>
+
+<span class="sd">The api that will be exposed by this module is meant for use in a web</span>
+<span class="sd">application or rpc server. This module is not for use in command line tools.</span>
+
+<span class="sd">The two primary uses of this class are: </span>
+<span class="sd">1. to use convience functions to get large amounts of data out of the db </span>
+<span class="sd">  without large amounts of db queries. For usage on this consult the pydoc</span>
+<span class="sd">  on the individual functions.</span>
+
+<span class="sd">2. to Make/Remove/List rows in the database. The method that is used in this</span>
+<span class="sd">  class is based on generic Make/Remove/Lock functions that take specifc</span>
+<span class="sd">  dictionaries that correspond to the table that is being referenced. </span>
+
+<span class="sd">  Here is an example of how to remove rows from the acls table:</span>
+
+<span class="sd">  acls_dict = db_instance.GetEmptyRowDict(&#39;acls&#39;)</span>
+<span class="sd">  acls_dict[&#39;acl_name&#39;] = &#39;test_acl&#39;</span>
+<span class="sd">  db_instance.StartTransaction()</span>
+<span class="sd">  try:</span>
+<span class="sd">    matching_rows = db_instance.ListRow(&#39;acls&#39;, acls_dict)</span>
+<span class="sd">    for row in matching_rows:</span>
+<span class="sd">      db_instance.RemoveRow(&#39;acls&#39;, row)</span>
+<span class="sd">  except Exception:</span>
+<span class="sd">    db_instance.EndTransaction(rollback=True)</span>
+<span class="sd">  else:</span>
+<span class="sd">    db_instance.EndTransaction()</span>
+
+<span class="sd">Note: MySQLdb.Error can be raised in almost any function in this module. Please</span>
+<span class="sd">      keep that in mind when using this module.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">Queue</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">MySQLdb</span>
+
+<span class="kn">import</span> <span class="nn">constants</span>
+<span class="kn">import</span> <span class="nn">data_validation</span>
+<span class="kn">import</span> <span class="nn">embedded_files</span>
+<span class="kn">import</span> <span class="nn">errors</span>
+<span class="kn">import</span> <span class="nn">helpers_lib</span>
+<span class="kn">import</span> <span class="nn">codecs</span>
+
+<div class="viewcode-block" id="dbAccess"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess">[docs]</a><span class="k">class</span> <span class="nc">dbAccess</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;This class provides the primary interface for connecting and interacting</span>
+<span class="sd">   with the roster database.</span>
+<span class="sd">   &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_host</span><span class="p">,</span> <span class="n">db_user</span><span class="p">,</span> <span class="n">db_passwd</span><span class="p">,</span> <span class="n">db_name</span><span class="p">,</span> <span class="n">big_lock_timeout</span><span class="p">,</span>
+               <span class="n">big_lock_wait</span><span class="p">,</span> <span class="n">thread_safe</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">ssl</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">ssl_ca</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="n">ssl_cert</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ssl_key</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ssl_capath</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ssl_cipher</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="n">db_debug</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">db_debug_log</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Instantiates the db_access class.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      db_host: string of the database host name</span>
+<span class="sd">      db_user: string of the user name used to connect to mysql</span>
+<span class="sd">      db_passwd: string of password used to connect to mysql</span>
+<span class="sd">      db_name: string of name of database in mysql server to use</span>
+<span class="sd">      big_lock_timeout: integer of how long the big lock should be valid for</span>
+<span class="sd">      big_lock_wait: integer of how long to wait for proccesses to finish</span>
+<span class="sd">                     before locking the database</span>
+<span class="sd">      thread_safe: boolean of if db_acceess should be thread safe</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Do some better checking of these args</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_host</span> <span class="o">=</span> <span class="n">db_host</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_user</span> <span class="o">=</span> <span class="n">db_user</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_passwd</span> <span class="o">=</span> <span class="n">db_passwd</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span> <span class="o">=</span> <span class="n">db_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">big_lock_timeout</span> <span class="o">=</span> <span class="n">big_lock_timeout</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">big_lock_wait</span> <span class="o">=</span> <span class="n">big_lock_wait</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ssl</span> <span class="o">=</span> <span class="n">ssl</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ssl_ca</span> <span class="o">=</span> <span class="n">ssl_ca</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ssl_settings</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_debug</span> <span class="o">=</span> <span class="n">db_debug</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_debug_log</span> <span class="o">=</span> <span class="n">db_debug_log</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssl</span> <span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssl_ca</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssl_settings</span><span class="p">[</span><span class="s">&#39;ca&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ssl_ca</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span><span class="s">&#39;ssl_ca not specified in config file.&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c"># This is generated only when ListRow is called and is then cached for</span>
+    <span class="c"># the life of the object.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">foreign_keys</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">locked_db</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">thread_safe</span> <span class="o">=</span> <span class="n">thread_safe</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">now_serving</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">queue_update_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+<div class="viewcode-block" id="dbAccess.close"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.close">[docs]</a>  <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes a connection that has been opened. </span>
+
+<span class="sd">    A new connection will be created on StartTransaction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="dbAccess.cursor_execute"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.cursor_execute">[docs]</a>  <span class="k">def</span> <span class="nf">cursor_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">execution_string</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="sd">&quot;&quot;&quot;This function allows for the capture of every mysql command that</span>
+<span class="sd">       is run in this class. </span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      execution_string: mysql command string</span>
+<span class="sd">      values: dictionary of values for mysql command</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_debug</span> <span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_debug_log</span> <span class="p">):</span>
+        <span class="c">#If the execution_string contains a unicode character we must account</span>
+        <span class="c">#for it. So we need to use the codecs package to write to a utf-8 log</span>
+        <span class="c">#file, instead of ASCII like the &#39;normal&#39; open() results in.</span>
+        <span class="n">debug_log_handle</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_debug_log</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span> 
+            <span class="n">mode</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+        <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">execution_string</span> <span class="o">%</span> <span class="n">values</span><span class="p">)</span>
+        <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">execution_string</span> <span class="o">%</span> <span class="n">values</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">execution_string</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">ProgrammingError</span><span class="p">:</span>
+      <span class="k">raise</span>
+    <span class="k">except</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">Error</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">errors</span><span class="o">.</span><span class="n">PARSABLE_MYSQL_ERRORS</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">DatabaseError</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span>
+    
+    </div>
+<div class="viewcode-block" id="dbAccess.StartTransaction"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.StartTransaction">[docs]</a>  <span class="k">def</span> <span class="nf">StartTransaction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Starts a transaction.</span>
+
+<span class="sd">    Also it starts a db connection if none exists or it times out.</span>
+<span class="sd">    Always creates a new cursor.</span>
+<span class="sd">    </span>
+<span class="sd">    This function also serializes all requests on this object and if the </span>
+<span class="sd">    big lock has been activated will wait for it to be released.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TransactionError: Cannot start new transaction last transaction not</span>
+<span class="sd">                        committed or rolled-back.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">thread_safe</span> <span class="p">):</span>
+      <span class="n">unique_id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">unique_id</span><span class="p">)</span>
+
+      <span class="n">while_sleep</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">while</span><span class="p">(</span> <span class="n">unique_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">now_serving</span> <span class="p">):</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">while_sleep</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_update_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">now_serving</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">now_serving</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queue_update_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="n">while_sleep</span> <span class="o">=</span> <span class="mf">0.005</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Cannot start new transaction last &#39;</span>
+                                      <span class="s">&#39;transaction not committed or &#39;</span>
+                                      <span class="s">&#39;rolled-back.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">(</span><span class="n">MySQLdb</span><span class="o">.</span><span class="n">cursors</span><span class="o">.</span><span class="n">DictCursor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;DO 0&#39;</span><span class="p">)</span> <span class="c"># NOOP to test connection</span>
+      <span class="k">except</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssl</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_host</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_user</span><span class="p">,</span> <span class="n">passwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_passwd</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">charset</span><span class="o">=</span><span class="s">&#39;utf8&#39;</span><span class="p">,</span>
+            <span class="n">ssl</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ssl_settings</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="n">host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_host</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_user</span><span class="p">,</span> <span class="n">passwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_passwd</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">,</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">charset</span><span class="o">=</span><span class="s">&#39;utf8&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">(</span><span class="n">MySQLdb</span><span class="o">.</span><span class="n">cursors</span><span class="o">.</span><span class="n">DictCursor</span><span class="p">)</span>
+
+    <span class="n">while_sleep</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">db_lock_locked</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span><span class="p">(</span> <span class="n">db_lock_locked</span> <span class="p">):</span>
+      <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">while_sleep</span><span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SELECT `locked`, `lock_last_updated`, &#39;</span>
+                            <span class="s">&#39;NOW() as `now` from `locks` WHERE &#39;</span>
+                            <span class="s">&#39;`lock_name`=&quot;db_lock_lock&quot;&#39;</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+      <span class="k">except</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">ProgrammingError</span><span class="p">:</span>
+        <span class="k">break</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">rows</span> <span class="p">):</span>
+        <span class="k">break</span>
+      <span class="n">lock_last_updated</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;lock_last_updated&#39;</span><span class="p">]</span>
+      <span class="n">db_lock_locked</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;locked&#39;</span><span class="p">]</span>
+      <span class="n">now</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;now&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="n">lock_last_updated</span><span class="p">)</span><span class="o">.</span><span class="n">seconds</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">big_lock_timeout</span> <span class="p">):</span>
+        <span class="k">break</span>
+      <span class="n">while_sleep</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="dbAccess.EndTransaction"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.EndTransaction">[docs]</a>  <span class="k">def</span> <span class="nf">EndTransaction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rollback</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Ends a transaction.</span>
+
+<span class="sd">    Also does some simple checking to make sure a connection was open first</span>
+<span class="sd">    and releases itself from the current queue.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      rollback: boolean of if the transaction should be rolled back</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TransactionError: Must run StartTansaction before EndTransaction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">thread_safe</span> <span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Must run StartTansaction before &#39;</span>
+                                      <span class="s">&#39;EndTransaction.&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">rollback</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="o">=</span> <span class="bp">False</span>
+      <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">thread_safe</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span> <span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">now_serving</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">now_serving</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="dbAccess.CheckMaintenanceFlag"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.CheckMaintenanceFlag">[docs]</a>  <span class="k">def</span> <span class="nf">CheckMaintenanceFlag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks the maintenance flag in the database.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: boolean of maintenance mode</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;locks&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;lock_name&#39;</span><span class="p">:</span> <span class="s">u&#39;maintenance&#39;</span><span class="p">,</span> <span class="s">&#39;locked&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">})</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;locked&#39;</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="dbAccess.LockDb"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.LockDb">[docs]</a>  <span class="k">def</span> <span class="nf">LockDb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function is to lock the whole database for consistent data</span>
+<span class="sd">    retrevial.</span>
+
+<span class="sd">    This function expects for self.db_instance.cursor to be instantiated and</span>
+<span class="sd">    valid.</span>
+
+<span class="sd">    Raises: </span>
+<span class="sd">      TransactionError: Must unlock tables before re-locking them.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">locked_db</span> <span class="ow">is</span> <span class="bp">True</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Must unlock tables before re-locking them&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;UPDATE `locks` SET `locked`=1 WHERE &#39;</span>
+                        <span class="s">&#39;`lock_name`=&quot;db_lock_lock&quot;&#39;</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">big_lock_wait</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span>
+        <span class="s">&#39;LOCK TABLES </span><span class="si">%s</span><span class="s"> READ&#39;</span> <span class="o">%</span> <span class="s">&#39; READ, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ListTableNames</span><span class="p">()))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">locked_db</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="dbAccess.UnlockDb"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.UnlockDb">[docs]</a>  <span class="k">def</span> <span class="nf">UnlockDb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function is to unlock the whole database.</span>
+
+<span class="sd">    This function expects for self.db_instance.cursor to be instantiated and</span>
+<span class="sd">    valid. It also expects all tables to be locked.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TransactionError: Must lock tables before unlocking them.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">locked_db</span> <span class="ow">is</span> <span class="bp">False</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Must lock tables before unlocking them&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;UNLOCK TABLES&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;UPDATE `locks` SET `locked`=0 WHERE &#39;</span>
+                        <span class="s">&#39;`lock_name`=&quot;db_lock_lock&quot;&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">locked_db</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="dbAccess.InitDataValidation"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.InitDataValidation">[docs]</a>  <span class="k">def</span> <span class="nf">InitDataValidation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get all reserved words and group permissions and init the</span>
+<span class="sd">    data_validation_instance</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_debug</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_debug_log</span> <span class="p">):</span>
+          <span class="c">#If the execution_string contains a unicode character we must account</span>
+          <span class="c">#for it. So we need to use the codecs package to write to a utf-8 log</span>
+          <span class="c">#file, instead of ASCII like the &#39;normal&#39; open() results in.</span>
+          <span class="n">debug_log_handle</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_debug_log</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span>
+              <span class="n">mode</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+          <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;SELECT reserved_word FROM reserved_words&#39;</span><span class="p">)</span>
+          <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+          <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">print</span> <span class="s">&#39;SELECT reserved_word FROM reserved_words&#39;</span>
+      <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;SELECT reserved_word FROM reserved_words&#39;</span><span class="p">)</span>
+      <span class="n">reserved_words_rows</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_debug</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_debug_log</span> <span class="p">):</span>
+          <span class="n">debug_log_handle</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_debug_log</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">,</span>
+              <span class="n">mode</span><span class="o">=</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+          <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;SELECT record_type FROM record_types&#39;</span><span class="p">)</span>
+          <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+          <span class="n">debug_log_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">print</span> <span class="s">&#39;SELECT record_type FROM record_types&#39;</span>
+      <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&#39;SELECT record_type FROM record_types&#39;</span><span class="p">)</span>
+      <span class="n">record_types_rows</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reserved_words_rows</span><span class="p">]</span>
+    <span class="n">record_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">record_types_rows</span><span class="p">]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span> <span class="o">=</span> <span class="n">data_validation</span><span class="o">.</span><span class="n">DataValidation</span><span class="p">(</span>
+        <span class="n">words</span><span class="p">,</span> <span class="n">record_types</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="dbAccess.MakeRow"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.MakeRow">[docs]</a>  <span class="k">def</span> <span class="nf">MakeRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">row_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a row in the database using the table name and row dict</span>
+<span class="sd">    </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      table_name: string of valid table name from constants</span>
+<span class="sd">      row_dict: dictionary that coresponds to table_name</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      InvalidInputError: Table name not valid</span>
+<span class="sd">      TransactionError: Must run StartTansaction before inserting</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      int: last insert id</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetValidTables</span><span class="p">()</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Table name not valid: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Must run StartTansaction before &#39;</span>
+                                    <span class="s">&#39;inserting.&#39;</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">InitDataValidation</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span><span class="o">.</span><span class="n">ValidateRowDict</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">row_dict</span><span class="p">)</span> 
+
+    <span class="n">column_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">column_assignments</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">():</span>
+      <span class="n">column_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+      <span class="n">column_assignments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&#39;%(&#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s">&#39;)s&#39;</span><span class="p">))</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&#39;INSERT INTO </span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">) VALUES (</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">table_name</span><span class="p">,</span> 
+                                                 <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">column_names</span><span class="p">),</span>
+                                                 <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">column_assignments</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">row_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">lastrowid</span>
+</div>
+<div class="viewcode-block" id="dbAccess.TableRowCount"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.TableRowCount">[docs]</a>  <span class="k">def</span> <span class="nf">TableRowCount</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Counts the amount of records in a table and returns it.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      table_name: string of valid table name from constants</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      InvalidInputError: Table name not valid</span>
+<span class="sd">      TransactionError: Must run StartTansaction before getting row count.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      int: number of rows found</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetValidTables</span><span class="p">()</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Table name not valid: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Must run StartTansaction before getting &#39;</span>
+                                    <span class="s">&#39;row count.&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SELECT COUNT(*) FROM </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+    <span class="n">row_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">row_count</span><span class="p">[</span><span class="s">&#39;COUNT(*)&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="dbAccess.RemoveRow"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.RemoveRow">[docs]</a>  <span class="k">def</span> <span class="nf">RemoveRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">row_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Removes a row in the database using the table name and row dict</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      table_name: string of valid table name from constants</span>
+<span class="sd">      row_dict: dictionary that coresponds to table_name</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      InvalidInputError: Table name not valid</span>
+<span class="sd">      TransactionError: Must run StartTansaction before deleting</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      int: number of rows affected</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetValidTables</span><span class="p">()</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Table name not valid: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Must run StartTansaction before deleting.&#39;</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">InitDataValidation</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span><span class="o">.</span><span class="n">ValidateRowDict</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">row_dict</span><span class="p">)</span> 
+
+    <span class="n">where_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">():</span>
+      <span class="n">where_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">=</span><span class="si">%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s">&#39;%(&#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s">&#39;)s&#39;</span><span class="p">))</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&#39;DELETE FROM </span><span class="si">%s</span><span class="s"> WHERE </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="s">&#39; AND &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">where_list</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">row_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span>
+</div>
+<div class="viewcode-block" id="dbAccess.UpdateRow"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.UpdateRow">[docs]</a>  <span class="k">def</span> <span class="nf">UpdateRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">search_row_dict</span><span class="p">,</span> <span class="n">update_row_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates a row in the database using search and update dictionaries.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      table_name: string of valid table name from constants</span>
+<span class="sd">      search_row_dict: dictionary that coresponds to table_name containing</span>
+<span class="sd">                       search args</span>
+<span class="sd">      update_row_dict: dictionary that coresponds to table_name containing</span>
+<span class="sd">                       update args</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      InvalidInputError: Table name not valid</span>
+<span class="sd">      TransactionError: Must run StartTansaction before inserting</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      int: number of rows affected</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetValidTables</span><span class="p">()</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Table name not valid: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Must run StartTansaction before deleting.&#39;</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">InitDataValidation</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span><span class="o">.</span><span class="n">ValidateRowDict</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">search_row_dict</span><span class="p">,</span>
+                                                  <span class="n">none_ok</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span><span class="o">.</span><span class="n">ValidateRowDict</span><span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">update_row_dict</span><span class="p">,</span>
+                                                  <span class="n">none_ok</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="n">query_updates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">query_searches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">combined_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">update_row_dict</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="n">query_updates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s">&#39;=%(update_&#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s">&#39;)s&#39;</span><span class="p">))</span>
+        <span class="n">combined_dict</span><span class="p">[</span><span class="s">&#39;update_</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">search_row_dict</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="n">query_searches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">=</span><span class="si">%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s">&#39;%(search_&#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s">&#39;)s&#39;</span><span class="p">))</span>
+        <span class="n">combined_dict</span><span class="p">[</span><span class="s">&#39;search_</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&#39;UPDATE </span><span class="si">%s</span><span class="s"> SET </span><span class="si">%s</span><span class="s"> WHERE </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">query_updates</span><span class="p">),</span>
+                                           <span class="s">&#39; AND &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">query_searches</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">combined_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">rowcount</span>
+</div>
+<div class="viewcode-block" id="dbAccess.ListRow"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.ListRow">[docs]</a>  <span class="k">def</span> <span class="nf">ListRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Lists rows in the database using a dictionary of tables. Then returns </span>
+<span class="sd">    the rows found. Joins are auto generated on the fly based on foreign keys</span>
+<span class="sd">    in the database.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      args: pairs of string of table name and dict of rows</span>
+<span class="sd">      kwargs: lock_rows: default False</span>
+<span class="sd">              column: column to search range on, if using multiple</span>
+<span class="sd">                           tables, the column must be in the first table</span>
+<span class="sd">                           in args.</span>
+<span class="sd">              range_values: range tuple of values to search within for on column</span>
+<span class="sd">              is_date: boolean of if range is of dates</span>
+
+<span class="sd">      example usage: ListRow(&#39;users&#39;, user_row_dict,</span>
+<span class="sd">                             &#39;user_group_assignments&#39;, user_assign_row_dict,</span>
+<span class="sd">                             lock_rows=True)</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TransactionError: Must run StartTansaction before inserting</span>
+<span class="sd">      UnexpectedDataError: If is_date is specified you must specify column and range</span>
+<span class="sd">      UnexpectedDataError: If column or range is specified both are needed</span>
+<span class="sd">      InvalidInputError: Found unknown option(s)</span>
+<span class="sd">      UnexpectedDataError: No args given, must at least have a pair of table name and row dict</span>
+<span class="sd">      UnexpectedDataError: Number of unnamed args is not even.</span>
+<span class="sd">          Args should be entered in pairs of table name and row dict.</span>
+<span class="sd">      InvalidInputError: Table name not valid</span>
+<span class="sd">      InvalidInputError: Column not found in row</span>
+<span class="sd">      UnexpectedDataError: Column in table is not a DateTime type</span>
+<span class="sd">      UnexpectedDataError: Date from range is not a valid datetime object</span>
+<span class="sd">      InvalidInputError: Range must be int if is_date is not set</span>
+<span class="sd">      InvalidInputError: Multiple tables were passed in but no joins were found</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      tuple of row dicts consisting of all the tables that were in the input.</span>
+<span class="sd">      all column names in the db are unique so no colisions occour</span>
+<span class="sd">        example: ({&#39;user_name&#39;: &#39;sharrell&#39;, &#39;access_level&#39;: 10, </span>
+<span class="sd">                   &#39;user_group_assignments_group_name: &#39;cs&#39;,</span>
+<span class="sd">                   &#39;user_group_assignments_user_name: &#39;sharrell&#39;},</span>
+<span class="sd">                  {&#39;user_name&#39;: &#39;sharrell&#39;, &#39;access_level&#39;: 10, </span>
+<span class="sd">                   &#39;user_group_assignments_group_name: &#39;eas&#39;,</span>
+<span class="sd">                   &#39;user_group_assignments_user_name: &#39;sharrell&#39;})</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">transaction_init</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TransactionError</span><span class="p">(</span><span class="s">&#39;Must run StartTansaction before getting &#39;</span>
+                                    <span class="s">&#39;data.&#39;</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">InitDataValidation</span><span class="p">()</span>
+
+    <span class="n">valid_tables</span> <span class="o">=</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetValidTables</span><span class="p">()</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">table_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lock_rows</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">column</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">range_values</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">is_date</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">kwargs</span> <span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="s">&#39;lock_rows&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="p">):</span>
+        <span class="n">lock_rows</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;lock_rows&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;lock_rows&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="s">&#39;column&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="p">):</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;column&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;column&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="s">&#39;range_values&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="p">):</span>
+        <span class="n">range_values</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;range_values&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;range_values&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="s">&#39;is_date&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="p">):</span>
+        <span class="n">is_date</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;is_date&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;is_date&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">column</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">is_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;If is_date is specified you must &#39;</span>
+                                       <span class="s">&#39;specify column and range&#39;</span><span class="p">)</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">bool</span><span class="p">(</span><span class="n">column</span><span class="p">)</span> <span class="o">^</span> <span class="nb">bool</span><span class="p">(</span><span class="n">range_values</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;If column or range is specified &#39;</span>
+                                       <span class="s">&#39;both are needed&#39;</span><span class="p">)</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">kwargs</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Found unknown option(s): &#39;</span>
+                                       <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">args</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;No args given, must at least have a &#39;</span>
+                                     <span class="s">&#39;pair of table name and row dict&#39;</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span>
+          <span class="s">&#39;Number of unnamed args is not even. Args &#39;</span>
+          <span class="s">&#39;should be entered in pairs of table name &#39;</span>
+          <span class="s">&#39;and row dict.&#39;</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+      <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">count</span> <span class="o">%</span> <span class="mi">2</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">valid_tables</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Table name not valid: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">arg</span><span class="p">)</span>
+        <span class="n">current_table_name</span> <span class="o">=</span> <span class="n">arg</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="c"># do checking in validate row dict to check if it is a dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span><span class="o">.</span><span class="n">ValidateRowDict</span><span class="p">(</span><span class="n">current_table_name</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span>
+                                                      <span class="n">none_ok</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                                      <span class="n">all_none_ok</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">tables</span><span class="p">[</span><span class="n">current_table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg</span>
+        <span class="n">table_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_table_name</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">range_values</span> <span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Column </span><span class="si">%s</span><span class="s"> not found in row&#39;</span>
+                                       <span class="s">&#39;dictionary: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="n">is_date</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">constants</span><span class="o">.</span><span class="n">TABLES</span><span class="p">[</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">column</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;DateTime&#39;</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;column: </span><span class="si">%s</span><span class="s"> in table </span><span class="si">%s</span><span class="s"> is not a&#39;</span>
+                                         <span class="s">&#39;DateTime type&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">date</span> <span class="ow">in</span> <span class="n">range_values</span><span class="p">:</span>
+          <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span><span class="o">.</span><span class="n">isDateTime</span><span class="p">(</span><span class="n">date</span><span class="p">)</span> <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span>
+                <span class="s">&#39;Date: </span><span class="si">%s</span><span class="s"> from range is not a valid &#39;</span>
+                <span class="s">&#39;datetime object&#39;</span> <span class="o">%</span> <span class="n">date</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">range_values</span><span class="p">:</span>
+          <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span><span class="o">.</span><span class="n">isUnsignedInt</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Range must be int if is_date &#39;</span>
+                                           <span class="s">&#39;is not set&#39;</span><span class="p">)</span>
+    <span class="n">query_where</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">tables</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">foreign_keys</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SELECT table_name, column_name, &#39;</span>
+                            <span class="s">&#39;referenced_table_name, referenced_column_name &#39;</span>
+                            <span class="s">&#39;FROM information_schema.key_column_usage WHERE &#39;</span>
+                            <span class="s">&#39;referenced_table_name IS NOT NULL AND &#39;</span>
+                            <span class="s">&#39;referenced_table_schema=&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">foreign_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+      <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">foreign_keys</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">key</span><span class="p">[</span><span class="s">&#39;table_name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">table_names</span> <span class="ow">and</span>
+            <span class="n">key</span><span class="p">[</span><span class="s">&#39;referenced_table_name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">table_names</span> <span class="p">):</span>
+          
+          <span class="n">query_where</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;(</span><span class="si">%(table_name)s</span><span class="s">.</span><span class="si">%(column_name)s</span><span class="s">=&#39;</span>
+                             <span class="s">&#39;</span><span class="si">%(referenced_table_name)s</span><span class="s">.&#39;</span>
+                             <span class="s">&#39;</span><span class="si">%(referenced_column_name)s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">query_where</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Multiple tables were passed in but no &#39;</span>
+                                       <span class="s">&#39;joins were found&#39;</span><span class="p">)</span>
+    <span class="n">column_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">search_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">row_dict</span> <span class="ow">in</span> <span class="n">tables</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">column_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">table_name</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+          <span class="n">search_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+          <span class="n">query_where</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s">&#39;=%(&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="s">&#39;)s&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">range_values</span> <span class="p">):</span>
+      <span class="n">search_dict</span><span class="p">[</span><span class="s">&#39;start&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">range_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="n">search_dict</span><span class="p">[</span><span class="s">&#39;end&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">range_values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="n">query_where</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="s">&#39;&gt;=</span><span class="si">%(start)s</span><span class="s"> AND &#39;</span><span class="p">,</span>
+                                       <span class="n">column</span><span class="p">,</span> <span class="s">&#39;&lt;=</span><span class="si">%(end)s</span><span class="s">&#39;</span><span class="p">))</span>
+
+    <span class="n">query_end</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">query_where</span> <span class="p">):</span>
+      <span class="n">query_end</span> <span class="o">=</span> <span class="s">&#39;WHERE </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="s">&#39; AND &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">query_where</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">lock_rows</span> <span class="p">):</span>
+      <span class="n">query_end</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s"> FOR UPDATE&#39;</span> <span class="o">%</span> <span class="n">query_end</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&#39;SELECT </span><span class="si">%s</span><span class="s"> FROM </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">column_names</span><span class="p">),</span>
+                                      <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_names</span><span class="p">),</span>
+                                      <span class="n">query_end</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">search_dict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="dbAccess.GetEmptyRowDict"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.GetEmptyRowDict">[docs]</a>  <span class="k">def</span> <span class="nf">GetEmptyRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gives a dict that has all the members needed to interact with the</span>
+<span class="sd">    the given table using the Make/Remove/ListRow functions.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      table_name: string of valid table name from constants</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      InvalidInputError: Table name not valid</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dictionary: of empty row for specificed table.</span>
+<span class="sd">        example acls dict:</span>
+<span class="sd">        {&#39;acl_name&#39;: None</span>
+<span class="sd">         &#39;acl_range_allowed: None,</span>
+<span class="sd">         &#39;acl_cidr_block&#39;: None }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">row_dict</span> <span class="o">=</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetRowDict</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">row_dict</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Table name not valid: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">():</span>
+      <span class="n">row_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">row_dict</span>
+
+  <span class="c"># Not sure this is needed, buuuuut.</span></div>
+<div class="viewcode-block" id="dbAccess.GetValidTables"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.GetValidTables">[docs]</a>  <span class="k">def</span> <span class="nf">GetValidTables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Export this function to the top level of the db_access stuff so</span>
+<span class="sd">    it can be used without importing un-needed classes.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      list: valid table names</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetValidTables</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="dbAccess.GetRecordArgsDict"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.GetRecordArgsDict">[docs]</a>  <span class="k">def</span> <span class="nf">GetRecordArgsDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get args for a specific record type from the db and shove them into</span>
+<span class="sd">    a dictionary.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      record_type: string of record type</span>
+<span class="sd">    </span>
+<span class="sd">    Raises:</span>
+<span class="sd">      InvalidInputError: Unknown record type</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dictionary: keyed by argument name with values of data type of that arg</span>
+<span class="sd">        example: {&#39;mail_host&#39;: &#39;Hostname&#39;</span>
+<span class="sd">                  &#39;priority&#39;: &#39;UnsignedInt&#39;}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">search_record_arguments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;record_arguments&#39;</span><span class="p">)</span>
+    <span class="n">search_record_arguments_dict</span><span class="p">[</span><span class="s">&#39;record_arguments_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record_type</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">record_arguments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;record_arguments&#39;</span><span class="p">,</span>
+                                      <span class="n">search_record_arguments_dict</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+
+    <span class="n">record_arguments_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">record_arguments</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;Unknown record type: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">record_type</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">record_argument</span> <span class="ow">in</span> <span class="n">record_arguments</span><span class="p">:</span>
+      <span class="n">record_arguments_dict</span><span class="p">[</span><span class="n">record_argument</span><span class="p">[</span><span class="s">&#39;argument_name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">record_argument</span><span class="p">[</span><span class="s">&#39;argument_data_type&#39;</span><span class="p">])</span>
+    
+    <span class="k">return</span> <span class="n">record_arguments_dict</span>
+</div>
+<div class="viewcode-block" id="dbAccess.GetEmptyRecordArgsDict"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.GetEmptyRecordArgsDict">[docs]</a>  <span class="k">def</span> <span class="nf">GetEmptyRecordArgsDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets empty args dict for a specific record type</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      record_type: string of record type</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dictionary: keyed by argument name with values of None</span>
+<span class="sd">        example: {&#39;mail_host&#39;: None</span>
+<span class="sd">                  &#39;priority&#39;: None}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">args_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetRecordArgsDict</span><span class="p">(</span><span class="n">record_type</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">args_dict</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">():</span>
+      <span class="n">args_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="n">args_dict</span>
+</div>
+<div class="viewcode-block" id="dbAccess.ValidateRecordArgsDict"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.ValidateRecordArgsDict">[docs]</a>  <span class="k">def</span> <span class="nf">ValidateRecordArgsDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_type</span><span class="p">,</span> <span class="n">record_args_dict</span><span class="p">,</span>
+                             <span class="n">none_ok</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Type checks record args dynamically.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      record_type: string of record_type</span>
+<span class="sd">      record_args_dict: dictionary for args keyed by arg name.</span>
+<span class="sd">                        a filled out dict from GetEmptyRecordArgsDict()</span>
+<span class="sd">      none_ok: boolean of if None types should be acepted.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      InvalidInputError: dict for record type should have these keys</span>
+<span class="sd">      FucntionError: No function to check data type</span>
+<span class="sd">      UnexpectedDataError: Invalid data type</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">record_type_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetRecordArgsDict</span><span class="p">(</span><span class="n">record_type</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">record_type_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">record_args_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;dict for record type </span><span class="si">%s</span><span class="s"> should have &#39;</span>
+                                     <span class="s">&#39;these keys: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">record_type</span><span class="p">,</span>
+                                     <span class="n">record_type_dict</span><span class="p">))</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">InitDataValidation</span><span class="p">()</span>
+    
+    <span class="n">data_validation_methods</span> <span class="o">=</span> <span class="nb">dir</span><span class="p">(</span><span class="n">data_validation</span><span class="o">.</span><span class="n">DataValidation</span><span class="p">([],</span> <span class="p">[]))</span>
+    <span class="k">for</span> <span class="n">record_arg_name</span> <span class="ow">in</span> <span class="n">record_args_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="s">&#39;is</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">record_type_dict</span><span class="p">[</span><span class="n">record_arg_name</span><span class="p">]</span> <span class="ow">in</span>
+          <span class="n">data_validation_methods</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">FucntionError</span><span class="p">(</span><span class="s">&#39;No function to check data type </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                                          <span class="n">record_type_dict</span><span class="p">[</span><span class="n">record_arg_name</span><span class="p">])</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">none_ok</span> <span class="ow">and</span> <span class="n">record_args_dict</span><span class="p">[</span><span class="n">record_arg_name</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="k">continue</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_validation_instance</span><span class="p">,</span> <span class="s">&#39;is</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+          <span class="n">record_type_dict</span><span class="p">[</span><span class="n">record_arg_name</span><span class="p">])(</span>
+              <span class="n">record_args_dict</span><span class="p">[</span><span class="n">record_arg_name</span><span class="p">])</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;Invalid data type </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                                         <span class="n">record_type_dict</span><span class="p">[</span><span class="n">record_arg_name</span><span class="p">],</span>
+                                         <span class="n">record_args_dict</span><span class="p">[</span><span class="n">record_arg_name</span><span class="p">]))</span></div>
+<div class="viewcode-block" id="dbAccess.ListTableNames"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.ListTableNames">[docs]</a>  <span class="k">def</span> <span class="nf">ListTableNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Lists all tables in the database.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      List: List of tables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&#39;SHOW TABLES&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">tables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    <span class="n">table_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">table_dict</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">table_dict</span><span class="p">:</span>
+        <span class="n">table_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table_dict</span><span class="p">[</span><span class="n">table</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">table_list</span>
+</div>
+<div class="viewcode-block" id="dbAccess.GetCurrentTime"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.GetCurrentTime">[docs]</a>  <span class="k">def</span> <span class="nf">GetCurrentTime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns datetime object of current time in database.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      datetime: current time in the database</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SELECT NOW()&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s">&#39;NOW()&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="dbAccess.CreateRosterDatabase"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.CreateRosterDatabase">[docs]</a>  <span class="k">def</span> <span class="nf">CreateRosterDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Destroys existing table structure in database and replaces it</span>
+<span class="sd">    with schema that is passed in(or default schema).</span>
+
+<span class="sd">    DO NOT RUN THIS AGAINST A DATABASE THAT IS NOT READY TO BE CLEARED</span>
+
+<span class="sd">    This function is used because of a poorly understood bug in MySQLdb</span>
+<span class="sd">    that does not allow our schema to be executed as one big query. The </span>
+<span class="sd">    work around is splitting the whole thing up and commiting each piece</span>
+<span class="sd">    separately.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      schema: string of sql schema</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">schema</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="n">schema</span> <span class="o">=</span> <span class="n">embedded_files</span><span class="o">.</span><span class="n">SCHEMA_FILE</span>
+    <span class="n">schema_lines</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">execute_lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">continued_line</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">schema_lines</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;#&#39;</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">continue</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">line</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">continued_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">execute_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">continued_line</span><span class="p">))</span>
+        <span class="n">continued_line</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">continued_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+      
+    <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s">&#39;ignore&#39;</span><span class="p">,</span> <span class="s">&#39;Unknown table.*&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">execute_lines</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="dbAccess.DumpDatabase"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.DumpDatabase">[docs]</a>  <span class="k">def</span> <span class="nf">DumpDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This will dump the entire database to memory.</span>
+
+<span class="sd">    This would be done by mysqldump but it needs to be done in the same lock</span>
+<span class="sd">    as other processes. So this is a simple mysqldump function.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      Dictionary: Dictionary with keys of table name and schema/data for each</span>
+<span class="sd">                  table as values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">table_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SHOW TABLES&#39;</span><span class="p">)</span>
+    <span class="n">table_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SET OPTION SQL_QUOTE_SHOW_CREATE=1&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">table_names</span><span class="p">:</span>
+      <span class="n">table_name</span> <span class="o">=</span> <span class="n">table_name</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="n">table_data</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SHOW CREATE TABLE </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+      <span class="n">table_data</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="s">&#39;schema&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s">&#39;Create Table&#39;</span><span class="p">]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;DESCRIBE </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+      <span class="n">table_data</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="s">&#39;columns&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">table_descriptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+      <span class="k">for</span> <span class="n">table_description</span> <span class="ow">in</span> <span class="n">table_descriptions</span><span class="p">:</span>
+        <span class="n">table_data</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="s">&#39;columns&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table_description</span><span class="p">[</span><span class="s">&#39;Field&#39;</span><span class="p">])</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SELECT </span><span class="si">%s</span><span class="s"> FROM </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> 
+                          <span class="p">(</span><span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_data</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="s">&#39;columns&#39;</span><span class="p">]),</span>
+                           <span class="n">table_name</span><span class="p">))</span>
+      <span class="n">table_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+      <span class="n">table_data</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="s">&#39;rows&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table_rows</span><span class="p">:</span>
+        <span class="n">row_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+          <span class="n">row_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">literal</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+          <span class="k">if</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">row_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">row_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+            
+
+        <span class="n">table_data</span><span class="p">[</span><span class="n">table_name</span><span class="p">][</span><span class="s">&#39;rows&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_dict</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">table_data</span>
+
+  <span class="c">### These functions are for the user class</span></div>
+<div class="viewcode-block" id="dbAccess.GetUserAuthorizationInfo"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.GetUserAuthorizationInfo">[docs]</a>  <span class="k">def</span> <span class="nf">GetUserAuthorizationInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Grabs authorization data from the db and returns a dict.</span>
+
+<span class="sd">    This function does two selects on the db, one for forward and one for</span>
+<span class="sd">    reverse zones. It also parses the data into a dict for ease of use.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      user: string of username</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnexpectedDataError: Row did not contain</span>
+<span class="sd">                           reverse_range_permissions or</span>
+<span class="sd">                           forward_zone_permissions</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dict: dict with all the relevant information</span>
+<span class="sd">        example:</span>
+<span class="sd">        {&#39;user_access_level&#39;: &#39;2&#39;,</span>
+<span class="sd">         &#39;user_name&#39;: &#39;shuey&#39;,</span>
+<span class="sd">         &#39;forward_zones&#39;: [</span>
+<span class="sd">             {&#39;zone_name&#39;: &#39;cs.university.edu&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: [&#39;a&#39;, &#39;aaaa&#39;]},</span>
+<span class="sd">             {&#39;zone_name&#39;: &#39;eas.university.edu&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: [&#39;a&#39;, &#39;aaaa&#39;, &#39;cname&#39;]},</span>
+<span class="sd">             {&#39;zone_name&#39;: &#39;bio.university.edu&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: &#39;&#39;a&#39;, &#39;ns&#39;}],</span>
+<span class="sd">         &#39;groups&#39;: [&#39;cs&#39;, &#39;bio&#39;],</span>
+<span class="sd">         &#39;reverse_ranges&#39;: [</span>
+<span class="sd">             {&#39;cidr_block&#39;: &#39;192.168.0.0/24&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: [&#39;ptr&#39;, &#39;cname&#39;]},</span>
+<span class="sd">             {&#39;cidr_block&#39;: &#39;192.168.0.0/24&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: [&#39;ptr&#39;]},</span>
+<span class="sd">             {&#39;cidr_block&#39;: &#39;192.168.1.0/24&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: [&#39;ptr&#39;, &#39;cname&#39;]}]}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">auth_info_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">db_data</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">users_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;users&#39;</span><span class="p">)</span>
+    <span class="n">users_dict</span><span class="p">[</span><span class="s">&#39;user_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>
+    <span class="n">groups_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;groups&#39;</span><span class="p">)</span>
+    <span class="n">user_group_assignments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;user_group_assignments&#39;</span><span class="p">)</span>
+    <span class="n">forward_zone_permissions_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;forward_zone_permissions&#39;</span><span class="p">)</span>
+    <span class="n">reverse_range_permissions_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;reverse_range_permissions&#39;</span><span class="p">)</span>
+    <span class="n">group_forward_permissions_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;group_forward_permissions&#39;</span><span class="p">)</span>
+    <span class="n">group_reverse_permissions_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;group_reverse_permissions&#39;</span><span class="p">)</span>
+
+    <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;user_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>
+    <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;forward_zones&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;reverse_ranges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">db_data</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;users&#39;</span><span class="p">,</span> <span class="n">users_dict</span><span class="p">,</span>
+                                  <span class="s">&#39;groups&#39;</span><span class="p">,</span> <span class="n">groups_dict</span><span class="p">,</span>
+                                  <span class="s">&#39;user_group_assignments&#39;</span><span class="p">,</span>
+                                  <span class="n">user_group_assignments_dict</span><span class="p">,</span>
+                                  <span class="s">&#39;forward_zone_permissions&#39;</span><span class="p">,</span>
+                                  <span class="n">forward_zone_permissions_dict</span><span class="p">,</span>
+                                  <span class="s">&#39;group_forward_permissions&#39;</span><span class="p">,</span>
+                                  <span class="n">group_forward_permissions_dict</span><span class="p">))</span>
+
+      <span class="n">db_data</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;users&#39;</span><span class="p">,</span> <span class="n">users_dict</span><span class="p">,</span>
+                                  <span class="s">&#39;groups&#39;</span><span class="p">,</span> <span class="n">groups_dict</span><span class="p">,</span>
+                                  <span class="s">&#39;user_group_assignments&#39;</span><span class="p">,</span>
+                                  <span class="n">user_group_assignments_dict</span><span class="p">,</span>
+                                  <span class="s">&#39;reverse_range_permissions&#39;</span><span class="p">,</span>
+                                  <span class="n">reverse_range_permissions_dict</span><span class="p">,</span>
+                                  <span class="s">&#39;group_reverse_permissions&#39;</span><span class="p">,</span>
+                                  <span class="n">group_reverse_permissions_dict</span><span class="p">))</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">db_data</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor_execute</span><span class="p">(</span><span class="s">&#39;SELECT access_level FROM users &#39;</span>
+                            <span class="s">&#39;WHERE user_name=&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">user</span><span class="p">)</span>
+        <span class="n">db_data</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">())</span>
+
+        <span class="k">if</span><span class="p">(</span> <span class="n">db_data</span> <span class="p">):</span>
+          <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;user_access_level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;access_level&#39;</span><span class="p">]</span>
+          <span class="k">return</span> <span class="n">auth_info_dict</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">return</span> <span class="p">{}</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+
+
+    <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;user_access_level&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db_data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;access_level&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">db_data</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">row</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;group_forward_permissions_group_permission&#39;</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;user_group_assignments_group_name&#39;</span><span class="p">]</span> <span class="ow">in</span>
+            <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;groups&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;groups&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="n">row</span><span class="p">[</span><span class="s">&#39;user_group_assignments_group_name&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="p">{</span><span class="s">&#39;zone_name&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;forward_zone_permissions_zone_name&#39;</span><span class="p">],</span>
+                 <span class="s">&#39;group_permission&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span>
+                     <span class="s">&#39;group_forward_permissions_group_permission&#39;</span><span class="p">]}</span>
+            <span class="ow">in</span> <span class="p">(</span><span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;forward_zones&#39;</span><span class="p">])</span> <span class="p">):</span>
+          <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;forward_zones&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="p">{</span><span class="s">&#39;zone_name&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;forward_zone_permissions_zone_name&#39;</span><span class="p">],</span>
+               <span class="s">&#39;group_permission&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span>
+                 <span class="s">&#39;group_forward_permissions_group_permission&#39;</span><span class="p">]})</span>
+      <span class="k">elif</span><span class="p">(</span> <span class="n">row</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;group_reverse_permissions_group_permission&#39;</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;user_group_assignments_group_name&#39;</span><span class="p">]</span> <span class="ow">in</span>
+            <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;groups&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;groups&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="n">row</span><span class="p">[</span><span class="s">&#39;user_group_assignments_group_name&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="p">{</span><span class="s">&#39;cidr_block&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;reverse_range_permissions_cidr_block&#39;</span><span class="p">],</span>
+                 <span class="s">&#39;group_permission&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span>
+                     <span class="s">&#39;group_reverse_permissions_group_permission&#39;</span><span class="p">]}</span>
+            <span class="ow">in</span> <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;reverse_ranges&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;reverse_ranges&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="p">{</span><span class="s">&#39;cidr_block&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;reverse_range_permissions_cidr_block&#39;</span><span class="p">],</span>
+               <span class="s">&#39;group_permission&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span>
+                   <span class="s">&#39;group_reverse_permissions_group_permission&#39;</span><span class="p">]})</span>
+      <span class="k">elif</span><span class="p">(</span> <span class="n">auth_info_dict</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;forward_zones&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">auth_info_dict</span><span class="p">[</span>
+                <span class="s">&#39;user_access_level&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">64</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="p">{</span><span class="s">&#39;zone_name&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;forward_zone_permissions_zone_name&#39;</span><span class="p">],</span>
+             <span class="s">&#39;group_permission&#39;</span><span class="p">:</span> <span class="p">[]}</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;forward_zones&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;forward_zones&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="p">{</span><span class="s">&#39;zone_name&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;forward_zone_permissions_zone_name&#39;</span><span class="p">],</span>
+               <span class="s">&#39;group_permission&#39;</span><span class="p">:</span> <span class="p">[]})</span>
+      <span class="k">elif</span><span class="p">(</span> <span class="n">auth_info_dict</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;reverse_ranges&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">auth_info_dict</span><span class="p">[</span>
+                <span class="s">&#39;user_access_level&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">64</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="p">{</span><span class="s">&#39;cidr_block&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;reverse_permissions_cidr_block&#39;</span><span class="p">],</span>
+             <span class="s">&#39;group_permission&#39;</span><span class="p">:</span> <span class="p">[]}</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;reverse_ranges&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="n">auth_info_dict</span><span class="p">[</span><span class="s">&#39;reverse_ranges&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="p">{</span><span class="s">&#39;cidr_block&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;reverse_range_permissions_cidr_block&#39;</span><span class="p">],</span>
+               <span class="s">&#39;group_permission&#39;</span><span class="p">:</span> <span class="p">[]})</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">RecordError</span><span class="p">(</span><span class="s">&#39;Returned row is corrupt.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">auth_info_dict</span>
+</div>
+<div class="viewcode-block" id="dbAccess.GetZoneOrigin"><a class="viewcode-back" href="../../roster_core.html#roster_core.db_access.dbAccess.GetZoneOrigin">[docs]</a>  <span class="k">def</span> <span class="nf">GetZoneOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zone_name</span><span class="p">,</span> <span class="n">view_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns zone origin of zone_name that is passed in.</span>
+<span class="sd">    If no zone origin found, return None</span>
+<span class="sd">    </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      zone_name: string of zone_name</span>
+<span class="sd">      view_name: string of view_name</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string of zone origin or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zone_view_assignments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;zone_view_assignments&#39;</span><span class="p">)</span>
+    <span class="n">zone_view_assignments_dict</span><span class="p">[</span><span class="s">&#39;zone_view_assignments_zone_name&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">zone_name</span>
+    <span class="n">zone_view_assignments_dict</span><span class="p">[</span>
+        <span class="s">&#39;zone_view_assignments_view_dependency&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">view_name</span>
+    
+    <span class="n">zone_view_assignment_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;zone_view_assignments&#39;</span><span class="p">,</span> <span class="n">zone_view_assignments_dict</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">zone_view_assignment_rows</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="n">zone_view_assignment_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;zone_origin&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">None</span>
+
+
+
+<span class="c"># vi: set ai aw sw=2:</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

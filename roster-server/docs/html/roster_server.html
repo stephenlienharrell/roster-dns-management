@@ -1,0 +1,598 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_server Package &mdash; Roster Server v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Roster Server v0.17 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to Roster Server’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Roster Server’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Roster Server v0.17 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="roster-server-package">
+<h1>roster_server Package<a class="headerlink" href="#roster-server-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">roster_server</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-roster_server.__init__"></span><p>Toplevel RosterServer API.  This presents entities to external consumers.</p>
+<dl class="class">
+<dt id="roster_server.__init__.Server">
+<em class="property">class </em><tt class="descclassname">roster_server.__init__.</tt><tt class="descname">Server</tt><big>(</big><em>config_instance</em>, <em>keyfile=None</em>, <em>certfile=None</em>, <em>inf_renew_time=None</em>, <em>core_die_time=None</em>, <em>clean_time=None</em>, <em>unittest_timestamp=None</em>, <em>unit_test=False</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Daemon library used to serve commands to the client.</p>
+<dl class="method">
+<dt id="roster_server.__init__.Server.CleanupCoreStore">
+<tt class="descname">CleanupCoreStore</tt><big>(</big><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.CleanupCoreStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleans up expired instances in core_store</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.CoreRun">
+<tt class="descname">CoreRun</tt><big>(</big><em>function</em>, <em>user_name</em>, <em>credfile</em>, <em>args=None</em>, <em>kwargs=None</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.CoreRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a function in core_instance with arbitrary parameters</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>function: name of the function to be run
+user_name: user running the function
+args: list of arguments to be passed to function
+kwargs: dictionary of keyword arguments to be passed to function</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>dictionary:  dictionary of return from function run and new cred string</dt>
+<dd><dl class="first last docutils">
+<dt>example: {&#8216;core_return&#8217;: returned_data,</dt>
+<dd><dl class="first last docutils">
+<dt>&#8216;new_credential&#8217;: u&#8217;</dt>
+<dd>be4d4ecf-d670-44a0-b957-770e118e2755&#8217;}</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.GetCoreInstance">
+<tt class="descname">GetCoreInstance</tt><big>(</big><em>user_name</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.GetCoreInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds core instance in core store, if one cannot be found
+it will be created.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: string of user name</dd>
+<dt>Outputs:</dt>
+<dd>instance: instance of dnsmgmtcore</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.GetCredentials">
+<tt class="descname">GetCredentials</tt><big>(</big><em>user_name</em>, <em>password</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.GetCredentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects to credential cache and gets a credential file.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: string of user name
+password: string of password (plaintext)</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>string: string of credential</dt>
+<dd>example: u&#8217;be4d4ecf-d670-44a0-b957-770e118e2755&#8217;</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.GetVersion">
+<tt class="descname">GetVersion</tt><big>(</big><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.GetVersion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.IsAuthenticated">
+<tt class="descname">IsAuthenticated</tt><big>(</big><em>user_name</em>, <em>credstring</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.IsAuthenticated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if string is valid.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>credstring: string of credential</dd>
+<dt>Outputs:</dt>
+<dd>bool: bool of valid string</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.LogException">
+<tt class="descname">LogException</tt><big>(</big><em>function</em>, <em>args</em>, <em>kwargs</em>, <em>user_name</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.LogException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save functions traceback to logfile</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>function: string of function name
+args: args list
+kwargs: keyword args dict
+user_name: username string</dd>
+<dt>Outputs:</dt>
+<dd>str: uuid string from logfile</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.LogMessage">
+<tt class="descname">LogMessage</tt><big>(</big><em>log_message</em>, <em>user_name</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.LogMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a message to the logfile</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>log_message: string of the log message
+user_name: username string</dd>
+<dt>Outputs:</dt>
+<dd>str: uuid string from logfile</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.Serve">
+<tt class="descname">Serve</tt><big>(</big><em>server_name=None</em>, <em>port=None</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.Serve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main server function</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>server_name: name of server you wish to create
+port: listening port number of server</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.__init__.Server.StringToUnicode">
+<tt class="descname">StringToUnicode</tt><big>(</big><em>object_to_convert</em><big>)</big><a class="headerlink" href="#roster_server.__init__.Server.StringToUnicode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts objects recursively into strings.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>object_to_convert: the object that needs to be converted to unicode</dd>
+<dt>Outputs:</dt>
+<dd>converted_object: object can vary type, but all strings will be unicode</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_server.auth_pam">
+<span id="auth-pam-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">auth_pam</span></tt> Module<a class="headerlink" href="#module-roster_server.auth_pam" title="Permalink to this headline">¶</a></h2>
+<p>PAM module for Pluggable Authentication Module in RosterServer.</p>
+<dl class="class">
+<dt id="roster_server.auth_pam.AuthenticationMethod">
+<em class="property">class </em><tt class="descclassname">roster_server.auth_pam.</tt><tt class="descname">AuthenticationMethod</tt><big>(</big><em>module=&lt;module 'pam' from '/usr/lib/python2.6/site-packages/pam-0.1.4-py2.6.egg/pam.pyc'&gt;</em><big>)</big><a class="reference internal" href="_modules/roster_server/auth_pam.html#AuthenticationMethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.auth_pam.AuthenticationMethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>PAM authentication method,</p>
+<dl class="method">
+<dt id="roster_server.auth_pam.AuthenticationMethod.Authenticate">
+<tt class="descname">Authenticate</tt><big>(</big><em>user_name=None</em>, <em>password=None</em><big>)</big><a class="reference internal" href="_modules/roster_server/auth_pam.html#AuthenticationMethod.Authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.auth_pam.AuthenticationMethod.Authenticate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check, using PAM, if the user_name and password provided match.
+Inputs:</p>
+<blockquote>
+<div>user_name: string of user name.
+password: string of password</div></blockquote>
+<dl class="docutils">
+<dt>Outputs:</dt>
+<dd>boolean: authentication success</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_server.auth_pam.PAMInputError">
+<em class="property">exception </em><tt class="descclassname">roster_server.auth_pam.</tt><tt class="descname">PAMInputError</tt><a class="reference internal" href="_modules/roster_server/auth_pam.html#PAMInputError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.auth_pam.PAMInputError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_server.credentials">
+<span id="credentials-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">credentials</span></tt> Module<a class="headerlink" href="#module-roster_server.credentials" title="Permalink to this headline">¶</a></h2>
+<p>Credential caching for XMLRPC services.</p>
+<dl class="exception">
+<dt id="roster_server.credentials.ConfigError">
+<em class="property">exception </em><tt class="descclassname">roster_server.credentials.</tt><tt class="descname">ConfigError</tt><a class="reference internal" href="_modules/roster_server/credentials.html#ConfigError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.credentials.ConfigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_server.credentials.CredCache">
+<em class="property">class </em><tt class="descclassname">roster_server.credentials.</tt><tt class="descname">CredCache</tt><big>(</big><em>config_instance</em>, <em>inf_renew_time</em>, <em>unit_test=False</em><big>)</big><a class="reference internal" href="_modules/roster_server/credentials.html#CredCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.credentials.CredCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Credentials cache for XMLRPC services.</p>
+<p>Authenticated users are given a time-limited credential.  Credentials map
+to Core instances, and can be used for repeated calls from a client.</p>
+<p>CredCaches also handle verifying credentials, and invoking API calls as
+those credentials.</p>
+<dl class="method">
+<dt id="roster_server.credentials.CredCache.Authenticate">
+<tt class="descname">Authenticate</tt><big>(</big><em>user_name</em>, <em>password</em><big>)</big><a class="reference internal" href="_modules/roster_server/credentials.html#CredCache.Authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.credentials.CredCache.Authenticate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authenticates user against authentication method</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: string of user name
+password: string of password</dd>
+<dt>Outputs:</dt>
+<dd>boolean of whether or not user is authenticated</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.credentials.CredCache.CheckCredential">
+<tt class="descname">CheckCredential</tt><big>(</big><em>credential</em>, <em>user_name</em>, <em>core_instance</em><big>)</big><a class="reference internal" href="_modules/roster_server/credentials.html#CredCache.CheckCredential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.credentials.CredCache.CheckCredential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks users credential against database.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>credential: string of credential
+core_instance: instance of Core</dd>
+<dt>Outputs:</dt>
+<dd>string or None, None if not authenticated, empty string if
+authenticated, string with new uuid if infinite key is being
+refreshed
+example: None, u&#8217;&#8216;, u&#8217;be4d4ecf-d670-44a0-b957-770e118e2755&#8217;</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.credentials.CredCache.GetCredentials">
+<tt class="descname">GetCredentials</tt><big>(</big><em>user_name</em>, <em>password</em>, <em>core_instance</em><big>)</big><a class="reference internal" href="_modules/roster_server/credentials.html#CredCache.GetCredentials"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.credentials.CredCache.GetCredentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a valid credential string given a username and password.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: strin of login for a user
+password: string of user&#8217;s password
+core_instance: instance of Core</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>string: credential string</dt>
+<dd>example: u&#8217;be4d4ecf-d670-44a0-b957-770e118e2755&#8217;</dd>
+</dl>
+</dd>
+<dt>Raises:</dt>
+<dd>AuthError         Raised on invalid username/password combination</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_server.general_ldap">
+<span id="general-ldap-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">general_ldap</span></tt> Module<a class="headerlink" href="#module-roster_server.general_ldap" title="Permalink to this headline">¶</a></h2>
+<p>General LDAP module for LDAP authentication in RosterServer.</p>
+<dl class="class">
+<dt id="roster_server.general_ldap.AuthenticationMethod">
+<em class="property">class </em><tt class="descclassname">roster_server.general_ldap.</tt><tt class="descname">AuthenticationMethod</tt><big>(</big><em>ldap_module=&lt;module 'ldap' from '/usr/lib64/python2.6/site-packages/ldap/__init__.pyc'&gt;</em><big>)</big><a class="reference internal" href="_modules/roster_server/general_ldap.html#AuthenticationMethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.general_ldap.AuthenticationMethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>General LDAP authentication method,
+should work for most LDAP applications.</p>
+<dl class="method">
+<dt id="roster_server.general_ldap.AuthenticationMethod.Authenticate">
+<tt class="descname">Authenticate</tt><big>(</big><em>user_name=None</em>, <em>password=None</em>, <em>binddn=None</em>, <em>cert_file=None</em>, <em>server=None</em>, <em>version=None</em>, <em>tls=None</em><big>)</big><a class="reference internal" href="_modules/roster_server/general_ldap.html#AuthenticationMethod.Authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.general_ldap.AuthenticationMethod.Authenticate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authenticate method for LDAP</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: string of user name
+password: string of password
+binddn: string of binddn line
+cert_file: string of cert file location
+server: string of server url
+version: string of version constant from ldap module
+tls: string of tls enabled or not</dd>
+<dt>Outputs:</dt>
+<dd>boolean: authenticated or not</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_server.general_ldap.GeneralLDAPConfigError">
+<em class="property">exception </em><tt class="descclassname">roster_server.general_ldap.</tt><tt class="descname">GeneralLDAPConfigError</tt><a class="reference internal" href="_modules/roster_server/general_ldap.html#GeneralLDAPConfigError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.general_ldap.GeneralLDAPConfigError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_server.server">
+<span id="server-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">server</span></tt> Module<a class="headerlink" href="#module-roster_server.server" title="Permalink to this headline">¶</a></h2>
+<p>Server library for XML RPC
+Allows client to connect and run arbitrary functions in core.py.</p>
+<dl class="exception">
+<dt id="roster_server.server.ArgumentError">
+<em class="property">exception </em><tt class="descclassname">roster_server.server.</tt><tt class="descname">ArgumentError</tt><a class="reference internal" href="_modules/roster_server/server.html#ArgumentError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.ArgumentError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">roster_core.errors.CoreError</span></tt></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_server.server.FunctionError">
+<em class="property">exception </em><tt class="descclassname">roster_server.server.</tt><tt class="descname">FunctionError</tt><a class="reference internal" href="_modules/roster_server/server.html#FunctionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.FunctionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">roster_core.errors.CoreError</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_server.server.Server">
+<em class="property">class </em><tt class="descclassname">roster_server.server.</tt><tt class="descname">Server</tt><big>(</big><em>config_instance</em>, <em>keyfile=None</em>, <em>certfile=None</em>, <em>inf_renew_time=None</em>, <em>core_die_time=None</em>, <em>clean_time=None</em>, <em>unittest_timestamp=None</em>, <em>unit_test=False</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Daemon library used to serve commands to the client.</p>
+<dl class="method">
+<dt id="roster_server.server.Server.CleanupCoreStore">
+<tt class="descname">CleanupCoreStore</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.CleanupCoreStore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.CleanupCoreStore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleans up expired instances in core_store</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.CoreRun">
+<tt class="descname">CoreRun</tt><big>(</big><em>function</em>, <em>user_name</em>, <em>credfile</em>, <em>args=None</em>, <em>kwargs=None</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.CoreRun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.CoreRun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a function in core_instance with arbitrary parameters</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>function: name of the function to be run
+user_name: user running the function
+args: list of arguments to be passed to function
+kwargs: dictionary of keyword arguments to be passed to function</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>dictionary:  dictionary of return from function run and new cred string</dt>
+<dd><dl class="first last docutils">
+<dt>example: {&#8216;core_return&#8217;: returned_data,</dt>
+<dd><dl class="first last docutils">
+<dt>&#8216;new_credential&#8217;: u&#8217;</dt>
+<dd>be4d4ecf-d670-44a0-b957-770e118e2755&#8217;}</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.GetCoreInstance">
+<tt class="descname">GetCoreInstance</tt><big>(</big><em>user_name</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.GetCoreInstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.GetCoreInstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds core instance in core store, if one cannot be found
+it will be created.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: string of user name</dd>
+<dt>Outputs:</dt>
+<dd>instance: instance of dnsmgmtcore</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.GetCredentials">
+<tt class="descname">GetCredentials</tt><big>(</big><em>user_name</em>, <em>password</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.GetCredentials"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.GetCredentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects to credential cache and gets a credential file.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: string of user name
+password: string of password (plaintext)</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>string: string of credential</dt>
+<dd>example: u&#8217;be4d4ecf-d670-44a0-b957-770e118e2755&#8217;</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.GetVersion">
+<tt class="descname">GetVersion</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.GetVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.GetVersion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.IsAuthenticated">
+<tt class="descname">IsAuthenticated</tt><big>(</big><em>user_name</em>, <em>credstring</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.IsAuthenticated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.IsAuthenticated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if string is valid.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>credstring: string of credential</dd>
+<dt>Outputs:</dt>
+<dd>bool: bool of valid string</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.LogException">
+<tt class="descname">LogException</tt><big>(</big><em>function</em>, <em>args</em>, <em>kwargs</em>, <em>user_name</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.LogException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.LogException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save functions traceback to logfile</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>function: string of function name
+args: args list
+kwargs: keyword args dict
+user_name: username string</dd>
+<dt>Outputs:</dt>
+<dd>str: uuid string from logfile</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.LogMessage">
+<tt class="descname">LogMessage</tt><big>(</big><em>log_message</em>, <em>user_name</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.LogMessage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.LogMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a message to the logfile</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>log_message: string of the log message
+user_name: username string</dd>
+<dt>Outputs:</dt>
+<dd>str: uuid string from logfile</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.Serve">
+<tt class="descname">Serve</tt><big>(</big><em>server_name=None</em>, <em>port=None</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.Serve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.Serve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main server function</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>server_name: name of server you wish to create
+port: listening port number of server</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.server.Server.StringToUnicode">
+<tt class="descname">StringToUnicode</tt><big>(</big><em>object_to_convert</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#Server.StringToUnicode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.Server.StringToUnicode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts objects recursively into strings.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>object_to_convert: the object that needs to be converted to unicode</dd>
+<dt>Outputs:</dt>
+<dd>converted_object: object can vary type, but all strings will be unicode</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_server.server.ServerError">
+<em class="property">exception </em><tt class="descclassname">roster_server.server.</tt><tt class="descname">ServerError</tt><a class="reference internal" href="_modules/roster_server/server.html#ServerError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.ServerError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">roster_core.errors.CoreError</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_server.server.ThreadedXMLRPCServer">
+<em class="property">class </em><tt class="descclassname">roster_server.server.</tt><tt class="descname">ThreadedXMLRPCServer</tt><big>(</big><em>server_address</em>, <em>HandlerClass</em>, <em>keyfile</em>, <em>certfile</em>, <em>logRequests=False</em><big>)</big><a class="reference internal" href="_modules/roster_server/server.html#ThreadedXMLRPCServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.server.ThreadedXMLRPCServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">SocketServer.ThreadingMixIn</span></tt>, <a class="reference internal" href="#roster_server.ssl_xml_rpc_lib.SecureXMLRPCServer" title="roster_server.ssl_xml_rpc_lib.SecureXMLRPCServer"><tt class="xref py py-class docutils literal"><span class="pre">roster_server.ssl_xml_rpc_lib.SecureXMLRPCServer</span></tt></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_server.ssl_xml_rpc_lib">
+<span id="ssl-xml-rpc-lib-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">ssl_xml_rpc_lib</span></tt> Module<a class="headerlink" href="#module-roster_server.ssl_xml_rpc_lib" title="Permalink to this headline">¶</a></h2>
+<p>Secure server library for XML RPC
+SSL wrapper for SimpleXMLRPCServer.</p>
+<p>Most of code is from an example at: <a class="reference external" href="http://code.activestate.com/recipes/496786/">http://code.activestate.com/recipes/496786/</a></p>
+<dl class="class">
+<dt id="roster_server.ssl_xml_rpc_lib.SecureXMLRPCServer">
+<em class="property">class </em><tt class="descclassname">roster_server.ssl_xml_rpc_lib.</tt><tt class="descname">SecureXMLRPCServer</tt><big>(</big><em>server_address</em>, <em>HandlerClass</em>, <em>keyfile</em>, <em>certfile</em>, <em>logRequests=False</em><big>)</big><a class="reference internal" href="_modules/roster_server/ssl_xml_rpc_lib.html#SecureXMLRPCServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.ssl_xml_rpc_lib.SecureXMLRPCServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">BaseHTTPServer.HTTPServer</span></tt>, <tt class="xref py py-class docutils literal"><span class="pre">SimpleXMLRPCServer.SimpleXMLRPCDispatcher</span></tt></p>
+<p>Sets up the XML RPC server to use SSL</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_server.ssl_xml_rpc_lib.SecureXMLRpcRequestHandler">
+<em class="property">class </em><tt class="descclassname">roster_server.ssl_xml_rpc_lib.</tt><tt class="descname">SecureXMLRpcRequestHandler</tt><big>(</big><em>request</em>, <em>client_address</em>, <em>server</em><big>)</big><a class="reference internal" href="_modules/roster_server/ssl_xml_rpc_lib.html#SecureXMLRpcRequestHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.ssl_xml_rpc_lib.SecureXMLRpcRequestHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">SimpleXMLRPCServer.SimpleXMLRPCRequestHandler</span></tt></p>
+<p>Sets up the XML RPC handler to use SSL</p>
+<dl class="method">
+<dt id="roster_server.ssl_xml_rpc_lib.SecureXMLRpcRequestHandler.do_POST">
+<tt class="descname">do_POST</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_server/ssl_xml_rpc_lib.html#SecureXMLRpcRequestHandler.do_POST"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.ssl_xml_rpc_lib.SecureXMLRpcRequestHandler.do_POST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the HTTPS post</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_server.ssl_xml_rpc_lib.SecureXMLRpcRequestHandler.setup">
+<tt class="descname">setup</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_server/ssl_xml_rpc_lib.html#SecureXMLRpcRequestHandler.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_server.ssl_xml_rpc_lib.SecureXMLRpcRequestHandler.setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up SSL transport</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">roster_server Package</a><ul>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">roster_server</span></tt> Package</a></li>
+<li><a class="reference internal" href="#module-roster_server.auth_pam"><tt class="docutils literal"><span class="pre">auth_pam</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_server.credentials"><tt class="docutils literal"><span class="pre">credentials</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_server.general_ldap"><tt class="docutils literal"><span class="pre">general_ldap</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_server.server"><tt class="docutils literal"><span class="pre">server</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_server.ssl_xml_rpc_lib"><tt class="docutils literal"><span class="pre">ssl_xml_rpc_lib</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Roster Server&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/roster_server.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Roster Server’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">Roster Server v0.17 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

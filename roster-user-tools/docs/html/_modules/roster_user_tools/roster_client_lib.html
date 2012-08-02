@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_user_tools.roster_client_lib &mdash; Roster User Tools v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster User Tools v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster User Tools v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_user_tools.roster_client_lib</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;Client library for XML RPC.</span>
+
+<span class="sd">Connects to XML RPC server and runs arbitrary functions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">xmlrpclib</span>
+<span class="kn">import</span> <span class="nn">cli_common_lib</span>
+<span class="kn">import</span> <span class="nn">getpass</span>
+
+
+<div class="viewcode-block" id="InvalidCredentials"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.roster_client_lib.InvalidCredentials">[docs]</a><span class="k">class</span> <span class="nc">InvalidCredentials</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="RunFunction"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.roster_client_lib.RunFunction">[docs]</a><span class="k">def</span> <span class="nf">RunFunction</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">credfile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">credstring</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">[],</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{},</span> <span class="n">server_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">raise_errors</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Runs an arbitrary function for SERVER</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    function: name of the function to be run</span>
+<span class="sd">    user_name: user running the function</span>
+<span class="sd">    args: list of arguments to be passed to function</span>
+<span class="sd">    kwargs: dictionary of keyword arguments to be passed to function</span>
+<span class="sd">    server_name: a string of the server name to connect to</span>
+<span class="sd">    raise_errors: raise errors rather than printing</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    return from function in core</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="c"># if args is None:</span>
+  <span class="c">#   args = []</span>
+  <span class="c"># if kwargs is None:</span>
+  <span class="c">#   kwargs = {}</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">credfile</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+    <span class="n">credfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&#39;~/.dnscred&#39;</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">credfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">credfile</span><span class="p">)</span>
+  <span class="n">server</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="c">## Read credential File</span>
+  <span class="n">core_return</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">credstring</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">credfile</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">credfile_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">credfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">credstring</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">credfile_handle</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">credfile_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">CheckCredentials</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">credfile</span><span class="p">,</span> <span class="n">server_name</span><span class="p">,</span>
+                               <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">print</span> <span class="s">&quot;ERROR: Credential file not found, invalid credentials.&quot;</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">core_return</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">CoreRun</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">credstring</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+  <span class="k">except</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">Fault</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">raise_errors</span> <span class="p">):</span>
+      <span class="k">raise</span>
+    <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">ServerError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s">&#39;UNKNOWN&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># This should never happen</span>
+
+  <span class="k">if</span><span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">core_return</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span> <span class="ow">and</span> <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]</span> <span class="p">):</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">raise_errors</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">Fault</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;(</span><span class="si">%s</span><span class="s">) </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">core_return</span><span class="p">[</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">],</span>
+                                            <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]))</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;error_class&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;InternalError&#39;</span> <span class="p">):</span>
+      <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">ServerError</span><span class="p">(</span><span class="n">core_return</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">],</span>
+                                 <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">elif</span><span class="p">(</span> <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;error_class&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;UserError&#39;</span> <span class="p">):</span>
+      <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">UserError</span><span class="p">(</span><span class="n">core_return</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">UnknownError</span><span class="p">(</span>
+          <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;error_class&#39;</span><span class="p">],</span>
+          <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">],</span>
+          <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+
+  <span class="k">if</span><span class="p">(</span> <span class="n">core_return</span> <span class="o">==</span> <span class="s">&#39;ERROR: Invalid Credentials&#39;</span> <span class="p">):</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">CheckCredentials</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">credfile</span><span class="p">,</span> <span class="n">server_name</span><span class="p">,</span>
+                               <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">print</span> <span class="s">&quot;ERROR: Credential file not found, invalid credentials.&quot;</span>
+      <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+  <span class="k">elif</span><span class="p">(</span> <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;new_credential&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
+    <span class="n">core_return</span><span class="p">[</span><span class="s">&#39;new_credential&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span> <span class="p">):</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">credfile</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">save_umask</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">umask</span><span class="p">(</span><span class="mo">077</span><span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">credfile_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">credfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">credfile_handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">core_return</span><span class="p">[</span><span class="s">&#39;new_credential&#39;</span><span class="p">])</span>
+        <span class="k">finally</span><span class="p">:</span>
+          <span class="n">credfile_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">umask</span><span class="p">(</span><span class="n">save_umask</span><span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">core_return</span>
+
+</div>
+<div class="viewcode-block" id="GetCredentials"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.roster_client_lib.GetCredentials">[docs]</a><span class="k">def</span> <span class="nf">GetCredentials</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">credfile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                   <span class="n">server_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Gets credential string from CredCache.</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    user_name: string of user name</span>
+<span class="sd">    password: string of password (plain text)</span>
+<span class="sd">    ldap_server_name: string of ldap server url</span>
+<span class="sd">    credfile: full path of credential file</span>
+<span class="sd">    server_name: string of xml rpc server url</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    string: credential string</span>
+<span class="sd">            example: u&#39;be4d4ecf-d670-44a0-b957-770e118e2755&#39;</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">server</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="n">credential</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">GetCredentials</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span> <span class="p">):</span>
+    <span class="k">if</span><span class="p">(</span> <span class="s">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">credential</span> <span class="p">):</span>
+      <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">ServerError</span><span class="p">(</span><span class="n">credential</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">],</span>
+                                 <span class="n">credential</span><span class="p">[</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">credfile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+    <span class="n">credfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">credfile</span><span class="p">)</span>
+    <span class="n">save_umask</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">umask</span><span class="p">(</span><span class="mo">077</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">credfile_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">credfile</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">credfile_handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">credential</span><span class="p">)</span>
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="n">credfile_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+      <span class="k">pass</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">umask</span><span class="p">(</span><span class="n">save_umask</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">credential</span> <span class="o">==</span> <span class="s">&#39;&#39;</span> <span class="p">):</span>
+    <span class="k">raise</span> <span class="n">InvalidCredentials</span>
+
+  <span class="k">return</span> <span class="n">credential</span>
+
+</div>
+<div class="viewcode-block" id="IsAuthenticated"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.roster_client_lib.IsAuthenticated">[docs]</a><span class="k">def</span> <span class="nf">IsAuthenticated</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">credfile</span><span class="p">,</span>
+                    <span class="n">server_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Checks credential file if it is valid.</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    user_name: string of user name</span>
+<span class="sd">    credfile: full path of credential file location</span>
+<span class="sd">    server_name: string of server name</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    bool: whether or not credential file is valid</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">credfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">credfile</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">credfile</span><span class="p">)</span> <span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">credfile_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">credfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+      <span class="n">credstring</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">credfile_handle</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+      <span class="n">credfile_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="bp">False</span>
+  <span class="n">server</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="n">authenticated</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">IsAuthenticated</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">credstring</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">authenticated</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span> <span class="ow">and</span> <span class="s">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">authenticated</span> <span class="p">):</span>
+    <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">ServerError</span><span class="p">(</span><span class="n">authenticated</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">],</span>
+                                <span class="n">authenticated</span><span class="p">[</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">authenticated</span>
+</div>
+<div class="viewcode-block" id="CheckCredentials"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.roster_client_lib.CheckCredentials">[docs]</a><span class="k">def</span> <span class="nf">CheckCredentials</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">credfile</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Checks if credential file is valid.</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    username: string of username</span>
+<span class="sd">    credfile: string of credential file location</span>
+<span class="sd">    server: string of server URL</span>
+<span class="sd">    password: string of password</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    string: string of valid credential</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">credfile</span> <span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span><span class="s">&#39;No credential file specified.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="n">got_credential</span> <span class="o">=</span> <span class="bp">None</span>
+  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="k">while</span><span class="p">(</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="p">):</span>
+    <span class="n">valid</span> <span class="o">=</span> <span class="n">IsAuthenticated</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">credfile</span><span class="p">,</span> <span class="n">server_name</span><span class="o">=</span><span class="n">server</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">valid</span> <span class="p">):</span>
+      <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">password</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">password</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s">&#39;Password for </span><span class="si">%s</span><span class="s">: &#39;</span> <span class="o">%</span>  <span class="n">username</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">got_credential</span> <span class="o">=</span> <span class="n">GetCredentials</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">credfile</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">InvalidCredentials</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">password</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">count</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;ERROR: Incorrect username/password.&#39;</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">print</span> <span class="s">&#39;ERROR: Incorrect username/password.&#39;</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">got_credential</span>
+</div>
+<div class="viewcode-block" id="CheckServerVersionMatch"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.roster_client_lib.CheckServerVersionMatch">[docs]</a><span class="k">def</span> <span class="nf">CheckServerVersionMatch</span><span class="p">(</span><span class="n">server_name</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Does a version check between this client and server</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    server_name: string name of server to check</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">server</span> <span class="o">=</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">ServerProxy</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="n">allow_none</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+  <span class="n">server_version</span> <span class="o">=</span>  <span class="n">server</span><span class="o">.</span><span class="n">GetVersion</span><span class="p">()</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">server_version</span> <span class="o">!=</span> <span class="n">__version__</span> <span class="p">):</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s">&#39;user_tools version </span><span class="si">%s</span><span class="s"> mismatch with server version </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+               <span class="n">__version__</span><span class="p">,</span> <span class="n">server_version</span><span class="p">))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster User Tools v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_config_manager.zone_exporter_lib &mdash; Roster Config Manager v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Config Manager v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_config_manager.zone_exporter_lib</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;This module contains all of the logic for the zone exporter.</span>
+
+<span class="sd">It should be only called by the exporter.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">roster_core</span>
+
+
+<span class="n">roster_core</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CheckCoreVersionMatches</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Error"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_exporter_lib.Error">[docs]</a><span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="n">roster_core</span><span class="o">.</span><span class="n">CoreError</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="DuplicateRecordError"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_exporter_lib.DuplicateRecordError">[docs]</a><span class="k">class</span> <span class="nc">DuplicateRecordError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ZoneError"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_exporter_lib.ZoneError">[docs]</a><span class="k">class</span> <span class="nc">ZoneError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="FormatRecordsForZone"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_exporter_lib.FormatRecordsForZone">[docs]</a><span class="k">def</span> <span class="nf">FormatRecordsForZone</span><span class="p">(</span><span class="n">unsorted_records</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">zone_name</span><span class="p">,</span> <span class="n">view_name</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Gets the records from the db and sorts them.</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    unsorted_records: unsorted records dictionary</span>
+<span class="sd">    origin: string of zone origin</span>
+<span class="sd">    zone_name: string of zone name</span>
+<span class="sd">    view_name: string of view name</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    dictionary keyed by record type with values of sorted lists of</span>
+<span class="sd">      record dictionaries.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">pre_sorted_records</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="n">sorted_records</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">unsorted_records</span> <span class="p">):</span>
+    <span class="n">sorted_records</span><span class="p">[</span><span class="s">&#39;bulk&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">unsorted_records</span><span class="p">:</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">pre_sorted_records</span> <span class="p">):</span>
+      <span class="n">pre_sorted_records</span><span class="p">[</span><span class="n">record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pre_sorted_records</span><span class="p">[</span><span class="n">record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">record_type</span> <span class="ow">in</span> <span class="n">pre_sorted_records</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">&#39;mx&#39;</span> <span class="p">):</span>
+      <span class="n">sorted_records</span><span class="p">[</span><span class="n">record_type</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pre_sorted_records</span><span class="p">[</span><span class="n">record_type</span><span class="p">],</span>
+                                           <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;priority&#39;</span><span class="p">])</span>
+
+    <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">&#39;ns&#39;</span> <span class="p">):</span>
+      <span class="n">sorted_records</span><span class="p">[</span><span class="n">record_type</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pre_sorted_records</span><span class="p">[</span><span class="n">record_type</span><span class="p">],</span>
+                                           <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;name_server&#39;</span><span class="p">])</span>
+
+    <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;soa&#39;</span><span class="p">,</span> <span class="s">&#39;txt&#39;</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">sorted_records</span><span class="p">[</span><span class="n">record_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">pre_sorted_records</span><span class="p">[</span><span class="n">record_type</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="c"># put the rest of the records together and sort them by target</span>
+      <span class="n">sorted_records</span><span class="p">[</span><span class="s">&#39;bulk&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">pre_sorted_records</span><span class="p">[</span><span class="n">record_type</span><span class="p">])</span>
+
+  <span class="k">if</span><span class="p">(</span> <span class="n">unsorted_records</span> <span class="p">):</span>
+    <span class="n">sorted_records</span><span class="p">[</span><span class="s">&#39;bulk&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sorted_records</span><span class="p">[</span><span class="s">&#39;bulk&#39;</span><span class="p">],</span>
+                                    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">])</span>
+
+  <span class="k">if</span><span class="p">(</span> <span class="s">&#39;soa&#39;</span> <span class="ow">in</span> <span class="n">sorted_records</span> <span class="p">):</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_records</span><span class="p">[</span><span class="s">&#39;soa&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">):</span>
+      <span class="n">soa_origin</span> <span class="o">=</span> <span class="n">sorted_records</span><span class="p">[</span><span class="s">&#39;soa&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;target&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">soa_origin</span> <span class="o">!=</span> <span class="n">origin</span> <span class="ow">and</span> <span class="n">soa_origin</span> <span class="o">!=</span> <span class="s">u&#39;@&#39;</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;SOA origin &quot;</span><span class="si">%s</span><span class="s">&quot; and zone origin &quot;</span><span class="si">%s</span><span class="s">&quot; do not match.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">soa_origin</span><span class="p">,</span> <span class="n">origin</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">sorted_records</span><span class="p">[</span><span class="s">&#39;soa&#39;</span><span class="p">]:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;view_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">u&#39;any&#39;</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;SOA record found in &quot;any&quot; view in &quot;</span><span class="si">%s</span><span class="s">&quot; zone.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+              <span class="n">record</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]))</span>
+      <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;Multiple SOA records found for &quot;</span><span class="si">%s</span><span class="s">&quot; zone &quot;</span><span class="si">%s</span><span class="s">&quot; view&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="n">zone_name</span><span class="p">,</span> <span class="n">view_name</span><span class="p">))</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;No SOA records found for zone &quot;</span><span class="si">%s</span><span class="s">&quot; view &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">zone_name</span><span class="p">,</span>
+                                                                  <span class="n">view_name</span><span class="p">))</span>
+
+  <span class="k">return</span> <span class="n">sorted_records</span>
+</div>
+<div class="viewcode-block" id="MakeZoneString"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.zone_exporter_lib.MakeZoneString">[docs]</a><span class="k">def</span> <span class="nf">MakeZoneString</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">zone_origin</span><span class="p">,</span> <span class="n">argument_definitions</span><span class="p">,</span> <span class="n">zone_name</span><span class="p">,</span>
+                   <span class="n">view_name</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Makes zone string that can be written to a file.</span>
+<span class="sd">  Inputs:</span>
+<span class="sd">    records: dictionary of sorted records</span>
+<span class="sd">    zone_origin: string of zone origin</span>
+<span class="sd">    argument_definitions: dictionary of argument definitions</span>
+<span class="sd">    zone_name: string of zone name</span>
+<span class="sd">    view_name: string of view name</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    string of exported zone file.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">dupe_check_records</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">dupe_check_records</span><span class="p">:</span>
+    <span class="k">del</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;ttl&#39;</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;last_user&#39;</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;view_name&#39;</span><span class="p">]</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;@&#39;</span> <span class="p">):</span>
+      <span class="n">record</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zone_origin</span>
+
+  <span class="k">for</span> <span class="n">current_index</span><span class="p">,</span> <span class="n">record_a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dupe_check_records</span><span class="p">):</span>
+    <span class="n">next_index</span> <span class="o">=</span> <span class="n">current_index</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">record_b</span> <span class="ow">in</span> <span class="n">dupe_check_records</span><span class="p">[</span><span class="n">next_index</span><span class="p">:]:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">record_a</span> <span class="o">==</span> <span class="n">record_b</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">DuplicateRecordError</span><span class="p">(</span><span class="s">&#39;Duplicate record: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">record_b</span><span class="p">)</span>
+
+  <span class="n">records</span> <span class="o">=</span> <span class="n">FormatRecordsForZone</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">zone_origin</span><span class="p">,</span> <span class="n">zone_name</span><span class="p">,</span> <span class="n">view_name</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">records</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;soa&#39;</span><span class="p">)</span> <span class="p">):</span>
+    <span class="k">raise</span> <span class="n">ZoneError</span><span class="p">(</span><span class="s">&#39;SOA not found for zone </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">zone_name</span><span class="p">)</span>
+
+  <span class="n">zone_string_list</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;; This zone file is autogenerated. DO NOT EDIT.&#39;</span><span class="p">,</span>
+                      <span class="s">&#39;$ORIGIN </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">zone_origin</span><span class="p">]</span>
+  <span class="n">begining_record_order</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;soa&#39;</span><span class="p">,</span> <span class="s">&#39;ns&#39;</span><span class="p">,</span> <span class="s">&#39;mx&#39;</span><span class="p">,</span> <span class="s">&#39;txt&#39;</span><span class="p">]</span>
+
+  <span class="k">for</span> <span class="n">record_type</span> <span class="ow">in</span> <span class="n">begining_record_order</span><span class="p">:</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">record_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">records</span> <span class="p">):</span>
+      <span class="k">continue</span>
+    <span class="k">for</span> <span class="n">current_record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">[</span><span class="n">record_type</span><span class="p">]:</span>
+      <span class="n">line_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">current_record</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">(</span><span class="n">current_record</span><span class="p">[</span><span class="s">&#39;ttl&#39;</span><span class="p">]),</span> <span class="s">&#39;in&#39;</span><span class="p">,</span>
+                   <span class="n">current_record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]]</span>
+
+      <span class="k">for</span> <span class="n">arg_def</span> <span class="ow">in</span> <span class="n">argument_definitions</span><span class="p">[</span><span class="n">record_type</span><span class="p">]:</span>
+        <span class="n">line_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">current_record</span><span class="p">[</span><span class="n">arg_def</span><span class="p">[</span><span class="s">&#39;argument_name&#39;</span><span class="p">]]))</span>
+
+      <span class="n">zone_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line_list</span><span class="p">))</span>
+
+  <span class="k">for</span> <span class="n">current_record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">[</span><span class="s">&#39;bulk&#39;</span><span class="p">]:</span>
+    <span class="n">line_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">current_record</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">(</span><span class="n">current_record</span><span class="p">[</span><span class="s">&#39;ttl&#39;</span><span class="p">]),</span> <span class="s">&#39;in&#39;</span><span class="p">,</span>
+                 <span class="n">current_record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]]</span>
+
+    <span class="k">for</span> <span class="n">arg_def</span> <span class="ow">in</span> <span class="n">argument_definitions</span><span class="p">[</span><span class="n">current_record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]]:</span>
+      <span class="n">line_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">current_record</span><span class="p">[</span><span class="n">arg_def</span><span class="p">[</span><span class="s">&#39;argument_name&#39;</span><span class="p">]]))</span>
+
+    <span class="n">zone_string_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">line_list</span><span class="p">))</span>
+
+  <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">zone_string_list</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

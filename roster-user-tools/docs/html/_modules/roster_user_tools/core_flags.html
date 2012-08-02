@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_user_tools.core_flags &mdash; Roster User Tools v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster User Tools v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster User Tools v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_user_tools.core_flags</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;Core flags lib, flags in all tools.&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">getpass</span>
+<span class="kn">from</span> <span class="nn">optparse</span> <span class="kn">import</span> <span class="n">OptionParser</span>
+<span class="kn">from</span> <span class="nn">roster_user_tools</span> <span class="kn">import</span> <span class="n">cli_common_lib</span>
+
+<div class="viewcode-block" id="FlagsError"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.core_flags.FlagsError">[docs]</a><span class="k">class</span> <span class="nc">FlagsError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+  <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="CoreFlags"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.core_flags.CoreFlags">[docs]</a><span class="k">class</span> <span class="nc">CoreFlags</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Command line common library&quot;&quot;&quot;</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">commands</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">bootstrapper</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes parser, sets flags for all classes&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">OptionParser</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%%</span><span class="s">prog (Roster </span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="n">__version__</span><span class="p">,</span>
+                               <span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapper</span> <span class="o">=</span> <span class="n">bootstrapper</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">SetCommands</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span> <span class="p">):</span>
+      <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span>
+          <span class="s">&#39;This tool does not have a </span><span class="si">%s</span><span class="s"> command.&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">SetCoreFlags</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">SetActionFlags</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">SetDataFlags</span><span class="p">()</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;SetToolFlags&#39;</span><span class="p">)</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">SetToolFlags</span><span class="p">()</span>
+
+    <span class="c">## Organize flags into dict {&#39;flag_name&#39;: &#39;-f/--flag-name&#39;}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">avail_flags</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">option_list</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">avail_flags</span><span class="p">[</span><span class="n">flag</span><span class="o">.</span><span class="n">dest</span><span class="p">]</span> <span class="o">=</span> <span class="n">flag</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">CheckDataFlags</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CoreFlags.SetCoreFlags"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.core_flags.CoreFlags.SetCoreFlags">[docs]</a>  <span class="k">def</span> <span class="nf">SetCoreFlags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets core flags for parser&quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bootstrapper</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span>
+          <span class="s">&#39;-u&#39;</span><span class="p">,</span> <span class="s">&#39;--username&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;username&#39;</span><span class="p">,</span>
+          <span class="n">help</span><span class="o">=</span><span class="s">&#39;Run as different username.&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;&lt;username&gt;&#39;</span><span class="p">,</span>
+          <span class="n">default</span><span class="o">=</span><span class="nb">unicode</span><span class="p">(</span><span class="n">getpass</span><span class="o">.</span><span class="n">getuser</span><span class="p">()))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">SetAllFlagRule</span><span class="p">(</span><span class="s">&#39;username&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span>
+          <span class="s">&#39;-p&#39;</span><span class="p">,</span> <span class="s">&#39;--password&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;password&#39;</span><span class="p">,</span>
+          <span class="n">help</span><span class="o">=</span><span class="s">&#39;Password string, NOTE: It is insecure to use this &#39;</span>
+               <span class="s">&#39;flag on the command line.&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;&lt;password&gt;&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">SetAllFlagRule</span><span class="p">(</span><span class="s">&#39;password&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span>
+          <span class="s">&#39;--cred-string&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;credstring&#39;</span><span class="p">,</span>
+          <span class="n">help</span><span class="o">=</span><span class="s">&#39;String of credential.&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;&lt;cred-string&gt;&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">SetAllFlagRule</span><span class="p">(</span><span class="s">&#39;credstring&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span>
+        <span class="s">&#39;-s&#39;</span><span class="p">,</span> <span class="s">&#39;--server&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;server&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;XML RPC Server URL.&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;&lt;server&gt;&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">SetAllFlagRule</span><span class="p">(</span><span class="s">&#39;server&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span>
+        <span class="s">&#39;-c&#39;</span><span class="p">,</span> <span class="s">&#39;--cred-file&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;credfile&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Location of credential file.&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;&lt;cred-file&gt;&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DEFAULT_CRED_FILE</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">SetAllFlagRule</span><span class="p">(</span><span class="s">&#39;credfile&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span>
+        <span class="s">&#39;--config-file&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;config_file&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s">&#39;Config file location.&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;&lt;file&gt;&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">SetAllFlagRule</span><span class="p">(</span><span class="s">&#39;config_file&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CoreFlags.CheckDataFlags"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.core_flags.CoreFlags.CheckDataFlags">[docs]</a>  <span class="k">def</span> <span class="nf">CheckDataFlags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the action the tool should perform</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      function: string of function, must be in functions</span>
+<span class="sd">      functions: dictionary of uses from tool</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string: string from uses keys of correct action</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="p">):</span>
+      <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span><span class="s">&#39;A command must be specified.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+      <span class="c">## Possilby print help</span>
+    <span class="k">elif</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span> <span class="p">):</span>
+      <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span>
+          <span class="s">&#39;This tool does not have a </span><span class="si">%s</span><span class="s"> command.&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+      <span class="c">## Possilby print help</span>
+
+    <span class="c">## Find used flags {&#39;flag_name&#39;: &#39;flag_value&#39;}</span>
+    <span class="n">used_flags</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">option_list</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+      <span class="n">option_var</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s">&#39;self.options.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">flag</span><span class="o">.</span><span class="n">dest</span><span class="p">)</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">option_var</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">defaults</span><span class="p">[</span><span class="n">flag</span><span class="o">.</span><span class="n">dest</span><span class="p">]</span> <span class="p">):</span>
+        <span class="n">used_flags</span><span class="p">[</span><span class="n">flag</span><span class="o">.</span><span class="n">dest</span><span class="p">]</span> <span class="o">=</span> <span class="n">option_var</span>
+
+    <span class="c">## Find irrelevant flags</span>
+    <span class="k">for</span> <span class="n">used_flag</span> <span class="ow">in</span> <span class="n">used_flags</span><span class="p">:</span>
+      <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
+      <span class="k">for</span> <span class="n">flag_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">]:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">flag_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;dependent_args&#39;</span><span class="p">,</span> <span class="s">&#39;independent_args&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">][</span><span class="n">flag_type</span><span class="p">]:</span>
+            <span class="k">if</span><span class="p">(</span> <span class="n">used_flag</span> <span class="ow">in</span> <span class="n">group</span> <span class="p">):</span>
+              <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">used_flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">][</span><span class="n">flag_type</span><span class="p">]</span> <span class="p">):</span>
+          <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">found</span> <span class="p">):</span>
+        <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span>
+            <span class="s">&#39;The </span><span class="si">%s</span><span class="s"> flag cannot be used with the </span><span class="si">%s</span><span class="s"> command.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">avail_flags</span><span class="p">[</span><span class="n">used_flag</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c">## Check if all required arguments are used</span>
+    <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">][</span><span class="s">&#39;args&#39;</span><span class="p">]:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">flag</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_flags</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">][</span><span class="s">&#39;args&#39;</span><span class="p">][</span>
+            <span class="n">flag</span><span class="p">]</span> <span class="p">):</span>
+        <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span>
+            <span class="s">&#39;The </span><span class="si">%s</span><span class="s"> flag is required.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">avail_flags</span><span class="p">[</span><span class="n">flag</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c">## Possilby print help</span>
+
+    <span class="c">## Check independent arguments</span>
+    <span class="k">for</span> <span class="n">flags</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">][</span><span class="s">&#39;independent_args&#39;</span><span class="p">]:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">):</span>
+        <span class="k">continue</span>
+      <span class="n">flags_real</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># Real flags strings like -a/--acl</span>
+      <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">:</span>
+        <span class="n">flags_real</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">avail_flags</span><span class="p">[</span><span class="n">flag</span><span class="p">]))</span>
+      <span class="n">independent_flags</span> <span class="o">=</span> <span class="mi">0</span> 
+      <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">used_flags</span> <span class="p">):</span>
+          <span class="n">independent_flags</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">independent_flags</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">):</span>
+          <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> cannot be used simultaneously.&#39;</span> <span class="o">%</span> <span class="p">(</span> 
+              <span class="s">&#39; and &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">flags_real</span><span class="p">))),</span> <span class="mi">1</span><span class="p">)</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">independent_flags</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">flags</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span> <span class="p">):</span>
+        <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span><span class="s">&#39;Either </span><span class="si">%s</span><span class="s"> must be used.&#39;</span> <span class="o">%</span> <span class="p">(</span> 
+            <span class="s">&#39; or &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">flags_real</span><span class="p">))),</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c">## Check dependent arguments</span>
+    <span class="n">used</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">unused</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">flags</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">][</span><span class="s">&#39;dependent_args&#39;</span><span class="p">]:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">):</span>
+        <span class="k">continue</span>
+      <span class="n">flags_real</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># Real flags strings like -a/--acl</span>
+      <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">:</span>
+        <span class="n">flags_real</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">avail_flags</span><span class="p">[</span><span class="n">flag</span><span class="p">]))</span>
+      <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">used_flags</span> <span class="p">):</span>
+          <span class="n">used</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">unused</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">used</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">unused</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">):</span>
+        <span class="n">cli_common_lib</span><span class="o">.</span><span class="n">DnsError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> must be used together.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="s">&#39; and &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">flags_real</span><span class="p">))),</span> <span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CoreFlags.SetCommands"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.core_flags.CoreFlags.SetCommands">[docs]</a>  <span class="k">def</span> <span class="nf">SetCommands</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">functions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets self.functions_dict according to functions list</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      functions: list of strings of functions</span>
+
+<span class="sd">      Sets the self.functions_dict</span>
+<span class="sd">      ex:</span>
+<span class="sd">        {&#39;list&#39;: {&#39;args&#39;: {}, &#39;forbidden_args&#39;:{}, &#39;independent_args&#39;: [],</span>
+<span class="sd">                  &#39;dependent_args&#39;: []},</span>
+<span class="sd">        {&#39;remove&#39;: {&#39;args&#39;: {}, &#39;forbidden_args&#39;:{}, &#39;independent_args&#39;: [],</span>
+<span class="sd">                    &#39;dependent_args&#39;: []}}</span>
+
+<span class="sd">      The list portion of the dictionary may be populated as shown below:</span>
+
+<span class="sd">        {&#39;list&#39;: {&#39;args&#39;: {&#39;user&#39;: True, &#39;verbose&#39;: False},</span>
+<span class="sd">                  &#39;forbidden_args&#39;: {&#39;make_all&#39;: False},</span>
+<span class="sd">                  &#39;independent_args&#39;: [{&#39;allow&#39;: False, &#39;deny&#39;: False},</span>
+<span class="sd">                                       {&#39;quiet&#39;: False, &#39;verbose&#39;: False}],</span>
+<span class="sd">                  &#39;dependent_args&#39;: [{&#39;allow&#39;: False, &#39;allow_level&#39;: True}]}}</span>
+
+<span class="sd">      Where &#39;user&#39; is a required argument. The value represents whether or not</span>
+<span class="sd">      the argument is required: True/False. Note &#39;user&#39; is the name given in</span>
+<span class="sd">      optparse, NOT the flag &#39;-u/--user&#39;. Verbose is not a required argument,</span>
+<span class="sd">      but is listed in args and should be in case of any code changes. All</span>
+<span class="sd">      args should be represented in portions of this dictionary. If &#39;user&#39;</span>
+<span class="sd">      is not supplied, the function will exit with error. &#39;make_all&#39; is a</span>
+<span class="sd">      forbidden argument. If it is used in this certain portion of a function,</span>
+<span class="sd">      the user is probably mistaking what is happening with the command and</span>
+<span class="sd">      the function will exit with error. Independent args must not be given</span>
+<span class="sd">      simultaneously otherwise the function will exit with error. If these args</span>
+<span class="sd">      are required, it will exit with error if one or the other is not</span>
+<span class="sd">      specified. Dependent args are arguments that depend on each other,</span>
+<span class="sd">      the function will error out if both are not supplied simultaneously.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span> <span class="o">=</span> <span class="p">{}</span> <span class="c"># Reset if not empty</span>
+    <span class="n">functions_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;args&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s">&#39;forbidden_args&#39;</span><span class="p">:</span> <span class="p">{},</span>
+                           <span class="s">&#39;independent_args&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s">&#39;dependent_args&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">functions</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="n">function</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">functions_dict</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CoreFlags.SetDefaultFlags"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.core_flags.CoreFlags.SetDefaultFlags">[docs]</a>  <span class="k">def</span> <span class="nf">SetDefaultFlags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets all availible default flags to not required</span>
+<span class="sd">       </span>
+<span class="sd">       for use with one command functions such as list functions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">defaults</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">AddFlagRule</span><span class="p">(</span><span class="n">flag</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CoreFlags.AddFlagRule"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.core_flags.CoreFlags.AddFlagRule">[docs]</a>  <span class="k">def</span> <span class="nf">AddFlagRule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag_name</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                  <span class="n">flag_type</span><span class="o">=</span><span class="s">&#39;args&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a key to functions dict</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      flag_name: string of flag name</span>
+<span class="sd">      command: string of command (defaults to self.command)</span>
+<span class="sd">      required: boolean of required flag (defaults to true)</span>
+<span class="sd">      flag_type: type of flag (defaults to &#39;args&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">command</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+      <span class="k">return</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">command</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+      <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">flag_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;independent_args&#39;</span><span class="p">,</span> <span class="s">&#39;dependent_args&#39;</span><span class="p">]</span>
+        <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">flag_name</span><span class="p">)</span> <span class="o">==</span> <span class="nb">tuple</span> <span class="p">):</span>
+      <span class="n">new_dict</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">for</span> <span class="n">flag_n</span> <span class="ow">in</span> <span class="n">flag_name</span><span class="p">:</span>
+        <span class="n">new_dict</span><span class="p">[</span><span class="n">flag_n</span><span class="p">]</span> <span class="o">=</span> <span class="n">required</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="n">command</span><span class="p">][</span><span class="n">flag_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_dict</span><span class="p">)</span>
+
+    <span class="k">elif</span><span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">flag_name</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">[</span><span class="n">command</span><span class="p">][</span><span class="n">flag_type</span><span class="p">][</span><span class="n">flag_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">required</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">FlagsError</span><span class="p">(</span><span class="s">&#39;flag_name type and flag_type mismatch.&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="CoreFlags.SetAllFlagRule"><a class="viewcode-back" href="../../roster_user_tools.html#roster_user_tools.core_flags.CoreFlags.SetAllFlagRule">[docs]</a>  <span class="k">def</span> <span class="nf">SetAllFlagRule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flag_name</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">flag_type</span><span class="o">=</span><span class="s">&#39;args&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a key to all args portions of functions dicts</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      flag_name: string of optparse flag name</span>
+<span class="sd">      required: boolean of required flag (defaults to True)</span>
+<span class="sd">      flag_type: type of flag (defaults to &#39;args&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions_dict</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">AddFlagRule</span><span class="p">(</span><span class="n">flag_name</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">command</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="n">required</span><span class="p">,</span>
+                       <span class="n">flag_type</span><span class="o">=</span><span class="n">flag_type</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster User Tools v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

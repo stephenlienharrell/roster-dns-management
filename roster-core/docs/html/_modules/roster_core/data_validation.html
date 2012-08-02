@@ -1,0 +1,454 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_core.data_validation &mdash; Roster Core v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Core v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_core.data_validation</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c"># </span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c"># </span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c"># </span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c"># </span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;This module contains static methods for validating different kinds of data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">cPickle</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">import</span> <span class="nn">IPy</span>
+
+<span class="kn">import</span> <span class="nn">constants</span>
+<span class="kn">import</span> <span class="nn">errors</span>
+<span class="kn">import</span> <span class="nn">helpers_lib</span>
+
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">punycode_lib</span>
+
+<div class="viewcode-block" id="DataValidation"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation">[docs]</a><span class="k">class</span> <span class="nc">DataValidation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reserved_words</span><span class="p">,</span> <span class="n">group_permissions</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">reserved_words</span> <span class="o">=</span> <span class="n">reserved_words</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">group_permissions</span> <span class="o">=</span> <span class="n">group_permissions</span>
+
+<div class="viewcode-block" id="DataValidation.isUnicodeString"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isUnicodeString">[docs]</a>  <span class="k">def</span> <span class="nf">isUnicodeString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that a string is unicode.</span>
+<span class="sd">  </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      u_string: unicode string</span>
+<span class="sd"> </span>
+<span class="sd">    Raises:</span>
+<span class="sd">      ReservedWordError: Reserved word found, unable to complete request.</span>
+<span class="sd"> </span>
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: bool if string or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">u_string</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reserved_words</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">u_string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">word</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ReservedWordError</span><span class="p">(</span><span class="s">&#39;Reserved word </span><span class="si">%s</span><span class="s"> found, unable &#39;</span>
+                                       <span class="s">&#39;to complete request&#39;</span> <span class="o">%</span> <span class="n">word</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="DataValidation.isReservedWord"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isReservedWord">[docs]</a>  <span class="k">def</span> <span class="nf">isReservedWord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that a string is unicode. Ignores reserved words.</span>
+<span class="sd">  </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      u_string: unicode string</span>
+<span class="sd">    </span>
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: bool if string or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">u_string</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="DataValidation.isGroupPermission"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isGroupPermission">[docs]</a>  <span class="k">def</span> <span class="nf">isGroupPermission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_permission</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks to make sure that the string is a valid group permission.</span>
+<span class="sd">  </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      group_permission: unicode string of a group permission</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if group permission is valid or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">group_permissions_list</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">permission</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">permission</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_permissions</span><span class="p">]</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">isUnicodeString</span><span class="p">(</span><span class="n">group_permission</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="n">group_permission</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">group_permissions_list</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="DataValidation.isAccessLevel"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isAccessLevel">[docs]</a>  <span class="k">def</span> <span class="nf">isAccessLevel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">access_level</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks to make sure that the string is a valid access level.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      access_level: unisgned int that is in constants.ACCESS_LEVELS </span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if access level is valid or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">isUnsignedInt</span><span class="p">(</span><span class="n">access_level</span><span class="p">)</span> <span class="ow">and</span> <span class="n">access_level</span> <span class="ow">in</span>
+        <span class="n">constants</span><span class="o">.</span><span class="n">ACCESS_LEVELS</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="DataValidation.isIPv4IPAddress"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isIPv4IPAddress">[docs]</a>  <span class="k">def</span> <span class="nf">isIPv4IPAddress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ip_address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that a string is an ipv4 IP Address.</span>
+<span class="sd">  </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      ip_address: string of an ipv4 ip address</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if string is valid ip address</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ip_address</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s">r&quot;\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.&quot;</span>
+                  <span class="s">r&quot;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.&quot;</span>
+                  <span class="s">r&quot;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.&quot;</span>
+                  <span class="s">r&quot;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b&quot;</span><span class="p">,</span>
+                  <span class="n">ip_address</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="DataValidation.isIPv6IPAddress"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isIPv6IPAddress">[docs]</a>  <span class="k">def</span> <span class="nf">isIPv6IPAddress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ip_address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that a string is a fully enumerated ipv6 IP Address.</span>
+<span class="sd">  </span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      ip_address: string of ipv6 ip address</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if string is valid ip address</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ip_address</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">)</span> <span class="ow">or</span> 
+        <span class="ow">not</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">ip</span> <span class="o">=</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">ip</span><span class="o">.</span><span class="n">strFullsize</span><span class="p">()</span> <span class="o">==</span> <span class="n">ip_address</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">ip</span><span class="o">.</span><span class="n">netmask</span><span class="p">())</span> <span class="o">==</span> <span class="s">&#39;ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff&#39;</span> <span class="ow">or</span>
+        <span class="ow">not</span> <span class="n">ip</span><span class="o">.</span><span class="n">version</span><span class="p">()</span> <span class="o">==</span> <span class="mi">6</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="DataValidation.isCIDRBlock"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isCIDRBlock">[docs]</a>  <span class="k">def</span> <span class="nf">isCIDRBlock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cidr_block</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that a string is a CIDR block.</span>
+
+<span class="sd">    http://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      cidr_block: string of CIDR block</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if it is valid CIDR block</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cidr_block</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">)</span> <span class="ow">or</span>
+        <span class="n">cidr_block</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">cidr_block</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="DataValidation.isIntBool"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isIntBool">[docs]</a>  <span class="k">def</span> <span class="nf">isIntBool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">int_bool</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that int_bool is only 1 or 0 and nothing else.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      int_bool: 1 or 0</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if it is a valid int bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">int_bool</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">int_bool</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="DataValidation.isUnsignedInt"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isUnsignedInt">[docs]</a>  <span class="k">def</span> <span class="nf">isUnsignedInt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unsigned_int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that unsigned_int is of int class and is 0 or higher.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      unsigned_int: integer</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if it is a valid unsigned int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">unsigned_int</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unsigned_int</span><span class="p">,</span> <span class="nb">long</span><span class="p">))</span> <span class="ow">and</span> 
+        <span class="n">unsigned_int</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unsigned_int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="DataValidation.isTarget"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isTarget">[docs]</a>  <span class="k">def</span> <span class="nf">isTarget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that a target and it&#39;s components have the correct length</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">    target: target string</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">    bool: if it is a valid target&quot;&quot;&quot;</span>
+
+    <span class="n">target</span> <span class="o">=</span> <span class="n">punycode_lib</span><span class="o">.</span><span class="n">Uni2Puny</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+    
+    <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">255</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">target</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">component</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">63</span> <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="DataValidation.isHostname"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isHostname">[docs]</a>  <span class="k">def</span> <span class="nf">isHostname</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that is a unicode string and that is properly dotted.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      host_name: string of properly dotted time stamp</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if it is a valid hostname</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">host_name</span> <span class="o">==</span> <span class="s">&#39;.&#39;</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">isUnicodeStringNoSpaces</span><span class="p">(</span><span class="n">host_name</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="n">host_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="n">host_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span>
+        <span class="ow">not</span> <span class="n">host_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">isTarget</span><span class="p">(</span><span class="n">host_name</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="DataValidation.isUnicodeStringNoSpaces"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isUnicodeStringNoSpaces">[docs]</a>  <span class="k">def</span> <span class="nf">isUnicodeStringNoSpaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that string is unicode and contains no spaces</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      string: string to validate</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if it is a valid unicode string with no spaces</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">isUnicodeString</span><span class="p">(</span><span class="n">string</span><span class="p">)</span> <span class="ow">and</span> <span class="s">&#39; &#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">string</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="DataValidation.isUnicodeString255"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isUnicodeString255">[docs]</a>  <span class="k">def</span> <span class="nf">isUnicodeString255</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that is a unicode string and that is less than 256 characters</span>
+<span class="sd">    long</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      string: string to validate</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if it is a valid unicode string of correct length&quot;&quot;&quot;</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">isUnicodeString</span><span class="p">(</span><span class="n">string</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">256</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="DataValidation.isDateTime"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isDateTime">[docs]</a>  <span class="k">def</span> <span class="nf">isDateTime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that is a unicode string and that is a valid time stamp.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      date_time: string of date in format YYYY-MM-DD HH:MM:SS</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if it is a valid date</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">date_time</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="DataValidation.isPickleString"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.isPickleString">[docs]</a>  <span class="k">def</span> <span class="nf">isPickleString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pickle_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that the string can be unpickled.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      pickle_string: string to be unpickled.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: if it is a valid pickle string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">cPickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">pickle_string</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">cPickle</span><span class="o">.</span><span class="n">PickleError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<div class="viewcode-block" id="DataValidation.ListGroupPermissions"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.ListGroupPermissions">[docs]</a>  <span class="k">def</span> <span class="nf">ListGroupPermissions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of group permissions pulled from the database</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      list: list of string group permissions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_permissions</span>
+</div>
+<div class="viewcode-block" id="DataValidation.ValidateRowDict"><a class="viewcode-back" href="../../roster_core.html#roster_core.data_validation.DataValidation.ValidateRowDict">[docs]</a>  <span class="k">def</span> <span class="nf">ValidateRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">row_dict</span><span class="p">,</span> <span class="n">none_ok</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                      <span class="n">all_none_ok</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks row dictionaries for correctness in reference to know data types</span>
+<span class="sd">      and column names in the coresponding table.</span>
+<span class="sd">  </span>
+<span class="sd">    Input:</span>
+<span class="sd">      table_name: string of table name</span>
+<span class="sd">      row_dict: dict of row</span>
+<span class="sd">      none_ok: bool of allowance of None as a value in the dict</span>
+<span class="sd">      all_none_ok: bool of allowance of None as every value in the dict</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnexpectedDataError: Missing key in dictionary</span>
+<span class="sd">      UnexpectedDataError: Dictionary has extra key that is not used.</span>
+<span class="sd">      FunctionError: No Function to check data type</span>
+<span class="sd">      UnexpectedDataError: Invalid data type</span>
+<span class="sd">      UnexpectedDataError: Need to fill out at least one value in dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">main_dict</span> <span class="o">=</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetRowDict</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">main_dict</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">():</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row_dict</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;Missing key </span><span class="si">%s</span><span class="s"> in dictionary&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">main_dict</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;Dictionary has extra key that is not &#39;</span>
+                                       <span class="s">&#39;used: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="s">&#39;is</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">main_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">FunctionError</span><span class="p">(</span><span class="s">&#39;No function to check data &#39;</span>
+                                          <span class="s">&#39;type: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">main_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;is</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">main_dict</span><span class="p">[</span><span class="n">key</span><span class="p">])(</span><span class="n">value</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="p">(</span><span class="ow">not</span> <span class="n">none_ok</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;_id&#39;</span><span class="p">))</span> <span class="ow">or</span>
+            <span class="p">(</span><span class="n">none_ok</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;Invalid data type </span><span class="si">%s</span><span class="s"> for </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+              <span class="n">main_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">none_ok</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">all_none_ok</span> <span class="p">):</span>
+      <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+          <span class="k">return</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span><span class="s">&#39;Need to fill out at least one value &#39;</span>
+                                       <span class="s">&#39;in dict&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

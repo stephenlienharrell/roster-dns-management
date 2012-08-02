@@ -1,0 +1,197 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_core.punycode_lib &mdash; Roster Core v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Core v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_core.punycode_lib</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2010, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USjjE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;Punycode and Unicode convertor module for Roster&quot;&quot;&quot;</span>
+
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2010, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&quot;#TRUNK#&quot;</span>
+
+
+<div class="viewcode-block" id="Uni2Puny"><a class="viewcode-back" href="../../roster_core.html#roster_core.punycode_lib.Uni2Puny">[docs]</a><span class="k">def</span> <span class="nf">Uni2Puny</span><span class="p">(</span><span class="n">unicode_string</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Converts a unicode domain into a punycoded domain.</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    unicode/string: String or unicode of domain.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    string: A punycoded domain string.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">unicode_string</span> <span class="o">==</span> <span class="bp">None</span> <span class="p">):</span>
+    <span class="k">return</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">unicode_string</span> <span class="o">=</span> <span class="n">unicode_string</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">:</span>
+      <span class="k">pass</span>
+
+  <span class="c">## Split the domain name into levels.</span>
+  <span class="n">unicode_string</span> <span class="o">=</span> <span class="n">unicode_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+
+  <span class="c">## For each level of the domain, check if it is unicode.</span>
+  <span class="c">## If it is, Punycode the level.</span>
+  <span class="n">punycode_string</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+  <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">unicode_string</span><span class="p">:</span>
+    <span class="n">is_unicode</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">punycode_string</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span> <span class="p">):</span>
+      <span class="n">punycode_string</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">punycode_string</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">level</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">ord</span><span class="p">(</span><span class="n">char</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">127</span> <span class="p">):</span>
+        <span class="n">is_unicode</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">break</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">is_unicode</span> <span class="p">):</span>
+      <span class="n">punycode_string</span> <span class="o">=</span> <span class="s">&#39;xn--</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">punycode_string</span><span class="p">)</span>
+      <span class="n">punycode_string</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">punycode_string</span><span class="p">,</span> <span class="n">level</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;punycode&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">punycode_string</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">punycode_string</span><span class="p">,</span> <span class="n">level</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+  <span class="k">return</span> <span class="n">punycode_string</span>
+</div>
+<div class="viewcode-block" id="Puny2Uni"><a class="viewcode-back" href="../../roster_core.html#roster_core.punycode_lib.Puny2Uni">[docs]</a><span class="k">def</span> <span class="nf">Puny2Uni</span><span class="p">(</span><span class="n">punycode_string</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Converts a Punycoded domain into a unicode domain.</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    string: Punycoded domain.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    unicode: Decoded punycode domain.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">punycode_string</span> <span class="o">==</span> <span class="bp">None</span> <span class="p">):</span>
+    <span class="k">return</span>
+
+  <span class="c">## Split the domain name into levels.</span>
+  <span class="n">punycode_string</span> <span class="o">=</span> <span class="n">punycode_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+
+  <span class="c">## For each level of the domain, check if it is Punycode.</span>
+  <span class="c">## If it is, decode it to unicode.</span>
+  <span class="n">unicode_string</span> <span class="o">=</span> <span class="s">u&#39;&#39;</span>
+  <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">punycode_string</span><span class="p">:</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">unicode_string</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span> <span class="p">):</span>
+      <span class="n">unicode_string</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">unicode_string</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">level</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;xn--&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">):</span>
+      <span class="n">level</span> <span class="o">=</span> <span class="n">level</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;xn--&#39;</span><span class="p">,</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+      <span class="n">unicode_string</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">unicode_string</span><span class="p">,</span> <span class="n">level</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;punycode&#39;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">unicode_string</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">unicode_string</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">unicode_string</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

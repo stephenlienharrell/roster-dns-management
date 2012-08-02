@@ -1,0 +1,442 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_core.helpers_lib &mdash; Roster Core v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Core v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_core.helpers_lib</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c"># </span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c"># </span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c"># </span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c"># </span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;This is a library of static helper functions for Roster.&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">IPy</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">import</span> <span class="nn">constants</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">errors</span>
+
+
+<div class="viewcode-block" id="GetFunctionNameAndArgs"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.GetFunctionNameAndArgs">[docs]</a><span class="k">def</span> <span class="nf">GetFunctionNameAndArgs</span><span class="p">():</span>
+  <span class="sd">&quot;&quot;&quot;Grabs the current frame and adjacent frames then finds the calling</span>
+<span class="sd">  function name and arguments and returns them.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    tuple: function name and current args</span>
+<span class="sd">      ex: (&#39;MakeUser&#39;, {&#39;replay_args&#39;: [u&#39;ahoward&#39;, 64],</span>
+<span class="sd">                        &#39;audit_args&#39;: {&#39;access_level&#39;: 64,</span>
+<span class="sd">                                       &#39;user_name&#39;: u&#39;ahoward&#39;}}</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">current_frame</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">()</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">outer_frames</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getouterframes</span><span class="p">(</span><span class="n">current_frame</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">function_name</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">outer_frames</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span>
+      <span class="n">calling_frame</span> <span class="o">=</span> <span class="n">outer_frames</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">arg_values</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargvalues</span><span class="p">(</span><span class="n">calling_frame</span><span class="p">)</span>
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">calling_frame</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="k">del</span> <span class="n">outer_frames</span>
+  <span class="k">finally</span><span class="p">:</span>
+    <span class="k">del</span> <span class="n">current_frame</span>
+  <span class="n">replay_args</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="n">audit_args</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">arg_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">arg</span> <span class="o">==</span> <span class="s">&#39;self&#39;</span> <span class="p">):</span>
+      <span class="k">continue</span>
+    <span class="n">audit_args</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg_values</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="n">arg</span><span class="p">]</span>
+    <span class="n">replay_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg_values</span><span class="p">[</span><span class="mi">3</span><span class="p">][</span><span class="n">arg</span><span class="p">])</span>
+  <span class="n">current_args</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;audit_args&#39;</span><span class="p">:</span> <span class="n">audit_args</span><span class="p">,</span> <span class="s">&#39;replay_args&#39;</span><span class="p">:</span> <span class="n">replay_args</span><span class="p">}</span>
+  <span class="k">return</span> <span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="n">current_args</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="GetValidTables"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.GetValidTables">[docs]</a><span class="k">def</span> <span class="nf">GetValidTables</span><span class="p">():</span>
+  <span class="sd">&quot;&quot;&quot;Returns all of the tables in the database that are enumerated in this</span>
+<span class="sd">  modules.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    list: list of valid tables.</span>
+<span class="sd">      example: [&#39;acls&#39;, &#39;records&#39;, &#39;etc&#39;]</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">constants</span><span class="o">.</span><span class="n">TABLES</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="GetRowDict"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.GetRowDict">[docs]</a><span class="k">def</span> <span class="nf">GetRowDict</span><span class="p">(</span><span class="n">table_name</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Returns a specific dictionary keyed off of table name. </span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    table_name: string of table name from db</span>
+<span class="sd">  </span>
+<span class="sd">  Outputs:</span>
+<span class="sd">    dictionary: dict of row that was requested (see constants above)</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">row_dict</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">constants</span><span class="o">.</span><span class="n">TABLES</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">):</span>
+    <span class="n">row_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">TABLES</span><span class="p">[</span><span class="n">table_name</span><span class="p">])</span>
+  <span class="k">return</span> <span class="n">row_dict</span>
+
+</div>
+<div class="viewcode-block" id="ReverseIP"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.ReverseIP">[docs]</a><span class="k">def</span> <span class="nf">ReverseIP</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Reverse an IP address</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    ip_address: either an ipv4 or ipv6 string</span>
+
+<span class="sd">  Raises:</span>
+<span class="sd">    InvalidInputError: Not a valid IP address.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    string: reverse ip address</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">ip_object</span> <span class="o">=</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span>
+  <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a valid IP address&#39;</span> <span class="o">%</span> <span class="n">ip_address</span><span class="p">)</span>
+  <span class="n">reverse_ip_string</span> <span class="o">=</span> <span class="n">ip_object</span><span class="o">.</span><span class="n">reverseName</span><span class="p">()</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">ip_object</span><span class="o">.</span><span class="n">version</span><span class="p">()</span> <span class="o">==</span> <span class="mi">4</span> <span class="p">):</span>
+    <span class="n">ip_parts</span> <span class="o">=</span> <span class="n">reverse_ip_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="s">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">ip_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">):</span>
+      <span class="n">ip_range</span> <span class="o">=</span> <span class="n">ip_parts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+      <span class="n">num_ips</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ip_range</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">ip_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
+      <span class="n">netmask</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">32</span> <span class="o">-</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">num_ips</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+      <span class="n">last_octet</span> <span class="o">=</span> <span class="n">ip_parts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+      <span class="n">reverse_ip_string</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip_parts</span><span class="p">)</span>
+      <span class="n">reverse_ip_string</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">last_octet</span><span class="p">,</span> <span class="n">netmask</span><span class="p">,</span>
+                                        <span class="n">reverse_ip_string</span><span class="p">)</span>
+  <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">reverse_ip_string</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="UnReverseIP"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.UnReverseIP">[docs]</a><span class="k">def</span> <span class="nf">UnReverseIP</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Un-Reverses reversed IP addresses</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    ip_address: either an ipv4 or ipv6 string (reversed)</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    string: forward ip address</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">mask</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">ip_address</span> <span class="o">=</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+  <span class="n">cidr_parts</span> <span class="o">=</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">cidr_parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="p">):</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">cidr_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ip_address</span> <span class="o">=</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">mask</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;in-addr.arpa.&#39;</span><span class="p">)</span> <span class="p">):</span>
+    <span class="n">octets</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ip_array</span> <span class="o">=</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">ip_parts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_array</span><span class="p">):</span>
+      <span class="n">ip_part</span> <span class="o">=</span> <span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">ip_part</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="p">):</span>
+        <span class="n">ip_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ip_part</span><span class="p">)</span>
+        <span class="n">octets</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">new_ip</span> <span class="o">=</span> <span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip_parts</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">mask</span> <span class="p">):</span>
+      <span class="n">new_ip</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">new_ip</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+    <span class="k">elif</span><span class="p">(</span> <span class="n">octets</span> <span class="o">&lt;</span> <span class="mi">4</span> <span class="p">):</span>
+      <span class="n">new_ip</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">new_ip</span><span class="p">,</span> <span class="n">octets</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+  <span class="k">elif</span><span class="p">(</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;ip6.arpa.&#39;</span><span class="p">)</span> <span class="p">):</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_address</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span> <span class="o">==</span> <span class="mi">32</span> <span class="p">):</span>
+      <span class="n">ip_array</span> <span class="o">=</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+      <span class="n">ip_parts</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_array</span><span class="p">):</span>
+        <span class="n">ip_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span>
+                                      <span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">()))</span>
+
+      <span class="n">new_ip</span> <span class="o">=</span> <span class="s">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip_parts</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">ip_array</span> <span class="o">=</span> <span class="n">ip_address</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+      <span class="n">ip_parts</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">while</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_array</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="p">):</span> 
+        <span class="n">ip_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s%s%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span>
+                                      <span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">ip_array</span><span class="o">.</span><span class="n">pop</span><span class="p">()))</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_array</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">):</span>
+        <span class="n">ip_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip_array</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">])))</span>
+
+      <span class="n">new_ip</span> <span class="o">=</span> <span class="s">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ip_parts</span><span class="p">)</span>
+      <span class="n">new_ip</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">::/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">new_ip</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ip_address</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span><span class="p">))</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="n">new_ip</span> <span class="o">=</span> <span class="n">ip_address</span>
+ 
+  <span class="k">return</span> <span class="n">new_ip</span>
+
+</div>
+<div class="viewcode-block" id="CIDRExpand"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.CIDRExpand">[docs]</a><span class="k">def</span> <span class="nf">CIDRExpand</span><span class="p">(</span><span class="n">cidr_block</span><span class="p">,</span> <span class="n">begin</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Expands a cidr block to a list of ip addreses</span>
+<span class="sd">     from begin (integer) to end (integer).</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    cidr_block: string of cidr_block</span>
+<span class="sd">    begin: integer of ip address to start</span>
+<span class="sd">    end: integer of ip address to end</span>
+
+<span class="sd">  Raises:</span>
+<span class="sd">    InvalidInputError: Not a valid CIDR block.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    list: list of ip addresses in strings</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">cidr_block</span> <span class="o">=</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">cidr_block</span><span class="p">)</span>
+  <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a valid cidr block&#39;</span> <span class="o">%</span> <span class="n">cidr_block</span><span class="p">)</span>
+  <span class="n">ip_address_list</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="n">end_count</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+  <span class="n">length</span> <span class="o">=</span> <span class="n">cidr_block</span><span class="o">.</span><span class="n">len</span><span class="p">()</span>
+  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">start_ip</span> <span class="o">=</span> <span class="n">cidr_block</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">begin</span> <span class="p">):</span>
+    <span class="n">start_ip</span> <span class="o">=</span> <span class="n">cidr_block</span><span class="o">.</span><span class="n">int</span><span class="p">()</span> <span class="o">+</span> <span class="n">begin</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">begin</span> <span class="ow">and</span> <span class="n">end</span> <span class="p">):</span>
+    <span class="n">end_count</span> <span class="o">=</span> <span class="n">end</span> <span class="o">-</span> <span class="n">begin</span>
+  <span class="k">elif</span><span class="p">(</span> <span class="n">end</span> <span class="p">):</span>
+    <span class="n">end_count</span> <span class="o">=</span> <span class="n">end</span>
+  <span class="k">while</span><span class="p">(</span> <span class="n">count</span> <span class="o">!=</span> <span class="n">end_count</span> <span class="ow">and</span> <span class="n">count</span> <span class="o">!=</span> <span class="n">length</span> <span class="ow">and</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">start_ip</span> <span class="o">+</span> <span class="n">count</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cidr_block</span> <span class="p">):</span>
+    <span class="n">ip_address_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">unicode</span><span class="p">(</span><span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">start_ip</span> <span class="o">+</span> <span class="n">count</span><span class="p">)</span><span class="o">.</span><span class="n">strFullsize</span><span class="p">()))</span>
+    <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+  <span class="k">return</span> <span class="n">ip_address_list</span>
+
+</div>
+<div class="viewcode-block" id="ExpandIPV6"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.ExpandIPV6">[docs]</a><span class="k">def</span> <span class="nf">ExpandIPV6</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Expands a shorthand ipv6 address to a full ipv6 address</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    ip_address: string of ipv6 address</span>
+
+<span class="sd">  Raises:</span>
+<span class="sd">    InvalidInputError: Not a valid IP address.</span>
+<span class="sd">    InvalidInputError: Not a valid IPV6 address.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    string: string of long ipv6 address</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">ipv6_address</span> <span class="o">=</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span>
+  <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a valid IP address&#39;</span> <span class="o">%</span> <span class="n">ip_address</span><span class="p">)</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">ipv6_address</span><span class="o">.</span><span class="n">version</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">6</span> <span class="p">):</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot; is not a valid IPV6 address.&#39;</span> <span class="o">%</span> <span class="n">ipv6_address</span><span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">ipv6_address</span><span class="o">.</span><span class="n">strFullsize</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="GetRecordsFromRecordRowsAndArgumentRows"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.GetRecordsFromRecordRowsAndArgumentRows">[docs]</a><span class="k">def</span> <span class="nf">GetRecordsFromRecordRowsAndArgumentRows</span><span class="p">(</span><span class="n">record_data</span><span class="p">,</span> <span class="n">record_args_dict</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Takes data from joined records and record_arguments_record_assignments</span>
+<span class="sd">  and creates record rows that are combined.</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    record_data: List of rows from ListRow with records and</span>
+<span class="sd">                 records_arguments_record_assignments joined.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    list of record dictionaries</span>
+<span class="sd">      Each dictionary can have different args depending on record type.</span>
+<span class="sd">      All of them will include record_type, target, zone_name, ttl, and</span>
+<span class="sd">      view_name regardless of record type. Below is an example of an mx</span>
+<span class="sd">      record search.</span>
+<span class="sd">      example: [{&#39;record_type&#39;: &#39;mx&#39;, &#39;target&#39;: &#39;university.edu.&#39;,</span>
+<span class="sd">                 &#39;zone_name&#39;: &#39;university.edu&#39;, ttl: 3600,</span>
+<span class="sd">                 &#39;view_name&#39;: &#39;external&#39;, &#39;priority&#39;: 10,</span>
+<span class="sd">                 &#39;mail_server&#39;: &#39;smtp-01.university.edu.&#39;,</span>
+<span class="sd">                 &#39;last_user&#39;: &#39;sharrell},</span>
+<span class="sd">                {&#39;record_type&#39;: &#39;mx&#39;, &#39;target&#39;: &#39;university.edu.&#39;,</span>
+<span class="sd">                 &#39;zone_name&#39;: &#39;university.edu&#39;, ttl: 3600,</span>
+<span class="sd">                 &#39;view_name&#39;: &#39;external&#39;, &#39;priority&#39;: 20,</span>
+<span class="sd">                 &#39;mail_server&#39;: &#39;smtp-02.university.edu.&#39;},</span>
+<span class="sd">                 &#39;last_user&#39;: &#39;sharrell}]</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">full_record_dicts</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="n">del_id_list</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">record_data</span><span class="p">:</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_argument_name&#39;</span><span class="p">]</span> <span class="ow">in</span>
+        <span class="n">record_args_dict</span> <span class="ow">and</span>
+        <span class="n">record_args_dict</span><span class="p">[</span><span class="n">record</span><span class="p">[</span>
+            <span class="s">&#39;record_arguments_records_assignments_argument_name&#39;</span><span class="p">]]</span> <span class="ow">is</span>
+        <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
+        <span class="nb">unicode</span><span class="p">(</span><span class="n">record_args_dict</span><span class="p">[</span><span class="n">record</span><span class="p">[</span>
+          <span class="s">&#39;record_arguments_records_assignments_argument_name&#39;</span><span class="p">]])</span> <span class="o">!=</span>
+        <span class="n">record</span><span class="p">[</span><span class="s">&#39;argument_value&#39;</span><span class="p">]</span> <span class="p">):</span>
+      <span class="n">del_id_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s">&#39;records_id&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]</span> <span class="ow">in</span>
+        <span class="n">full_record_dicts</span> <span class="p">):</span>
+      <span class="n">full_record_dicts</span><span class="p">[</span>
+          <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+      <span class="n">full_record_dicts</span><span class="p">[</span>
+          <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]][</span>
+              <span class="s">&#39;record_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]</span>
+
+      <span class="n">full_record_dicts</span><span class="p">[</span>
+          <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]][</span>
+              <span class="s">&#39;zone_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_zone_name&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_view_dependency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;_dep&#39;</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_view_dependency&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span>
+            <span class="s">&#39;record_view_dependency&#39;</span><span class="p">][:</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span>
+      <span class="n">full_record_dicts</span><span class="p">[</span>
+          <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]][</span>
+              <span class="s">&#39;view_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_view_dependency&#39;</span><span class="p">]</span>
+
+      <span class="n">full_record_dicts</span><span class="p">[</span>
+          <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]][</span>
+              <span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_target&#39;</span><span class="p">]</span>
+
+      <span class="n">full_record_dicts</span><span class="p">[</span>
+          <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]][</span>
+              <span class="s">&#39;ttl&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_ttl&#39;</span><span class="p">]</span>
+
+      <span class="n">full_record_dicts</span><span class="p">[</span>
+          <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]][</span>
+              <span class="s">&#39;last_user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_last_user&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;argument_value&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="p">):</span>
+      <span class="n">record</span><span class="p">[</span><span class="s">&#39;argument_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s">&#39;argument_value&#39;</span><span class="p">])</span>
+
+    <span class="n">full_record_dicts</span><span class="p">[</span>
+        <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]][</span><span class="n">record</span><span class="p">[</span>
+            <span class="s">&#39;record_arguments_records_assignments_argument_name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span>
+            <span class="s">&#39;argument_value&#39;</span><span class="p">]</span>
+
+  <span class="k">for</span> <span class="n">record_id</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">del_id_list</span><span class="p">):</span>
+    <span class="k">del</span> <span class="n">full_record_dicts</span><span class="p">[</span><span class="n">record_id</span><span class="p">]</span>
+
+  <span class="k">return</span> <span class="n">full_record_dicts</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="UnicodeString"><a class="viewcode-back" href="../../roster_core.html#roster_core.helpers_lib.UnicodeString">[docs]</a><span class="k">def</span> <span class="nf">UnicodeString</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Returns unicode string if object is a string</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    string: string to unicode</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    unicode string: if input is a string</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">if</span><span class="p">(</span> <span class="nb">type</span><span class="p">(</span><span class="n">string</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span> <span class="p">):</span>
+    <span class="k">return</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">string</span>
+
+
+<span class="c"># vi: set ai aw sw=2:</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

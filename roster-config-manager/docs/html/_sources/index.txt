@@ -1,0 +1,23 @@
+.. Roster Config Manager documentation master file, created by
+   sphinx-quickstart on Thu Aug  2 16:52:46 2012.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to Roster Config Manager's documentation!
+=================================================
+
+Contents:
+
+.. toctree::
+   :maxdepth: 4
+
+   roster_config_manager
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

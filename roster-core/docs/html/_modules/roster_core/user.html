@@ -1,0 +1,409 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_core.user &mdash; Roster Core v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Core v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_core.user</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c"># </span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c"># </span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c"># </span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c"># </span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;Classes pertaining to users and authorization for Roster.</span>
+
+<span class="sd">Authorization for specific functions and for specific domain/ip range blocks</span>
+<span class="sd">is handled in this module.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">IPy</span>
+
+<span class="kn">import</span> <span class="nn">constants</span>
+<span class="kn">import</span> <span class="nn">errors</span>
+<span class="kn">import</span> <span class="nn">helpers_lib</span>
+
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../roster_core.html#roster_core.user.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Representation of a user, with basic manipulation methods.</span>
+<span class="sd">  Note that is it not necessary to authenticate a user to construct this</span>
+<span class="sd">  class. This class is mainly responsible for authorization.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">db_instance</span><span class="p">,</span> <span class="n">log_instance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Inputs:</span>
+<span class="sd">      user_name:	user&#39;s login</span>
+<span class="sd">      db_instance:	dbAccess instance to use for user verification</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      InvalidInputError: No such user.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user_name</span> <span class="o">=</span> <span class="n">user_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span> <span class="o">=</span> <span class="n">db_instance</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span> <span class="o">=</span> <span class="n">log_instance</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c"># pull a pile of authentication info from the database here</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetUserAuthorizationInfo</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;user_name&#39;</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">InvalidInputError</span><span class="p">(</span><span class="s">&quot;No such user: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">user_name</span><span class="p">)</span>
+
+    <span class="c"># More DB crud</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="p">[</span><span class="s">&#39;groups&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">forward_zones</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="p">[</span><span class="s">&#39;forward_zones&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">reverse_ranges</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="p">[</span><span class="s">&#39;reverse_ranges&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user_access_level</span> <span class="o">=</span> <span class="n">ual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="p">[</span><span class="s">&#39;user_access_level&#39;</span><span class="p">]</span>
+
+    <span class="c"># Pull zone origins for cache</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_zones</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="p">[</span>
+            <span class="n">zone</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetZoneOrigin</span><span class="p">(</span>
+                <span class="n">zone</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">],</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+
+    <span class="c"># Build a hash of methods, using the supported_method hash</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">constants</span><span class="o">.</span><span class="n">SUPPORTED_METHODS</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">constants</span><span class="o">.</span><span class="n">SUPPORTED_METHODS</span><span class="p">[</span><span class="n">method</span><span class="p">][</span><span class="s">&#39;access_level&#39;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">ual</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span><span class="p">[</span><span class="n">method</span><span class="p">]</span> <span class="o">=</span> <span class="n">constants</span><span class="o">.</span><span class="n">SUPPORTED_METHODS</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+
+<div class="viewcode-block" id="User.Authorize"><a class="viewcode-back" href="../../roster_core.html#roster_core.user.User.Authorize">[docs]</a>  <span class="k">def</span> <span class="nf">Authorize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">record_data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">current_transaction</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check to see if the user is authorized to run the given operation.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      method:	what the user&#39;s trying to do</span>
+<span class="sd">      record_data: dictionary of target, zone_name, view_name, record_type, </span>
+<span class="sd">                   and record_args_dict for the record that is being modified.</span>
+<span class="sd">                   {&#39;target&#39;: &#39;test_target&#39;,</span>
+<span class="sd">                    &#39;zone_name&#39;: &#39;test_zone&#39;,</span>
+<span class="sd">                    &#39;view_name&#39;: &#39;test_view&#39;,</span>
+<span class="sd">                    &#39;record_type&#39;: &#39;a&#39;,</span>
+<span class="sd">                    &#39;record_args_dict&#39; : {</span>
+<span class="sd">                        u&#39;assignment_ip&#39; : &#39;192.168.1.1&#39;</span>
+<span class="sd">                     }</span>
+<span class="sd">                   }</span>
+<span class="sd">      current_transaction: bool of if this function is run from inside a</span>
+<span class="sd">                           transaction in the db_access class</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      MaintenanceError: Roster is currently under maintenance.</span>
+<span class="sd">      MissingDataTypeError: Incomplete record data provided for access method.</span>
+<span class="sd">      AuthorizationError: Authorization failure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">function_name</span><span class="p">,</span> <span class="n">current_args</span> <span class="o">=</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetFunctionNameAndArgs</span><span class="p">()</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">current_transaction</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">maintenance_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">CheckMaintenanceFlag</span><span class="p">()</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">record_data</span> <span class="ow">and</span> <span class="n">record_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;zone_name&#39;</span><span class="p">)</span> <span class="ow">and</span>
+          <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">])</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="p">[</span>
+            <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetZoneOrigin</span><span class="p">(</span>
+                <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">],</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;view_name&#39;</span><span class="p">])</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">current_transaction</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">maintenance_mode</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="p">[</span><span class="s">&#39;user_access_level&#39;</span><span class="p">]</span>
+        <span class="o">!=</span> <span class="n">constants</span><span class="o">.</span><span class="n">ACCESS_LEVELS</span><span class="p">[</span><span class="s">&#39;dns_admin&#39;</span><span class="p">]</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">MaintenanceError</span><span class="p">(</span><span class="s">&#39;Roster is currently under maintenance.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">record_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">record_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;zone_name&#39;</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">target_string</span> <span class="o">=</span> <span class="s">&#39; with </span><span class="si">%s</span><span class="s"> on </span><span class="si">%s</span><span class="s"> of type </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">record_data</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">],</span>
+                                          <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">],</span>
+                                          <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">])</span>
+
+      <span class="n">user_group_perms</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">record_target</span> <span class="o">=</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="n">record_target</span> <span class="o">==</span> <span class="s">u&#39;@&#39;</span> <span class="p">):</span>
+        <span class="n">ip_address</span> <span class="o">=</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">UnReverseIP</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="p">[</span><span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]])</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">ip_address</span> <span class="o">=</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">UnReverseIP</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">record_target</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="p">[</span><span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]]))</span>
+      
+      <span class="c">#Looking for permissions in the forward zones</span>
+      <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="p">[</span><span class="s">&#39;forward_zones&#39;</span><span class="p">]:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">zone</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="n">user_group_perms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zone</span><span class="p">[</span><span class="s">&#39;group_permission&#39;</span><span class="p">])</span>
+    
+      <span class="c">#If we haven&#39;t found any, look in the reverse ranges</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">user_group_perms</span> <span class="o">==</span> <span class="p">[]</span> <span class="p">):</span>
+        <span class="n">validation_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">data_validation_instance</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">validation_instance</span><span class="o">.</span><span class="n">isIPv4IPAddress</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span> <span class="ow">or</span> 
+            <span class="n">validation_instance</span><span class="o">.</span><span class="n">isIPv6IPAddress</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span> <span class="p">):</span>
+          <span class="k">for</span> <span class="n">cidr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="p">[</span><span class="s">&#39;reverse_ranges&#39;</span><span class="p">]:</span>
+            <span class="k">if</span><span class="p">(</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">cidr</span><span class="p">[</span><span class="s">&#39;cidr_block&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span> <span class="p">):</span>
+              <span class="n">user_group_perms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cidr</span><span class="p">[</span><span class="s">&#39;group_permission&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">target_string</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">auth_fail_string</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;User </span><span class="si">%s</span><span class="s"> is not allowed to use </span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_name</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">target_string</span><span class="p">))</span>
+
+    <span class="c">#authorizing method</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">method</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">method_hash</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abilities</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_access_level</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">constants</span><span class="o">.</span><span class="n">ACCESS_LEVELS</span><span class="p">[</span><span class="s">&#39;dns_admin&#39;</span><span class="p">]</span> <span class="p">):</span>
+        <span class="k">return</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="n">method_hash</span><span class="p">[</span><span class="s">&#39;check&#39;</span><span class="p">]</span> <span class="p">):</span>
+        <span class="c"># Secondary check - ensure the target is in a range delegated to</span>
+        <span class="c"># the user</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">record_data</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">MissingDataTypeError</span><span class="p">(</span>
+              <span class="s">&#39;No record data provided for access method &#39;</span>
+              <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">method</span><span class="p">)</span>
+        <span class="k">elif</span><span class="p">(</span> <span class="ow">not</span> <span class="n">record_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;zone_name&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span>
+            <span class="ow">not</span> <span class="n">record_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;view_name&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;view_name&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span>
+            <span class="ow">not</span> <span class="n">record_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;target&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span>
+            <span class="ow">not</span> <span class="n">record_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;record_type&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span>
+            <span class="ow">not</span> <span class="n">record_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">MissingDataTypeError</span><span class="p">(</span>
+              <span class="s">&#39;Incomplete record data provided for access &#39;</span>
+              <span class="s">&#39;method </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">method</span><span class="p">)</span>
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">user_group_perms</span> <span class="ow">and</span>
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_access_level</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">constants</span><span class="o">.</span><span class="n">ACCESS_LEVELS</span><span class="p">[</span>
+                <span class="s">&#39;unlocked_user&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">AuthorizationError</span><span class="p">(</span><span class="n">auth_fail_string</span><span class="p">)</span>
+
+        <span class="k">if</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_access_level</span><span class="p">)</span> <span class="o">&lt;</span>
+          <span class="n">constants</span><span class="o">.</span><span class="n">ACCESS_LEVELS</span><span class="p">[</span><span class="s">&#39;unlocked_user&#39;</span><span class="p">]</span> <span class="p">):</span>
+
+          <span class="c"># if a or aaaa</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">u&#39;assignment_ip&#39;</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">ip</span> <span class="o">=</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">][</span><span class="s">u&#39;assignment_ip&#39;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">reverse_range</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_ranges</span><span class="p">:</span>
+              <span class="k">if</span><span class="p">(</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">reverse_range</span><span class="p">[</span><span class="s">&#39;cidr_block&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span> <span class="p">):</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+              <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">AuthorizationError</span><span class="p">(</span><span class="n">auth_fail_string</span><span class="p">)</span>
+
+          <span class="c"># if cname, mx, ns, or ptr</span>
+          <span class="k">elif</span><span class="p">(</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">u&#39;assignment_host&#39;</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">u&#39;mail_server&#39;</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">u&#39;name_server&#39;</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">hostname</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">if</span><span class="p">(</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">u&#39;assignment_host&#39;</span><span class="p">)</span> <span class="p">):</span>
+              <span class="n">hostname</span> <span class="o">=</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">][</span><span class="s">u&#39;assignment_host&#39;</span><span class="p">]</span>
+            <span class="k">elif</span><span class="p">(</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">u&#39;mail_server&#39;</span><span class="p">)</span> <span class="p">):</span>
+              <span class="n">hostname</span> <span class="o">=</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">][</span><span class="s">u&#39;mail_server&#39;</span><span class="p">]</span>
+            <span class="k">elif</span><span class="p">(</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">u&#39;name_server&#39;</span><span class="p">)</span> <span class="p">):</span>
+              <span class="n">hostname</span> <span class="o">=</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;record_args_dict&#39;</span><span class="p">][</span><span class="s">u&#39;name_server&#39;</span><span class="p">]</span>
+            <span class="n">smallest_zone</span> <span class="o">=</span> <span class="n">hostname</span>
+
+            <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">while</span><span class="p">(</span> <span class="n">smallest_zone</span> <span class="p">):</span>
+              <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="p">:</span>
+                <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="p">[</span><span class="n">domain</span><span class="p">]</span> <span class="p">):</span>
+                  <span class="n">domain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="p">[</span><span class="n">domain</span><span class="p">]</span>
+                <span class="k">if</span><span class="p">(</span> <span class="n">smallest_zone</span> <span class="o">==</span> <span class="n">domain</span> <span class="p">):</span>
+                  <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+              <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">found</span> <span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                  <span class="n">smallest_zone</span> <span class="o">=</span> <span class="n">smallest_zone</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                  <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">AuthorizationError</span><span class="p">(</span><span class="n">auth_fail_string</span><span class="p">)</span>
+              <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">found</span> <span class="p">):</span>
+              <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">AuthorizationError</span><span class="p">(</span><span class="n">auth_fail_string</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_zones</span><span class="p">:</span>
+              <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">zone</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">])</span> <span class="p">):</span>
+                <span class="k">if</span><span class="p">(</span> <span class="n">smallest_zone</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_origin_cache</span><span class="p">[</span>
+                    <span class="n">zone</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]]</span> <span class="p">):</span>
+                  <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+              <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">AuthorizationError</span><span class="p">(</span><span class="n">auth_fail_string</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">forward_zone</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_zones</span><span class="p">:</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_data</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">forward_zone</span><span class="p">[</span><span class="s">&#39;zone_name&#39;</span><span class="p">]</span> <span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="c"># Can&#39;t find it in forward zones, maybe it&#39;s a reverse</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">ip</span> <span class="o">=</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span>
+
+          <span class="c"># Good, we have an IP.  See if we hit any delegated ranges.</span>
+          <span class="k">for</span> <span class="n">reverse_range</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reverse_ranges</span><span class="p">:</span>
+            <span class="k">if</span><span class="p">(</span> <span class="n">IPy</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="n">reverse_range</span><span class="p">[</span><span class="s">&#39;cidr_block&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span> <span class="p">):</span>
+              <span class="k">return</span>
+
+          <span class="c"># fail to find a matching IP range with appropriate perms</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span><span class="o">.</span><span class="n">LogAction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_name</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span>
+                                      <span class="n">current_args</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">current_transaction</span><span class="p">)</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">AuthorizationError</span><span class="p">(</span><span class="n">auth_fail_string</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="c"># fail to find a matching zone with appropriate perms</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span><span class="o">.</span><span class="n">LogAction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_name</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span>
+                                      <span class="n">current_args</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">current_transaction</span><span class="p">)</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">AuthorizationError</span><span class="p">(</span><span class="n">auth_fail_string</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="c"># fail to find a matching method</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span><span class="o">.</span><span class="n">LogAction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_name</span><span class="p">,</span> <span class="n">function_name</span><span class="p">,</span>
+                                  <span class="n">current_args</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="n">current_transaction</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">AuthorizationError</span><span class="p">(</span><span class="n">auth_fail_string</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="User.GetUserName"><a class="viewcode-back" href="../../roster_core.html#roster_core.user.User.GetUserName">[docs]</a>  <span class="k">def</span> <span class="nf">GetUserName</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return user name for current session.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string: user name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span><span class="p">[</span><span class="s">&#39;user_name&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="User.GetPermissions"><a class="viewcode-back" href="../../roster_core.html#roster_core.user.User.GetPermissions">[docs]</a>  <span class="k">def</span> <span class="nf">GetPermissions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return permissions and groups for user.</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dictionary of permissions</span>
+<span class="sd">        example:</span>
+<span class="sd">        {&#39;user_access_level&#39;: &#39;2&#39;,</span>
+<span class="sd">         &#39;user_name&#39;: &#39;shuey&#39;,</span>
+<span class="sd">         &#39;forward_zones&#39;: [</span>
+<span class="sd">             {&#39;zone_name&#39;: &#39;cs.university.edu&#39;, &#39;group_permission&#39;: &#39;rw&#39;},</span>
+<span class="sd">             {&#39;zone_name&#39;: &#39;eas.university.edu&#39;, &#39;group_permission&#39;: &#39;r&#39;},</span>
+<span class="sd">             {&#39;zone_name&#39;: &#39;bio.university.edu&#39;, &#39;group_permission&#39;: &#39;rw&#39;}],</span>
+<span class="sd">         &#39;groups&#39;: [&#39;cs&#39;, &#39;bio&#39;],</span>
+<span class="sd">         &#39;reverse_ranges&#39;: [</span>
+<span class="sd">             {&#39;cidr_block&#39;: &#39;192.168.0.0/24&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: &#39;rw&#39;},</span>
+<span class="sd">             {&#39;cidr_block&#39;: &#39;192.168.0.0/24&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: &#39;r&#39;},</span>
+<span class="sd">             {&#39;cidr_block&#39;: &#39;192.168.1.0/24&#39;,</span>
+<span class="sd">              &#39;group_permission&#39;: &#39;rw&#39;}]}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_perms</span>
+
+
+<span class="c"># vi: set ai aw sw=2:</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Core v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,847 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_config_manager.tree_exporter &mdash; Roster Config Manager v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Config Manager v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_config_manager.tree_exporter</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+
+<span class="sd">&quot;&quot;&quot;This module is used for exporting data in the database for all hosts</span>
+<span class="sd">to a BIND readable text form.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">bz2</span>
+<span class="kn">import</span> <span class="nn">ConfigParser</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">iscpy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">StringIO</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tarfile</span>
+
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">punycode_lib</span>
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">audit_log</span>
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">constants</span>
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">core</span>
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">helpers_lib</span>
+<span class="kn">from</span> <span class="nn">roster_config_manager</span> <span class="kn">import</span> <span class="n">zone_exporter_lib</span>
+
+
+<span class="n">core</span><span class="o">.</span><span class="n">CheckCoreVersionMatches</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Error"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.Error">[docs]</a><span class="k">class</span> <span class="nc">Error</span><span class="p">(</span><span class="n">errors</span><span class="o">.</span><span class="n">CoreError</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="MaintenanceError"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.MaintenanceError">[docs]</a><span class="k">class</span> <span class="nc">MaintenanceError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="ChangesNotFoundError"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.ChangesNotFoundError">[docs]</a><span class="k">class</span> <span class="nc">ChangesNotFoundError</span><span class="p">(</span><span class="n">Error</span><span class="p">):</span>
+  <span class="k">pass</span>
+
+</div>
+<div class="viewcode-block" id="BindTreeExport"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport">[docs]</a><span class="k">class</span> <span class="nc">BindTreeExport</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;This class exports zones&quot;&quot;&quot;</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_name</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets self.db_instance</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      config_file_name: name of config file to load db info from</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">tar_file_name</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+    <span class="n">config_instance</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">config_file_name</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span> <span class="o">=</span> <span class="n">config_instance</span><span class="o">.</span><span class="n">GetDb</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">raw_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cooked_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">root_config_dir</span> <span class="o">=</span> <span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;exporter&#39;</span><span class="p">][</span>
+        <span class="s">&#39;root_config_dir&#39;</span><span class="p">]</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">directory</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">named_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span>
+          <span class="n">directory</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">named_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span>
+          <span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;exporter&#39;</span><span class="p">][</span><span class="s">&#39;named_dir&#39;</span><span class="p">]))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">backup_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span>
+        <span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;exporter&#39;</span><span class="p">][</span><span class="s">&#39;backup_dir&#39;</span><span class="p">]))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span> <span class="o">=</span> <span class="n">audit_log</span><span class="o">.</span><span class="n">AuditLog</span><span class="p">(</span><span class="n">log_to_syslog</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">log_to_db</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                           <span class="n">db_instance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BindTreeExport.NamedHeaderChangeDirectory"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.NamedHeaderChangeDirectory">[docs]</a>  <span class="k">def</span> <span class="nf">NamedHeaderChangeDirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">named_conf_header</span><span class="p">,</span> <span class="n">new_directory</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds/Changes directory in named.conf header</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      named_conf_header: string of namedconf header</span>
+<span class="sd">      new_directory: {}</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string: string of namedconf header</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">named_conf_header_contents</span> <span class="o">=</span> <span class="n">iscpy</span><span class="o">.</span><span class="n">ParseISCString</span><span class="p">(</span><span class="n">named_conf_header</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="s">&#39;options&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">named_conf_header_contents</span> <span class="p">):</span>
+      <span class="n">named_conf_header_contents</span><span class="p">[</span><span class="s">&#39;options&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">named_conf_header_contents</span><span class="p">[</span><span class="s">&#39;options&#39;</span><span class="p">][</span><span class="s">&#39;directory&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">new_directory</span>
+    <span class="k">return</span> <span class="n">iscpy</span><span class="o">.</span><span class="n">MakeISC</span><span class="p">(</span><span class="n">named_conf_header_contents</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="BindTreeExport.AddToTarFile"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.AddToTarFile">[docs]</a>  <span class="k">def</span> <span class="nf">AddToTarFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tar_file</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">file_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds file string to tarfile object</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      tarfile: tarfile object</span>
+<span class="sd">      file_name: string of filename to add</span>
+<span class="sd">      file_string: string of file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">TarInfo</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">info</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_string</span><span class="p">)</span>
+    <span class="n">tar_file</span><span class="o">.</span><span class="n">addfile</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="n">file_string</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.ListRecordArgumentDefinitions"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.ListRecordArgumentDefinitions">[docs]</a>  <span class="k">def</span> <span class="nf">ListRecordArgumentDefinitions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record_arguments</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Lists record argument definitions given table from database</span>
+
+<span class="sd">    This function is duplicated in roster-core/roster_core/core.py</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      record_arguments: record arguments from database</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dictionary keyed by record type with values of lists</span>
+<span class="sd">        of lists of record arguments sorted by argument order.</span>
+<span class="sd">        example: {&#39;mx&#39;: [{&#39;argument_name&#39;: u&#39;priority&#39;,</span>
+<span class="sd">                          &#39;record_arguments_type&#39;: u&#39;mx&#39;,</span>
+<span class="sd">                          &#39;argument_data_type&#39;: u&#39;UnsignedInt&#39;,</span>
+<span class="sd">                          &#39;argument_order&#39;: 0},</span>
+<span class="sd">                         {&#39;argument_name&#39;: u&#39;mail_server&#39;,</span>
+<span class="sd">                          &#39;record_arguments_type&#39;: u&#39;mx&#39;,</span>
+<span class="sd">                          &#39;argument_data_type&#39;: u&#39;Hostname&#39;,</span>
+<span class="sd">                          &#39;argument_order&#39;: 1}]}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sorted_record_arguments</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">record_argument</span> <span class="ow">in</span> <span class="n">record_arguments</span><span class="p">:</span>
+      <span class="n">current_record_type</span> <span class="o">=</span> <span class="n">record_argument</span><span class="p">[</span><span class="s">&#39;record_arguments_type&#39;</span><span class="p">]</span>
+      <span class="k">del</span> <span class="n">record_argument</span><span class="p">[</span><span class="s">&#39;record_arguments_type&#39;</span><span class="p">]</span>
+      <span class="k">del</span> <span class="n">record_argument</span><span class="p">[</span><span class="s">&#39;argument_data_type&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">current_record_type</span> <span class="ow">in</span> <span class="n">sorted_record_arguments</span> <span class="p">):</span>
+        <span class="n">sorted_record_arguments</span><span class="p">[</span><span class="n">current_record_type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">sorted_record_arguments</span><span class="p">[</span><span class="n">current_record_type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record_argument</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">record_argument</span> <span class="ow">in</span> <span class="n">sorted_record_arguments</span><span class="p">:</span>
+      <span class="n">sorted_record_arguments</span><span class="p">[</span><span class="n">record_argument</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
+          <span class="n">sorted_record_arguments</span><span class="p">[</span><span class="n">record_argument</span><span class="p">],</span>
+          <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s">&#39;argument_order&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">sorted_record_arguments</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.ExportAllBindTrees"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.ExportAllBindTrees">[docs]</a>  <span class="k">def</span> <span class="nf">ExportAllBindTrees</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exports bind trees to files</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      force: boolean of if the export should continue if no changes are found</span>
+<span class="sd">             in the database</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">function_name</span><span class="p">,</span> <span class="n">current_args</span> <span class="o">=</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">GetFunctionNameAndArgs</span><span class="p">()</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">LockDb</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">force</span> <span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">CheckMaintenanceFlag</span><span class="p">()</span> <span class="p">):</span>
+              <span class="k">raise</span> <span class="n">MaintenanceError</span><span class="p">(</span><span class="s">&#39;Database currently under maintenance.&#39;</span><span class="p">)</span>
+            <span class="n">audit_log_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;audit_log&#39;</span><span class="p">)</span>
+            <span class="n">audit_log_dict</span><span class="p">[</span><span class="s">&#39;action&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;ExportAllBindTrees&#39;</span>
+            <span class="n">audit_log_dict</span><span class="p">[</span><span class="s">&#39;success&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">audit_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;audit_log&#39;</span><span class="p">,</span> <span class="n">audit_log_dict</span><span class="p">)</span>
+            <span class="k">if</span><span class="p">(</span> <span class="n">audit_rows</span> <span class="p">):</span>
+              <span class="n">audit_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+                  <span class="s">&#39;audit_log&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;audit_log&#39;</span><span class="p">),</span>
+                  <span class="n">column</span><span class="o">=</span><span class="s">&#39;audit_log_timestamp&#39;</span><span class="p">,</span>
+                  <span class="n">range_values</span><span class="o">=</span><span class="p">(</span><span class="n">audit_rows</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s">&#39;audit_log_timestamp&#39;</span><span class="p">],</span>
+                              <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
+                  <span class="n">is_date</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+              <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">audit_rows</span><span class="p">:</span>
+                <span class="k">if</span><span class="p">(</span> <span class="n">row</span><span class="p">[</span><span class="s">&#39;action&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s">u&#39;ExportAllBindTrees&#39;</span> <span class="p">):</span>
+                  <span class="k">break</span>
+              <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ChangesNotFoundError</span><span class="p">(</span><span class="s">&#39;No changes have been made to the &#39;</span>
+                                           <span class="s">&#39;database since last export, &#39;</span>
+                                           <span class="s">&#39;no export needed.&#39;</span><span class="p">)</span>
+          <span class="n">data</span><span class="p">,</span> <span class="n">raw_dump</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetRawData</span><span class="p">()</span>
+          <span class="n">current_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetCurrentTime</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">UnlockDb</span><span class="p">()</span>
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+      <span class="n">cooked_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CookData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+      <span class="n">zone_view_assignments</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">for</span> <span class="n">zone_view_assignment</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;zone_view_assignments&#39;</span><span class="p">]:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">zone_view_assignment</span><span class="p">[</span><span class="s">&#39;zone_view_assignments_zone_name&#39;</span><span class="p">]</span>
+            <span class="ow">in</span> <span class="n">zone_view_assignments</span><span class="p">):</span>
+          <span class="n">zone_view_assignments</span><span class="p">[</span><span class="n">zone_view_assignment</span><span class="p">[</span>
+              <span class="s">&#39;zone_view_assignments_zone_name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">zone_view_assignments</span><span class="p">[</span><span class="n">zone_view_assignment</span><span class="p">[</span>
+            <span class="s">&#39;zone_view_assignments_zone_name&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zone_view_assignment</span><span class="p">[</span>
+            <span class="s">&#39;zone_view_assignments_view_dependency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_dep&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+      <span class="k">for</span> <span class="n">zone_view_assignment</span> <span class="ow">in</span> <span class="n">zone_view_assignments</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">zone_view_assignments</span><span class="p">[</span><span class="n">zone_view_assignment</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="s">u&#39;any&#39;</span><span class="p">]</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;Zone &quot;</span><span class="si">%s</span><span class="s">&quot; has no view assignments.&#39;</span> <span class="o">%</span>
+                      <span class="n">zone_view_assignment</span><span class="p">)</span>
+
+      <span class="n">record_arguments</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;record_arguments&#39;</span><span class="p">]</span>
+      <span class="n">record_argument_definitions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ListRecordArgumentDefinitions</span><span class="p">(</span>
+          <span class="n">record_arguments</span><span class="p">)</span>
+
+      <span class="n">temp_tar_file_name</span> <span class="o">=</span> <span class="s">&#39;temp_file.tar.bz2&#39;</span>
+      <span class="n">tar_file</span> <span class="o">=</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">temp_tar_file_name</span><span class="p">,</span> <span class="s">&#39;w:bz2&#39;</span><span class="p">)</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">cooked_data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;No dns server sets found.&#39;</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">dns_server_set</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">:</span>
+        <span class="n">dummy_config_file</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+        <span class="n">config_parser</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="o">.</span><span class="n">SafeConfigParser</span><span class="p">()</span>
+        <span class="c">## Make Files</span>
+        <span class="n">named_directory</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">_servers&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">root_config_dir</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">),</span> <span class="n">dns_server_set</span><span class="p">)</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">named_directory</span><span class="p">)</span> <span class="p">):</span>
+          <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">named_directory</span><span class="p">)</span>
+        <span class="n">dns_server_set_directory</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">_servers/named&#39;</span> <span class="o">%</span>
+                                   <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_config_dir</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">),</span>
+                                    <span class="n">dns_server_set</span><span class="p">))</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dns_server_set_directory</span><span class="p">)</span> <span class="p">):</span>
+          <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dns_server_set_directory</span><span class="p">)</span>
+        <span class="n">config_file</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">_config&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dns_server_set_directory</span><span class="p">,</span>
+                                        <span class="n">dns_server_set</span><span class="p">)</span>
+        <span class="n">config_parser</span><span class="o">.</span><span class="n">add_section</span><span class="p">(</span><span class="s">&#39;dns_server_set_parameters&#39;</span><span class="p">)</span>
+        <span class="n">config_parser</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;dns_server_set_parameters&#39;</span><span class="p">,</span> <span class="s">&#39;dns_servers&#39;</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;dns_servers&#39;</span><span class="p">]))</span>
+        <span class="n">config_parser</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s">&#39;dns_server_set_parameters&#39;</span><span class="p">,</span> <span class="s">&#39;dns_server_set_name&#39;</span><span class="p">,</span>
+                          <span class="n">dns_server_set</span><span class="p">)</span>
+        <span class="n">config_parser</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dummy_config_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddToTarFile</span><span class="p">(</span><span class="n">tar_file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span> <span class="n">dummy_config_file</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+        <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">):</span>
+          <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;Server set </span><span class="si">%s</span><span class="s"> has no views.&#39;</span> <span class="o">%</span> <span class="n">dns_server_set</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">view</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">]:</span>
+          <span class="n">view_directory</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dns_server_set_directory</span><span class="p">,</span> <span class="n">view</span><span class="p">)</span>
+          <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">view_directory</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">view_directory</span><span class="p">)</span>
+          <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;Server set </span><span class="si">%s</span><span class="s"> has no zones in </span><span class="si">%s</span><span class="s"> view.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+              <span class="n">dns_server_set</span><span class="p">,</span> <span class="n">view</span><span class="p">))</span>
+          <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">]:</span>
+            <span class="k">if</span><span class="p">(</span> <span class="n">view</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">zone_view_assignments</span><span class="p">[</span><span class="n">zone</span><span class="p">]</span> <span class="p">):</span>
+              <span class="k">continue</span>
+            <span class="n">zone_file</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">.db&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dns_server_set_directory</span><span class="p">,</span> <span class="n">view</span><span class="p">,</span> <span class="n">zone</span><span class="p">)</span>
+            <span class="n">zone_file_string</span> <span class="o">=</span> <span class="n">zone_exporter_lib</span><span class="o">.</span><span class="n">MakeZoneString</span><span class="p">(</span>
+                <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone</span><span class="p">][</span>
+                    <span class="s">&#39;records&#39;</span><span class="p">],</span>
+                <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone</span><span class="p">][</span>
+                    <span class="s">&#39;zone_origin&#39;</span><span class="p">],</span>
+                <span class="n">record_argument_definitions</span><span class="p">,</span> <span class="n">zone</span><span class="p">,</span> <span class="n">view</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">AddToTarFile</span><span class="p">(</span><span class="n">tar_file</span><span class="p">,</span> <span class="n">zone_file</span><span class="p">,</span> <span class="n">zone_file_string</span><span class="p">)</span>
+        <span class="n">named_conf_file</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/named.conf&#39;</span> <span class="o">%</span> <span class="n">named_directory</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
+        <span class="n">named_conf_file_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MakeNamedConf</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cooked_data</span><span class="p">,</span>
+                                                    <span class="n">dns_server_set</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AddToTarFile</span><span class="p">(</span><span class="n">tar_file</span><span class="p">,</span> <span class="n">named_conf_file</span><span class="p">,</span> <span class="n">named_conf_file_string</span><span class="p">)</span>
+
+      <span class="n">audit_log_replay_dump</span><span class="p">,</span> <span class="n">full_database_dump</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CookRawDump</span><span class="p">(</span><span class="n">raw_dump</span><span class="p">)</span>
+
+      <span class="n">success</span> <span class="o">=</span> <span class="bp">True</span>
+      <span class="n">tar_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">log_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_instance</span><span class="o">.</span><span class="n">LogAction</span><span class="p">(</span><span class="s">u&#39;tree_export_user&#39;</span><span class="p">,</span>
+                                           <span class="n">function_name</span><span class="p">,</span>
+                                           <span class="n">current_args</span><span class="p">,</span>
+                                           <span class="n">success</span><span class="p">)</span>
+
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">tar_file_name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/dns_tree_</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">.tar.bz2&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backup_dir</span><span class="p">,</span> <span class="n">current_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s">_%m_%yT%H_%M&quot;</span><span class="p">),</span> <span class="n">log_id</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backup_dir</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backup_dir</span><span class="p">)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">temp_tar_file_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tar_file_name</span><span class="p">)</span>
+
+    <span class="n">audit_log_replay_dump_file</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span>
+        <span class="s">&#39;</span><span class="si">%s</span><span class="s">/audit_log_replay_dump-</span><span class="si">%s</span><span class="s">.bz2&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backup_dir</span><span class="p">,</span> <span class="n">log_id</span><span class="p">),</span>
+
+        <span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">audit_index</span><span class="p">,</span> <span class="n">audit_entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">audit_log_replay_dump</span><span class="p">):</span>
+        <span class="n">audit_log_replay_dump</span><span class="p">[</span><span class="n">audit_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">audit_entry</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+      <span class="n">audit_log_replay_dump_file</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">audit_log_replay_dump</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">audit_log_replay_dump_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">full_dump_file</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">/full_database_dump-</span><span class="si">%s</span><span class="s">.bz2&#39;</span> <span class="o">%</span>
+                                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backup_dir</span><span class="p">,</span> <span class="n">log_id</span><span class="p">),</span> <span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">full_dump_index</span><span class="p">,</span> <span class="n">full_dump_entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">full_database_dump</span><span class="p">):</span>
+        <span class="n">full_database_dump</span><span class="p">[</span><span class="n">full_dump_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">full_dump_entry</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+      <span class="n">full_dump_file</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">full_database_dump</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">full_dump_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_config_dir</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root_config_dir</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.CookRawDump"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.CookRawDump">[docs]</a>  <span class="k">def</span> <span class="nf">CookRawDump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_dump</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This takes raw data from the database and turns it into a</span>
+<span class="sd">    mysqldump-like output.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      raw_dump: list of dictionaries that contain all of the tables</span>
+<span class="sd">                and their associated metadata</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      list: tuple of list of strings to be concatenated into mysql dump files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Stole these lines from mysqldump output, not sure all are needed</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET NAMES utf8;</span><span class="se">\n</span><span class="s">&#39;</span>
+              <span class="s">&#39;SET @OLD_TIME_ZONE=@@TIME_ZONE;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&quot;SET TIME_ZONE=&#39;+00:00&#39;;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+              <span class="s">&#39;SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET UNIQUE_CHECKS=0;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET FOREIGN_KEY_CHECKS=0;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET @OLD_SQL_MODE=@@SQL_MODE;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&quot;SET SQL_MODE=&#39;NO_AUTO_VALUE_ON_ZERO&#39;;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+              <span class="s">&#39;SET @OLD_SQL_NOTES=@@SQL_NOTES;</span><span class="se">\n</span><span class="s">&#39;</span>
+              <span class="s">&#39;SET SQL_NOTES=0;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">]</span>
+
+    <span class="n">footer</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;SET SQL_MODE=@OLD_SQL_MODE;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+              <span class="s">&#39;SET SQL_NOTES=@OLD_SQL_NOTES;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">]</span>
+
+    <span class="n">full_database_dump</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">full_database_dump</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+    <span class="n">audit_log_replay_dump</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">audit_log_replay_dump</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">table_data</span> <span class="ow">in</span> <span class="n">raw_dump</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="n">table_lines</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">table_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;DROP TABLE IF EXISTS `</span><span class="si">%s</span><span class="s">`;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">table_name</span><span class="p">)</span>
+      <span class="n">table_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table_data</span><span class="p">[</span><span class="s">&#39;schema&#39;</span><span class="p">])</span>
+      <span class="n">table_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">;&#39;</span> <span class="o">%</span> <span class="n">table_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+      <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">table_data</span><span class="p">[</span><span class="s">&#39;rows&#39;</span><span class="p">]:</span>
+        <span class="n">insert_row</span> <span class="o">=</span> <span class="s">&quot;INSERT INTO </span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">) VALUES (</span><span class="si">%%</span><span class="s">(</span><span class="si">%s</span><span class="s">)s);</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">table_name</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_data</span><span class="p">[</span><span class="s">&#39;columns&#39;</span><span class="p">]),</span>
+            <span class="s">&quot;)s, %(&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">table_data</span><span class="p">[</span><span class="s">&#39;columns&#39;</span><span class="p">]))</span>
+        <span class="n">table_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">insert_row</span> <span class="o">%</span> <span class="n">row</span><span class="p">)</span>
+
+      <span class="n">full_database_dump</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">table_lines</span><span class="p">)</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">constants</span><span class="o">.</span><span class="n">TABLES_NOT_AUDIT_LOGGED</span> <span class="p">):</span>
+        <span class="n">audit_log_replay_dump</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">table_lines</span><span class="p">)</span>
+
+    <span class="n">full_database_dump</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">footer</span><span class="p">)</span>
+    <span class="n">audit_log_replay_dump</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">footer</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">audit_log_replay_dump</span><span class="p">,</span> <span class="n">full_database_dump</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.ListLatestNamedConfGlobalOptions"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.ListLatestNamedConfGlobalOptions">[docs]</a>  <span class="k">def</span> <span class="nf">ListLatestNamedConfGlobalOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">dns_server_set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Lists latest named.conf global options</span>
+
+<span class="sd">    This function is duplicated in roster-core/roster_core/core_helpers.py</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      data: data from GetRawData</span>
+<span class="sd">      dns_server_set: string of dns server set name</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string: string of latest named.conf global options</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">current_timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">smallest_time_differential</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="mi">100000</span><span class="p">)</span>
+    <span class="n">newest_config</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">for</span> <span class="n">named_config</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;named_conf_global_options&#39;</span><span class="p">]:</span>
+      <span class="n">time_differential</span> <span class="o">=</span> <span class="n">current_timestamp</span> <span class="o">-</span> <span class="n">named_config</span><span class="p">[</span><span class="s">&#39;options_created&#39;</span><span class="p">]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">named_config</span><span class="p">[</span><span class="s">&#39;named_conf_global_options_dns_server_set_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span>
+            <span class="n">dns_server_set</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">time_differential</span> <span class="o">&lt;</span> <span class="n">smallest_time_differential</span> <span class="p">):</span>
+          <span class="n">smallest_time_differential</span> <span class="o">=</span> <span class="n">time_differential</span>
+          <span class="n">newest_config</span> <span class="o">=</span> <span class="n">named_config</span><span class="p">[</span><span class="s">&#39;global_options&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">iscpy</span><span class="o">.</span><span class="n">Deserialize</span><span class="p">(</span><span class="n">newest_config</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.MakeNamedConf"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.MakeNamedConf">[docs]</a>  <span class="k">def</span> <span class="nf">MakeNamedConf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">cooked_data</span><span class="p">,</span> <span class="n">dns_server_set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Makes named.conf file strings</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      data: data from GetRawData</span>
+<span class="sd">      cooked_data: data from cooked_data</span>
+<span class="sd">      dns_server_set: string of dns_server_set</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string: string of named.conf file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">acl_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">named_conf_lines</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;#This named.conf file is autogenerated. DO NOT EDIT&#39;</span><span class="p">]</span>
+    <span class="n">named_conf_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ListLatestNamedConfGlobalOptions</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">dns_server_set</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">named_conf_header</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">Error</span><span class="p">(</span><span class="s">&#39;Named conf global options missing for server set &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="n">dns_server_set</span><span class="p">))</span>
+    <span class="n">named_conf_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NamedHeaderChangeDirectory</span><span class="p">(</span>
+        <span class="n">named_conf_header</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/named&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">named_dir</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">))</span>
+    <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">named_conf_header</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">acl_range</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;acl_ranges&#39;</span><span class="p">]:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">acl_range</span><span class="p">[</span><span class="s">&#39;acl_ranges_acl_name&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">acl_dict</span> <span class="p">):</span>
+        <span class="n">acl_dict</span><span class="p">[</span><span class="n">acl_range</span><span class="p">[</span><span class="s">&#39;acl_ranges_acl_name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">acl_range</span><span class="p">[</span><span class="s">&#39;acl_range_cidr_block&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="n">acl_dict</span><span class="p">[</span><span class="n">acl_range</span><span class="p">[</span><span class="s">&#39;acl_range_cidr_block&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">acl_range</span><span class="p">[</span><span class="s">&#39;acl_range_cidr_block&#39;</span><span class="p">]</span> <span class="ow">in</span>
+            <span class="n">acl_dict</span><span class="p">[</span><span class="n">acl_range</span><span class="p">[</span><span class="s">&#39;acl_ranges_acl_name&#39;</span><span class="p">]]</span> <span class="p">):</span>
+          <span class="n">acl_dict</span><span class="p">[</span>
+              <span class="n">acl_range</span><span class="p">[</span><span class="s">&#39;acl_ranges_acl_name&#39;</span><span class="p">]][</span><span class="n">acl_range</span><span class="p">[</span>
+                  <span class="s">&#39;acl_range_cidr_block&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">acl</span> <span class="ow">in</span> <span class="n">acl_dict</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">acl_dict</span><span class="p">[</span><span class="n">acl</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">acl</span> <span class="o">!=</span> <span class="s">&#39;any&#39;</span> <span class="p">):</span>
+        <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;acl </span><span class="si">%s</span><span class="s"> {&#39;</span> <span class="o">%</span> <span class="n">acl</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cidr</span> <span class="ow">in</span> <span class="n">acl_dict</span><span class="p">[</span><span class="n">acl</span><span class="p">]:</span>
+          <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t</span><span class="si">%s</span><span class="s">;&#39;</span> <span class="o">%</span> <span class="n">cidr</span><span class="p">)</span>
+        <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;};</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">view_name</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">]:</span>
+      <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;view &quot;</span><span class="si">%s</span><span class="s">&quot; {&#39;</span> <span class="o">%</span> <span class="n">view_name</span><span class="p">)</span>
+      <span class="n">clients</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">found_acl</span> <span class="o">=</span> <span class="bp">False</span>
+      <span class="k">for</span> <span class="n">acl_name</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span><span class="s">&#39;acls&#39;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">view_acl_assignment</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;view_acl_assignments&#39;</span><span class="p">]:</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">view_acl_assignment</span><span class="p">[</span><span class="s">&#39;view_acl_assignments_view_name&#39;</span><span class="p">]</span> <span class="o">==</span>
+              <span class="n">view_name</span> <span class="p">):</span>
+            <span class="k">if</span><span class="p">(</span> <span class="n">view_acl_assignment</span><span class="p">[</span><span class="s">&#39;view_acl_assignments_acl_name&#39;</span><span class="p">]</span> <span class="o">==</span>
+                <span class="n">acl_name</span> <span class="p">):</span>
+              <span class="k">if</span><span class="p">(</span> <span class="n">view_acl_assignment</span><span class="p">[</span><span class="s">&#39;view_acl_assignments_range_allowed&#39;</span><span class="p">]</span> <span class="o">==</span>
+                  <span class="bp">True</span> <span class="p">):</span>
+                <span class="n">clients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">;&#39;</span> <span class="o">%</span> <span class="n">acl_name</span><span class="p">)</span>
+              <span class="k">else</span><span class="p">:</span>
+                <span class="n">clients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;!</span><span class="si">%s</span><span class="s">;&#39;</span> <span class="o">%</span> <span class="n">acl_name</span><span class="p">)</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="n">clients</span> <span class="o">==</span> <span class="p">[]</span> <span class="ow">and</span> <span class="n">found_acl</span> <span class="p">):</span>
+        <span class="n">clients</span> <span class="o">=</span> <span class="p">[</span><span class="s">u&#39;any;&#39;</span><span class="p">]</span>
+      <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">match-clients { </span><span class="si">%s</span><span class="s"> };&#39;</span> <span class="o">%</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clients</span><span class="p">))</span>
+      <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">]:</span>
+        <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">zone &quot;</span><span class="si">%s</span><span class="s">&quot; {&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone</span><span class="p">][</span>
+              <span class="s">&#39;zone_origin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)))</span>
+        <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t\t</span><span class="s">type </span><span class="si">%s</span><span class="s">;&#39;</span> <span class="o">%</span> <span class="n">cooked_data</span><span class="p">[</span>
+            <span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone</span><span class="p">][</span><span class="s">&#39;zone_type&#39;</span><span class="p">])</span>
+        <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t\t</span><span class="s">file &quot;</span><span class="si">%s</span><span class="s">/named/</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">.db&quot;;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">named_dir</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">),</span> <span class="n">view_name</span><span class="p">,</span> <span class="n">zone</span><span class="p">))</span>
+        <span class="n">zone_options</span> <span class="o">=</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+            <span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone</span><span class="p">][</span><span class="s">&#39;zone_options&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\n\t\t</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t\t</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">zone_options</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n\t\t</span><span class="s">&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">};&#39;</span><span class="p">)</span>
+      <span class="n">named_conf_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;};&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">named_conf_lines</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.ListACLNamesByView"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.ListACLNamesByView">[docs]</a>  <span class="k">def</span> <span class="nf">ListACLNamesByView</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">view</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Lists acl names</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      data: data from GetRawData</span>
+<span class="sd">      view: string of view name</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      list: list of acl names ex:</span>
+<span class="sd">            [&#39;private&#39;, &#39;public&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">acl_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">view_acl_assignment</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;view_acl_assignments&#39;</span><span class="p">]:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">view_acl_assignment</span><span class="p">[</span><span class="s">&#39;view_acl_assignments_view_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">view</span> <span class="p">):</span>
+        <span class="n">acl_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">view_acl_assignment</span><span class="p">[</span><span class="s">&#39;view_acl_assignments_acl_name&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">acl_list</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.GetRawData"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.GetRawData">[docs]</a>  <span class="k">def</span> <span class="nf">GetRawData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets raw data from database</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      tuple of two dictionaries:</span>
+<span class="sd">        dictionary of raw data keyed by data name with values of dicts</span>
+<span class="sd">            containing values of that type&#39;s attributes</span>
+<span class="sd">        dictionary of the raw dump keyed by data name with values of</span>
+<span class="sd">            dicts containing the db dump keyed by row, column, and schema</span>
+<span class="sd">      example:</span>
+<span class="sd">        ({&#39;view_acl_assignments&#39;: ({</span>
+<span class="sd">          &#39;view_acl_assignments_view_name&#39;: u&#39;external&#39;,</span>
+<span class="sd">          &#39;view_acl_assignments_acl_name&#39;: u&#39;public&#39;,</span>
+<span class="sd">          &#39;view_acl_assignments_acl_range_allowed&#39;: 1})},</span>
+<span class="sd">        { u&#39;zones&#39;:</span>
+<span class="sd">          {&#39;rows&#39;:[{}],</span>
+<span class="sd">           &#39;columns&#39;: [u&#39;zones_id&#39;, u&#39;zone_name&#39;],</span>
+<span class="sd">           &#39;schema&#39;:(</span>
+<span class="sd">               u&#39;CREATE TABLE `zones` (\n  `zones_id` mediumint(8) &#39;,</span>
+<span class="sd">               &#39;unsigned NOT NULL auto_increment,\n  `zone_name` varchar(255) &#39;,</span>
+<span class="sd">               &#39;NOT NULL,\n  PRIMARY KEY  (`zones_id`),\n  UNIQUE KEY ;</span>
+<span class="sd">               &#39;`zone_name` (`zone_name`),\n  KEY `zone_name_1` &#39;</span>
+<span class="sd">               &#39;(`zone_name`)\n) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT &#39;,</span>
+<span class="sd">               &#39;CHARSET=utf8&#39;)}}),</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">named_conf_global_options_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;named_conf_global_options&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;named_conf_global_options&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;named_conf_global_options&#39;</span><span class="p">,</span> <span class="n">named_conf_global_options_dict</span><span class="p">)</span>
+
+    <span class="n">dns_server_set_view_assignments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;dns_server_set_view_assignments&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;dns_server_set_view_assignments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;dns_server_set_view_assignments&#39;</span><span class="p">,</span> <span class="n">dns_server_set_view_assignments_dict</span><span class="p">)</span>
+
+    <span class="n">dns_server_set_assignments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;dns_server_set_assignments&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;dns_server_set_assignments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;dns_server_set_assignments&#39;</span><span class="p">,</span> <span class="n">dns_server_set_assignments_dict</span><span class="p">)</span>
+
+    <span class="n">dns_server_set_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;dns_server_sets&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;dns_server_sets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;dns_server_sets&#39;</span><span class="p">,</span>
+                                                       <span class="n">dns_server_set_dict</span><span class="p">)</span>
+
+    <span class="n">view_dependency_assignments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;view_dependency_assignments&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;view_dependency_assignments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;view_dependency_assignments&#39;</span><span class="p">,</span> <span class="n">view_dependency_assignments_dict</span><span class="p">)</span>
+
+    <span class="n">view_acl_assignments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;view_acl_assignments&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;view_acl_assignments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;view_acl_assignments&#39;</span><span class="p">,</span> <span class="n">view_acl_assignments_dict</span><span class="p">)</span>
+
+    <span class="n">acl_ranges_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;acl_ranges&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;acl_ranges&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;acl_ranges&#39;</span><span class="p">,</span> <span class="n">acl_ranges_dict</span><span class="p">)</span>
+
+    <span class="n">record_arguments_records_assignments_dict</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+          <span class="s">&#39;record_arguments_records_assignments&#39;</span><span class="p">))</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;record_arguments_records_assignments&#39;</span><span class="p">,</span>
+        <span class="n">record_arguments_records_assignments_dict</span><span class="p">)</span>
+
+    <span class="n">records_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;records&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;records&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;records&#39;</span><span class="p">,</span> <span class="n">records_dict</span><span class="p">,</span> <span class="s">&#39;record_arguments_records_assignments&#39;</span><span class="p">,</span>
+        <span class="n">record_arguments_records_assignments_dict</span><span class="p">)</span>
+
+    <span class="n">zone_view_assignments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span>
+        <span class="s">&#39;zone_view_assignments&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;zone_view_assignments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span>
+        <span class="s">&#39;zone_view_assignments&#39;</span><span class="p">,</span> <span class="n">zone_view_assignments_dict</span><span class="p">)</span>
+
+    <span class="n">record_arguments_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;record_arguments&#39;</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;record_arguments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;record_arguments&#39;</span><span class="p">,</span>
+                                                        <span class="n">record_arguments_dict</span><span class="p">)</span>
+    <span class="n">raw_dump</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">DumpDatabase</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">raw_dump</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.SortRecords"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.SortRecords">[docs]</a>  <span class="k">def</span> <span class="nf">SortRecords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">records</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sorts records for zone exporter</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      records: list of records</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dict: dictionary keyed by tuple (zone, view_dep)</span>
+<span class="sd">      ex:</span>
+<span class="sd">      {(u&#39;university.edu&#39;, u&#39;internal_dep&#39;):</span>
+<span class="sd">          {11: {&#39;target&#39;: u&#39;computer4&#39;, &#39;ttl&#39;: 3600, &#39;record_type&#39;: u&#39;a&#39;,</span>
+<span class="sd">                &#39;view_name&#39;: u&#39;internal&#39;, &#39;last_user&#39;: u&#39;sharrell&#39;,</span>
+<span class="sd">                &#39;zone_name&#39;: u&#39;university.edu&#39;,</span>
+<span class="sd">                u&#39;assignment_ip&#39;: u&#39;192.168.1.4&#39;},</span>
+<span class="sd">           12: {u&#39;serial_number&#39;: 20091225, u&#39;refresh_seconds&#39;: 5,</span>
+<span class="sd">                &#39;target&#39;: u&#39;university.edu.&#39;,</span>
+<span class="sd">                u&#39;name_server&#39;: u&#39;ns1.university.edu.&#39;, u&#39;retry_seconds&#39;: 5,</span>
+<span class="sd">                &#39;ttl&#39;: 3600, u&#39;minimum_seconds&#39;: 5, &#39;record_type&#39;: u&#39;soa&#39;,</span>
+<span class="sd">                &#39;view_name&#39;: u&#39;internal&#39;, &#39;last_user&#39;: u&#39;sharrell&#39;,</span>
+<span class="sd">                &#39;zone_name&#39;: u&#39;university.edu&#39;,</span>
+<span class="sd">                u&#39;admin_email&#39;: u&#39;admin@university.edu.&#39;,</span>
+<span class="sd">                u&#39;expiry_seconds&#39;: 5}}}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sorted_records</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+      <span class="n">zone_name</span> <span class="o">=</span>  <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_zone_name&#39;</span><span class="p">]</span>
+      <span class="n">view_dep</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_view_dependency&#39;</span><span class="p">]</span>
+      <span class="n">record_id</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments_records_assignments_record_id&#39;</span><span class="p">]</span>
+      <span class="n">arg_name</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span>
+          <span class="s">&#39;record_arguments_records_assignments_argument_name&#39;</span><span class="p">]</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">sorted_records</span><span class="o">.</span><span class="n">has_key</span><span class="p">((</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">))</span> <span class="p">):</span>
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)]</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">record_id</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="s">&#39;record_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">])</span>
+
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="s">&#39;zone_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_zone_name&#39;</span><span class="p">])</span>
+
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="s">&#39;view_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_view_dependency&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39;_dep&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_target&#39;</span><span class="p">])</span>
+
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="s">&#39;ttl&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_ttl&#39;</span><span class="p">])</span>
+
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="s">&#39;last_user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_last_user&#39;</span><span class="p">])</span>
+
+      <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span>
+              <span class="s">&#39;argument_value&#39;</span><span class="p">]</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span>
+          <span class="n">arg_name</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="p">):</span>
+        <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="n">arg_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="n">sorted_records</span><span class="p">[(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dep</span><span class="p">)][</span><span class="n">record_id</span><span class="p">][</span><span class="n">arg_name</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">sorted_records</span>
+</div>
+<div class="viewcode-block" id="BindTreeExport.CookData"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.tree_exporter.BindTreeExport.CookData">[docs]</a>  <span class="k">def</span> <span class="nf">CookData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Cooks data for zone exporter</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      data: dictionary of raw data from database</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dict: dictionary keyed by dns_server_set ex:</span>
+<span class="sd">      {u&#39;external_dns&#39;: {</span>
+<span class="sd">          &#39;dns_servers&#39;: [u&#39;[ns1.university.edu]&#39;, u&#39;[dns2.university.edu]&#39;,</span>
+<span class="sd">                          u&#39;[dns3.university.edu]&#39;],</span>
+<span class="sd">          &#39;views&#39;: {u&#39;external&#39;:</span>
+<span class="sd">              {u&#39;university.edu&#39;: {&#39;records&#39;:</span>
+<span class="sd">                  [{u&#39;serial_number&#39;: 20091227, u&#39;refresh_seconds&#39;: 5,</span>
+<span class="sd">                    &#39;target&#39;: u&#39;university.edu.&#39;,</span>
+<span class="sd">                    u&#39;name_server&#39;: u&#39;ns1.university.edu.&#39;, u&#39;retry_seconds&#39;: 5,</span>
+<span class="sd">                    &#39;ttl&#39;: 3600, u&#39;minimum_seconds&#39;: 5, &#39;record_type&#39;: u&#39;soa&#39;,</span>
+<span class="sd">                    &#39;view_name&#39;: u&#39;external&#39;, &#39;last_user&#39;: u&#39;sharrell&#39;,</span>
+<span class="sd">                    &#39;zone_name&#39;: u&#39;university.edu&#39;,</span>
+<span class="sd">                    u&#39;admin_email&#39;: u&#39;admin@university.edu.&#39;,</span>
+<span class="sd">                    u&#39;expiry_seconds&#39;: 5},</span>
+<span class="sd">                   {&#39;target&#39;: u&#39;computer1&#39;, &#39;ttl&#39;: 3600, &#39;record_type&#39;: u&#39;a&#39;,</span>
+<span class="sd">                    &#39;view_name&#39;: u&#39;external&#39;, &#39;last_user&#39;: u&#39;sharrell&#39;,</span>
+<span class="sd">                    &#39;zone_name&#39;: u&#39;university.edu&#39;,</span>
+<span class="sd">                    u&#39;assignment_ip&#39;: u&#39;1.2.3.5&#39;},</span>
+<span class="sd">                    &#39;zone_origin&#39;: u&#39;example.&#39;, &#39;zone_type&#39;: u&#39;master&#39;}}}}}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cooked_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">sorted_records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SortRecords</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;records&#39;</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">dns_server_set</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;dns_server_sets&#39;</span><span class="p">]:</span>
+      <span class="n">dns_server_set_name</span> <span class="o">=</span> <span class="n">dns_server_set</span><span class="p">[</span><span class="s">&#39;dns_server_set_name&#39;</span><span class="p">]</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">dns_server_set_name</span> <span class="ow">in</span> <span class="n">cooked_data</span> <span class="p">):</span>
+        <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="s">&#39;dns_servers&#39;</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">]</span> <span class="p">):</span>
+        <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;dns_servers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="s">&#39;views&#39;</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">]</span> <span class="p">):</span>
+        <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+      <span class="k">for</span> <span class="n">dns_server_set_assignment</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;dns_server_set_assignments&#39;</span><span class="p">]:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">dns_server_set_assignment</span><span class="p">[</span>
+            <span class="s">&#39;dns_server_set_assignments_dns_server_set_name&#39;</span><span class="p">]</span> <span class="o">==</span>
+            <span class="n">dns_server_set</span><span class="p">[</span><span class="s">&#39;dns_server_set_name&#39;</span><span class="p">]</span> <span class="ow">and</span>
+            <span class="n">dns_server_set_assignment</span><span class="p">[</span>
+                <span class="s">&#39;dns_server_set_assignments_dns_server_name&#39;</span><span class="p">]</span>
+            <span class="ow">not</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;dns_servers&#39;</span><span class="p">]</span> <span class="p">):</span>
+
+          <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;dns_servers&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="n">dns_server_set_assignment</span><span class="p">[</span>
+                  <span class="s">&#39;dns_server_set_assignments_dns_server_name&#39;</span><span class="p">])</span>
+
+      <span class="k">for</span> <span class="n">dns_server_set_view_assignment</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span>
+            <span class="s">&#39;dns_server_set_view_assignments&#39;</span><span class="p">]:</span>
+        <span class="n">dns_server_set_name</span> <span class="o">=</span> <span class="n">dns_server_set_view_assignment</span><span class="p">[</span>
+            <span class="s">&#39;dns_server_set_view_assignments_dns_server_set_name&#39;</span><span class="p">]</span>
+        <span class="n">view_name</span> <span class="o">=</span> <span class="n">dns_server_set_view_assignment</span><span class="p">[</span>
+            <span class="s">&#39;dns_server_set_view_assignments_view_name&#39;</span><span class="p">]</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">dns_server_set_name</span> <span class="o">==</span> <span class="n">dns_server_set</span><span class="p">[</span><span class="s">&#39;dns_server_set_name&#39;</span><span class="p">]</span> <span class="p">):</span>
+
+          <span class="k">for</span> <span class="n">view_dependency</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;view_dependency_assignments&#39;</span><span class="p">]:</span>
+            <span class="k">if</span><span class="p">(</span> <span class="n">view_name</span> <span class="o">==</span> <span class="n">view_dependency</span><span class="p">[</span>
+                  <span class="s">&#39;view_dependency_assignments_view_name&#39;</span><span class="p">]</span> <span class="p">):</span>
+              <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">view_name</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span>
+                    <span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">]</span> <span class="p">):</span>
+                <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+              <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="s">&#39;acls&#39;</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span>
+                    <span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">]</span> <span class="p">):</span>
+                <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+                    <span class="s">&#39;acls&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ListACLNamesByView</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">view_name</span><span class="p">)</span>
+              <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="s">&#39;zones&#39;</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span>
+                    <span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">]</span> <span class="p">):</span>
+                <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+                    <span class="s">&#39;zones&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+              <span class="k">for</span> <span class="n">zone</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;zone_view_assignments&#39;</span><span class="p">]:</span>
+                <span class="n">view_dependency_name</span> <span class="o">=</span> <span class="n">view_dependency</span><span class="p">[</span>
+                    <span class="s">&#39;view_dependency_assignments_view_dependency&#39;</span><span class="p">]</span>
+                <span class="n">zone_name</span> <span class="o">=</span> <span class="n">zone</span><span class="p">[</span><span class="s">&#39;zone_view_assignments_zone_name&#39;</span><span class="p">]</span>
+                <span class="k">if</span><span class="p">(</span> <span class="n">view_dependency_name</span> <span class="o">==</span> <span class="n">zone</span><span class="p">[</span>
+                      <span class="s">&#39;zone_view_assignments_view_dependency&#39;</span><span class="p">]</span> <span class="ow">and</span>
+                      <span class="p">(</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dependency_name</span><span class="p">)</span> <span class="ow">in</span> <span class="n">sorted_records</span> <span class="p">):</span>
+                  <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">zone_name</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span>
+                        <span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">]</span> <span class="p">):</span>
+                    <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+                        <span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                  <span class="k">if</span><span class="p">(</span> <span class="s">&#39;records&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span>
+                          <span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span><span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone_name</span><span class="p">]</span> <span class="p">):</span>
+                    <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+                        <span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone_name</span><span class="p">][</span><span class="s">&#39;records&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+                  <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">sorted_records</span><span class="p">[(</span>
+                      <span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dependency_name</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="k">try</span><span class="p">:</span>
+                      <span class="n">record</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">punycode_lib</span><span class="o">.</span><span class="n">Uni2Puny</span><span class="p">(</span><span class="n">record</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">])</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">):</span>
+                      <span class="k">pass</span>
+                    <span class="k">try</span><span class="p">:</span>
+                      <span class="n">record</span><span class="p">[</span><span class="s">&#39;assignment_host&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">punycode_lib</span><span class="o">.</span><span class="n">Uni2Puny</span><span class="p">(</span>
+                          <span class="n">record</span><span class="p">[</span><span class="s">&#39;assignment_host&#39;</span><span class="p">])</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">):</span>
+                      <span class="k">pass</span>
+                  <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+                      <span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone_name</span><span class="p">][</span><span class="s">&#39;records&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">sorted_records</span><span class="p">[(</span>
+                          <span class="n">zone_name</span><span class="p">,</span> <span class="n">view_dependency_name</span><span class="p">)]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+                  <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+                      <span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone_name</span><span class="p">][</span><span class="s">&#39;zone_origin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                          <span class="n">punycode_lib</span><span class="o">.</span><span class="n">Uni2Puny</span><span class="p">(</span><span class="n">zone</span><span class="p">[</span><span class="s">&#39;zone_origin&#39;</span><span class="p">]))</span>
+
+                  <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+                      <span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone_name</span><span class="p">][</span><span class="s">&#39;zone_options&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iscpy</span><span class="o">.</span><span class="n">Deserialize</span><span class="p">(</span><span class="n">zone</span><span class="p">[</span><span class="s">&#39;zone_options&#39;</span><span class="p">])</span>
+
+                  <span class="n">cooked_data</span><span class="p">[</span><span class="n">dns_server_set_name</span><span class="p">][</span><span class="s">&#39;views&#39;</span><span class="p">][</span><span class="n">view_name</span><span class="p">][</span>
+                      <span class="s">&#39;zones&#39;</span><span class="p">][</span><span class="n">zone_name</span><span class="p">][</span><span class="s">&#39;zone_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">zone</span><span class="p">[</span>
+                          <span class="s">&#39;zone_view_assignments_zone_type&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">cooked_data</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

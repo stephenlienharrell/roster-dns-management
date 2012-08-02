@@ -1,0 +1,51 @@
+roster_user_tools Package
+=========================
+
+:mod:`action_flags` Module
+--------------------------
+
+.. automodule:: roster_user_tools.action_flags
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`cli_common_lib` Module
+----------------------------
+
+.. automodule:: roster_user_tools.cli_common_lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`cli_record_lib` Module
+----------------------------
+
+.. automodule:: roster_user_tools.cli_record_lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`core_flags` Module
+------------------------
+
+.. automodule:: roster_user_tools.core_flags
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`data_flags` Module
+------------------------
+
+.. automodule:: roster_user_tools.data_flags
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`roster_client_lib` Module
+-------------------------------
+
+.. automodule:: roster_user_tools.roster_client_lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

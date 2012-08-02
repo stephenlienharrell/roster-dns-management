@@ -1,0 +1,51 @@
+roster_server Package
+=====================
+
+:mod:`roster_server` Package
+----------------------------
+
+.. automodule:: roster_server.__init__
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`auth_pam` Module
+----------------------
+
+.. automodule:: roster_server.auth_pam
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`credentials` Module
+-------------------------
+
+.. automodule:: roster_server.credentials
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`general_ldap` Module
+--------------------------
+
+.. automodule:: roster_server.general_ldap
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`server` Module
+--------------------
+
+.. automodule:: roster_server.server
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`ssl_xml_rpc_lib` Module
+-----------------------------
+
+.. automodule:: roster_server.ssl_xml_rpc_lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

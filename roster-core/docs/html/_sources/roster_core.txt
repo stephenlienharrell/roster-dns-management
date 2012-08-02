@@ -1,0 +1,107 @@
+roster_core Package
+===================
+
+:mod:`roster_core` Package
+--------------------------
+
+.. automodule:: roster_core.__init__
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`audit_log` Module
+-----------------------
+
+.. automodule:: roster_core.audit_log
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`config` Module
+--------------------
+
+.. automodule:: roster_core.config
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`constants` Module
+-----------------------
+
+.. automodule:: roster_core.constants
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`core` Module
+------------------
+
+.. automodule:: roster_core.core
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`core_helpers` Module
+--------------------------
+
+.. automodule:: roster_core.core_helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`data_validation` Module
+-----------------------------
+
+.. automodule:: roster_core.data_validation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`db_access` Module
+-----------------------
+
+.. automodule:: roster_core.db_access
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`embedded_files` Module
+----------------------------
+
+.. automodule:: roster_core.embedded_files
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`errors` Module
+--------------------
+
+.. automodule:: roster_core.errors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`helpers_lib` Module
+-------------------------
+
+.. automodule:: roster_core.helpers_lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`punycode_lib` Module
+--------------------------
+
+.. automodule:: roster_core.punycode_lib
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`user` Module
+------------------
+
+.. automodule:: roster_core.user
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

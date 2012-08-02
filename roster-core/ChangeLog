@@ -1,5 +1,3 @@
-Current Release
-
 2012-08-02 release-0.17
 - Added functions to do classless reverse delegation
 - Removed redundant authorize on ListNamedConfGlobalOptionsClient

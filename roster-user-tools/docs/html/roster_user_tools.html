@@ -1,0 +1,852 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_user_tools Package &mdash; Roster User Tools v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Roster User Tools v0.17 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to Roster User Tools’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Roster User Tools’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Roster User Tools v0.17 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="roster-user-tools-package">
+<h1>roster_user_tools Package<a class="headerlink" href="#roster-user-tools-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-roster_user_tools.action_flags">
+<span id="action-flags-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">action_flags</span></tt> Module<a class="headerlink" href="#module-roster_user_tools.action_flags" title="Permalink to this headline">¶</a></h2>
+<p>Action flags lib, flags in all ls, mk, rm tools.</p>
+<dl class="class">
+<dt id="roster_user_tools.action_flags.List">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.action_flags.</tt><tt class="descname">List</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/action_flags.html#List"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.action_flags.List" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line ls flags</p>
+<dl class="method">
+<dt id="roster_user_tools.action_flags.List.SetActionFlags">
+<tt class="descname">SetActionFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/action_flags.html#List.SetActionFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.action_flags.List.SetActionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets list flags for parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.action_flags.Make">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.action_flags.</tt><tt class="descname">Make</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/action_flags.html#Make"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.action_flags.Make" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line mk flags</p>
+<dl class="method">
+<dt id="roster_user_tools.action_flags.Make.SetActionFlags">
+<tt class="descname">SetActionFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/action_flags.html#Make.SetActionFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.action_flags.Make.SetActionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets make flags for parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.action_flags.Remove">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.action_flags.</tt><tt class="descname">Remove</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/action_flags.html#Remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.action_flags.Remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line rm flags</p>
+<dl class="method">
+<dt id="roster_user_tools.action_flags.Remove.SetActionFlags">
+<tt class="descname">SetActionFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/action_flags.html#Remove.SetActionFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.action_flags.Remove.SetActionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets remove flags for parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.action_flags.Update">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.action_flags.</tt><tt class="descname">Update</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/action_flags.html#Update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.action_flags.Update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line up flags</p>
+<dl class="method">
+<dt id="roster_user_tools.action_flags.Update.SetActionFlags">
+<tt class="descname">SetActionFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/action_flags.html#Update.SetActionFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.action_flags.Update.SetActionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets update flags for parser</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_user_tools.cli_common_lib">
+<span id="cli-common-lib-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">cli_common_lib</span></tt> Module<a class="headerlink" href="#module-roster_user_tools.cli_common_lib" title="Permalink to this headline">¶</a></h2>
+<p>Common library for DNS management command line tools.</p>
+<dl class="exception">
+<dt id="roster_user_tools.cli_common_lib.ArgumentError">
+<em class="property">exception </em><tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">ArgumentError</tt><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#ArgumentError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.ArgumentError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.cli_common_lib.CliCommonLib">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">CliCommonLib</tt><big>(</big><em>options</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#CliCommonLib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.CliCommonLib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Command line common library</p>
+<dl class="method">
+<dt id="roster_user_tools.cli_common_lib.CliCommonLib.DisallowFlags">
+<tt class="descname">DisallowFlags</tt><big>(</big><em>disallow_list</em>, <em>parser</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#CliCommonLib.DisallowFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.CliCommonLib.DisallowFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dissallows certain command line flags.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>disallow_list: list of command line flags to block
+parser: parser object from optparse</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.DnsError">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">DnsError</tt><big>(</big><em>message</em>, <em>exit_status=0</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#DnsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.DnsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints standardized client error message to screen.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>message: string of message to be displayed on screen
+exit_status: integer of retrun code, assumed not exit if 0</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.DnsWarning">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">DnsWarning</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#DnsWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.DnsWarning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints standardized warning message to screen.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>message: string of message to be displayed on screen</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.EditFile">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">EditFile</tt><big>(</big><em>fname</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#EditFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.EditFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Opens a file in a text editor in the EDITOR env variable for editing</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>fname: string of filename</dd>
+<dt>Outputs:</dt>
+<dd>int: return code from editor</dd>
+</dl>
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_user_tools.cli_common_lib.HostsError">
+<em class="property">exception </em><tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">HostsError</tt><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#HostsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.HostsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.PrintColumns">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">PrintColumns</tt><big>(</big><em>print_list</em>, <em>first_line_header=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#PrintColumns"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.PrintColumns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints a table with aligned columns.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>print_list: list of lists of columns
+file: string of filename</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.PrintHosts">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">PrintHosts</tt><big>(</big><em>records_dictionary</em>, <em>ip_address_list</em>, <em>view_name=None</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#PrintHosts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.PrintHosts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints hosts in an /etc/hosts format</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>records_dictionary: dictionary of records
+ip_address_list: list of ip_addresses
+view_name: string of view_name</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.PrintSortedHosts">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">PrintSortedHosts</tt><big>(</big><em>hosts_dict</em>, <em>print_headers=True</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#PrintSortedHosts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.PrintSortedHosts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints sorted hosts in a nice usable format</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>hosts_dict: A dictionary of sort host lists keyed by views.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.ServerError">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">ServerError</tt><big>(</big><em>message</em>, <em>uuid_string</em>, <em>exit_status=0</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#ServerError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.ServerError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints standardized server error message to screen.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>message: string of message to be displayed on screen
+exit_status: integer of retrun code, assumed not exit if 0</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.SortRecordsDict">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">SortRecordsDict</tt><big>(</big><em>records_dictionary</em>, <em>view_name</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#SortRecordsDict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.SortRecordsDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retries records from database and sorts them</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>records_dictionary: dictionary of records from core
+view_name: string of view name</dd>
+<dt>Outputs:</dt>
+<dd>dict: sorted dictionary of records</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.UnknownError">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">UnknownError</tt><big>(</big><em>error_class</em>, <em>uuid_string</em>, <em>message</em>, <em>exit_status=0</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#UnknownError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.UnknownError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints standardized unknown error message to screen.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>message: string of message to be displayed on screen
+exit_status: integer of retrun code, assumed not exit if 0</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.cli_common_lib.UserError">
+<tt class="descclassname">roster_user_tools.cli_common_lib.</tt><tt class="descname">UserError</tt><big>(</big><em>message</em>, <em>exit_status=0</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_common_lib.html#UserError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_common_lib.UserError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints standardized user error message to screen.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>message: string of message to be displayed on screen
+exit_status: integer of retrun code, assumed not exit if 0</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_user_tools.cli_record_lib">
+<span id="cli-record-lib-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">cli_record_lib</span></tt> Module<a class="headerlink" href="#module-roster_user_tools.cli_record_lib" title="Permalink to this headline">¶</a></h2>
+<p>Make record library for command line tools.</p>
+<dl class="class">
+<dt id="roster_user_tools.cli_record_lib.CliRecordLib">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.cli_record_lib.</tt><tt class="descname">CliRecordLib</tt><big>(</big><em>cli_common_lib_instance</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_record_lib.html#CliRecordLib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_record_lib.CliRecordLib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Command line record library class</p>
+<dl class="method">
+<dt id="roster_user_tools.cli_record_lib.CliRecordLib.ListRecords">
+<tt class="descname">ListRecords</tt><big>(</big><em>record_type</em>, <em>options</em>, <em>record_args_dict</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_record_lib.html#CliRecordLib.ListRecords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_record_lib.CliRecordLib.ListRecords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists records given certain parameters</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>options: options object from optparse
+record_args_dict: record arguments dictionary</dd>
+<dt>Outputs:</dt>
+<dd>list or string depending on record type</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.cli_record_lib.CliRecordLib.MakeRecord">
+<tt class="descname">MakeRecord</tt><big>(</big><em>record_type</em>, <em>options</em>, <em>record_args_dict</em>, <em>allow_duplicate=False</em>, <em>quiet=False</em>, <em>raise_errors=False</em>, <em>fix_ptr_origin=True</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_record_lib.html#CliRecordLib.MakeRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_record_lib.CliRecordLib.MakeRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects to server and makes a DNS record.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>record_type: record type
+options: options object from optparse
+record_args_dict: dictionary varying according to record record_type
+allow_duplicate: allow duplicate entries without causing error
+quiet: whether or not function should be quiet
+raise_errors: raise errors rather than printing</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.cli_record_lib.CliRecordLib.RemoveRecord">
+<tt class="descname">RemoveRecord</tt><big>(</big><em>record_type</em>, <em>options</em>, <em>record_args_dict</em>, <em>quiet=False</em>, <em>raise_errors=False</em>, <em>fix_ptr_origin=True</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/cli_record_lib.html#CliRecordLib.RemoveRecord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_record_lib.CliRecordLib.RemoveRecord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connects to server and removes a DNS record.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>record_type: record type
+options: options object from optparse
+record_args_dict: dictionary varying according to record record_type
+quiet: whether or not function should be quiet
+raise_errors: raise errors rather than printing</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_user_tools.cli_record_lib.RecordNotFoundException">
+<em class="property">exception </em><tt class="descclassname">roster_user_tools.cli_record_lib.</tt><tt class="descname">RecordNotFoundException</tt><a class="reference internal" href="_modules/roster_user_tools/cli_record_lib.html#RecordNotFoundException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.cli_record_lib.RecordNotFoundException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_user_tools.core_flags">
+<span id="core-flags-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">core_flags</span></tt> Module<a class="headerlink" href="#module-roster_user_tools.core_flags" title="Permalink to this headline">¶</a></h2>
+<p>Core flags lib, flags in all tools.</p>
+<dl class="class">
+<dt id="roster_user_tools.core_flags.CoreFlags">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.core_flags.</tt><tt class="descname">CoreFlags</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/core_flags.html#CoreFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.core_flags.CoreFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Command line common library</p>
+<dl class="method">
+<dt id="roster_user_tools.core_flags.CoreFlags.AddFlagRule">
+<tt class="descname">AddFlagRule</tt><big>(</big><em>flag_name</em>, <em>command=None</em>, <em>required=True</em>, <em>flag_type='args'</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/core_flags.html#CoreFlags.AddFlagRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.core_flags.CoreFlags.AddFlagRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a key to functions dict</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>flag_name: string of flag name
+command: string of command (defaults to self.command)
+required: boolean of required flag (defaults to true)
+flag_type: type of flag (defaults to &#8216;args&#8217;)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.core_flags.CoreFlags.CheckDataFlags">
+<tt class="descname">CheckDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/core_flags.html#CoreFlags.CheckDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.core_flags.CoreFlags.CheckDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the action the tool should perform</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>function: string of function, must be in functions
+functions: dictionary of uses from tool</dd>
+<dt>Outputs:</dt>
+<dd>string: string from uses keys of correct action</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.core_flags.CoreFlags.SetAllFlagRule">
+<tt class="descname">SetAllFlagRule</tt><big>(</big><em>flag_name</em>, <em>required=True</em>, <em>flag_type='args'</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/core_flags.html#CoreFlags.SetAllFlagRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.core_flags.CoreFlags.SetAllFlagRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a key to all args portions of functions dicts</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>flag_name: string of optparse flag name
+required: boolean of required flag (defaults to True)
+flag_type: type of flag (defaults to &#8216;args&#8217;)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.core_flags.CoreFlags.SetCommands">
+<tt class="descname">SetCommands</tt><big>(</big><em>functions</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/core_flags.html#CoreFlags.SetCommands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.core_flags.CoreFlags.SetCommands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets self.functions_dict according to functions list</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd><p class="first">functions: list of strings of functions</p>
+<p>Sets the self.functions_dict
+ex:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>{&#8216;list&#8217;: {&#8216;args&#8217;: {}, &#8216;forbidden_args&#8217;:{}, &#8216;independent_args&#8217;: [],</dt>
+<dd>&#8216;dependent_args&#8217;: []},</dd>
+<dt>{&#8216;remove&#8217;: {&#8216;args&#8217;: {}, &#8216;forbidden_args&#8217;:{}, &#8216;independent_args&#8217;: [],</dt>
+<dd>&#8216;dependent_args&#8217;: []}}</dd>
+</dl>
+</div></blockquote>
+<p>The list portion of the dictionary may be populated as shown below:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>{&#8216;list&#8217;: {&#8216;args&#8217;: {&#8216;user&#8217;: True, &#8216;verbose&#8217;: False},</dt>
+<dd><p class="first">&#8216;forbidden_args&#8217;: {&#8216;make_all&#8217;: False},
+&#8216;independent_args&#8217;: [{&#8216;allow&#8217;: False, &#8216;deny&#8217;: False},</p>
+<blockquote>
+<div>{&#8216;quiet&#8217;: False, &#8216;verbose&#8217;: False}],</div></blockquote>
+<p class="last">&#8216;dependent_args&#8217;: [{&#8216;allow&#8217;: False, &#8216;allow_level&#8217;: True}]}}</p>
+</dd>
+</dl>
+</div></blockquote>
+<p class="last">Where &#8216;user&#8217; is a required argument. The value represents whether or not
+the argument is required: True/False. Note &#8216;user&#8217; is the name given in
+optparse, NOT the flag &#8216;-u/&#8211;user&#8217;. Verbose is not a required argument,
+but is listed in args and should be in case of any code changes. All
+args should be represented in portions of this dictionary. If &#8216;user&#8217;
+is not supplied, the function will exit with error. &#8216;make_all&#8217; is a
+forbidden argument. If it is used in this certain portion of a function,
+the user is probably mistaking what is happening with the command and
+the function will exit with error. Independent args must not be given
+simultaneously otherwise the function will exit with error. If these args
+are required, it will exit with error if one or the other is not
+specified. Dependent args are arguments that depend on each other,
+the function will error out if both are not supplied simultaneously.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.core_flags.CoreFlags.SetCoreFlags">
+<tt class="descname">SetCoreFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/core_flags.html#CoreFlags.SetCoreFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.core_flags.CoreFlags.SetCoreFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets core flags for parser</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.core_flags.CoreFlags.SetDefaultFlags">
+<tt class="descname">SetDefaultFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/core_flags.html#CoreFlags.SetDefaultFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.core_flags.CoreFlags.SetDefaultFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets all availible default flags to not required</p>
+<p>for use with one command functions such as list functions</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_user_tools.core_flags.FlagsError">
+<em class="property">exception </em><tt class="descclassname">roster_user_tools.core_flags.</tt><tt class="descname">FlagsError</tt><a class="reference internal" href="_modules/roster_user_tools/core_flags.html#FlagsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.core_flags.FlagsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_user_tools.data_flags">
+<span id="data-flags-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">data_flags</span></tt> Module<a class="headerlink" href="#module-roster_user_tools.data_flags" title="Permalink to this headline">¶</a></h2>
+<p>Data flags lib, flags for each group of tools.</p>
+<dl class="class">
+<dt id="roster_user_tools.data_flags.Acl">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">Acl</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Acl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Acl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line acl flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Acl.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Acl.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Acl.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.AuditLog">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">AuditLog</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#AuditLog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.AuditLog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line audit log flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.AuditLog.SetActionFlags">
+<tt class="descname">SetActionFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#AuditLog.SetActionFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.AuditLog.SetActionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to set action variable since credential has no action class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.data_flags.AuditLog.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#AuditLog.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.AuditLog.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.Bootstrap">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">Bootstrap</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Bootstrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Bootstrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line bootstrap flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Bootstrap.SetActionFlags">
+<tt class="descname">SetActionFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Bootstrap.SetActionFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Bootstrap.SetActionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to set action variable since set maintenance has no action
+class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Bootstrap.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Bootstrap.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Bootstrap.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.CNAME">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">CNAME</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#CNAME"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.CNAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line CNAME flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.CNAME.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#CNAME.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.CNAME.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.Credential">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">Credential</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Credential"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Credential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line credential flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Credential.SetActionFlags">
+<tt class="descname">SetActionFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Credential.SetActionFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Credential.SetActionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to set action variable since credential has no action class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Credential.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Credential.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Credential.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.DnsServer">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">DnsServer</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#DnsServer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.DnsServer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line dns_server flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.DnsServer.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#DnsServer.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.DnsServer.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.FormattedRecords">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">FormattedRecords</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#FormattedRecords"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.FormattedRecords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line formattedrecords flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.FormattedRecords.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#FormattedRecords.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.FormattedRecords.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.Group">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">Group</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line group flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Group.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Group.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Group.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.Host">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">Host</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line view flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Host.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Host.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Host.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.Hosts">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">Hosts</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Hosts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Hosts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line uphost flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Hosts.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Hosts.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Hosts.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.MassAdd">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">MassAdd</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#MassAdd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.MassAdd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line uphost flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.MassAdd.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#MassAdd.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.MassAdd.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.NamedGlobals">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">NamedGlobals</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#NamedGlobals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.NamedGlobals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line named global flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.NamedGlobals.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#NamedGlobals.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.NamedGlobals.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.Record">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">Record</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line record flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Record.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Record.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Record.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.ReservedWord">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">ReservedWord</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#ReservedWord"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.ReservedWord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line reserved word flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.ReservedWord.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#ReservedWord.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.ReservedWord.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.SetMaintenance">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">SetMaintenance</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#SetMaintenance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.SetMaintenance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line set maintenenace flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.SetMaintenance.SetActionFlags">
+<tt class="descname">SetActionFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#SetMaintenance.SetActionFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.SetMaintenance.SetActionFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to set action variable since set maintenance has no action
+class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="roster_user_tools.data_flags.SetMaintenance.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#SetMaintenance.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.SetMaintenance.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.User">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">User</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#User"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.User" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.data_flags.Group" title="roster_user_tools.data_flags.Group"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.data_flags.Group</span></tt></a></p>
+<dl class="docutils">
+<dt>Command line user flags</dt>
+<dd>The User class inherits all of Group&#8217;s flags so dnsupusergroup has the 
+option of not including flags it doesn&#8217;t need. So know that if you call
+User.SetDataFlags(), you&#8217;ll get both Users&#8217; and Group&#8217;s</dd>
+<dt>Used by:</dt>
+<dd>dnsupusergroup</dd>
+</dl>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.User.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#User.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.User.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.View">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">View</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#View"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.View" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line view flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.View.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#View.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.View.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="roster_user_tools.data_flags.Zone">
+<em class="property">class </em><tt class="descclassname">roster_user_tools.data_flags.</tt><tt class="descname">Zone</tt><big>(</big><em>command</em>, <em>commands</em>, <em>args</em>, <em>usage</em>, <em>bootstrapper=False</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Zone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Zone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#roster_user_tools.core_flags.CoreFlags" title="roster_user_tools.core_flags.CoreFlags"><tt class="xref py py-class docutils literal"><span class="pre">roster_user_tools.core_flags.CoreFlags</span></tt></a></p>
+<p>Command line zone flags</p>
+<dl class="method">
+<dt id="roster_user_tools.data_flags.Zone.SetDataFlags">
+<tt class="descname">SetDataFlags</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/roster_user_tools/data_flags.html#Zone.SetDataFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.data_flags.Zone.SetDataFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets flags for self.parser</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-roster_user_tools.roster_client_lib">
+<span id="roster-client-lib-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">roster_client_lib</span></tt> Module<a class="headerlink" href="#module-roster_user_tools.roster_client_lib" title="Permalink to this headline">¶</a></h2>
+<p>Client library for XML RPC.</p>
+<p>Connects to XML RPC server and runs arbitrary functions.</p>
+<dl class="function">
+<dt id="roster_user_tools.roster_client_lib.CheckCredentials">
+<tt class="descclassname">roster_user_tools.roster_client_lib.</tt><tt class="descname">CheckCredentials</tt><big>(</big><em>username</em>, <em>credfile</em>, <em>server</em>, <em>password=None</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/roster_client_lib.html#CheckCredentials"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.roster_client_lib.CheckCredentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if credential file is valid.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>username: string of username
+credfile: string of credential file location
+server: string of server URL
+password: string of password</dd>
+<dt>Outputs:</dt>
+<dd>string: string of valid credential</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.roster_client_lib.CheckServerVersionMatch">
+<tt class="descclassname">roster_user_tools.roster_client_lib.</tt><tt class="descname">CheckServerVersionMatch</tt><big>(</big><em>server_name</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/roster_client_lib.html#CheckServerVersionMatch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.roster_client_lib.CheckServerVersionMatch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Does a version check between this client and server</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>server_name: string name of server to check</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.roster_client_lib.GetCredentials">
+<tt class="descclassname">roster_user_tools.roster_client_lib.</tt><tt class="descname">GetCredentials</tt><big>(</big><em>user_name</em>, <em>password</em>, <em>credfile=None</em>, <em>server_name=None</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/roster_client_lib.html#GetCredentials"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.roster_client_lib.GetCredentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets credential string from CredCache.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: string of user name
+password: string of password (plain text)
+ldap_server_name: string of ldap server url
+credfile: full path of credential file
+server_name: string of xml rpc server url</dd>
+<dt>Outputs:</dt>
+<dd><dl class="first last docutils">
+<dt>string: credential string</dt>
+<dd>example: u&#8217;be4d4ecf-d670-44a0-b957-770e118e2755&#8217;</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="exception">
+<dt id="roster_user_tools.roster_client_lib.InvalidCredentials">
+<em class="property">exception </em><tt class="descclassname">roster_user_tools.roster_client_lib.</tt><tt class="descname">InvalidCredentials</tt><a class="reference internal" href="_modules/roster_user_tools/roster_client_lib.html#InvalidCredentials"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.roster_client_lib.InvalidCredentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.roster_client_lib.IsAuthenticated">
+<tt class="descclassname">roster_user_tools.roster_client_lib.</tt><tt class="descname">IsAuthenticated</tt><big>(</big><em>user_name</em>, <em>credfile</em>, <em>server_name=None</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/roster_client_lib.html#IsAuthenticated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.roster_client_lib.IsAuthenticated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks credential file if it is valid.</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>user_name: string of user name
+credfile: full path of credential file location
+server_name: string of server name</dd>
+<dt>Outputs:</dt>
+<dd>bool: whether or not credential file is valid</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="roster_user_tools.roster_client_lib.RunFunction">
+<tt class="descclassname">roster_user_tools.roster_client_lib.</tt><tt class="descname">RunFunction</tt><big>(</big><em>function</em>, <em>user_name</em>, <em>credfile=None</em>, <em>credstring=None</em>, <em>args=</em><span class="optional">[</span><span class="optional">]</span>, <em>kwargs={}</em>, <em>server_name=None</em>, <em>raise_errors=False</em>, <em>password=None</em><big>)</big><a class="reference internal" href="_modules/roster_user_tools/roster_client_lib.html#RunFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#roster_user_tools.roster_client_lib.RunFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs an arbitrary function for SERVER</p>
+<dl class="docutils">
+<dt>Inputs:</dt>
+<dd>function: name of the function to be run
+user_name: user running the function
+args: list of arguments to be passed to function
+kwargs: dictionary of keyword arguments to be passed to function
+server_name: a string of the server name to connect to
+raise_errors: raise errors rather than printing</dd>
+<dt>Outputs:</dt>
+<dd>return from function in core</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">roster_user_tools Package</a><ul>
+<li><a class="reference internal" href="#module-roster_user_tools.action_flags"><tt class="docutils literal"><span class="pre">action_flags</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_user_tools.cli_common_lib"><tt class="docutils literal"><span class="pre">cli_common_lib</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_user_tools.cli_record_lib"><tt class="docutils literal"><span class="pre">cli_record_lib</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_user_tools.core_flags"><tt class="docutils literal"><span class="pre">core_flags</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_user_tools.data_flags"><tt class="docutils literal"><span class="pre">data_flags</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-roster_user_tools.roster_client_lib"><tt class="docutils literal"><span class="pre">roster_client_lib</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Roster User Tools&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/roster_user_tools.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Roster User Tools’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">Roster User Tools v0.17 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

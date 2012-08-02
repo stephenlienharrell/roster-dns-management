@@ -1,0 +1,242 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_config_manager.db_recovery &mdash; Roster Config Manager v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Config Manager v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_config_manager.db_recovery</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;This module contains all of the logic for the recovery system.</span>
+
+<span class="sd">It should be only called by the roster recovery system.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+<span class="kn">import</span> <span class="nn">roster_core</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">bz2</span>
+<span class="kn">import</span> <span class="nn">cPickle</span>
+
+
+<span class="n">roster_core</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CheckCoreVersionMatches</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Recover"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.db_recovery.Recover">[docs]</a><span class="k">class</span> <span class="nc">Recover</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Roster Recovery</span>
+
+<span class="sd">  This class contains methods pertaining to recover roster after</span>
+<span class="sd">  catastrophic failure.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">config_instance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets self.db_instance</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      config_instance: instantiated config class object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span> <span class="o">=</span> <span class="n">config_instance</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span> <span class="o">=</span> <span class="n">config_instance</span><span class="o">.</span><span class="n">GetDb</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">core_instance</span> <span class="o">=</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">Core</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">core_helper_instance</span> <span class="o">=</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">CoreHelpers</span><span class="p">(</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">core_instance</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Recover.PushBackup"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.db_recovery.Recover.PushBackup">[docs]</a>  <span class="k">def</span> <span class="nf">PushBackup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">audit_log_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Restores database from sql backup with specified audit log id</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      audit_log_id: integer of audit log id</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">backup_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;exporter&#39;</span><span class="p">][</span><span class="s">&#39;backup_dir&#39;</span><span class="p">]</span>
+
+    <span class="n">full_dump_file</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">/audit_log_replay_dump-</span><span class="si">%s</span><span class="s">.bz2&#39;</span> <span class="o">%</span>
+                                 <span class="p">(</span><span class="n">backup_dir</span><span class="p">,</span> <span class="n">audit_log_id</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">full_dump_file_contents</span> <span class="o">=</span> <span class="n">full_dump_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">full_dump_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">print</span> <span class="s">&#39;Loading database from backup with ID </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">audit_log_id</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">full_dump_file_contents</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Recover.RunAuditStep"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.db_recovery.Recover.RunAuditStep">[docs]</a>  <span class="k">def</span> <span class="nf">RunAuditStep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">audit_log_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs a step from the audit_log</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      audit_log_id: integer of audit_log_id</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">forbidden_actions</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;ExportAllBindTrees&#39;</span><span class="p">]</span>
+    <span class="n">audit_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">GetEmptyRowDict</span><span class="p">(</span><span class="s">&#39;audit_log&#39;</span><span class="p">)</span>
+    <span class="n">audit_dict</span><span class="p">[</span><span class="s">&#39;audit_log_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">audit_log_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">StartTransaction</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">audit_log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">ListRow</span><span class="p">(</span><span class="s">&#39;audit_log&#39;</span><span class="p">,</span> <span class="n">audit_dict</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">db_instance</span><span class="o">.</span><span class="n">EndTransaction</span><span class="p">()</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">audit_log</span> <span class="o">==</span> <span class="p">()</span> <span class="p">):</span>
+      <span class="k">print</span> <span class="s">&#39;Not replaying action with id </span><span class="si">%s</span><span class="s">, action is blank.&#39;</span> <span class="o">%</span> <span class="n">audit_log_id</span>
+      <span class="k">return</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="n">audit_log</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;action&#39;</span><span class="p">]</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="n">audit_log</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;success&#39;</span><span class="p">]</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">forbidden_actions</span> <span class="p">):</span>
+      <span class="k">print</span> <span class="s">&#39;Not replaying action with id </span><span class="si">%s</span><span class="s">, action not allowed.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="n">audit_log_id</span><span class="p">)</span>
+    <span class="k">elif</span><span class="p">(</span> <span class="ow">not</span> <span class="n">success</span> <span class="p">):</span>
+      <span class="k">print</span> <span class="s">&#39;Not replaying action with id </span><span class="si">%s</span><span class="s">, action was unsuccessful.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="n">audit_log_id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">data</span> <span class="o">=</span> <span class="n">cPickle</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">audit_log</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;data&#39;</span><span class="p">]))[</span><span class="s">&#39;replay_args&#39;</span><span class="p">]</span>
+      <span class="k">print</span> <span class="s">&#39;Replaying action with id </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="se">\n</span><span class="s">with arguments: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="n">audit_log_id</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_instance</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_instance</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+        <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)</span>
+      <span class="k">elif</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_helper_instance</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">function</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_helper_instance</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+        <span class="n">function</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span><span class="p">(</span>
+            <span class="s">&quot;Function </span><span class="si">%s</span><span class="s"> does not exist.&quot;</span> <span class="o">%</span> <span class="n">action</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Recover.RunAuditRange"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.db_recovery.Recover.RunAuditRange">[docs]</a>  <span class="k">def</span> <span class="nf">RunAuditRange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">audit_log_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs a range of audit steps</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      audit_log_id: integer of audit_log_id</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">backup_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;exporter&#39;</span><span class="p">][</span><span class="s">&#39;backup_dir&#39;</span><span class="p">]</span>
+    <span class="n">file_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">backup_dir</span><span class="p">)</span>
+    <span class="n">db_dumps</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">file_list</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">fname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;audit_log_replay_dump-&#39;</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">db_dumps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="n">audit_id</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">audit_id</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">db_dumps</span><span class="p">)):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">audit_id</span> <span class="o">&lt;</span> <span class="n">audit_log_id</span> <span class="p">):</span>
+        <span class="k">break</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">PushBackup</span><span class="p">(</span><span class="n">audit_id</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">current_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">audit_id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">audit_log_id</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">RunAuditStep</span><span class="p">(</span><span class="n">current_id</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

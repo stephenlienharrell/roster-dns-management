@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_server.server &mdash; Roster Server v0.17 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.17',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Server v0.17 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Server v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_server.server</h1><div class="highlight"><pre>
+<span class="c">#!/usr/bin/python</span>
+
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;Server library for XML RPC</span>
+<span class="sd">Allows client to connect and run arbitrary functions in core.py.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">SocketServer</span>
+<span class="kn">import</span> <span class="nn">StringIO</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">xmlrpclib</span>
+
+<span class="kn">import</span> <span class="nn">roster_core</span>
+
+<span class="kn">import</span> <span class="nn">credentials</span>
+<span class="kn">from</span> <span class="nn">ssl_xml_rpc_lib</span> <span class="kn">import</span> <span class="n">SecureXMLRPCServer</span>
+<span class="kn">from</span> <span class="nn">ssl_xml_rpc_lib</span> <span class="kn">import</span> <span class="n">SecureXMLRpcRequestHandler</span>
+
+
+<span class="n">roster_core</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CheckCoreVersionMatches</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ArgumentError"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.ArgumentError">[docs]</a><span class="k">class</span> <span class="nc">ArgumentError</span><span class="p">(</span><span class="n">roster_core</span><span class="o">.</span><span class="n">CoreError</span><span class="p">):</span>
+  <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="FunctionError"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.FunctionError">[docs]</a><span class="k">class</span> <span class="nc">FunctionError</span><span class="p">(</span><span class="n">roster_core</span><span class="o">.</span><span class="n">CoreError</span><span class="p">):</span>
+  <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="ServerError"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.ServerError">[docs]</a><span class="k">class</span> <span class="nc">ServerError</span><span class="p">(</span><span class="n">roster_core</span><span class="o">.</span><span class="n">CoreError</span><span class="p">):</span>
+  <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="ThreadedXMLRPCServer"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.ThreadedXMLRPCServer">[docs]</a><span class="k">class</span> <span class="nc">ThreadedXMLRPCServer</span><span class="p">(</span><span class="n">SocketServer</span><span class="o">.</span><span class="n">ThreadingMixIn</span><span class="p">,</span> <span class="n">SecureXMLRPCServer</span><span class="p">):</span>
+  <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="Server"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server">[docs]</a><span class="k">class</span> <span class="nc">Server</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Daemon library used to serve commands to the client.&quot;&quot;&quot;</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_instance</span><span class="p">,</span> <span class="n">keyfile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">certfile</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="n">inf_renew_time</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">core_die_time</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="n">clean_time</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">unittest_timestamp</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="n">unit_test</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets up config instance. Stores core instances.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">       config_instance: instance of Config</span>
+<span class="sd">       keyfile: key file used for ssl</span>
+<span class="sd">       certfile: cert file used for ssl</span>
+<span class="sd">       inf_renew_time: time to refresh infinite credentials (seconds)</span>
+<span class="sd">       core_die_time: time for each core instance to die (seconds)</span>
+<span class="sd">       clean_time: time to wait between core instance cleanings (seconds)</span>
+<span class="sd">       unit_test: boolean indicating a unit-test is being run.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span> <span class="o">=</span> <span class="n">config_instance</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">keyfile</span> <span class="o">=</span> <span class="n">keyfile</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">keyfile</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">keyfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;server&#39;</span><span class="p">][</span>
+          <span class="s">&#39;ssl_key_file&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">certfile</span> <span class="o">=</span> <span class="n">certfile</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">certfile</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">certfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;server&#39;</span><span class="p">][</span>
+          <span class="s">&#39;ssl_cert_file&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">inf_renew_time</span> <span class="o">=</span> <span class="n">inf_renew_time</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;server&#39;</span><span class="p">][</span>
+        <span class="s">&#39;port&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;server&#39;</span><span class="p">][</span>
+        <span class="s">&#39;host&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">core_store_cleanup_running</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">inf_renew_time</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">inf_renew_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;server&#39;</span><span class="p">][</span>
+          <span class="s">&#39;inf_renew_time&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">core_die_time</span> <span class="o">=</span> <span class="n">core_die_time</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">core_die_time</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">core_die_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;server&#39;</span><span class="p">][</span>
+          <span class="s">&#39;core_die_time&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;server&#39;</span><span class="p">][</span>
+        <span class="s">&#39;server_log_file&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait_increment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span>
+        <span class="s">&#39;server&#39;</span><span class="p">][</span><span class="s">&#39;get_credentials_wait_increment&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">server_killswitch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file</span><span class="p">[</span><span class="s">&#39;server&#39;</span><span class="p">][</span>
+        <span class="s">&#39;server_killswitch&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">clean_time</span> <span class="o">=</span> <span class="n">clean_time</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">clean_time</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">clean_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_die_time</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cred_cache_instance</span> <span class="o">=</span> <span class="n">credentials</span><span class="o">.</span><span class="n">CredCache</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">inf_renew_time</span><span class="p">,</span> <span class="n">unit_test</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">unittest_timestamp</span> <span class="o">=</span> <span class="n">unittest_timestamp</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">core_store</span> <span class="o">=</span> <span class="p">[]</span> <span class="c"># {&#39;user&#39;: user, &#39;last_used&#39;: last_used, &#39;instance&#39;: }</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait</span> <span class="o">=</span> <span class="p">{}</span> <span class="c"># {&#39;user1&#39;: 3, &#39;user2&#39;: 4}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">last_cleaned</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">LogMessage</span><span class="p">(</span><span class="s">&#39;Roster server started on port </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="s">&#39;rosterd&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Server.LogException"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.LogException">[docs]</a>  <span class="k">def</span> <span class="nf">LogException</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">user_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save functions traceback to logfile</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      function: string of function name</span>
+<span class="sd">      args: args list</span>
+<span class="sd">      kwargs: keyword args dict</span>
+<span class="sd">      user_name: username string</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      str: uuid string from logfile</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">uuid_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">log_file_contents</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">exception_string</span> <span class="o">=</span> <span class="n">StringIO</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">exception_string</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n\n</span><span class="s">---------------------</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">uuid_string</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;FUNCTION: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">function</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;ARGS: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">args</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;KWARGS: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;USER: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">user_name</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;TIMESTAMP: </span><span class="si">%s</span><span class="se">\n\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()))</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exception_string</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">---------------------</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">log_file_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_file</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">log_file_handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_file_contents</span><span class="p">))</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">log_file_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">uuid_string</span>
+</div>
+<div class="viewcode-block" id="Server.LogMessage"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.LogMessage">[docs]</a>  <span class="k">def</span> <span class="nf">LogMessage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_message</span><span class="p">,</span> <span class="n">user_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save a message to the logfile</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      log_message: string of the log message</span>
+<span class="sd">      user_name: username string</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      str: uuid string from logfile</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">uuid_string</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">log_file_contents</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n\n</span><span class="s">---------------------</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">uuid_string</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;MESSAGE: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">log_message</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;USER: </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">user_name</span><span class="p">)</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;TIMESTAMP: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()))</span>
+    <span class="n">log_file_contents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">---------------------</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">log_file_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_file</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">log_file_handle</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">log_file_contents</span><span class="p">))</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">log_file_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">uuid_string</span>
+  </div>
+<div class="viewcode-block" id="Server.CleanupCoreStore"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.CleanupCoreStore">[docs]</a>  <span class="k">def</span> <span class="nf">CleanupCoreStore</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Cleans up expired instances in core_store&quot;&quot;&quot;</span>
+    <span class="n">delete_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_cleaned</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">clean_time</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span>
+          <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span> <span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">last_cleaned</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+      <span class="k">for</span> <span class="n">core_instance</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_store</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">core_instance</span><span class="p">[</span><span class="s">&#39;last_used&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span>
+                <span class="n">seconds</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">core_die_time</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="p">):</span>
+          <span class="n">delete_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">core_instance</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">delete_list</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">core_store</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Server.StringToUnicode"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.StringToUnicode">[docs]</a>  <span class="k">def</span> <span class="nf">StringToUnicode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">object_to_convert</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts objects recursively into strings.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      object_to_convert: the object that needs to be converted to unicode</span>
+<span class="sd">    Outputs:</span>
+<span class="sd">      converted_object: object can vary type, but all strings will be unicode</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">converted_object</span> <span class="o">=</span> <span class="n">object_to_convert</span>
+    <span class="k">if</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">object_to_convert</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">converted_object</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">object_to_convert</span><span class="p">)</span>
+    <span class="k">elif</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">object_to_convert</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">new_dict</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">object_to_convert</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">new_dict</span><span class="p">[</span><span class="nb">unicode</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">StringToUnicode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+      <span class="n">converted_object</span> <span class="o">=</span> <span class="n">new_dict</span>
+    <span class="k">elif</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">object_to_convert</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="p">):</span>
+      <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">object_to_convert</span><span class="p">):</span>
+        <span class="n">object_to_convert</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">StringToUnicode</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+      <span class="n">converted_object</span> <span class="o">=</span> <span class="n">object_to_convert</span>
+    <span class="k">elif</span><span class="p">(</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">object_to_convert</span><span class="p">,</span> <span class="n">xmlrpclib</span><span class="o">.</span><span class="n">DateTime</span><span class="p">)</span> <span class="p">):</span>
+      <span class="n">converted_object</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span>
+          <span class="n">object_to_convert</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="s">&quot;%Y%m</span><span class="si">%d</span><span class="s">T%H:%M:%S&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">converted_object</span>
+</div>
+<div class="viewcode-block" id="Server.GetCoreInstance"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.GetCoreInstance">[docs]</a>  <span class="k">def</span> <span class="nf">GetCoreInstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds core instance in core store, if one cannot be found</span>
+<span class="sd">       it will be created.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      user_name: string of user name</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      instance: instance of dnsmgmtcore</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">core_instance_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">core_instance_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_store</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">core_instance_dict</span><span class="p">[</span><span class="s">&#39;user_name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">user_name</span> <span class="p">):</span>
+        <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">new_core_instance</span> <span class="o">=</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">Core</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="p">,</span>
+                                           <span class="n">unittest_timestamp</span><span class="o">=</span><span class="p">(</span>
+                                               <span class="bp">self</span><span class="o">.</span><span class="n">unittest_timestamp</span><span class="p">))</span>
+      <span class="n">core_instance_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;user_name&#39;</span><span class="p">:</span> <span class="n">user_name</span><span class="p">,</span>
+                            <span class="s">&#39;last_used&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
+                            <span class="s">&#39;core_instance&#39;</span><span class="p">:</span> <span class="n">new_core_instance</span><span class="p">}</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">core_store</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">core_instance_dict</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">core_instance_dict</span><span class="p">[</span><span class="s">&#39;core_instance&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Server.CoreRun"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.CoreRun">[docs]</a>  <span class="k">def</span> <span class="nf">CoreRun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">credfile</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs a function in core_instance with arbitrary parameters</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      function: name of the function to be run</span>
+<span class="sd">      user_name: user running the function</span>
+<span class="sd">      args: list of arguments to be passed to function</span>
+<span class="sd">      kwargs: dictionary of keyword arguments to be passed to function</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      dictionary:  dictionary of return from function run and new cred string</span>
+<span class="sd">                   example: {&#39;core_return&#39;: returned_data,</span>
+<span class="sd">                             &#39;new_credential&#39;: u&#39;</span>
+<span class="sd">                                 be4d4ecf-d670-44a0-b957-770e118e2755&#39;}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">kwargs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">uuid_string</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">credfile</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">credfile</span><span class="p">)</span>
+    <span class="n">user_name</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+    <span class="c">## Instantiate the core instance</span>
+    <span class="n">core_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetCoreInstance</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+    <span class="n">core_helper_instance</span> <span class="o">=</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">CoreHelpers</span><span class="p">(</span><span class="n">core_instance</span><span class="p">)</span>
+    <span class="n">cred_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cred_cache_instance</span><span class="o">.</span><span class="n">CheckCredential</span><span class="p">(</span><span class="n">credfile</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span>
+                                                           <span class="n">core_instance</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">cred_status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+      <span class="c">## Fix non unicode strings containing no unicode characters</span>
+      <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">StringToUnicode</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+      <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">StringToUnicode</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+      <span class="c">## Fix unicoded kwargs keys</span>
+      <span class="n">new_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">new_kwargs</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+      <span class="n">kwargs</span> <span class="o">=</span> <span class="n">new_kwargs</span>
+
+      <span class="k">if</span><span class="p">(</span> <span class="n">function</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">FunctionError</span><span class="p">(</span><span class="s">&#39;Function does not exist.&#39;</span><span class="p">)</span>
+      <span class="k">elif</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">core_instance</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">run_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">core_instance</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span>
+      <span class="k">elif</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">core_helper_instance</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span> <span class="p">):</span>
+        <span class="n">run_func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">core_helper_instance</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">FunctionError</span><span class="p">(</span><span class="s">&#39;Function does not exist.&#39;</span><span class="p">)</span>
+
+      <span class="n">types</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">run_func</span><span class="p">)</span>
+      <span class="n">error_class</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="c">## Figure out what each function is expecting</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">types</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">):</span>
+          <span class="c"># Nothing in core function</span>
+          <span class="n">core_return</span> <span class="o">=</span> <span class="n">run_func</span><span class="p">()</span>
+        <span class="k">elif</span><span class="p">(</span> <span class="n">types</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span> <span class="p">):</span>
+          <span class="c"># Arguments only in core function</span>
+          <span class="n">core_return</span> <span class="o">=</span> <span class="n">run_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span><span class="p">(</span> <span class="n">types</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">):</span>
+          <span class="c"># KWArguments only in core function</span>
+          <span class="n">core_return</span> <span class="o">=</span> <span class="n">run_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span><span class="p">(</span> <span class="n">types</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">types</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span> <span class="o">!=</span> <span class="mi">1</span> <span class="p">):</span>
+          <span class="c"># Both kwargs and args in core function</span>
+          <span class="n">core_return</span> <span class="o">=</span> <span class="n">run_func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="n">ArgumentError</span><span class="p">(</span><span class="s">&#39;Arguments do not match.&#39;</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">InternalError</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">uuid_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LogException</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">user_name</span><span class="p">)</span>
+        <span class="n">error_class</span> <span class="o">=</span> <span class="s">&#39;InternalError&#39;</span>
+      <span class="k">except</span> <span class="n">roster_core</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">UserError</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">error_class</span> <span class="o">=</span> <span class="s">&#39;UserError&#39;</span>
+      <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">uuid_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LogException</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">user_name</span><span class="p">)</span>
+        <span class="n">error_class</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">error_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">:</span> <span class="n">uuid_string</span><span class="p">,</span> <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                <span class="s">&#39;error_class&#39;</span><span class="p">:</span> <span class="n">error_class</span><span class="p">,</span> <span class="s">&#39;core_return&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;new_credential&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+      <span class="n">core_return</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;core_return&#39;</span><span class="p">:</span> <span class="n">core_return</span><span class="p">,</span> <span class="s">&#39;new_credential&#39;</span><span class="p">:</span> <span class="n">cred_status</span><span class="p">,</span>
+                     <span class="s">&#39;log_uuid_string&#39;</span><span class="p">:</span> <span class="n">uuid_string</span><span class="p">,</span> <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">core_return</span> <span class="o">=</span> <span class="s">&#39;ERROR: Invalid Credentials&#39;</span>
+    <span class="k">return</span> <span class="n">core_return</span>
+</div>
+<div class="viewcode-block" id="Server.GetCredentials"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.GetCredentials">[docs]</a>  <span class="k">def</span> <span class="nf">GetCredentials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Connects to credential cache and gets a credential file.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      user_name: string of user name</span>
+<span class="sd">      password: string of password (plaintext)</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      string: string of credential</span>
+<span class="sd">              example: u&#39;be4d4ecf-d670-44a0-b957-770e118e2755&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">error_class</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">user_name</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+      <span class="n">core_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetCoreInstance</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+      <span class="n">cred_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cred_cache_instance</span><span class="o">.</span><span class="n">GetCredentials</span><span class="p">(</span><span class="n">user_name</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span>
+                                                            <span class="n">core_instance</span><span class="p">)</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">cred_string</span> <span class="o">==</span> <span class="s">&#39;&#39;</span> <span class="p">):</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span> <span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">user_name</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait</span><span class="p">[</span><span class="n">user_name</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait</span><span class="p">[</span><span class="n">user_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait</span><span class="p">[</span>
+            <span class="n">user_name</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait_increment</span>
+      <span class="k">elif</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span> <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_credentials_wait</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span>
+      <span class="n">uuid_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LogException</span><span class="p">(</span>
+          <span class="s">&#39;GetCredentials&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_name</span><span class="p">,</span> <span class="s">&#39;&lt;password&gt;&#39;</span><span class="p">],</span> <span class="p">{},</span> <span class="n">user_name</span><span class="p">)</span>
+      <span class="n">error_class</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">error_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">:</span> <span class="n">uuid_string</span><span class="p">,</span> <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                <span class="s">&#39;error_class&#39;</span><span class="p">:</span> <span class="n">error_class</span><span class="p">,</span> <span class="s">&#39;core_return&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;new_credential&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+      <span class="k">return</span> <span class="p">{</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">:</span> <span class="n">uuid_string</span><span class="p">,</span> <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+              <span class="s">&#39;core_return&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;new_credential&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">cred_string</span>
+</div>
+<div class="viewcode-block" id="Server.IsAuthenticated"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.IsAuthenticated">[docs]</a>  <span class="k">def</span> <span class="nf">IsAuthenticated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">credstring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if string is valid.</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      credstring: string of credential</span>
+
+<span class="sd">    Outputs:</span>
+<span class="sd">      bool: bool of valid string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">error_class</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">user_name</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+      <span class="n">credstring</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">credstring</span><span class="p">)</span>
+      <span class="n">core_instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetCoreInstance</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+      <span class="n">valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cred_cache_instance</span><span class="o">.</span><span class="n">CheckCredential</span><span class="p">(</span>
+          <span class="n">credstring</span><span class="p">,</span> <span class="n">user_name</span><span class="p">,</span> <span class="n">core_instance</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">error</span><span class="p">:</span>
+      <span class="n">uuid_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LogException</span><span class="p">(</span>
+          <span class="s">&#39;IsAuthenticated&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">user_name</span><span class="p">,</span> <span class="s">&#39;&lt;credstring&gt;&#39;</span><span class="p">],</span> <span class="p">{},</span> <span class="n">user_name</span><span class="p">)</span>
+      <span class="n">error_class</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">error_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">:</span> <span class="n">uuid_string</span><span class="p">,</span> <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+                <span class="s">&#39;error_class&#39;</span><span class="p">:</span> <span class="n">error_class</span><span class="p">,</span> <span class="s">&#39;core_return&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;new_credential&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+      <span class="k">return</span> <span class="p">{</span><span class="s">&#39;log_uuid_string&#39;</span><span class="p">:</span> <span class="n">uuid_string</span><span class="p">,</span> <span class="s">&#39;error&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">),</span>
+              <span class="s">&#39;core_return&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;new_credential&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">valid</span> <span class="o">==</span> <span class="s">&#39;&#39;</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Server.GetVersion"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.GetVersion">[docs]</a>  <span class="k">def</span> <span class="nf">GetVersion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">__version__</span>
+</div>
+<div class="viewcode-block" id="Server.Serve"><a class="viewcode-back" href="../../roster_server.html#roster_server.server.Server.Serve">[docs]</a>  <span class="k">def</span> <span class="nf">Serve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Main server function</span>
+
+<span class="sd">    Inputs:</span>
+<span class="sd">      server_name: name of server you wish to create</span>
+<span class="sd">      port: listening port number of server</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span> <span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">log_file</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ServerError</span><span class="p">(</span><span class="s">&#39;Could not write to logfile &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_file</span><span class="p">)</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">port</span> <span class="p">):</span>
+      <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span>
+    <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="n">server_name</span> <span class="p">):</span>
+      <span class="n">server_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span>
+    <span class="k">if</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_killswitch</span> <span class="p">):</span>
+      <span class="k">raise</span> <span class="n">ServerError</span><span class="p">(</span><span class="s">&#39;&quot;server_killswitch&quot; must be set to &quot;off&quot; in &quot;</span><span class="si">%s</span><span class="s">&quot; &#39;</span>
+                        <span class="s">&#39;to allow the XML-RPC server to run.&#39;</span> <span class="o">%</span> <span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">config_instance</span><span class="o">.</span><span class="n">config_file_path</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">server</span> <span class="o">=</span> <span class="n">ThreadedXMLRPCServer</span><span class="p">((</span><span class="n">server_name</span><span class="p">,</span> <span class="n">port</span><span class="p">),</span>
+                                        <span class="n">SecureXMLRpcRequestHandler</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">keyfile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">certfile</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">register_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CoreRun</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">register_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GetCredentials</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">register_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">IsAuthenticated</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">register_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">GetVersion</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">handle_request</span><span class="p">()</span>
+        <span class="k">if</span><span class="p">(</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_store_cleanup_running</span> <span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">core_store_cleanup_running</span> <span class="o">=</span> <span class="bp">True</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">CleanupCoreStore</span><span class="p">()</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">core_store_cleanup_running</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+      <span class="k">print</span> <span class="s">&quot;Stopped by user.&quot;</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Server v0.17 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Purdue University.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -40,7 +40,7 @@ Example ./zonecmp.py example.com ns.example.com:5333 ns2.example.com
 
 __copyright__ = 'Copyright (C) 2011, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.17'
 
 import sys
 import socket

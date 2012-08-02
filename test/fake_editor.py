@@ -36,7 +36,7 @@ with 'new_host'.
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.17'
 
 import sys
 
