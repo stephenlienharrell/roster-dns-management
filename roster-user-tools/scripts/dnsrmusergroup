@@ -164,18 +164,25 @@ def main(args):
                                   server_name=options.server,
                                   args=[options.cidr_block, options.group,
                                         None])['core_return'][options.group][
-                                            0]['group_permission']
-    roster_client_lib.RunFunction(u'RemoveReverseRangePermission',
+                                        0]['group_permission']
+
+    rows_affected = roster_client_lib.RunFunction(
+                                  u'RemoveReverseRangePermission',
                                   options.username,
                                   credfile=options.credfile,
                                   credstring=options.credstring,
                                   server_name=options.server,
                                   args=[options.cidr_block, options.group,
-                                        group_permission_list])
-    if( not options.quiet ):
-      print ('REMOVED REVERSE_RANGE_PERMISSION: cidr_block: %s group: %s '
-             'group_permission: %s' % (options.cidr_block, options.group,
-                                       group_permission_list))
+                                        group_permission_list])['core_return']
+
+    if( rows_affected > 0 ):
+      if( not options.quiet ):
+        print ('REMOVED REVERSE_RANGE_PERMISSION: cidr_block: %s group: %s '
+               'group_permission: %s' % (options.cidr_block, options.group,
+                                         group_permission_list))
+    else:
+      cli_common_lib.DnsError('Permissions not removed', 1)
+
   elif( command == 'forward' ):
     if( options.group not in groups ):
       cli_common_lib.DnsError('Group does not exist.', 1)
@@ -186,20 +193,25 @@ def main(args):
                                   credstring=options.credstring,
                                   server_name=options.server,
                                   args=[options.zone_name, options.group,
-                                        None])['core_return'][
-                                        options.group][0]['group_permission']
+                                        None])['core_return'][options.group][
+                                        0]['group_permission']
 
-    roster_client_lib.RunFunction(u'RemoveForwardZonePermission',
+    rows_affected = roster_client_lib.RunFunction(
+                                  u'RemoveForwardZonePermission',
                                   options.username,
                                   credfile=options.credfile,
                                   credstring=options.credstring,
                                   server_name=options.server,
                                   args=[options.zone_name, options.group,
-                                        group_permission_list])
-    if( not options.quiet ):
-      print ('REMOVED FORWARD_ZONE_PERMISSION: zone_name: %s group: %s '
-             'group_permission: %s' % (options.zone_name, options.group,
-                                       group_permission_list))
+                                        group_permission_list])['core_return']
+
+    if( rows_affected > 0 ):
+      if( not options.quiet ):
+        print ('REMOVED FORWARD_ZONE_PERMISSION: zone_name: %s group: %s '
+               'group_permission: %s' % (options.zone_name, options.group,
+                                         group_permission_list))
+    else:
+      cli_common_lib.DnsError('Permissions not removed', 1)
 
   else:
     cli_common_lib.DnsError(

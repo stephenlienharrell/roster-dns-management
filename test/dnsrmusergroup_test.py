@@ -260,14 +260,14 @@ class Testdnsrmusergroup(unittest.TestCase):
                                       'group_permission': [u'cname', 
                                                            u'ptr', 
                                                            u'soa']}]})
-    output = os.popen('python %s reverse -b 192.168.1.0/24 '
+    output = os.popen('python %s reverse -b 192.168.1.4/30 '
                       '-g testgroup '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(
         output.read(),
-        'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.1.0/24 '
+        'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.1.4/30 '
         'group: testgroup group_permission: [\'cname\', \'ptr\', \'soa\']\n')
     output.close()
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
@@ -276,11 +276,61 @@ class Testdnsrmusergroup(unittest.TestCase):
          u'bio': [{'group_permission': [u'cname', u'ptr'], 
                    'cidr_block': u'192.168.0.0/24'}, 
                   {'group_permission': [u'ptr'], 
-                   'cidr_block': u'192.168.1.0/24'}], 
-         u'testgroup': [{'group_permission': [u'cname', u'ptr', u'soa'], 
-                         'cidr_block': u'192.168.1.4/30'}]})
+                   'cidr_block': u'192.168.1.0/24'}]}) 
 
   def testErrors(self):
+    self.core_instance.MakeGroup(u'testgroup')
+    self.core_instance.MakeZone(u'test_zone1', u'master', u'here1.')
+    self.core_instance.MakeZone(u'test_zone2', u'master', u'here2.')
+    self.core_instance.MakeReverseRangePermission('192.168.1.4/30', u'testgroup',
+                                                 [])
+    self.core_instance.MakeForwardZonePermission(u'test_zone2', u'testgroup',
+                                                 [])
+
+    #Trying to remove permissions on a cidr not assigned to testgroup
+    output = os.popen('python %s reverse -g testgroup '
+                      '-b 192.168.0.4/30 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'CLIENT ERROR: Permissions not removed\n')
+    output.close()
+
+    #Trying to remove permissions on a cidr in which testgroup has no permissions
+    output = os.popen('python %s reverse -g testgroup '
+                      '-b 192.168.1.4/30 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'CLIENT ERROR: Permissions not removed\n')
+    output.close()
+
+    #Trying to remove permissions on a zone not assigned to testgroup
+    output = os.popen('python %s forward -g testgroup '
+                      '-z test_zone1 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'CLIENT ERROR: Permissions not removed\n')
+    output.close()
+
+    #Trying to remove permissions on a zone in which testgroup has no permissions
+    output = os.popen('python %s forward -g testgroup '
+                      '-z test_zone2 '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(
+        output.read(),
+        'CLIENT ERROR: Permissions not removed\n')
+    output.close()
+
     output = os.popen('python %s user -n jcollins -g cs '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
