@@ -41,6 +41,7 @@ import sys
 from optparse import OptionParser
 
 from roster_config_manager import zone_importer_lib
+from roster_core import errors
 
 
 def main(args):
@@ -122,11 +123,15 @@ def main(args):
     if( options.directory is not None ):
       options.file = '%s/%s' % (options.directory, options.file)
     print 'Loading in %s' % options.file
-    importer = zone_importer_lib.ZoneImport(options.file, 
-                                            options.config,
-                                            user, 
-                                            unicode(options.view),
-                                            unicode(options.zone))
+    try:
+      importer = zone_importer_lib.ZoneImport(options.file, 
+                                              options.config,
+                                              user, 
+                                              unicode(options.view),
+                                              unicode(options.zone))
+    except errors.InvalidInputError as e:
+      print e
+      sys.exit(1)
 
     record_count = importer.MakeRecordsFromZone()
     print '%s records loaded from zone %s' % (record_count, options.file)

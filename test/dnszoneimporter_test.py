@@ -128,6 +128,21 @@ class TestDnsZoneImport(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
+  def testErrors(self):
+    output = os.popen('python %s -f test_data/test_zone.db -v no_view '
+                      '-u %s --config-file %s -z sub.university.lcl' % (
+                          EXEC, USERNAME, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'Loading in test_data/test_zone.db\n'
+        'View no_view does not exist.\n')
+    output.close()
+    output = os.popen('python %s -f test_data/test_zone.db -v any '
+                      '-u %s --config-file %s -z no_zone' % (
+                          EXEC, USERNAME, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'Loading in test_data/test_zone.db\n'
+        'Zone no_zone does not exist.\n')
+    output.close()
 
   def testImportForwardZoneToAny(self):
     self.assertEqual(self.core_instance.ListRecords(), [])

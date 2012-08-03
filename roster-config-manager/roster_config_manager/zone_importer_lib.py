@@ -41,6 +41,7 @@ __version__ = '#TRUNK#'
 import dns.zone
 import IPy
 import roster_core
+from roster_core import errors
 
 
 roster_core.core.CheckCoreVersionMatches(__version__)
@@ -67,7 +68,6 @@ class ZoneImport(object):
     """
     config_instance = roster_core.Config(file_name=config_file_name)
 
-
     self.core_instance = roster_core.Core(user_name, config_instance)
     self.core_helper_instance = roster_core.CoreHelpers(
         self.core_instance)
@@ -76,10 +76,18 @@ class ZoneImport(object):
 
     self.zone_name = zone_name
     self.view = view
-  
-    self.origin = self.core_instance.ListZones(zone_name=zone_name)[
-        zone_name][view][u'zone_origin']
-        
+
+    zones_dict = self.core_instance.ListZones(zone_name=zone_name)
+    if( zone_name in zones_dict ):
+      zones_dict = zones_dict[zone_name]
+      if( view in zones_dict ):
+        zones_dict = zones_dict[view]
+        self.origin = zones_dict[u'zone_origin']
+      else:
+        raise errors.InvalidInputError('View %s does not exist.' % view)
+    else:
+      raise errors.InvalidInputError('Zone %s does not exist.' % zone_name)
+
     self.all_views = self.core_instance.ListZones(zone_name=zone_name)[
         zone_name]
 
