@@ -394,7 +394,9 @@ class BindTreeExport(object):
         if( time_differential < smallest_time_differential ):
           smallest_time_differential = time_differential
           newest_config = named_config['global_options']
-    return iscpy.Deserialize(newest_config)
+    if( newest_config is not None ):
+      return iscpy.Deserialize(newest_config)
+    return newest_config
 
   def MakeNamedConf(self, data, cooked_data, dns_server_set):
     """Makes named.conf file strings
