@@ -75,24 +75,24 @@ def main(args):
                     default=None)
 
   (globals()["options"], args) = parser.parse_args(args)
+
+  if( not options.config_file ):
+    options.config_file = '/etc/roster/roster_user.conf'
+  if( not options.id ):
+    print 'ERROR: An audit log ID must be specified to recover Roster.'
+    sys.exit(1)
   
   server_config_file = ConfigParser.SafeConfigParser()
-
   server_config_file.read(options.config_file)
 
   options.username = unicode(options.username)
   options.id = int(options.id)
+
   config_instance = roster_core.Config(file_name=options.config_file)
   recovery_instance = db_recovery.Recover(options.username, config_instance)
 
-
-  if( not options.id ):
-    print 'ERROR: An audit log ID must be specified to recover Roster.'
-    sys.exit(1)
-
   if( options.single ):
     recovery_instance.RunAuditStep(options.id)
-
   else:
     recovery_instance.RunAuditRange(options.id)
 

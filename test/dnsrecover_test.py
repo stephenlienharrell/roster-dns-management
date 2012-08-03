@@ -227,6 +227,13 @@ class TestDnsRecover(unittest.TestCase):
              u'any': {'zone_type': u'master', 'zone_options': u'',
                       'zone_origin': u'university.edu.'}}})
 
+  def testErrors(self):
+    output = os.popen('python %s --single '
+                      '-u %s --config-file %s' % (
+                          EXEC, USERNAME, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ERROR: An audit log ID must be specified to recover Roster.\n')
+    output.close()
 
 if( __name__ == '__main__' ):
       unittest.main()
