@@ -129,8 +129,8 @@ def main(args):
                                               user, 
                                               unicode(options.view),
                                               unicode(options.zone))
-    except errors.InvalidInputError as e:
-      print e
+    except errors.InvalidInputError as error:
+      print error
       sys.exit(1)
 
     record_count = importer.MakeRecordsFromZone()
