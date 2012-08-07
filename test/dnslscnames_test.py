@@ -128,6 +128,44 @@ class TestDnslsRecord(unittest.TestCase):
       return 0
     return os.WEXITSTATUS(code)
 
+  def testListCNAMEsAnyView(self):
+    #removing test_zone in test_view
+    self.core_instance.RemoveZone(u'test_zone')
+    #making test_zone in any view
+    self.core_instance.MakeZone(u'test_zone', u'master', u'univeristy.edu.')
+    self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
+                                  {u'assignment_ip': u'10.10.10.0'},
+                                  view_name=u'any')
+    self.core_instance.MakeRecord(u'a', u'machine2', u'test_zone',
+                                  {u'assignment_ip': u'10.10.10.1'},
+                                  view_name=u'any')
+    self.core_instance.MakeRecord(u'cname', u'machine3', u'test_zone',
+                                  {u'assignment_host':
+                                   u'machine1.university.edu.'})
+    self.core_instance.MakeRecord(u'cname', u'machine4', u'test_zone',
+                                  {u'assignment_host':
+                                   u'machine2.university.edu.'},
+                                   view_name=u'any')
+    self.core_instance.MakeRecord(u'cname', u'machine5', u'test_zone',
+                                  {u'assignment_host':
+                                   u'machine1.university.edu.'},
+                                   view_name=u'any')
+    self.core_instance.MakeRecord(u'cname', u'machine5a', u'test_zone',
+                                  {u'assignment_host':
+                                   u'machine5.university.edu.'},
+                                   view_name=u'any')
+    command = os.popen('python %s cname -v any -z test_zone '
+                       '--hostname %s -u %s -p %s --config-file %s -s %s' % (
+                           EXEC, u'machine1.university.edu.', USERNAME,
+                           self.password, USER_CONFIG, self.server_name))
+    self.assertEqual(command.read(), 
+        'target   assignment_host\n'
+        '------------------------\n'
+        'machine3 machine1.university.edu.\n'
+        'machine5 machine1.university.edu.\n'
+        '\n')
+    command.close()
+
   def testListCNAMEsNonRecursive(self):
     self.core_instance.MakeRecord(u'a', u'machine1', u'test_zone',
                                   {u'assignment_ip': u'10.10.10.0'},

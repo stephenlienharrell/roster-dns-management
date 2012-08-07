@@ -314,8 +314,11 @@ class CoreHelpers(object):
         'zone_view_assignments')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = unicode(
          zone_name)
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-         unicode('%s_dep' % view_name))
+    if( view_name != u'any' ):
+      view_dep = u'%s_dep' % view_name
+    else: 
+      view_dep = u'any'
+    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = view_dep
 
     record_arguments_record_assignments_dict[
         'record_arguments_records_assignments_type'] = u'cname'
@@ -324,7 +327,7 @@ class CoreHelpers(object):
     records_dict = self.db_instance.GetEmptyRowDict(
         'records')
     records_dict['record_type'] = u'cname'
-    records_dict['record_view_dependency'] = '%s_dep' % view_name
+    records_dict['record_view_dependency'] = view_dep
     records_dict['record_zone_name'] = zone_name
     self.db_instance.StartTransaction()
     try:

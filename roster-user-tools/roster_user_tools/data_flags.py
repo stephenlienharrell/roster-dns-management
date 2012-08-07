@@ -485,7 +485,7 @@ class CNAME(core_flags.CoreFlags):
                            dest='view_name',
                            help=('String of the view name <view-name>. '
                                  'Example: "internal"'), metavar='<view-name>',
-                           default='any')
+                           default=None)
     self.SetAllFlagRule('view_name', required=True)
     self.parser.add_option('-r', '--recursive', action='store_true',
                            dest='recursive', help='Use recursion during lookup',
