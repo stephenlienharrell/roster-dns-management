@@ -148,9 +148,10 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'view_name acl_name\n'
-        '------------------\n'
-        'test_view acl1\n\n')
+        'view_name acl_name acl_range_allowed\n'
+        '------------------------------------\n'
+        'test_view acl1     True\n'
+        '\n')
     command.close()
 
   def testMakeViewAssignment(self):

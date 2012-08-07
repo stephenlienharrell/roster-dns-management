@@ -944,15 +944,15 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'view_name  acl_name\n'
-        '-------------------\n'
-        'test_view  test_acl\n'
-        'test_view2 test_acl\n'
-        'test_view2 test_acl2\n'
-        'test_view3 test_acl\n\n')
+        'view_name  acl_name  acl_range_allowed\n'
+        '--------------------------------------\n'
+        'test_view  test_acl  True\n'
+        'test_view2 test_acl  True\n'
+        'test_view2 test_acl2 True\n'
+        'test_view3 test_acl  True\n\n')
     command.close()
     ## User tool: dnslsviews
-    ## /dnslsviews view_subset
+    ## dnslsviews view_subset
     command_string = (
         'python ../roster-user-tools/scripts/dnslsviews '
         'view_subset '
@@ -986,11 +986,11 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'view_name  acl_name\n'
-        '-------------------\n'
-        'test_view  test_acl\n'
-        'test_view2 test_acl\n'
-        'test_view2 test_acl2\n\n')
+        'view_name  acl_name  acl_range_allowed\n'
+        '--------------------------------------\n'
+        'test_view  test_acl  True\n'
+        'test_view2 test_acl  True\n'
+        'test_view2 test_acl2 True\n\n')
     command.close()
     ## User tool: dnsrmview
     ## dnsrmview dns_server_set -v test_view3 -e set3
@@ -1116,12 +1116,12 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'view_name    acl_name\n'
-        '---------------------\n'
-        'test_view    test_acl\n'
-        'test_view2   test_acl\n'
-        'test_view2   test_acl2\n'
-        'test_subview test_acl\n\n')
+        'view_name    acl_name  acl_range_allowed\n'
+        '----------------------------------------\n'
+        'test_view    test_acl  True\n'
+        'test_view2   test_acl  True\n'
+        'test_view2   test_acl2 True\n'
+        'test_subview test_acl  True\n\n')
     command.close()
     ## User tool: dnslsviews
     ## /dnslsviews view_subset

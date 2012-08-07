@@ -130,10 +130,14 @@ def main(args):
             'core_return']
 
     if( not options.no_header ):
-      print_list = [['view_name', 'acl_name']]
+      print_list = [['view_name', 'acl_name', 'acl_range_allowed']]
 
     for assignment in view_acl_assignments:
-      print_list.append([assignment['view_name'], assignment['acl_name']])
+      if( assignment['acl_range_allowed'] ):
+        allowed = True
+      else:
+        allowed = False
+      print_list.append([assignment['view_name'], assignment['acl_name'], allowed])
 
     print cli_common_lib.PrintColumns(print_list,
         first_line_header=not options.no_header)
