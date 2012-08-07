@@ -37,7 +37,7 @@ def main(args):
               [sys.argv[0] for _ in range(1)]))
   args_instance = Args(command, ['add'], args, usage)
   options = args_instance.options
-
+  
   try:
     cli_common_lib_instance = cli_common_lib.CliCommonLib(options)
   except cli_common_lib.ArgumentError, error:
@@ -140,9 +140,18 @@ def main(args):
       for record_ip in records[view]:
         for record in iter(records[view][record_ip]):
           records_to_remove.append(record)
-  if not options.commit:
-    print('Commit flag not specified. '
-        'Changes will not be made to the database.\n')
+  if( not options.commit ):
+    if( options.no_commit ):
+      print('Commit flag not specified. '
+            'Changes will not be made to the database.\n')
+    else:
+      print('Commit flag not specified. '
+            'Would you like to commit?')
+      user_input = ''
+      while( user_input.lower() not in ['y', 'n'] ):
+        user_input = raw_input('Respond y or n: ')
+      if( user_input == 'y' ):
+        options.commit = True
 
   print("HOSTS TO BE REMOVED: ")
   zone_list = ['zone']
