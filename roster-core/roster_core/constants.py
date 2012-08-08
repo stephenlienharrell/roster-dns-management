@@ -181,7 +181,7 @@ SUPPORTED_METHODS = {
     'ListDnsServers':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['dns_admin']},
 
     'MakeDnsServer':
                     {'check': False,
@@ -201,7 +201,7 @@ SUPPORTED_METHODS = {
     'ListDnsServerSets':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['dns_admin']},
 
     'MakeDnsServerSet':
                     {'check': False,
@@ -221,7 +221,7 @@ SUPPORTED_METHODS = {
     'ListDnsServerSetViewAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['dns_admin']},
 
     'MakeDnsServerSetViewAssignments':
                     {'check': False,
@@ -236,7 +236,7 @@ SUPPORTED_METHODS = {
     'ListDnsServerSetAssignments':
                     {'check': False,
                      'write': False,
-                     'access_level': ACCESS_LEVELS['unlocked_user']},
+                     'access_level': ACCESS_LEVELS['dns_admin']},
 
     'MakeDnsServerSetAssignments':
                     {'check': False,
