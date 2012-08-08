@@ -117,8 +117,6 @@ def main(args):
 
   if( command == 'update' ):
     UpdateConfiguration(options)
-    if( not options.keep_output ):
-      os.remove(options.file)
 
   elif( command == 'list' ):
     named_options = roster_client_lib.RunFunction(

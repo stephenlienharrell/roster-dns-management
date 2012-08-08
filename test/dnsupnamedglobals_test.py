@@ -158,6 +158,17 @@ class TestDnsMkHost(unittest.TestCase):
     self.assertEqual(output.read(),
                      'ADDED NAMED_CONF_GLOBAL_OPTION: test_data/test_named\n')
     output.close()
+    # Verify original file contents after update
+    handle = open(TEST_FILE, 'r')
+    try:
+      file_contents = handle.read()
+    finally:
+      handle.close()
+    self.assertEqual(file_contents, (
+        'zone "example.com" IN {\n'
+        '    type master;\n'
+        '    file "example.com.zone";\n'
+        '    allow-update { none; };\n};\n\n'))
     timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%dT%H:%M:%S')
     # Print the file list of set1 from the database
     output = os.popen('python %s list -d set1 -t "%s" --no-header '
