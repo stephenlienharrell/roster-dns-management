@@ -175,6 +175,16 @@ def main(args):
     if( options.view_name not in views ):
       cli_common_lib.DnsError(
           'View "%s" does not exist.' % options.view_name, 1)
+    view_dep_list = roster_client_lib.RunFunction(u'ListViewDependencies',
+        options.username, credfile=options.credfile, 
+        credstring=options.credstring, server_name=options.server)[
+            'core_return']
+    view_dep = '%s_dep' % options.view_subset
+    if( options.view_subset == 'any' ):
+      view_dep = u'any'
+    if( view_dep not in view_dep_list ):
+      cli_common_lib.DnsError(
+          'View dependency "%s_dep" does not exist.' % options.view_subset, 1)
     view_assignments = roster_client_lib.RunFunction(
         u'ListViewAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,

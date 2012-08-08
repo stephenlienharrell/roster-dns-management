@@ -141,6 +141,10 @@ SUPPORTED_METHODS = {
     'ListViews':    {'check': False,
                      'write': False,
                      'access_level': ACCESS_LEVELS['user']},
+    'ListViewDependencies':    
+                    {'check': False,
+                     'write': False,
+                     'access_level': ACCESS_LEVELS['user']},
 
     'GetViewsByUser':
                     {'check': False,

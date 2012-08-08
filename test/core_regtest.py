@@ -972,5 +972,15 @@ class TestCore(unittest.TestCase):
     self.assertRaises(errors.VersionDiscrepancyError,
                       core.CheckCoreVersionMatches, 00)
 
+  def testListViewDependencies(self):
+    self.assertEqual(self.core_instance.ListViewDependencies(),
+                     [u'any'])
+    self.core_instance.MakeView(u'view1')
+    self.core_instance.MakeView(u'view2')
+    self.core_instance.MakeView(u'view3')
+    self.assertEqual(self.core_instance.ListViewDependencies(),
+                     [u'any', u'view1_dep', u'view2_dep', u'view3_dep'])
+
+
 if( __name__ == '__main__' ):
     unittest.main()

@@ -1037,6 +1037,24 @@ class Core(object):
 
     return view_options_dict
 
+  def ListViewDependencies(self):
+    """Lists all view dependencies.
+
+    Outputs:
+      list: list of view dependencies
+    """
+    self.user_instance.Authorize('ListViewDependencies')
+    view_dep_dict = self.db_instance.GetEmptyRowDict('view_dependencies')
+    self.db_instance.StartTransaction()
+    try:
+      view_deps = self.db_instance.ListRow('view_dependencies', view_dep_dict)
+    finally:
+      self.db_instance.EndTransaction()
+    view_dep_list = []
+    for dep in view_deps:
+      view_dep_list.append(dep['view_dependency'])
+    return view_dep_list
+  
   def MakeView(self, view_name, view_options=None):
     """Makes a view and all of the other things that go with a view.
 
