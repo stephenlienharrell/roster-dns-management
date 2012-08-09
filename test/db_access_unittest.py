@@ -493,6 +493,94 @@ class TestdbAccess(unittest.TestCase):
                  'forward_zone_permissions_zone_name': u'eas.university.edu'}])) 
     self.db_instance.EndTransaction()
 
+  def testGetZoneOrigins(self):
+    # Add zones and views
+    zones_dict1 = self.db_instance.GetEmptyRowDict('zones')
+    zones_dict1['zone_name'] = u'test_zone1'
+    zones_dict2 = self.db_instance.GetEmptyRowDict('zones')
+    zones_dict2['zone_name'] = u'test_zone2'
+    view_deps_dict1 = self.db_instance.GetEmptyRowDict('view_dependencies')
+    view_deps_dict1['view_dependency'] = u'temp_view_dep1'
+    view_deps_dict2 = self.db_instance.GetEmptyRowDict('view_dependencies')
+    view_deps_dict2['view_dependency'] = u'temp_view_dep2'
+
+    self.db_instance.StartTransaction()
+    self.db_instance.MakeRow('view_dependencies', view_deps_dict1)
+    self.db_instance.MakeRow('view_dependencies', view_deps_dict2)
+    self.db_instance.MakeRow('zones', zones_dict1)
+    self.db_instance.MakeRow('zones', zones_dict2)
+    self.db_instance.EndTransaction()
+
+    # Add zone-view assignments
+    zone_view_assignments_dict1 = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_view_assignments_dict1['zone_view_assignments_zone_name'] = (
+        u'test_zone1')
+    zone_view_assignments_dict1['zone_view_assignments_view_dependency'] = (
+        u'temp_view_dep1')
+    zone_view_assignments_dict1['zone_view_assignments_zone_type'] = u'master'
+    zone_view_assignments_dict1['zone_origin'] = u'10.0.1.IN-ADDR.ARPA.'
+    zone_view_assignments_dict1['zone_options'] = u''
+
+    zone_view_assignments_dict2 = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_view_assignments_dict2['zone_view_assignments_zone_name'] = (
+        u'test_zone2')
+    zone_view_assignments_dict2['zone_view_assignments_view_dependency'] = (
+        u'temp_view_dep1')
+    zone_view_assignments_dict2['zone_view_assignments_zone_type'] = u'master'
+    zone_view_assignments_dict2['zone_origin'] = u'10.0.0.IN-ADDR.ARPA.'
+    zone_view_assignments_dict2['zone_options'] = u''
+
+    zone_view_assignments_dict3 = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_view_assignments_dict3['zone_view_assignments_zone_name'] = (
+        u'test_zone2')
+    zone_view_assignments_dict3['zone_view_assignments_view_dependency'] = (
+        u'temp_view_dep2')
+    zone_view_assignments_dict3['zone_view_assignments_zone_type'] = u'master'
+    zone_view_assignments_dict3['zone_origin'] = u'10.0.2.IN-ADDR.ARPA.'
+    zone_view_assignments_dict3['zone_options'] = u''
+
+    self.db_instance.StartTransaction()
+    self.db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict1)
+    self.db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict2)
+    self.db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict3)
+    self.db_instance.EndTransaction()
+
+    self.assertEquals(self.db_instance.GetZoneOrigins(
+        u'test_zone1', u'temp_view_dep1'), {u'test_zone1': [
+            u'10.0.1.IN-ADDR.ARPA.']})
+
+    self.assertEquals(self.db_instance.GetZoneOrigins(
+        u'test_zone1', None), {u'test_zone1': [
+            u'10.0.1.IN-ADDR.ARPA.']})
+
+    self.assertEquals(self.db_instance.GetZoneOrigins(
+        u'test_zone2', u'temp_view_dep1'), {u'test_zone2': [
+            u'10.0.0.IN-ADDR.ARPA.']})
+
+    self.assertEquals(self.db_instance.GetZoneOrigins(
+        u'test_zone2', u'temp_view_dep2'), {u'test_zone2': [
+            u'10.0.2.IN-ADDR.ARPA.']})
+
+    self.assertEquals(self.db_instance.GetZoneOrigins(
+        u'test_zone2', None), {u'test_zone2': [
+            u'10.0.0.IN-ADDR.ARPA.', u'10.0.2.IN-ADDR.ARPA.']})
+
+    self.assertEquals(self.db_instance.GetZoneOrigins(
+        None, u'temp_view_dep1'), {
+            u'test_zone1': [u'10.0.1.IN-ADDR.ARPA.'],
+            u'test_zone2': [u'10.0.0.IN-ADDR.ARPA.']})
+
+    self.assertEquals(self.db_instance.GetZoneOrigins(
+        None, None), {u'bio.university.edu': [u'bio.university.edu.'],
+                      u'cs.university.edu': [u'cs.university.edu.'],
+                      u'eas.university.edu': [u'eas.university.edu.'],
+                      u'test_zone1': [u'10.0.1.IN-ADDR.ARPA.'],
+                      u'test_zone2': [u'10.0.0.IN-ADDR.ARPA.',
+                                      u'10.0.2.IN-ADDR.ARPA.']})
+
   def testGetRecordArgsDict(self):
     self.assertEquals(self.db_instance.GetRecordArgsDict(u'mx'),
                       {u'priority': u'UnsignedInt',

@@ -1033,31 +1033,47 @@ class dbAccess(object):
         raise errors.RecordError('Returned row is corrupt.')
     return auth_info_dict
 
-  def GetZoneOrigin(self, zone_name, view_name):
-    """Returns zone origin of zone_name that is passed in.
-    If no zone origin found, return None
-    
+  def GetZoneOrigins(self, zone_name, view_name):
+    """Returns zone origins of zone_name that is passed in.
+    If no zone origins are found, return None.
+    If None is passed for view_name the output may contain multiple origins
+    per zone name.
+
     Inputs:
       zone_name: string of zone_name
-      view_name: string of view_name
+      view_name: string of view_name or None
 
     Outputs:
-      string of zone origin or None
+      a dictionary keyed by zone name with values of lists of origins
+      Example:
+        {'test_zone': ['192.168.0.in-addr.arpa.', '10.0.1.in-addr.arpa.'],
+         'example_rev': ['10.0.in-addr.arpa.']}
     """
     zone_view_assignments_dict = self.GetEmptyRowDict(
         'zone_view_assignments')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] =  zone_name
     zone_view_assignments_dict[
         'zone_view_assignments_view_dependency'] = view_name
-    
-    zone_view_assignment_rows = self.ListRow(
-        'zone_view_assignments', zone_view_assignments_dict)
+    self.StartTransaction()
+    try:
+      zone_view_assignment_rows = self.ListRow(
+          'zone_view_assignments', zone_view_assignments_dict)
+    finally:
+      self.EndTransaction()
+
+    origins = {}
 
     if( zone_view_assignment_rows ):
-      return zone_view_assignment_rows[0]['zone_origin']
+      for row in zone_view_assignment_rows:
+        if( row['zone_view_assignments_zone_name'] not in origins ):
+          origins[row['zone_view_assignments_zone_name']] = []
+        if( row['zone_origin'] not in origins[
+            row['zone_view_assignments_zone_name']] ):
+          origins[row['zone_view_assignments_zone_name']].append(
+              row['zone_origin'])
     else:
       return None
-
+    return origins
 
 
 # vi: set ai aw sw=2:

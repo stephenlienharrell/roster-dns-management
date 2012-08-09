@@ -79,10 +79,11 @@ class User(object):
     # Pull zone origins for cache
     self.db_instance.StartTransaction()
     try:
+      all_zone_origins = self.db_instance.GetZoneOrigins(None, None)
       for zone in self.forward_zones:
-        self.zone_origin_cache[
-            zone['zone_name']] = self.db_instance.GetZoneOrigin(
-                zone['zone_name'], None)
+        if( zone['zone_name'] in all_zone_origins ):
+          self.zone_origin_cache[
+              zone['zone_name']] = all_zone_origins[zone['zone_name']]
     finally:
       self.db_instance.EndTransaction()
 
@@ -123,9 +124,11 @@ class User(object):
       maintenance_mode = self.db_instance.CheckMaintenanceFlag()
       if( record_data and record_data.has_key('zone_name') and
           not self.zone_origin_cache.has_key(record_data['zone_name']) ):
-        self.zone_origin_cache[
-            record_data['zone_name']] = self.db_instance.GetZoneOrigin(
-                record_data['zone_name'], record_data['view_name'])
+        if( record_data['zone_name'] ):
+          self.zone_origin_cache[record_data['zone_name']] = (
+              self.db_instance.GetZoneOrigins(
+                  record_data['zone_name'], record_data['view_name'])[
+                      record_data['zone_name']])
     finally:
       if( not current_transaction ):
         self.db_instance.EndTransaction()
@@ -139,30 +142,33 @@ class User(object):
                                           record_data['zone_name'],
                                           record_data['record_type'])
 
-      user_group_perms = []
+      user_group_perms = {}
       record_target = record_data['target']
 
-      if( record_target == u'@' ):
-        ip_address = helpers_lib.UnReverseIP(
-            self.zone_origin_cache[record_data['zone_name']])
-      else:
-        ip_address = helpers_lib.UnReverseIP('%s.%s' % (
-            record_target,
-            self.zone_origin_cache[record_data['zone_name']]))
-      
-      #Looking for permissions in the forward zones
-      for zone in self.user_perms['forward_zones']:
-        if( zone['zone_name'] == record_data['zone_name'] ):
-          user_group_perms.append(zone['group_permission'])
-    
-      #If we haven't found any, look in the reverse ranges
-      if( user_group_perms == [] ):
-        validation_instance = self.db_instance.data_validation_instance
-        if( validation_instance.isIPv4IPAddress(ip_address) or 
-            validation_instance.isIPv6IPAddress(ip_address) ):
-          for cidr in self.user_perms['reverse_ranges']:
-            if( IPy.IP(cidr['cidr_block']).overlaps(ip_address) ):
-              user_group_perms.append(cidr['group_permission'])
+      # Get user group permissions for record zone
+      if( record_data['zone_name'] ):
+        for origin in self.zone_origin_cache[record_data['zone_name']]:
+          user_group_perms[origin] = []
+          if( record_target == u'@' ):
+            ip_address = helpers_lib.UnReverseIP(origin)
+          else:
+            ip_address = helpers_lib.UnReverseIP('%s.%s' % (
+                record_target,
+                origin))
+
+          #Looking for permissions in the forward zones
+          for zone in self.user_perms['forward_zones']:
+            if( zone['zone_name'] == record_data['zone_name'] ):
+              user_group_perms[origin].append(zone['group_permission'])
+
+          #If we haven't found any, look in the reverse ranges
+          if( user_group_perms[origin] == [] ):
+            validation_instance = self.db_instance.data_validation_instance
+            if( validation_instance.isIPv4IPAddress(ip_address) or
+                validation_instance.isIPv6IPAddress(ip_address) ):
+              for cidr in self.user_perms['reverse_ranges']:
+                if( IPy.IP(cidr['cidr_block']).overlaps(ip_address) ):
+                  user_group_perms[origin].append(cidr['group_permission'])
     else:
       target_string = ''
     auth_fail_string = ('User %s is not allowed to use %s%s' %
@@ -194,10 +200,16 @@ class User(object):
           raise errors.MissingDataTypeError(
               'Incomplete record data provided for access '
               'method %s' % method)
-        elif( record_data['record_type'] not in user_group_perms and
-            int(self.user_access_level) <= constants.ACCESS_LEVELS[
-                'unlocked_user'] ):
-          raise errors.AuthorizationError(auth_fail_string)
+        # If user or less, check permission for zone origin
+        elif( int(self.user_access_level) <= constants.ACCESS_LEVELS[
+            'unlocked_user'] ):
+          user_has_permission = False
+          for origin in self.zone_origin_cache[record_data['zone_name']]:
+            if( record_data['record_type'] in user_group_perms[origin] ):
+              user_has_permission = True
+
+          if( not user_has_permission ):
+            raise errors.AuthorizationError(auth_fail_string)
 
         if( int(self.user_access_level) <
           constants.ACCESS_LEVELS['unlocked_user'] ):
@@ -227,15 +239,14 @@ class User(object):
             found = False
             while( smallest_zone ):
               for domain in self.zone_origin_cache:
-                if( self.zone_origin_cache[domain] ):
-                  domain = self.zone_origin_cache[domain]
-                if( smallest_zone == domain ):
-                  found = True
+                for origin in self.zone_origin_cache[domain]:
+                  if( smallest_zone == origin ):
+                    found = True
               if( not found ):
                 try:
                   smallest_zone = smallest_zone.split('.', 1)[1]
                 except IndexError:
-                  raise errors.AuthorizationError(auth_fail_string)
+                  break
               else:
                 break
             if( not found ):
@@ -243,8 +254,12 @@ class User(object):
 
             for zone in self.forward_zones:
               if( self.zone_origin_cache.has_key(zone['zone_name']) ):
-                if( smallest_zone == self.zone_origin_cache[
-                    zone['zone_name']] ):
+                found = False
+                for origin in self.zone_origin_cache[zone['zone_name']]:
+                  if( smallest_zone == origin ):
+                    found = True
+                    break
+                if( found ):
                   break
             else:
               raise errors.AuthorizationError(auth_fail_string)

@@ -3259,7 +3259,8 @@ class Core(object):
     """
     ip = ''
     if( record_type == 'ptr' ):
-      origin = self.db_instance.GetZoneOrigin(zone_name, view_name)
+      origin = self.db_instance.GetZoneOrigins(zone_name, view_name)[
+          zone_name][0]
       ip = helpers_lib.UnReverseIP('%s.%s' % (target, origin))
       if( self.db_instance.data_validation_instance is None ):
         self.db_instance.InitDataValidation()
