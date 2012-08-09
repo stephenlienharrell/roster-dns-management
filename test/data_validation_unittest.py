@@ -132,6 +132,13 @@ class TestDataValidation(unittest.TestCase):
     self.assertFalse(self.data_validation_instance.isUnsignedInt(-1))
     self.assertFalse(self.data_validation_instance.isUnsignedInt('not_valid'))
 
+  def testisUnixDirectory(self):
+    self.assertTrue(self.data_validation_instance.isUnixDirectory(u'/etc/bind/'))
+    self.assertFalse(self.data_validation_instance.isUnixDirectory(u'/etc/bind'))
+    self.assertFalse(self.data_validation_instance.isUnixDirectory(u'etc/bind/'))
+    self.assertFalse(self.data_validation_instance.isUnixDirectory(u'etc/bind'))
+    self.assertFalse(self.data_validation_instance.isUnixDirectory(None))
+
   def testisTarget(self):
     #Despite what I have written in these targets, don't actually read them
     #and believe what they say.

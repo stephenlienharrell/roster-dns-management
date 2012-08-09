@@ -556,7 +556,12 @@ class Core(object):
     """List dns servers.
 
     Outputs:
-      int: number of rows modified
+      dictionary: dictionary of server metadata keyed by server the name.
+        example:
+          {u'dns1': {
+            'ssh_username': u'user',
+            'bind_dir': u'/etc/bind/',
+            'test_dir': u'/etc/bind/test'}}
     """
     self.user_instance.Authorize('ListDnsServers')
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
@@ -568,23 +573,38 @@ class Core(object):
     finally:
       self.db_instance.EndTransaction()
 
-    dns_server_list = []
+    dns_server_dict = {}
     for dns_server in dns_servers:
-      dns_server_list.append(dns_server['dns_server_name'])
+      server = dns_server['dns_server_name']
+      if( server not in dns_server_dict ):
+        dns_server_dict[server] = {}
+      dns_server_dict[server][
+          'ssh_username'] = dns_server['dns_server_ssh_username']
+      dns_server_dict[server][
+          'test_dir'] = dns_server['dns_server_remote_test_directory']
+      dns_server_dict[server][
+          'bind_dir'] = dns_server['dns_server_remote_bind_directory']
 
-    return dns_server_list
+    return dns_server_dict
 
-  def MakeDnsServer(self, dns_server_name):
+  def MakeDnsServer(self, dns_server_name, dns_server_ssh_username, 
+                    dns_server_bind_dir, dns_server_test_dir):
     """Makes one dns server
 
     Inputs:
       dns_server_name: string of the dns server name
+      dns_server_ssh_username: string of the ssh user on the server
+      dns_server_bind_dir: string of the absolute path to the bind directory
+        example: u'/etc/bind/'
+      dns_server_test_dir: string of the absolute path to the test directory
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
-
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     dns_server_dict['dns_server_name'] = dns_server_name
+    dns_server_dict['dns_server_ssh_username'] = dns_server_ssh_username
+    dns_server_dict['dns_server_remote_bind_directory'] = dns_server_bind_dir
+    dns_server_dict['dns_server_remote_test_directory'] = dns_server_test_dir
 
     success = False
     try:
@@ -614,12 +634,21 @@ class Core(object):
 
     dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     dns_server_dict['dns_server_name'] = dns_server_name
-
+    
+    row_count = 0
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        row_count = self.db_instance.RemoveRow('dns_servers', dns_server_dict)
+        found_dns = self.db_instance.ListRow('dns_servers', dns_server_dict)
+        if( len(found_dns) > 0 ):
+          dns_server_dict['dns_server_ssh_username'] = found_dns[0][
+              'dns_server_ssh_username']
+          dns_server_dict['dns_server_remote_bind_directory'] = found_dns[0][
+              'dns_server_remote_bind_directory']
+          dns_server_dict['dns_server_remote_test_directory'] = found_dns[0][
+              'dns_server_remote_test_directory']
+          row_count = self.db_instance.RemoveRow('dns_servers', dns_server_dict)
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -630,12 +659,17 @@ class Core(object):
                                   current_args, success)
     return row_count
 
-  def UpdateDnsServer(self, search_dns_server_name, update_dns_server_name):
+  def UpdateDnsServer(self, search_dns_server_name, update_dns_server_name, 
+      update_dns_server_ssh_username, update_dns_server_bind_dir, 
+      update_dns_server_test_dir):
     """Updates dns server
 
     Inputs:
       search_dns_server_name: string of dns server name
       update_dns_server_name: new string of dns server name
+      update_dns_server_ssh_username: new string of dns server username
+      update_dns_server_bind_dir: new string of path to the bind directory
+      update_dns_server_test_dir: new string of path to the test directory
 
     Outputs:
       int: number of rows modified
@@ -648,6 +682,12 @@ class Core(object):
 
     update_dns_server_dict = self.db_instance.GetEmptyRowDict('dns_servers')
     update_dns_server_dict['dns_server_name'] = update_dns_server_name
+    update_dns_server_dict[
+        'dns_server_ssh_username'] = update_dns_server_ssh_username
+    update_dns_server_dict[
+        'dns_server_remote_bind_directory'] = update_dns_server_bind_dir
+    update_dns_server_dict[
+        'dns_server_remote_test_directory'] = update_dns_server_test_dir
 
     success = False
     try:

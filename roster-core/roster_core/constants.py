@@ -541,7 +541,10 @@ TABLES = {
         {'view_dependency_assignments_view_name': 'UnicodeString',
          'view_dependency_assignments_view_dependency': 'UnicodeString'},
 
-    'dns_servers':        {'dns_server_name': 'UnicodeString'},
+    'dns_servers':      {'dns_server_name': 'UnicodeString',
+                         'dns_server_ssh_username': 'UnicodeString',
+                         'dns_server_remote_bind_directory': 'UnixDirectory',
+                         'dns_server_remote_test_directory': 'UnixDirectory'},
 
     'dns_server_sets':    {'dns_server_set_name': 'UnicodeString'},
 

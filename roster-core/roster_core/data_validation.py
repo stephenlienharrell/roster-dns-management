@@ -307,6 +307,21 @@ class DataValidation(object):
       return False
     return True
 
+  def isUnixDirectory(self, directoryString):
+    """Checks a unicode string for valid Unix directory format.
+
+    Inputs:
+      string: string to be checked
+
+    Outpus:
+      bool: if it is a valid Unix directory format
+    """
+    if( self.isUnicodeString(directoryString) and
+        directoryString.startswith('/') and
+        directoryString.endswith('/') ):
+      return True
+    return False
+
   def ListGroupPermissions(self):
     """Returns a list of group permissions pulled from the database
 

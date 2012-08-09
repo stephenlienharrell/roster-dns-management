@@ -60,7 +60,9 @@ def main(args):
   usage = ('\n'
            '\n'
            'To make a dns server:\n'
-           '\t%s dns_server -d <dns-server>\n'
+           '\t%s dns_server -d <dns-server> --dns-server-ssh-username user\n'
+           '\t--dns-server-bind-dir /etc/bind/\n'
+           '\t--dns-server-test-dir /etc/bind/test/\n'
            '\n'
            'To make a dns server set:\n'
            '\t%s dns_server_set -e <dns-server-set>\n'
@@ -92,11 +94,13 @@ def main(args):
     if( options.dns_server in dns_servers ):
       cli_common_lib.DnsError(
           'DNS Server "%s" already exists.' % options.dns_server, 1)
+    args_dict = [options.dns_server, options.dns_server_ssh_username, 
+                 options.dns_server_bind, options.dns_server_test]
     roster_client_lib.RunFunction(
         u'MakeDnsServer', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        args=[options.dns_server])
+        args=args_dict)
     if( not options.quiet ):
       print 'ADDED DNS SERVER: %s' % options.dns_server
 
@@ -116,7 +120,8 @@ def main(args):
         args=[options.dns_server, options.dns_server_set])
     if( not options.quiet ):
       print ('ADDED DNS SERVER SET ASSIGNMENT: dns_server: %s '
-            'dns_server_set: %s' % (options.dns_server, options.dns_server_set))
+            'dns_server_set: %s' % (options.dns_server, 
+                                    options.dns_server_set))
 
   elif( command == 'dns_server_set' ):
     if( options.dns_server_set in dns_server_sets ):

@@ -167,26 +167,62 @@ class TestCore(unittest.TestCase):
                      set([u'set1', u'set3']))
 
   def testDnsServerMakeRemoveUpdate(self):
-    self.core_instance.MakeDnsServer(u'dns1')
-    self.core_instance.MakeDnsServer(u'dns2')
-    self.core_instance.MakeDnsServer(u'dns3')
-    self.assertEqual(set(self.core_instance.ListDnsServers()),
-                     set([u'dns1', u'dns2', u'dns3']))
-    self.assertEqual(set(self.core_instance.ListDnsServers(u'dns3')),
-                     set([u'dns3']))
+    self.core_instance.MakeDnsServer(u'dns1', u'user', 
+                                     u'/etc/bind/', u'/etc/bind/test/')
+    self.core_instance.MakeDnsServer(u'dns2', u'user', 
+                                     u'/etc/bind/', u'/etc/bind/test/')
+    self.core_instance.MakeDnsServer(u'dns3', u'user', 
+                                     u'/etc/dns/bind/', u'/etc/dns/bind/test/')
+    self.assertEqual(self.core_instance.ListDnsServers(),
+                     {u'dns1': 
+                         {'ssh_username': u'user',
+                          'test_dir': u'/etc/bind/test/',
+                          'bind_dir': u'/etc/bind/'},
+                      u'dns2': 
+                         {'ssh_username': u'user',
+                          'test_dir': u'/etc/bind/test/',
+                          'bind_dir': u'/etc/bind/'},
+                      u'dns3':
+                         {'ssh_username': u'user',
+                          'test_dir': u'/etc/dns/bind/test/',
+                          'bind_dir': u'/etc/dns/bind/'}})
+    self.assertEqual(self.core_instance.ListDnsServers(u'dns3'),
+                     {u'dns3': 
+                         {'ssh_username': u'user',
+                          'test_dir': u'/etc/dns/bind/test/',
+                          'bind_dir': u'/etc/dns/bind/'}
+                     })
     self.assertTrue(self.core_instance.RemoveDnsServer(u'dns3'))
-    self.assertEqual(set(self.core_instance.ListDnsServers()),
-                     set([u'dns1', u'dns2']))
-    self.assertTrue(self.core_instance.UpdateDnsServer(u'dns2', u'dns3'))
-    self.assertEqual(set(self.core_instance.ListDnsServers()),
-                     set([u'dns1', u'dns3']))
+    self.assertEqual(self.core_instance.ListDnsServers(),
+                     {u'dns1': 
+                         {'ssh_username': u'user',
+                          'test_dir': u'/etc/bind/test/',
+                          'bind_dir': u'/etc/bind/'},
+                      u'dns2': 
+                         {'ssh_username': u'user',
+                          'test_dir': u'/etc/bind/test/',
+                          'bind_dir': u'/etc/bind/'}})
+    self.assertTrue(self.core_instance.UpdateDnsServer(u'dns2', u'dns3',
+        u'user', u'/etc/bind/', u'/etc/bind/test/'))
+    self.assertEqual(self.core_instance.ListDnsServers(),
+                     {u'dns1': 
+                         {'ssh_username': u'user',
+                          'test_dir': u'/etc/bind/test/',
+                          'bind_dir': u'/etc/bind/'},
+                      u'dns3': 
+                         {'ssh_username': u'user',
+                          'test_dir': u'/etc/bind/test/',
+                          'bind_dir': u'/etc/bind/'}})
 
   def testServerSetAssignmentsMakeRemoveListUpdate(self):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSet(u'set2')
-    self.core_instance.MakeDnsServer(u'dns1')
-    self.core_instance.MakeDnsServer(u'dns2')
-    self.core_instance.MakeDnsServer(u'dns3')
+    self.core_instance.MakeDnsServer(u'dns1', u'user', 
+                                     u'/etc/bind/', u'/etc/bind/test/')
+    self.core_instance.MakeDnsServer(u'dns2', u'user', 
+                                     u'/etc/bind/', u'/etc/bind/test/')
+    self.core_instance.MakeDnsServer(u'dns3', u'user', 
+                                     u'/etc/dns/bind/', u'/etc/dns/bind/test/')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns2', u'set2')
     self.core_instance.MakeDnsServerSetAssignments(u'dns3', u'set2')

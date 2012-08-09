@@ -126,12 +126,17 @@ class Testdnsmkdnsserver(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testMakeDNSServer(self):
-    command = os.popen('python %s dns_server -d dns1 -u %s -p %s '
-                       '--config-file %s -s %s' % (
+    command = os.popen('python %s dns_server -d dns1 '
+                       '--dns-server-ssh-username user '
+                       '--dns-server-bind-dir /etc/bind/ '
+                       '--dns-server-test-dir /etc/bind/test/ '
+                       '-u %s -p %s --config-file %s -s %s' % (
         EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
     self.assertEqual(command.read(), 'ADDED DNS SERVER: dns1\n')
     command.close()
-    self.assertEqual(self.core_instance.ListDnsServers(), ['dns1'])
+    self.assertEqual(self.core_instance.ListDnsServers(), {u'dns1': 
+        {'ssh_username':u'user', 'bind_dir': u'/etc/bind/',
+         'test_dir': u'/etc/bind/test/'}})
 
   def testMakeDnsServerSet(self):
     command = os.popen('python %s dns_server_set -e set1 -u %s -p %s '
@@ -142,7 +147,8 @@ class Testdnsmkdnsserver(unittest.TestCase):
     self.assertEqual(self.core_instance.ListDnsServerSets(), ['set1'])
 
   def testMakeDnsServerSetAssignment(self):
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns1', u'user',
+                                     u'/etc/bind/', u'/etc/bind/test/')
     self.core_instance.MakeDnsServerSet(u'set1')
     command = os.popen(
         'python %s assignment -e set1 -d dns1 -u %s -p %s --config-file %s '
@@ -163,7 +169,8 @@ class Testdnsmkdnsserver(unittest.TestCase):
     self.assertEqual(command.read(),
         'CLIENT ERROR: DNS Server "dns1" does not exist.\n')
     command.close()
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns1', u'user',
+                                     u'/etc/bind/', u'/etc/bind/test/')
     command = os.popen(
         'python %s assignment -e set1 -d dns1 -u %s -p %s --config-file %s '
         '-s %s' % (

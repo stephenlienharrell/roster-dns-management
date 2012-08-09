@@ -126,8 +126,10 @@ class TestDnslsdnsservers(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testListDnsServerSetAssignments(self):
-    self.core_instance.MakeDnsServer(u'dns1')
-    self.core_instance.MakeDnsServer(u'dns2')
+    self.core_instance.MakeDnsServer(u'dns1', u'user',
+                                     u'/etc/bind/', u'/etc/bind/test/')
+    self.core_instance.MakeDnsServer(u'dns2', u'user',
+                                     u'/etc/bind/', u'/etc/bind/test/')
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSet(u'set2')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
@@ -177,24 +179,26 @@ class TestDnslsdnsservers(unittest.TestCase):
     command.close()
 
   def testListDnsServers(self):
-    self.core_instance.MakeDnsServer(u'dns1')
-    self.core_instance.MakeDnsServer(u'dns2')
+    self.core_instance.MakeDnsServer(u'dns1', u'user',
+                                     u'/etc/bind/', u'/etc/bind/test/')
+    self.core_instance.MakeDnsServer(u'dns2', u'user',
+                                     u'/etc/bind/', u'/etc/bind/test/')
     command = os.popen('python %s dns_server -u %s '
                        '-p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
-    self.assertEqual(command.read(), 'dns_server\n'
-                                     '----------\n'
-                                     'dns1\n'
-                                     'dns2\n\n')
+    self.assertEqual(command.read(), 'dns_server ssh_user bind_dir   test_dir\n'
+                                     '---------------------------------------\n'
+                                     'dns2       user     /etc/bind/ /etc/bind/test/\n'
+                                     'dns1       user     /etc/bind/ /etc/bind/test/\n\n')
     command.close()
     command = os.popen('python %s dns_server -d dns2 -u %s '
                        '-p %s --config-file %s -s %s' % (
                            EXEC, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
-    self.assertEqual(command.read(), 'dns_server\n'
-                                     '----------\n'
-                                     'dns2\n\n')
+    self.assertEqual(command.read(), 'dns_server ssh_user bind_dir   test_dir\n'
+                                     '---------------------------------------\n'
+                                     'dns2       user     /etc/bind/ /etc/bind/test/\n\n')
     command.close()
 
   def testListDnsServerSets(self):

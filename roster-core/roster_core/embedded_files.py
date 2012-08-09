@@ -466,6 +466,9 @@ CREATE TABLE `dns_servers` (
     
   `dns_server_id` smallint unsigned NOT NULL auto_increment,
   `dns_server_name` varchar(255) UNIQUE NOT NULL,
+  `dns_server_ssh_username` varchar(255) NOT NULL,
+  `dns_server_remote_test_directory` VARCHAR(255) NOT NULL,
+  `dns_server_remote_bind_directory` VARCHAR(255) NOT NULL,
 
   PRIMARY KEY (`dns_server_id`),
   INDEX `dns_server_1` (`dns_server_name`)

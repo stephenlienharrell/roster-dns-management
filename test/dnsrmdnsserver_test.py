@@ -128,13 +128,16 @@ class Testdnsrmdnsserver(unittest.TestCase):
 
   def testRemoveDnsServerSetViewAssignments(self):
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns1', u'user', u'/etc/bind/', 
+                                     u'/etc/bind/test/')
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.assertEqual(self.core_instance.ListDnsServerSetAssignments(),
         {u'set1': [u'dns1']})
     self.assertEqual(self.core_instance.ListDnsServerSets(), [u'set1'])
-    self.assertEqual(self.core_instance.ListDnsServers(), [u'dns1'])
+    self.assertEqual(self.core_instance.ListDnsServers(), {u'dns1': 
+        {'ssh_username': u'user', 'bind_dir': u'/etc/bind/', 
+         'test_dir': u'/etc/bind/test/'}})
     output = os.popen('python %s assignment -e set1 -d dns1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
@@ -152,14 +155,16 @@ class Testdnsrmdnsserver(unittest.TestCase):
     self.assertEqual(output.read(), 'REMOVED DNS SERVER SET: set1\n')
     output.close()
     self.assertEqual(self.core_instance.ListDnsServerSets(), [])
-    self.assertEqual(self.core_instance.ListDnsServers(), [u'dns1'])
+    self.assertEqual(self.core_instance.ListDnsServers(), {u'dns1': 
+        {'ssh_username': u'user', 'bind_dir': u'/etc/bind/', 
+         'test_dir': u'/etc/bind/test/'}})
     output = os.popen('python %s dns_server -d dns1 '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(), 'REMOVED DNS SERVER: dns1\n')
     output.close()
-    self.assertEqual(self.core_instance.ListDnsServers(), [])
+    self.assertEqual(self.core_instance.ListDnsServers(), {})
 
   def testErrors(self):
     output = os.popen('python %s dns_server -d dns1 '

@@ -87,7 +87,8 @@ def main(args):
 
     if( not options.quiet and core_return ):
       print ('REMOVED DNS SERVER SET ASSIGNMENT: dns_server_set: %s '
-             'dns_server: %s' % (options.dns_server_set, options.dns_server))
+             'dns_server: %s' % 
+             (options.dns_server_set, options.dns_server))
     elif( not core_return ):
       cli_common_lib.DnsError(
           'DNS server set assignment "%s/%s" does not exist.' % (

@@ -359,11 +359,31 @@ class DnsServer(core_flags.CoreFlags):
   def SetDataFlags(self):
     """Sets flags for self.parser"""
     not_list = self.action != 'List'
+    is_make = self.action == 'Make'
     self.parser.add_option('-d', '--dns-server', action='store',
                            dest='dns_server', help='DNS server.',
-                           default=None)
+                           default=None) 
     self.AddFlagRule('dns_server', required=not_list, command='dns_server')
     self.AddFlagRule('dns_server', required=not_list, command='assignment')
+
+    self.parser.add_option('--dns-server-ssh-username', action='store',
+                            dest='dns_server_ssh_username',
+                            help='DNS server username.', default=None)
+    self.AddFlagRule('dns_server_ssh_username', required=is_make, 
+                     command='dns_server')
+    
+    self.parser.add_option('--dns-server-test-dir', action='store',
+        dest='dns_server_test', default=None,
+        help='DNS server test directory to perform zone checks.')
+    self.AddFlagRule('dns_server_test', required=is_make,
+                     command='dns_server')
+
+    self.parser.add_option('--dns-server-bind-dir', action='store',
+                           dest='dns_server_bind', 
+                           help='DNS server bind directory.', default=None)
+    self.AddFlagRule('dns_server_bind', required=is_make,
+                     command='dns_server')
+
     self.parser.add_option('-e', '--dns-server-set', action='store',
                            dest='dns_server_set',
                            help='DNS server set.', default=None)
