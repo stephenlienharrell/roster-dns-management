@@ -65,9 +65,11 @@ KEY_FILE = 'test_data/rndc.key'
 USERNAME = 'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
+TESTDIR = u'%s/unittest_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
 TEST_DNS_SERVER = u'localhost'
 SSH_ID = 'test_data/roster_id_dsa'
-SSH_USER = getpass.getuser()
+SSH_USER = unicode(getpass.getuser())
 SESSION_KEYFILE = 'test_data/session.key'
 RNDC_CONF_DATA = ('# Start of rndc.conf\n'
                   'key "rndc-key" {\n'
@@ -194,7 +196,7 @@ class TestCheckConfig(unittest.TestCase):
                      '17 total records added\n')
     output.close()
 
-    self.core_instance.MakeDnsServer(TEST_DNS_SERVER)
+    self.core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')

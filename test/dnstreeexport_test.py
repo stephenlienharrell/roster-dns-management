@@ -46,12 +46,16 @@ import sys
 import shutil
 import tarfile
 import datetime
+import getpass
 
 import unittest
 sys.path.append('../')
 
 import roster_core
 
+TESTDIR = u'%s/unittest_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
+SSH_USER = unicode(getpass.getuser())
 USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 DATA_FILE = 'test_data/test_data.sql'
@@ -266,7 +270,11 @@ class TestDnsMkHost(unittest.TestCase):
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
     # Make DNS Servers
-    dns_servers_dict = {}
+    dns_servers_dict = db_instance.GetEmptyRowDict('dns_servers')
+    dns_servers_dict['dns_server_name'] = u'dns1.university.edu'
+    dns_servers_dict['dns_server_remote_bind_directory'] = BINDDIR
+    dns_servers_dict['dns_server_remote_test_directory'] = TESTDIR
+    dns_servers_dict['dns_server_ssh_username'] = SSH_USER
     dns_servers_dict['dns_server_name'] = u'dns1.university.edu'
     db_instance.MakeRow('dns_servers', dns_servers_dict)
 

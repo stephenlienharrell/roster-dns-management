@@ -47,6 +47,7 @@ import MySQLdb
 import os
 import sys
 import threading
+import getpass
 
 from roster_core import audit_log
 import roster_config_manager
@@ -57,6 +58,9 @@ from roster_core import data_validation
 from roster_core import core
 
 
+TESTDIR = u'%s/unittest_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
+SSH_USER = unicode(getpass.getuser())
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
@@ -138,7 +142,7 @@ class TestdbAccess(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
@@ -240,7 +244,7 @@ class TestdbAccess(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')

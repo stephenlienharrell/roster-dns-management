@@ -49,9 +49,11 @@ import roster_core
 CONFIG_FILE = 'test_data/roster.conf'
 EXEC = '../roster-config-manager/scripts/dnsversioncheck'
 CORE_USERNAME = u'sharrell'
-SSH_USERNAME = getpass.getuser()
 TEST_DNS_SERVER = u'localhost'
 CURRENT_BIND_VERSION = '9.9.0'
+TESTDIR = u'%s/unittest_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
+SSH_USER = unicode(getpass.getuser())
 
 class TestBINDVersion(unittest.TestCase):
   def setUp(self):
@@ -59,7 +61,7 @@ class TestBINDVersion(unittest.TestCase):
     core_instance = roster_core.Core(CORE_USERNAME, config_instance)
 
     if( TEST_DNS_SERVER not in core_instance.ListDnsServers() ):
-      core_instance.MakeDnsServer(TEST_DNS_SERVER)
+      core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
 
   def testVersion(self):    
     command1 = os.popen('service named status')
@@ -78,7 +80,7 @@ class TestBINDVersion(unittest.TestCase):
       
     command = os.popen('python %s --ssh-user-name %s --core-user-name '
                        '%s --config-file %s' % (
-            EXEC, SSH_USERNAME, CORE_USERNAME, CONFIG_FILE))
+            EXEC, SSH_USER, CORE_USERNAME, CONFIG_FILE))
     lines = command.read().split('\n')
 
     self.assertTrue('Connecting to "%s"' % TEST_DNS_SERVER in lines)

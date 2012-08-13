@@ -64,13 +64,14 @@ HOST = u'localhost'
 CREDFILE = '%s/.dnscred' % os.getcwd()
 USERNAME = 'shuey'
 PASSWORD = 'testpass'
-TESTDIR = 'unittest_dir'
+TESTDIR = u'%s/unittest_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd() 
 #bind binary files
 CHECKZONE_EXEC = '/usr/sbin/named-checkzone'
 CHECKCONF_EXEC = '/usr/sbin/named-checkconf'
 #SSH
 SSH_ID = 'test_data/roster_id_dsa'
-SSH_USER = getpass.getuser()
+SSH_USER = unicode(getpass.getuser())
 TEST_DNS_SERVER = u'localhost' # change this to real bind servers
 TEST_DNS_SERVER2 = u'testns2'
 SESSION_KEYFILE = 'test_data/session.key'
@@ -284,10 +285,11 @@ class TestComplete(unittest.TestCase):
     ## dnsmkdnsserver dns_server -d dns1
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkdnsserver '
-        'dns_server -d %s '
+        'dns_server -d %s --dns-server-test-dir %s --dns-server-bind-dir %s '
+        '--dns-server-ssh-username %s '
         '-u %s -p %s -s %s --config-file %s ' % (
-            TEST_DNS_SERVER,
-            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
+            TEST_DNS_SERVER, TESTDIR, BINDDIR, 
+            SSH_USER, USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED DNS SERVER: %s\n' % TEST_DNS_SERVER)
@@ -296,9 +298,10 @@ class TestComplete(unittest.TestCase):
     ## dnsmkdnsserver dns_server -d dns2
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkdnsserver '
-        'dns_server -d %s '
+        'dns_server -d %s --dns-server-test-dir %s --dns-server-bind-dir %s '
+        '--dns-server-ssh-username %s '
         '-u %s -p %s -s %s --config-file %s ' % (
-            TEST_DNS_SERVER2, 
+            TEST_DNS_SERVER2, TESTDIR, BINDDIR, SSH_USER, 
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
@@ -400,8 +403,10 @@ class TestComplete(unittest.TestCase):
     ## dnsmkdnsserver dns_server -d dns3
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkdnsserver '
-        'dns_server -d dns3 '
+        'dns_server -d dns3 --dns-server-test-dir %s --dns-server-bind-dir %s '
+        '--dns-server-ssh-username %s '
         '-u %s -p %s -s %s --config-file %s ' % (
+            TESTDIR, BINDDIR, SSH_USER,
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
@@ -433,8 +438,10 @@ class TestComplete(unittest.TestCase):
     ## dnsmkdnsserver dns_server -d dns3
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkdnsserver '
-        'dns_server -d dns3 '
+        'dns_server -d dns3 --dns-server-test-dir %s --dns-server-bind-dir %s '
+        '--dns-server-ssh-username %s '
         '-u %s -p %s -s %s --config-file %s ' % (
+            TESTDIR, BINDDIR, SSH_USER,
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
@@ -448,12 +455,18 @@ class TestComplete(unittest.TestCase):
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
-    self.assertEqual(command.read(),
-        'dns_server\n'
-        '----------\n'
-        'dns3\n'
-        '%s\n'
-        '%s\n\n' % (TEST_DNS_SERVER, TEST_DNS_SERVER2) )
+    output = command.read()
+    self.assertTrue('dns_server' in output)
+    self.assertTrue('ssh_user' in output)
+    self.assertTrue('bind_dir' in output)
+    self.assertTrue('test_dir' in output)
+    self.assertTrue('-------' in output)
+    self.assertTrue('dns3' in output)
+    self.assertTrue(TEST_DNS_SERVER in output)
+    self.assertTrue(TEST_DNS_SERVER2 in output)
+    self.assertTrue(SSH_USER in output)
+    self.assertTrue(BINDDIR in output)
+    self.assertTrue(TESTDIR in output)
     command.close()
     ## User tool: dnsrmdnsserver
     ## dnsrmdnsserver assignment -d dns2 -e set4
@@ -530,11 +543,17 @@ class TestComplete(unittest.TestCase):
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
-    self.assertEqual(command.read(),
-        'dns_server\n'
-        '----------\n'
-        '%s\n'
-        '%s\n\n' % (TEST_DNS_SERVER, TEST_DNS_SERVER2))
+    output = command.read()
+    self.assertTrue('dns_server' in output)
+    self.assertTrue('ssh_user' in output)
+    self.assertTrue('bind_dir' in output)
+    self.assertTrue('test_dir' in output)
+    self.assertTrue('-------' in output)
+    self.assertTrue(TEST_DNS_SERVER in output)
+    self.assertTrue(TEST_DNS_SERVER2 in output)
+    self.assertTrue(SSH_USER in output)
+    self.assertTrue(BINDDIR in output)
+    self.assertTrue(TESTDIR in output)
     command.close()
     ## User tool: dnslsdnsservers
     ## dnslsdnsservers dns_server
@@ -593,12 +612,16 @@ class TestComplete(unittest.TestCase):
     output = command.read()
     output = re.sub("\s+"," ",output)
     output = output.split(' ')
-    #output[9] is a timestamp that will change every time the test is run
-    self.assertEqual(output[7:14],
-        ['1', 'MakeDnsServer', output[9], 'shuey', '1', 
-         '{\'dns_server_name\':', u"u\'%s\'}" % TEST_DNS_SERVER])
-    self.assertEqual(output[24:30],
-        ['shuey', '1', '{\'dns_server_set_name\':', 'u\'set1\'}', 
+    #output[9] and output[35] are timestamps that will change every time 
+    #the test is run
+    self.assertEqual(output[7:20],
+        ['1', 'MakeDnsServer', output[9], 'shuey', '1', "{'dns_server_name':",
+         u"u\'%s\'," % TEST_DNS_SERVER, "'dns_server_bind_dir':",
+         u"u'%s'," % BINDDIR, "'dns_server_ssh_username':",
+         u"u'%s'," % SSH_USER, "'dns_server_test_dir':", u"u'%s'}" % TESTDIR])
+    self.assertEqual(output[33:42],
+        ['3', 'MakeDnsServerSet', output[35], 'shuey', '1', 
+         '{\'dns_server_set_name\':', 'u\'set1\'}', 
          '4', 'MakeDnsServerSetAssignments'])
     command.close()
 
@@ -1639,12 +1662,12 @@ class TestComplete(unittest.TestCase):
     ## -g test_group2 --group-permission=ptr,cname
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmusergroup '
-        'reverse -b 192.168.2.0/24 -g test_group2 '
+        'reverse -b 168.192.2.0/24 -g test_group2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 192.168.2.0/24 '
+        'REMOVED REVERSE_RANGE_PERMISSION: cidr_block: 168.192.2.0/24 '
         "group: test_group2 group_permission: ['ptr', 'cname']\n")
     command.close()
     ## User tool: dnsrmusergroup

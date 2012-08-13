@@ -1054,12 +1054,8 @@ class dbAccess(object):
     zone_view_assignments_dict['zone_view_assignments_zone_name'] =  zone_name
     zone_view_assignments_dict[
         'zone_view_assignments_view_dependency'] = view_name
-    self.StartTransaction()
-    try:
-      zone_view_assignment_rows = self.ListRow(
-          'zone_view_assignments', zone_view_assignments_dict)
-    finally:
-      self.EndTransaction()
+    zone_view_assignment_rows = self.ListRow(
+        'zone_view_assignments', zone_view_assignments_dict)
 
     origins = {}
 

@@ -548,6 +548,7 @@ class TestdbAccess(unittest.TestCase):
     self.db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict3)
     self.db_instance.EndTransaction()
 
+    self.db_instance.StartTransaction()
     self.assertEquals(self.db_instance.GetZoneOrigins(
         u'test_zone1', u'temp_view_dep1'), {u'test_zone1': [
             u'10.0.1.IN-ADDR.ARPA.']})
@@ -580,6 +581,7 @@ class TestdbAccess(unittest.TestCase):
                       u'test_zone1': [u'10.0.1.IN-ADDR.ARPA.'],
                       u'test_zone2': [u'10.0.0.IN-ADDR.ARPA.',
                                       u'10.0.2.IN-ADDR.ARPA.']})
+    self.db_instance.EndTransaction()
 
   def testGetRecordArgsDict(self):
     self.assertEquals(self.db_instance.GetRecordArgsDict(u'mx'),

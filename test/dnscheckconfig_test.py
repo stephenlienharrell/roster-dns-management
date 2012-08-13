@@ -49,6 +49,7 @@ import unittest
 import tarfile
 import time
 import StringIO
+import getpass
 
 import roster_core
 from roster_config_manager import tree_exporter
@@ -60,7 +61,9 @@ KEY_FILE = 'test_data/rndc.key'
 USERNAME = u'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
-
+TESTDIR = u'%s/unittest_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
+SSH_USER = unicode(getpass.getuser())
 
 class TestCheckConfig(unittest.TestCase):
   def TarReplaceString(self, tar_file_name, member, string1, string2):
@@ -149,7 +152,7 @@ class TestCheckConfig(unittest.TestCase):
                      '17 total records added\n')
     output.close()
 
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
@@ -180,7 +183,7 @@ class TestCheckConfig(unittest.TestCase):
                      '17 total records added\n')
     output.close()
 
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')

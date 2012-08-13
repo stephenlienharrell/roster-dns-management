@@ -65,6 +65,9 @@ KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
 EXEC='../roster-config-manager/scripts/dnsrecover'
+TESTDIR = u'%s/unittest_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
+SSH_USER = unicode(getpass.getuser())
 
 class StdOutStream():
   """Std out redefined"""
@@ -135,7 +138,7 @@ class TestDnsRecover(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
-    self.core_instance.MakeDnsServer(u'dns1')
+    self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')

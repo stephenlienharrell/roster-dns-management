@@ -125,10 +125,16 @@ class User(object):
       if( record_data and record_data.has_key('zone_name') and
           not self.zone_origin_cache.has_key(record_data['zone_name']) ):
         if( record_data['zone_name'] ):
-          self.zone_origin_cache[record_data['zone_name']] = (
-              self.db_instance.GetZoneOrigins(
-                  record_data['zone_name'], record_data['view_name'])[
-                      record_data['zone_name']])
+          pulled_origin = self.db_instance.GetZoneOrigins(
+              record_data['zone_name'], record_data['view_name'])
+
+          #Making sure we pulled something that exists
+          if( pulled_origin is not None ):
+            self.zone_origin_cache[record_data['zone_name']] = pulled_origin[
+                record_data['zone_name']]
+          else:
+            raise errors.UnexpectedDataError(
+                'Specified zone or view does not exist.')
     finally:
       if( not current_transaction ):
         self.db_instance.EndTransaction()
