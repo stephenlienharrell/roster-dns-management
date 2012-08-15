@@ -72,5 +72,5 @@ setup(name='RosterConfigManager',
       scripts = ['scripts/dnsconfigsync', 'scripts/dnszoneimporter',
                  'scripts/dnstreeexport', 'scripts/dnscheckconfig',
                  'scripts/dnsexportconfig', 'scripts/dnsrecover',
-                 'scripts/dnszonecompare']
+                 'scripts/dnszonecompare', 'scripts/dnszoneverify']
      )

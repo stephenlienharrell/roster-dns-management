@@ -231,7 +231,7 @@ def ExpandIPV6(ip_address):
   """Expands a shorthand ipv6 address to a full ipv6 address
 
   Inputs:
-    ip_address: string of ipv6 address
+    ip_address: string of short ipv6 address
 
   Raises:
     InvalidInputError: Not a valid IP address.
@@ -245,9 +245,42 @@ def ExpandIPV6(ip_address):
   except ValueError:
     raise errors.InvalidInputError('%s is not a valid IP address' % ip_address)
   if( ipv6_address.version() != 6 ):
-    raise errors.InvalidInputError('"%s" is not a valid IPV6 address.' % ipv6_address)
+    raise errors.InvalidInputError('"%s" is not a valid IPV6 address.' % (
+        ipv6_address))
 
   return ipv6_address.strFullsize()
+
+def UnExpandIPV6(ip_address):
+  """Unexpands a full ipv6 address to a shorthand ipv6 address
+
+  Inputs:
+    ip_address: string of long ipv6 address
+
+  Raises:
+    InvalidInputError: Not a valid IP address.
+    InvalidInputError: Not a valid IPV6 address.
+
+  Outputs:
+    string: string of short ipv6 address
+  """
+  try:
+    ipv6_address = IPy.IP(ip_address)
+  except ValueError:
+    raise errors.InvalidInputError('%s is not a valid IP address' % ip_address)
+  if( ipv6_address.version() != 6 ):
+    raise errors.InvalidInputError('"%s" is not a valid IPV6 address.' % (
+        ipv6_address))
+
+  new_address = str(ipv6_address)
+  new_address_parts = new_address.split(':')
+
+  #What this does is changes 4321:0:1:2:3:4:567:89ab into 4321::1:2:3:4:567:89ab
+  while( '0' in new_address_parts ):
+    zero_index = new_address_parts.index('0')
+    new_address_parts.pop(zero_index)
+    new_address_parts.insert(zero_index, '')
+
+  return u':'.join(new_address_parts)
 
 def GetRecordsFromRecordRowsAndArgumentRows(record_data, record_args_dict):
   """Takes data from joined records and record_arguments_record_assignments

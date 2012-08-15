@@ -106,6 +106,18 @@ class TestHelpersLib(unittest.TestCase):
     self.assertRaises(errors.CoreError, helpers_lib.ExpandIPV6, 'notavalidip')
     self.assertRaises(errors.CoreError, helpers_lib.ExpandIPV6, '192.168.0.1')
 
+  def testUnExpandIPV6(self):
+    self.assertEqual(
+        helpers_lib.UnExpandIPV6(u'4321:0000:0001:0002:0003:0004:0567:89ab'), 
+        u'4321::1:2:3:4:567:89ab')
+    self.assertEqual(
+        helpers_lib.UnExpandIPV6(u'4321:0:0:0:0:0:567:89ab'),
+        u'4321::567:89ab')
+    self.assertEqual(
+        helpers_lib.UnExpandIPV6(u'4321:0000:0000:0000:0000:0000:567:89ab'),
+        u'4321::567:89ab')
+    self.assertRaises(errors.InvalidInputError, helpers_lib.UnExpandIPV6,
+        u'invalid') 
 
 if( __name__ == '__main__' ):
   unittest.main()

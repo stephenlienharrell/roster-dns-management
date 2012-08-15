@@ -207,6 +207,15 @@ class Testdnsmkview(unittest.TestCase):
                      'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
                      'test_view dns_server_set: set1\n')
     command.close()
+    command = os.popen('python %s dns_server_set -v test_view -e set2 '
+                       '-c %s -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
+                     'test_view dns_server_set: set2\n')
+    command.close()
 
   def testErrors(self):
     self.core_instance.MakeDnsServerSet(u'set1')

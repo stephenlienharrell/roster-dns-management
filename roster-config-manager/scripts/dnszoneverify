@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""This script is used for verifying zone files are correctly loaded on a 
+name server."""
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+import sys
+from optparse import OptionParser
+from roster_config_manager import dns_query_lib
+from roster_core import errors
+
+def main(args):
+  usage = ('\n'
+           '\n'
+           'To test a zone file:\n'
+           '\t%s -f <zone-file> -s <dns-server>\n' % (
+               sys.argv[0]))
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
+
+  parser.add_option('-f', '--file', action='store', dest='file',
+                    help='Zone file to load in for verifying.', metavar='<file>',
+                    default=None)
+  parser.add_option('-s', '--server', action='store', dest='server',
+                    help='DNS server to query.', metavar='<server>',
+                    default=None)
+  parser.add_option('-o', '--origin', action='store', dest='zone_origin',
+                    help='Zone origin - required if $ORIGIN not present in '
+                    'zone file.', metavar='<zone_origin>', default=None)
+  parser.add_option('-p', '--port', action='store', dest='port',
+                    help='Port to query DNS server on.', metavar='<port>',
+                    default=53)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  if( options.server is None ):
+    print 'Must specify -s/--server flag.'
+    sys.exit(1)
+
+  if( options.file is None ):
+    print 'Must specify -f/--file flag.'
+    sys.exit(1)
+
+  try:
+    zone_file_handle = open(options.file, 'r')
+    zone_file_string = zone_file_handle.read()
+    zone_file_handle.close()
+  except IOError as error:
+    print 'Unable to read file %s: %s' % (options.file, str(error))
+    sys.exit(1)
+
+  try:
+    good_records, bad_records = dns_query_lib.DnsQuery(zone_file_string, 
+        options.server, options.port, zone_origin=options.zone_origin)
+  except errors.UnexpectedDataError as error:
+    print error
+    sys.exit(1)
+
+  print 'Able to verify %s records.' % len(good_records)
+  print 'Unable to verify %s records.' % len(bad_records)
+
+  if( len(bad_records) ):
+    print '\nUnverifiable records:'
+    for bad_record in bad_records:
+      print bad_record
+
+if( __name__ == "__main__" ):
+  main(sys.argv[1:])
+  
