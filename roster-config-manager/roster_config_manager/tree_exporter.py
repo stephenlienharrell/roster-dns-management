@@ -226,51 +226,51 @@ class BindTreeExport(object):
       if( len(cooked_data) == 0 ):
         raise Error('No dns server sets found.')
       for dns_server_set in cooked_data:
-        dummy_config_file = StringIO.StringIO()
-        config_parser = ConfigParser.SafeConfigParser()
-        ## Make Files
-        named_directory = '%s/%s_servers' % (
-            self.root_config_dir.rstrip('/'), dns_server_set)
-        if( not os.path.exists(named_directory) ):
-          os.makedirs(named_directory)
-        dns_server_set_directory = ('%s/%s_servers/named' %
-                                   (self.root_config_dir.rstrip('/'),
-                                    dns_server_set))
-        if( not os.path.exists(dns_server_set_directory) ):
-          os.makedirs(dns_server_set_directory)
-        config_file = '%s/%s_config' % (dns_server_set_directory,
-                                        dns_server_set)
-        config_parser.add_section('dns_server_set_parameters')
-        config_parser.set('dns_server_set_parameters', 'dns_servers', ','.join(
-            cooked_data[dns_server_set]['dns_servers']))
-        config_parser.set('dns_server_set_parameters', 'dns_server_set_name',
-                          dns_server_set)
-        config_parser.write(dummy_config_file)
-        self.AddToTarFile(tar_file, config_file, dummy_config_file.getvalue())
-        if( len(cooked_data[dns_server_set]['views']) == 0 ):
-          raise Error('Server set %s has no views.' % dns_server_set)
-        for view in cooked_data[dns_server_set]['views']:
-          view_directory = '%s/%s' % (dns_server_set_directory, view)
-          if( not os.path.exists(view_directory) ):
-            os.makedirs(view_directory)
-          if( len(cooked_data[dns_server_set]['views'][view]['zones']) == 0 ):
-            raise Error('Server set %s has no zones in %s view.' % (
-              dns_server_set, view))
-          for zone in cooked_data[dns_server_set]['views'][view]['zones']:
-            if( view not in zone_view_assignments[zone] ):
-              continue
-            zone_file = '%s/%s/%s.db' % (dns_server_set_directory, view, zone)
-            zone_file_string = zone_exporter_lib.MakeZoneString(
-                cooked_data[dns_server_set]['views'][view]['zones'][zone][
-                    'records'],
-                cooked_data[dns_server_set]['views'][view]['zones'][zone][
-                    'zone_origin'],
-                record_argument_definitions, zone, view)
-            self.AddToTarFile(tar_file, zone_file, zone_file_string)
-        named_conf_file = '%s/named.conf' % named_directory.rstrip('/')
-        named_conf_file_string = self.MakeNamedConf(data, cooked_data,
-                                                    dns_server_set)
-        self.AddToTarFile(tar_file, named_conf_file, named_conf_file_string)
+        for dns_server in cooked_data[dns_server_set]['dns_servers']:
+          dummy_config_file = StringIO.StringIO()
+          config_parser = ConfigParser.SafeConfigParser()
+          ## Make Files
+          named_directory = '%s/%s' % (
+              self.root_config_dir.rstrip('/'), dns_server)
+          if( not os.path.exists(named_directory) ):
+            os.makedirs(named_directory)
+          dns_server_directory = ('%s/%s/named' % (
+              self.root_config_dir.rstrip('/'), dns_server))
+          if( not os.path.exists(dns_server_directory) ):
+            os.makedirs(dns_server_directory)
+          config_file = '%s/%s_config' % (dns_server_directory, dns_server_set)
+          config_parser.add_section('dns_server_set_parameters')
+          config_parser.set('dns_server_set_parameters', 'dns_servers',
+                            ','.join(cooked_data[dns_server_set][
+                                'dns_servers']))
+          config_parser.set('dns_server_set_parameters', 'dns_server_set_name',
+                            dns_server_set)
+          config_parser.write(dummy_config_file)
+          self.AddToTarFile(tar_file, config_file, dummy_config_file.getvalue())
+          if( len(cooked_data[dns_server_set]['views']) == 0 ):
+            raise Error('Server set %s has no views.' % dns_server_set)
+          for view in cooked_data[dns_server_set]['views']:
+            view_directory = '%s/%s' % (dns_server_directory, view)
+            if( not os.path.exists(view_directory) ):
+              os.makedirs(view_directory)
+            if( len(cooked_data[dns_server_set]['views'][view]['zones']) == 0 ):
+              raise Error('Server set %s has no zones in %s view.' % (
+                  dns_server_set, view))
+            for zone in cooked_data[dns_server_set]['views'][view]['zones']:
+              if( view not in zone_view_assignments[zone] ):
+                continue
+              zone_file = '%s/%s/%s.db' % (dns_server_directory, view, zone)
+              zone_file_string = zone_exporter_lib.MakeZoneString(
+                  cooked_data[dns_server_set]['views'][view]['zones'][zone][
+                      'records'],
+                  cooked_data[dns_server_set]['views'][view]['zones'][zone][
+                      'zone_origin'],
+                  record_argument_definitions, zone, view)
+              self.AddToTarFile(tar_file, zone_file, zone_file_string)
+          named_conf_file = '%s/named.conf' % named_directory.rstrip('/')
+          named_conf_file_string = self.MakeNamedConf(data, cooked_data,
+                                                      dns_server_set)
+          self.AddToTarFile(tar_file, named_conf_file, named_conf_file_string)
 
       audit_log_replay_dump, full_database_dump = self.CookRawDump(raw_dump)
 
