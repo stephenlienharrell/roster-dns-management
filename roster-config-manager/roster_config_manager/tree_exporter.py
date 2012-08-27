@@ -238,7 +238,7 @@ class BindTreeExport(object):
               self.root_config_dir.rstrip('/'), dns_server))
           if( not os.path.exists(dns_server_directory) ):
             os.makedirs(dns_server_directory)
-          config_file = '%s/%s_config' % (dns_server_directory, dns_server_set)
+          config_file = '%s/%s_config' % (dns_server_directory, dns_server)
           config_parser.add_section('dns_server_set_parameters')
           config_parser.set('dns_server_set_parameters', 'dns_servers',
                             ','.join(cooked_data[dns_server_set][

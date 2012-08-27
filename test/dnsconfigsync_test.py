@@ -205,6 +205,7 @@ class TestCheckConfig(unittest.TestCase):
         self.port, SSH_USER, self.named_dir), capture=True)
     time.sleep(2)
 
+
     command = os.popen(
         'python %s --rndc-key test_data/rndc.key --rndc-port %s -u %s '
         '--ssh-id %s --config-file %s --rndc-port %s' % (
@@ -226,7 +227,6 @@ class TestCheckConfig(unittest.TestCase):
     command.close()
 
     try:
-
       file_handle = open('temp_dir/set1_servers/named.conf', 'r')
       lines = file_handle.read()
       file_handle.close()

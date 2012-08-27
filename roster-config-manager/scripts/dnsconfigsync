@@ -143,14 +143,13 @@ def pushFiles(ssh_port, ssh_id, user_name, destination_directory, rndc_exec,
   try:
     dns_server_sets = None
     file_dict = {}
-    for server_set in os.listdir(root_directory):
+    for server in os.listdir(root_directory):
       config_parser = ConfigParser.SafeConfigParser()
-      config_file_handle = config_parser.read('%s/%s/named/%s' % (
-          root_directory, server_set,
-          server_set.replace('servers', 'config')))
+      config_file_handle = config_parser.read('%s/%s/named/%s_config' % (
+          root_directory, server, server))
       for dns_server in config_parser.get(
             'dns_server_set_parameters', 'dns_servers').split(','):
-        rsync_dir = '%s/%s/*' % (os.path.expanduser(root_directory), server_set)
+        rsync_dir = '%s/%s/*' % (os.path.expanduser(root_directory), server)
         rsync_url_parts = []
         if( user_name ):
           rsync_url_parts.append('%s@' % user_name)

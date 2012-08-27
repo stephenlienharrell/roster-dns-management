@@ -2006,9 +2006,9 @@ class TestTreeExporter(unittest.TestCase):
     tar_file = tarfile.open(self.tree_exporter_instance.tar_file_name)
     tar_file.extractall()
     tar_file.close()
-
+   
     handle = open(
-        '%s/ns1.university.edu/named/external_dns_config' %
+        '%s/ns1.university.edu/named/ns1.university.edu_config' %
         self.bind_config_dir, 'r')
     ns1_server_set_conf = handle.read()
     self.assertEqual(ns1_server_set_conf, '[dns_server_set_parameters]\n'
@@ -2017,12 +2017,12 @@ class TestTreeExporter(unittest.TestCase):
                      'dns_server_set_name = external_dns\n\n')
     handle.close()
     handle = open(
-        '%s/dns2.university.edu/named/external_dns_config' %
+        '%s/dns2.university.edu/named/dns2.university.edu_config' %
         self.bind_config_dir, 'r')
     dns2_server_set_conf = handle.read()
     handle.close()
     handle = open(
-        '%s/dns3.university.edu/named/external_dns_config' %
+        '%s/dns3.university.edu/named/dns3.university.edu_config' %
         self.bind_config_dir, 'r')
     dns3_server_set_conf = handle.read()
     handle.close()
@@ -2089,7 +2089,7 @@ class TestTreeExporter(unittest.TestCase):
         'computer1 3600 in a 1.2.3.5\n'
         'computer3 3600 in a 1.2.3.6\n')
     handle.close()
-    handle = open('%s/dns1.university.edu/named/internal_dns_config' %
+    handle = open('%s/dns1.university.edu/named/dns1.university.edu_config' %
                   self.bind_config_dir, 'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                                     'dns_servers = ns1.int.university.edu,'
@@ -2201,7 +2201,7 @@ class TestTreeExporter(unittest.TestCase):
         'computer4 3600 in a 192.168.1.4\n')
     handle.close()
     handle = open(
-        '%s/dns4.university.edu/named/private_dns_config' %
+        '%s/dns4.university.edu/named/dns4.university.edu_config' %
         self.bind_config_dir, 'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                                     'dns_servers = ns1.int.university.edu,'

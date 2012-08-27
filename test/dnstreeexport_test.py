@@ -1165,9 +1165,10 @@ class TestDnsMkHost(unittest.TestCase):
       shutil.rmtree(self.bind_config_dir)
     if( os.path.exists('dns_tree-1.tar.bz2') ):
       os.remove('dns_tree-1.tar.bz2')
-    for fname in os.listdir('./test_data/backup_dir'):
-      if( fname.endswith('.bz2') ):
-        os.remove('./test_data/backup_dir/%s' % fname)
+    if( os.path.exists('./test_data/backup_dir') ):
+      for fname in os.listdir('./test_data/backup_dir'):
+        if( fname.endswith('.bz2') ):
+          os.remove('./test_data/backup_dir/%s' % fname)
 
   def testMakeFilesFromDB(self):
     output = os.popen('python %s -c %s' % (
@@ -1185,7 +1186,7 @@ class TestDnsMkHost(unittest.TestCase):
       raise Exception("File not found")
     ##Test Files
     handle = open(
-        './%s/ns1.university.edu/named/external_dns_config' %
+        './%s/ns1.university.edu/named/ns1.university.edu_config' %
         self.bind_config_dir, 'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                                     'dns_servers = ns1.university.edu,'
@@ -1257,7 +1258,7 @@ class TestDnsMkHost(unittest.TestCase):
         'computer3 3600 in a 1.2.3.6\n')
     handle.close()
     handle = open(
-        './%s/ns1.int.university.edu/named/internal_dns_config' %
+        './%s/ns1.int.university.edu/named/ns1.int.university.edu_config' %
         self.bind_config_dir, 'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                                     'dns_servers = ns1.int.university.edu,'
@@ -1368,7 +1369,7 @@ class TestDnsMkHost(unittest.TestCase):
         'computer4 3600 in a 192.168.1.4\n')
     handle.close()
     handle = open(
-        './%s/dns4.university.edu/named/private_dns_config' %
+        './%s/dns4.university.edu/named/dns4.university.edu_config' %
         self.bind_config_dir, 'r')
     self.assertEqual(handle.read(), '[dns_server_set_parameters]\n'
                                     'dns_servers = ns1.int.university.edu,'
