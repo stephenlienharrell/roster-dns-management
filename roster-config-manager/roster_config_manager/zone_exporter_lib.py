@@ -38,6 +38,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import bisect
 import copy
 import roster_core
 
@@ -130,20 +131,6 @@ def MakeZoneString(records, zone_origin, argument_definitions, zone_name,
   Outputs:
     string of exported zone file.
   """
-  dupe_check_records = copy.deepcopy(records)
-  for record in dupe_check_records:
-    del record['ttl']
-    del record['last_user']
-    del record['view_name']
-    if( record['target'] == '@' ):
-      record['target'] = zone_origin
-
-  for current_index, record_a in enumerate(dupe_check_records):
-    next_index = current_index + 1
-    for record_b in dupe_check_records[next_index:]:
-      if( record_a == record_b ):
-        raise DuplicateRecordError('Duplicate record: %s' % record_b)
-
   records = FormatRecordsForZone(records, zone_origin, zone_name, view_name)
   if( not records.has_key('soa') ):
     raise ZoneError('SOA not found for zone %s' % zone_name)
