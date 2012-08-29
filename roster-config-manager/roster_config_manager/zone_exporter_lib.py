@@ -38,8 +38,6 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
-import bisect
-import copy
 import roster_core
 
 
@@ -47,10 +45,6 @@ roster_core.core.CheckCoreVersionMatches(__version__)
 
 
 class Error(roster_core.CoreError):
-  pass
-
-
-class DuplicateRecordError(Error):
   pass
 
 
