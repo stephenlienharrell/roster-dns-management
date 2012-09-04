@@ -37,6 +37,7 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
+import os
 
 import dns.zone
 import IPy
@@ -50,6 +51,8 @@ roster_core.core.CheckCoreVersionMatches(__version__)
 class Error(Exception):
   pass
 
+class IncludeError(Error):
+  pass
 
 class ZoneImport(object):
   """This class will only import one zone per init. It will load the zone
@@ -61,10 +64,11 @@ class ZoneImport(object):
     """Sets self.core_instance, self.zone self.domain and self.view.
 
     Inputs:
-      zone_file_name: name of zone file to impport
+      zone_file_name: name of zone file to import
       config_file_name: name of config file to load db info from
       user_name: username of person running the script
-      view: view name
+      view: name of view to import records to
+      zone_name: name of the zone to import records to
     """
     config_instance = roster_core.Config(file_name=config_file_name)
 
@@ -72,7 +76,37 @@ class ZoneImport(object):
     self.core_helper_instance = roster_core.CoreHelpers(
         self.core_instance)
 
-    self.zone_file_string = unicode(open(zone_file_name, 'r').read())
+    zone_file_dir = os.path.dirname(zone_file_name)
+    zone_lines = []
+    zone_file = open(zone_file_name, 'r')
+    try:
+      for line in zone_file:
+        if( line.startswith('$INCLUDE') ):
+          include_file_name = line.split('$INCLUDE')[1].lstrip().rstrip()
+          if( not include_file_name.startswith('/') ):
+            include_file_name = os.path.join(zone_file_dir, include_file_name)
+
+          include_lines = []
+          try:
+            include_file = open(include_file_name, 'r')
+            try:
+              for line in include_file:
+                include_lines.append(line)
+            finally:
+              include_file.close()
+          except IOError:
+            raise IncludeError('Unable to import include file: %s' % include_file_name)
+          
+          zone_lines.extend(include_lines)
+          continue   
+          
+        zone_lines.append(line)
+        
+    finally:
+      zone_file.close() 
+        
+
+    self.zone_file_string = unicode('\n'.join(zone_lines))
 
     self.zone_name = zone_name
     self.view = view

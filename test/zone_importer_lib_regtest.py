@@ -51,6 +51,8 @@ CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
 ZONE_FILE = 'test_data/test_zone.db'
 REVERSE_ZONE_FILE = 'test_data/test_reverse_zone.db'
 REVERSE_IPV6_ZONE_FILE = 'test_data/test_reverse_ipv6_zone.db'
+INCLUDES_ZONE_FILE = 'test_data/test_include_zone.db'
+BAD_INCLUDES_ZONE_FILE = 'test_data/test_bad_include_zone.db'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 
@@ -234,6 +236,90 @@ class TestZoneImport(unittest.TestCase):
                          u'external', 'last_user': u'sharrell', 'zone_name':
                          u'8.0.e.f.f.3.ip6.arpa', u'assignment_host':
                          u'desktop-1.university.lcl.'}])
+
+  def testMakeRecordsFromZoneWithIncludes(self):
+    self.assertRaises(zone_importer_lib.IncludeError, zone_importer_lib.ZoneImport, 
+        BAD_INCLUDES_ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.lcl')
+
+    importer_instance = zone_importer_lib.ZoneImport(
+        INCLUDES_ZONE_FILE, CONFIG_FILE, u'sharrell', u'external', u'sub.university.lcl')
+    importer_instance.MakeRecordsFromZone()
+    self.assertEquals(self.core_instance.ListRecords(record_type=u'soa'),
+                      [{u'serial_number': 795, u'refresh_seconds': 10800,
+                        'target': u'@',
+                        u'name_server': u'ns.university.lcl.',
+                        u'retry_seconds': 3600, 'ttl': 3600,
+                        u'minimum_seconds': 86400, 'record_type': u'soa',
+                        'view_name': u'external', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl',
+                        u'admin_email': u'hostmaster.ns.university.lcl.',
+                        u'expiry_seconds': 3600000}])
+    self.assertEquals(self.core_instance.ListRecords(record_type=u'ns'),
+                      [{'target': u'@',
+                        u'name_server': u'ns.sub.university.lcl.', 'ttl': 3600,
+                        'record_type': u'ns', 'view_name': u'external',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl'},
+                       {'target': u'@',
+                        u'name_server': u'ns2.sub.university.lcl.', 'ttl': 3600,
+                        'record_type': u'ns', 'view_name': u'external',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl'}])
+    self.assertEquals(self.core_instance.ListRecords(record_type=u'mx'),
+                      [{'target': u'@', 'ttl': 3600,
+                        u'priority': 10, 'record_type': u'mx',
+                        'view_name': u'external', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl',
+                        u'mail_server': u'mail1.sub.university.lcl.'},
+                       {'target': u'@', 'ttl': 3600,
+                        u'priority': 20, 'record_type': u'mx',
+                        'view_name': u'external', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl',
+                        u'mail_server': u'mail2.sub.university.lcl.'}])
+    self.assertEquals(self.core_instance.ListRecords(record_type=u'txt'),
+                      [{'target': u'@', 'ttl': 3600,
+                        'record_type': u'txt', 'view_name': u'external',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl',
+                        u'quoted_text': u'"Contact 1:  Stephen Harrell '
+                                        u'(sharrell@university.lcl)"'}])
+    records_list = self.core_instance.ListRecords(record_type=u'a')
+    self.assertTrue({'target': u'localhost', 'ttl': 3600,
+                     'record_type': u'a', 'view_name': u'external',
+                     'last_user': u'sharrell',
+                     'zone_name': u'sub.university.lcl',
+                     u'assignment_ip': u'127.0.0.1'} in records_list)
+    self.assertTrue({'target': u'desktop-1', 'ttl': 3600,
+                     'record_type': u'a', 'view_name': u'external',
+                     'last_user': u'sharrell',
+                     'zone_name': u'sub.university.lcl',
+                     u'assignment_ip': u'192.168.1.100'} in records_list)
+    self.assertTrue({'target': u'@', 'ttl': 3600,
+                      'record_type': u'a', 'view_name': u'external',
+                      'last_user': u'sharrell',
+                      'zone_name': u'sub.university.lcl',
+                      u'assignment_ip': u'192.168.0.1'} in records_list)
+    self.assertEquals(self.core_instance.ListRecords(record_type=u'cname'),
+                      [{'target': u'www', 'ttl': 3600,
+                        'record_type': u'cname', 'view_name': u'external',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl',
+                        u'assignment_host': u'sub.university.lcl.'},
+                       {'target': u'www.data', 'ttl': 3600,
+                        'record_type': u'cname', 'view_name': u'external',
+                        'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl',
+                        u'assignment_host': u'ns.university.lcl.'}])
+    self.assertEquals(self.core_instance.ListRecords(record_type=u'hinfo'), 
+                      [{'target': u'ns2', 'ttl': 3600,
+                        u'hardware': u'PC', 'record_type': u'hinfo',
+                        'view_name': u'external', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl', u'os': u'NT'}])
+    self.assertEquals(self.core_instance.ListRecords(record_type=u'aaaa'),
+                      [{'target': u'desktop-1', 'ttl': 3600, 'record_type':
+                        u'aaaa', 'view_name': u'external', 'last_user': u'sharrell',
+                        'zone_name': u'sub.university.lcl', u'assignment_ip':
+                        u'3ffe:0800:0000:0000:02a8:79ff:fe32:1982'}])
 
 if( __name__ == '__main__' ):
   unittest.main()
