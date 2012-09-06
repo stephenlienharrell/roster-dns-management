@@ -243,22 +243,22 @@ class TestZoneVerify(unittest.TestCase):
  
     #Checking output of dnszoneverify
     command = os.popen('python %s -f test_data/test_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
+                       '-s %s -p %s -c %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
+                                        self.port, CONFIG_FILE))
     self.assertEqual(command.read(), 
-                     'Able to verify 15 records.\nUnable to verify 0 records.\n')
+                     'Able to verify 17 records.\nUnable to verify 0 records.\n')
     command.close()
     command = os.popen('python %s -f test_data/test_reverse_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
+                       '-s %s -p %s -c %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
+                                        self.port, CONFIG_FILE))
     self.assertEqual(command.read(), 
-                     'Able to verify 5 records.\nUnable to verify 0 records.\n')
+                     'Able to verify 6 records.\nUnable to verify 0 records.\n')
     command.close()
     command = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
+                       '-s %s -p %s -c %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
+                                        self.port, CONFIG_FILE))
     self.assertEqual(command.read(), 
-                     'Able to verify 4 records.\nUnable to verify 0 records.\n')
+                     'Able to verify 5 records.\nUnable to verify 0 records.\n')
     command.close()
 
   def testErrors(self):
@@ -318,68 +318,70 @@ class TestZoneVerify(unittest.TestCase):
     command.close()
 
     command = os.popen('python %s -f test_data/test_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
+                       '-s %s -p %s -c %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
+                                        self.port, CONFIG_FILE))
     self.assertEqual(command.read(),
         'Able to verify 0 records.\n'
-        'Unable to verify 15 records.\n'
+        'Unable to verify 17 records.\n'
         '\n'
         'Unverifiable records:\n'
-        'sub.university.lcl. IN SOA ns.university.lcl. hostmaster.ns.university.lcl. 794 10800 3600 3600000 86400\n'
-        'sub.university.lcl. IN NS ns2.sub.university.lcl.\n'
-        'sub.university.lcl. IN MX 20 mail2.sub.university.lcl.\n'
-        'sub.university.lcl. IN TXT "Contact 1:  Stephen Harrell (sharrell@university.lcl)"\n'
-        'sub.university.lcl. IN A 192.168.0.1\n'
-        'ns.sub.university.lcl. IN A 192.168.1.103\n'
-        'desktop-1.sub.university.lcl. IN AAAA 3ffe:800::2a8:79ff:fe32:1982\n'
-        'desktop-1.sub.university.lcl. IN A 192.168.1.100\n'
-        'ns2.sub.university.lcl. IN A 192.168.1.104\n'
-        'ns2.sub.university.lcl. IN HINFO "PC" "NT"\n'
-        'www.sub.university.lcl. IN CNAME sub.university.lcl.\n'
-        'localhost.sub.university.lcl. IN A 127.0.0.1\n'
-        'www.data.sub.university.lcl. IN CNAME ns.university.lcl.\n'
-        'mail1.sub.university.lcl. IN A 192.168.1.101\n'
-        'mail2.sub.university.lcl. IN A 192.168.1.102\n')
+        '{u\'record_arguments\': {u\'refresh_seconds\': 10800L, u\'expiry_seconds\': 3600000L, u\'name_server\': u\'ns.university.lcl.\', u\'minimum_seconds\': 86400L, u\'retry_seconds\': 3600L, u\'serial_number\': 794L, u\'admin_email\': u\'hostmaster.ns.university.lcl.\'}, u\'record_type\': u\'soa\', u\'ttl\': 3600L, u\'record_target\': u\'@\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'name_server\': u\'ns.sub.university.lcl.\'}, u\'record_type\': u\'ns\', u\'ttl\': 3600L, u\'record_target\': u\'@\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'name_server\': u\'ns2.sub.university.lcl.\'}, u\'record_type\': u\'ns\', u\'ttl\': 3600L, u\'record_target\': u\'@\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'priority\': 10, u\'mail_server\': u\'mail1.sub.university.lcl.\'}, u\'record_type\': u\'mx\', u\'ttl\': 3600L, u\'record_target\': u\'@\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'priority\': 20, u\'mail_server\': u\'mail2.sub.university.lcl.\'}, u\'record_type\': u\'mx\', u\'ttl\': 3600L, u\'record_target\': u\'@\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'quoted_text\': u\'"Contact 1:  Stephen Harrell (sharrell@university.lcl)"\'}, u\'record_type\': u\'txt\', u\'ttl\': 3600L, u\'record_target\': u\'@\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_ip\': u\'192.168.0.1\'}, u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': u\'@\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_ip\': u\'192.168.1.103\'}, u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': u\'ns\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_ip\': u\'3ffe:0800:0000:0000:02a8:79ff:fe32:1982\'}, u\'record_type\': u\'aaaa\', u\'ttl\': 3600L, u\'record_target\': u\'desktop-1\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_ip\': u\'192.168.1.100\'}, u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': u\'desktop-1\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_ip\': u\'192.168.1.104\'}, u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': u\'ns2\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'hardware\': u\'PC\', u\'os\': u\'NT\'}, u\'record_type\': u\'hinfo\', u\'ttl\': 3600L, u\'record_target\': u\'ns2\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_host\': u\'sub.university.lcl.\'}, u\'record_type\': u\'cname\', u\'ttl\': 3600L, u\'record_target\': u\'www\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_ip\': u\'127.0.0.1\'}, u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': u\'localhost\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_host\': u\'ns.university.lcl.\'}, u\'record_type\': u\'cname\', u\'ttl\': 3600L, u\'record_target\': u\'www.data\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n{u\'record_arguments\': {u\'assignment_ip\': u\'192.168.1.101\'}, u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': u\'mail1\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n'
+        '{u\'record_arguments\': {u\'assignment_ip\': u\'192.168.1.102\'}, u\'record_type\': u\'a\', u\'ttl\': 3600L, u\'record_target\': u\'mail2\', u\'record_zone_name\': None, u\'record_view_dependency\': None}\n')
     command.close()
 
     command = os.popen('python %s -f test_data/test_reverse_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
+                       '-s %s -p %s -c %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
+                                        self.port, CONFIG_FILE))
     self.assertEqual(command.read(),
-        'Able to verify 0 records.\n'
-        'Unable to verify 5 records.\n'
-        '\n'
-        'Unverifiable records:\n'
-        '0.168.192.in-addr.arpa. IN SOA ns.university.lcl. hostmaster.university.lcl. 4 10800 3600 3600000 86400\n'
-        '0.168.192.in-addr.arpa. IN NS ns2.university.lcl.\n'
-        '1.0.168.192.in-addr.arpa. IN PTR router.university.lcl.\n'
-        '11.0.168.192.in-addr.arpa. IN PTR desktop-1.university.lcl.\n'
-        '12.0.168.192.in-addr.arpa. IN PTR desktop-2.university.lcl.\n')
+        "Able to verify 0 records.\n"
+        "Unable to verify 6 records.\n"
+        "\n"
+        "Unverifiable records:\n"
+        "{u'record_arguments': {u'refresh_seconds': 10800L, u'expiry_seconds': 3600000L, u'name_server': u'ns.university.lcl.', u'minimum_seconds': 86400L, u'retry_seconds': 3600L, u'serial_number': 4L, u'admin_email': u'hostmaster.university.lcl.'}, u'record_type': u'soa', u'ttl': 86400L, u'record_target': u'@', u'record_zone_name': None, u'record_view_dependency': None}\n"
+        "{u'record_arguments': {u'name_server': u'ns.university.lcl.'}, u'record_type': u'ns', u'ttl': 86400L, u'record_target': u'@', u'record_zone_name': None, u'record_view_dependency': None}\n"
+        "{u'record_arguments': {u'name_server': u'ns2.university.lcl.'}, u'record_type': u'ns', u'ttl': 86400L, u'record_target': u'@', u'record_zone_name': None, u'record_view_dependency': None}\n"
+        "{u'record_arguments': {u'assignment_host': u'router.university.lcl.'}, u'record_type': u'ptr', u'ttl': 86400L, u'record_target': u'1', u'record_zone_name': None, u'record_view_dependency': None}\n"
+        "{u'record_arguments': {u'assignment_host': u'desktop-1.university.lcl.'}, u'record_type': u'ptr', u'ttl': 86400L, u'record_target': u'11', u'record_zone_name': None, u'record_view_dependency': None}\n"
+        "{u'record_arguments': {u'assignment_host': u'desktop-2.university.lcl.'}, u'record_type': u'ptr', u'ttl': 86400L, u'record_target': u'12', u'record_zone_name': None, u'record_view_dependency': None}\n")
     command.close()
     command = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
+                       '-s %s -p %s -c %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
+                                        self.port, CONFIG_FILE))
     self.assertEqual(command.read(), 
-                     'Able to verify 4 records.\nUnable to verify 0 records.\n')
+                     'Able to verify 5 records.\nUnable to verify 0 records.\n')
     command.close()
 
     command = os.popen('python %s -f test_data/no_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER,
-                                        self.port))
+                       '-s %s -p %s -c %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER,
+                                        self.port, CONFIG_FILE))
     self.assertEqual(command.read(),
         "Unable to read file test_data/no_zone.db: "
         "[Errno 2] No such file or directory: 'test_data/no_zone.db'\n")
     command.close()
 
     command = os.popen('python %s -f test_data/test_zone.db '
-                       '-p %s' % (ZONE_VERIFY_EXEC, self.port))
+                       '-p %s -c %s' % (ZONE_VERIFY_EXEC, self.port, CONFIG_FILE))
     self.assertEqual(command.read(),
                      'Must specify -s/--server flag.\n')
     command.close()
 
     command = os.popen('python %s '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER,
-                       self.port))
+                       '-s %s -p %s -c %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER,
+                       self.port, CONFIG_FILE))
     self.assertEqual(command.read(),
         'Must specify -f/--file flag.\n')
     command.close()

@@ -223,15 +223,41 @@ class BindTreeExport(object):
 
       temp_tar_file_name = 'temp_file.tar.bz2'
       tar_file = tarfile.open(temp_tar_file_name, 'w:bz2')
-      if( len(cooked_data) == 0 ):
+      if( len(cooked_data['dns_server_sets']) == 0 ):
         raise Error('No dns server sets found.')
-      for dns_server_set in cooked_data:
-        for dns_server in cooked_data[dns_server_set]['dns_servers']:
+      for dns_server_set in cooked_data['dns_server_sets']:
+        for dns_server in cooked_data['dns_server_sets'][dns_server_set][
+            'dns_servers']:
           dummy_config_file = StringIO.StringIO()
           config_parser = ConfigParser.SafeConfigParser()
           ## Make Files
           named_directory = '%s/%s' % (
               self.root_config_dir.rstrip('/'), dns_server)
+
+          # Write server info file
+          info_file = '%s/%s/%s.info' % (self.root_config_dir.rstrip('/'),
+                                         dns_server, dns_server)
+          dummy_info_file = StringIO.StringIO()
+          info_parser = ConfigParser.SafeConfigParser()
+          if( not os.path.exists(info_file) ):
+            info_parser.add_section(dns_server)
+            info_parser.add_section('tools')
+            # TODO change below to use actual server address
+            info_parser.set(dns_server, 'ssh_host', '%s@%s' % (cooked_data[
+                'dns_servers'][dns_server]['dns_server_ssh_username'],
+                'localhost:22'))
+            info_parser.set(dns_server, 'bind_version', '')
+            info_parser.set(dns_server, 'bind_dir', cooked_data['dns_servers'][
+                dns_server]['dns_server_remote_bind_directory'])
+            info_parser.set(dns_server, 'test_dir', cooked_data['dns_servers'][
+                dns_server]['dns_server_remote_test_directory'])
+            info_parser.set(dns_server, 'named-checkconf', '')
+            info_parser.set(dns_server, 'named-checkzone', '')
+            info_parser.set(dns_server, 'named-compilezone', '')
+            info_parser.set(dns_server, 'tar', 'True')
+          info_parser.write(dummy_info_file)
+          self.AddToTarFile(tar_file, info_file, dummy_info_file.getvalue())
+
           if( not os.path.exists(named_directory) ):
             os.makedirs(named_directory)
           dns_server_directory = ('%s/%s/named' % (
@@ -241,30 +267,33 @@ class BindTreeExport(object):
           config_file = '%s/%s_config' % (dns_server_directory, dns_server)
           config_parser.add_section('dns_server_set_parameters')
           config_parser.set('dns_server_set_parameters', 'dns_servers',
-                            ','.join(cooked_data[dns_server_set][
-                                'dns_servers']))
+                            ','.join(cooked_data['dns_server_sets'][
+                                dns_server_set]['dns_servers']))
           config_parser.set('dns_server_set_parameters', 'dns_server_set_name',
                             dns_server_set)
           config_parser.write(dummy_config_file)
           self.AddToTarFile(tar_file, config_file, dummy_config_file.getvalue())
-          if( len(cooked_data[dns_server_set]['views']) == 0 ):
+          if( len(cooked_data['dns_server_sets'][dns_server_set][
+              'views']) == 0 ):
             raise Error('Server set %s has no views.' % dns_server_set)
-          for view in cooked_data[dns_server_set]['views']:
+          for view in cooked_data['dns_server_sets'][dns_server_set]['views']:
             view_directory = '%s/%s' % (dns_server_directory, view)
             if( not os.path.exists(view_directory) ):
               os.makedirs(view_directory)
-            if( len(cooked_data[dns_server_set]['views'][view]['zones']) == 0 ):
+            if( len(cooked_data['dns_server_sets'][dns_server_set]['views'][
+                view]['zones']) == 0 ):
               raise Error('Server set %s has no zones in %s view.' % (
                   dns_server_set, view))
-            for zone in cooked_data[dns_server_set]['views'][view]['zones']:
+            for zone in cooked_data['dns_server_sets'][dns_server_set]['views'][
+                view]['zones']:
               if( view not in zone_view_assignments[zone] ):
                 continue
               zone_file = '%s/%s/%s.db' % (dns_server_directory, view, zone)
               zone_file_string = zone_exporter_lib.MakeZoneString(
-                  cooked_data[dns_server_set]['views'][view]['zones'][zone][
-                      'records'],
-                  cooked_data[dns_server_set]['views'][view]['zones'][zone][
-                      'zone_origin'],
+                  cooked_data['dns_server_sets'][dns_server_set]['views'][view][
+                      'zones'][zone]['records'],
+                  cooked_data['dns_server_sets'][dns_server_set]['views'][view][
+                      'zones'][zone]['zone_origin'],
                   record_argument_definitions, zone, view)
               self.AddToTarFile(tar_file, zone_file, zone_file_string)
           named_conf_file = '%s/named.conf' % named_directory.rstrip('/')
@@ -438,11 +467,12 @@ class BindTreeExport(object):
           named_conf_lines.append('\t%s;' % cidr)
         named_conf_lines.append('};\n')
 
-    for view_name in cooked_data[dns_server_set]['views']:
+    for view_name in cooked_data['dns_server_sets'][dns_server_set]['views']:
       named_conf_lines.append('view "%s" {' % view_name)
       clients = []
       found_acl = False
-      for acl_name in cooked_data[dns_server_set]['views'][view_name]['acls']:
+      for acl_name in cooked_data['dns_server_sets'][dns_server_set]['views'][
+          view_name]['acls']:
         for view_acl_assignment in data['view_acl_assignments']:
           if( view_acl_assignment['view_acl_assignments_view_name'] ==
               view_name ):
@@ -457,16 +487,17 @@ class BindTreeExport(object):
       if( clients == [] and found_acl ):
         clients = [u'any;']
       named_conf_lines.append('\tmatch-clients { %s };' % ' '.join(clients))
-      for zone in cooked_data[dns_server_set]['views'][view_name]['zones']:
+      for zone in cooked_data['dns_server_sets'][dns_server_set]['views'][
+          view_name]['zones']:
         named_conf_lines.append('\tzone "%s" {' % (
-          cooked_data[dns_server_set]['views'][view_name]['zones'][zone][
-              'zone_origin'].rstrip('.')))
-        named_conf_lines.append('\t\ttype %s;' % cooked_data[
+          cooked_data['dns_server_sets'][dns_server_set]['views'][view_name][
+              'zones'][zone]['zone_origin'].rstrip('.')))
+        named_conf_lines.append('\t\ttype %s;' % cooked_data['dns_server_sets'][
             dns_server_set]['views'][view_name]['zones'][zone]['zone_type'])
         named_conf_lines.append('\t\tfile "%s/named/%s/%s.db";' % (
             self.named_dir.rstrip('/'), view_name, zone))
-        zone_options = cooked_data[dns_server_set]['views'][view_name][
-            'zones'][zone]['zone_options'].replace('\n', '\n\t\t')
+        zone_options = cooked_data['dns_server_sets'][dns_server_set]['views'][
+            view_name]['zones'][zone]['zone_options'].replace('\n', '\n\t\t')
         named_conf_lines.append('\t\t%s' % zone_options.rsplit('\n\t\t', 1)[0])
         named_conf_lines.append('\t};')
       named_conf_lines.append('};')
@@ -533,6 +564,10 @@ class BindTreeExport(object):
     dns_server_set_dict = self.db_instance.GetEmptyRowDict('dns_server_sets')
     data['dns_server_sets'] = self.db_instance.ListRow('dns_server_sets',
                                                        dns_server_set_dict)
+
+    dns_servers_dict = self.db_instance.GetEmptyRowDict('dns_servers')
+    data['dns_servers'] = self.db_instance.ListRow('dns_servers',
+                                                   dns_servers_dict)
 
     view_dependency_assignments_dict = self.db_instance.GetEmptyRowDict(
         'view_dependency_assignments')
@@ -663,17 +698,20 @@ class BindTreeExport(object):
                     'zone_origin': u'example.', 'zone_type': u'master'}}}}}
     """
     cooked_data = {}
+    cooked_data['dns_server_sets'] = {}
+    cooked_data['dns_servers'] = {}
     sorted_records = self.SortRecords(data['records'])
 
     for dns_server_set in data['dns_server_sets']:
       dns_server_set_name = dns_server_set['dns_server_set_name']
 
-      if( not dns_server_set_name in cooked_data ):
-        cooked_data[dns_server_set_name] = {}
-      if( not 'dns_servers' in cooked_data[dns_server_set_name] ):
-        cooked_data[dns_server_set_name]['dns_servers'] = []
-      if( not 'views' in cooked_data[dns_server_set_name] ):
-        cooked_data[dns_server_set_name]['views'] = {}
+      if( not dns_server_set_name in cooked_data['dns_server_sets'] ):
+        cooked_data['dns_server_sets'][dns_server_set_name] = {}
+      if( not 'dns_servers' in cooked_data['dns_server_sets'][
+          dns_server_set_name] ):
+        cooked_data['dns_server_sets'][dns_server_set_name]['dns_servers'] = []
+      if( not 'views' in cooked_data['dns_server_sets'][dns_server_set_name] ):
+        cooked_data['dns_server_sets'][dns_server_set_name]['views'] = {}
 
       for dns_server_set_assignment in data['dns_server_set_assignments']:
         if( dns_server_set_assignment[
@@ -681,11 +719,26 @@ class BindTreeExport(object):
             dns_server_set['dns_server_set_name'] and
             dns_server_set_assignment[
                 'dns_server_set_assignments_dns_server_name']
-            not in cooked_data[dns_server_set_name]['dns_servers'] ):
+            not in cooked_data['dns_server_sets'][dns_server_set_name][
+                'dns_servers'] ):
 
-          cooked_data[dns_server_set_name]['dns_servers'].append(
-              dns_server_set_assignment[
+          cooked_data['dns_server_sets'][dns_server_set_name][
+              'dns_servers'].append(dns_server_set_assignment[
                   'dns_server_set_assignments_dns_server_name'])
+
+    # Insert dns_servers into cooked_data
+    for dns_server in data['dns_servers']:
+      dns_server_name = dns_server['dns_server_name']
+      if( not dns_server_name in cooked_data['dns_servers'] ):
+        cooked_data['dns_servers'][dns_server_name] = {}
+      cooked_data['dns_servers'][dns_server_name]['dns_server_ssh_username'] = (
+          dns_server['dns_server_ssh_username'])
+      cooked_data['dns_servers'][dns_server_name][
+          'dns_server_remote_test_directory'] = dns_server[
+              'dns_server_remote_test_directory']
+      cooked_data['dns_servers'][dns_server_name][
+          'dns_server_remote_bind_directory'] = dns_server[
+              'dns_server_remote_bind_directory']
 
       for dns_server_set_view_assignment in data[
             'dns_server_set_view_assignments']:
@@ -698,17 +751,19 @@ class BindTreeExport(object):
           for view_dependency in data['view_dependency_assignments']:
             if( view_name == view_dependency[
                   'view_dependency_assignments_view_name'] ):
-              if( not view_name in cooked_data[
+              if( not view_name in cooked_data['dns_server_sets'][
                     dns_server_set_name]['views'] ):
-                cooked_data[dns_server_set_name]['views'][view_name] = {}
-              if( not 'acls' in cooked_data[
+                cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                    view_name] = {}
+              if( not 'acls' in cooked_data['dns_server_sets'][
                     dns_server_set_name]['views'][view_name] ):
-                cooked_data[dns_server_set_name]['views'][view_name][
+                cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                    view_name][
                     'acls'] = self.ListACLNamesByView(data, view_name)
-              if( not 'zones' in cooked_data[
+              if( not 'zones' in cooked_data['dns_server_sets'][
                     dns_server_set_name]['views'][view_name] ):
-                cooked_data[dns_server_set_name]['views'][view_name][
-                    'zones'] = {}
+                cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                    view_name]['zones'] = {}
 
               for zone in data['zone_view_assignments']:
                 view_dependency_name = view_dependency[
@@ -717,14 +772,15 @@ class BindTreeExport(object):
                 if( view_dependency_name == zone[
                       'zone_view_assignments_view_dependency'] and
                       (zone_name, view_dependency_name) in sorted_records ):
-                  if( not zone_name in cooked_data[
+                  if( not zone_name in cooked_data['dns_server_sets'][
                         dns_server_set_name]['views'][view_name]['zones'] ):
-                    cooked_data[dns_server_set_name]['views'][view_name][
-                        'zones'][zone_name] = {}
-                  if( 'records' not in cooked_data[dns_server_set_name][
-                          'views'][view_name]['zones'][zone_name] ):
-                    cooked_data[dns_server_set_name]['views'][view_name][
-                        'zones'][zone_name]['records'] = []
+                    cooked_data['dns_server_sets'][dns_server_set_name][
+                        'views'][view_name]['zones'][zone_name] = {}
+                  if( 'records' not in cooked_data['dns_server_sets'][
+                      dns_server_set_name]['views'][view_name]['zones'][
+                          zone_name] ):
+                    cooked_data['dns_server_sets'][dns_server_set_name][
+                        'views'][view_name]['zones'][zone_name]['records'] = []
 
                   for record in sorted_records[(
                       zone_name, view_dependency_name)].values():
@@ -737,19 +793,22 @@ class BindTreeExport(object):
                           record['assignment_host'])
                     except (KeyError):
                       pass
-                  cooked_data[dns_server_set_name]['views'][view_name][
-                      'zones'][zone_name]['records'].extend(sorted_records[(
-                          zone_name, view_dependency_name)].values())
+                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                      view_name]['zones'][zone_name][
+                          'records'].extend(sorted_records[(
+                              zone_name, view_dependency_name)].values())
 
-                  cooked_data[dns_server_set_name]['views'][view_name][
-                      'zones'][zone_name]['zone_origin'] = (
+                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                      view_name]['zones'][zone_name]['zone_origin'] = (
                           punycode_lib.Uni2Puny(zone['zone_origin']))
 
-                  cooked_data[dns_server_set_name]['views'][view_name][
-                      'zones'][zone_name]['zone_options'] = iscpy.Deserialize(zone['zone_options'])
+                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                      view_name]['zones'][zone_name][
+                          'zone_options'] = iscpy.Deserialize(zone[
+                              'zone_options'])
 
-                  cooked_data[dns_server_set_name]['views'][view_name][
-                      'zones'][zone_name]['zone_type'] = zone[
+                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                      view_name]['zones'][zone_name]['zone_type'] = zone[
                           'zone_view_assignments_zone_type']
 
     return cooked_data

@@ -229,108 +229,40 @@ class TestZoneVerify(unittest.TestCase):
             TEST_DNS_SERVER) in lines)
     command.close()
 
-    forward_zone_string = open('test_data/test_zone.db', 'r').read()
+    all_zones = self.core_instance.ListZones(view_name=u'test_view')
+ 
+    #Creating a fake record to make sure DnsQuery can detect bad records
+    fake_record = {'target': u'fake_machine', 
+                  u'record_arguments': {u'assignment_ip': u'192.168.5.5'},
+                   'record_type': u'a'}
+    for zone in all_zones:
+      zone_records = self.core_instance.ListRecords(zone_name=zone)
+      new_zone_records = []
+      for record in zone_records:
 
-    #Appending some bogus records to the zone string to test that they come
-    #back in the bad_records part of the DnsQuery() return.
-    forward_zone_string = (
-        '%s\n'
-        'ww1       in  cname sub.university.lcl.\n'
-        'desktop-2 in  aaaa  3FFE:800::2A8:79FF:FE32:1983\n'
-        'desktop-3 in  a     192.168.1.123\n') % forward_zone_string
+        #core.ListRecords returns a dictionary that does not have a key 
+        #record_arguments, unlike CoreHelpers.CreateRecordsFromZoneObject,
+        #so we need to build the record_arguments dictionary
+        record_args_dict = self.core_instance.GetEmptyRecordArgsDict(
+            record['record_type'])
+        for key in record_args_dict:
+          record_args_dict[key] = record[key]
+          del record[key]
+        record[u'record_arguments'] = record_args_dict
+        new_zone_records.append(record)
+      new_zone_records.append(fake_record)
 
-    query_return = dns_query_lib.DnsQuery(forward_zone_string, 
-        TEST_DNS_SERVER, self.port)
-    self.assertEqual(query_return,
-         #good_records
-       ([u'sub.university.lcl. IN SOA ns.university.lcl. '
-         u'hostmaster.ns.university.lcl. 10800 3600 3600000 86400', 
-         u'sub.university.lcl. IN NS ns2.sub.university.lcl.', 
-         u'sub.university.lcl. IN MX 20 mail2.sub.university.lcl.', 
-         u'sub.university.lcl. IN TXT "Contact 1:  '
-         u'Stephen Harrell (sharrell@university.lcl)"', 
-         u'sub.university.lcl. IN A 192.168.0.1', 
-         u'ns.sub.university.lcl. IN A 192.168.1.103', 
-         u'desktop-1.sub.university.lcl. IN AAAA 3ffe:800::2a8:79ff:fe32:1982', 
-         u'desktop-1.sub.university.lcl. IN A 192.168.1.100', 
-         u'ns2.sub.university.lcl. IN A 192.168.1.104', 
-         u'ns2.sub.university.lcl. IN HINFO "PC" "NT"', 
-         u'www.sub.university.lcl. IN CNAME sub.university.lcl.', 
-         u'localhost.sub.university.lcl. IN A 127.0.0.1', 
-         u'www.data.sub.university.lcl. IN CNAME ns.university.lcl.', 
-         u'mail1.sub.university.lcl. IN A 192.168.1.101', 
-         u'mail2.sub.university.lcl. IN A 192.168.1.102'], 
+      query_return = dns_query_lib.DnsQuery(new_zone_records, 
+          TEST_DNS_SERVER, self.port, 
+          all_zones[zone][u'test_view']['zone_origin']) 
 
-         #bad_records
-        [u'desktop-2.sub.university.lcl. IN AAAA 3ffe:800::2a8:79ff:fe32:1983', 
-         u'desktop-3.sub.university.lcl. IN A 192.168.1.123', 
-         u'ww1.sub.university.lcl. IN CNAME sub.university.lcl.']))
+      #asserting DnsQuery returned the same number of good records 
+      #as we sent it.
+      self.assertEqual(len(query_return[0]), len(zone_records))
 
-    reverse_zone_string = open('test_data/test_reverse_zone.db', 'r').read()
+      #asserting DnsQuery returns fake_record
+      self.assertEqual(query_return[1], [fake_record])
 
-    #Appending some bogus records to the zone string to test that they come
-    #back in the bad_records part of the DnsQuery() return.
-    reverse_zone_string = (
-        '%s\n'
-        '13 in  ptr desktop-3.university.lcl.\n') % reverse_zone_string
-
-    query_return = dns_query_lib.DnsQuery(reverse_zone_string, 
-        TEST_DNS_SERVER, self.port)
-    self.assertEqual(query_return, 
-         #good_records
-        ([u'0.168.192.in-addr.arpa. IN SOA ns.university.lcl. '
-          u'hostmaster.university.lcl. 10800 3600 3600000 86400', 
-          u'0.168.192.in-addr.arpa. IN NS ns2.university.lcl.', 
-          u'1.0.168.192.in-addr.arpa. IN PTR router.university.lcl.', 
-          u'11.0.168.192.in-addr.arpa. IN PTR desktop-1.university.lcl.', 
-          u'12.0.168.192.in-addr.arpa. IN PTR desktop-2.university.lcl.'], 
-         
-         #bad_records
-         [u'13.0.168.192.in-addr.arpa. IN PTR desktop-3.university.lcl.']))
-
-    #One line way of taking test_zone.db and ripping out the first line.
-    no_origin_zone_string = '\n'.join(
-        open('test_data/test_zone.db', 'r').read().split('\n')[1:])
-
-    #DnsQuery should raise that there is no zone origin
-    self.assertRaises(roster_core.errors.UnexpectedDataError, 
-        dns_query_lib.DnsQuery, no_origin_zone_string, TEST_DNS_SERVER, 
-        self.port)
-
-    #Now we're going to test it by using the zone_origin flag
-    query_return = dns_query_lib.DnsQuery(no_origin_zone_string, 
-        TEST_DNS_SERVER, self.port, zone_origin='sub.university.lcl.')
-    self.assertEqual(query_return,
-         #good_records
-       ([u'sub.university.lcl. IN SOA ns.university.lcl. '
-         u'hostmaster.ns.university.lcl. 10800 3600 3600000 86400', 
-         u'sub.university.lcl. IN NS ns2.sub.university.lcl.', 
-         u'sub.university.lcl. IN MX 20 mail2.sub.university.lcl.', 
-         u'sub.university.lcl. IN TXT "Contact 1:  '
-         u'Stephen Harrell (sharrell@university.lcl)"', 
-         u'sub.university.lcl. IN A 192.168.0.1', 
-         u'ns.sub.university.lcl. IN A 192.168.1.103', 
-         u'desktop-1.sub.university.lcl. IN AAAA 3ffe:800::2a8:79ff:fe32:1982', 
-         u'desktop-1.sub.university.lcl. IN A 192.168.1.100', 
-         u'ns2.sub.university.lcl. IN A 192.168.1.104', 
-         u'ns2.sub.university.lcl. IN HINFO "PC" "NT"', 
-         u'www.sub.university.lcl. IN CNAME sub.university.lcl.', 
-         u'localhost.sub.university.lcl. IN A 127.0.0.1', 
-         u'www.data.sub.university.lcl. IN CNAME ns.university.lcl.', 
-         u'mail1.sub.university.lcl. IN A 192.168.1.101', 
-         u'mail2.sub.university.lcl. IN A 192.168.1.102'],
-         [])) 
-
-    #A zone file with an invalid record type, (i.e. SPF)
-    #NOTE: SPF is a valid DNS record type. Just not one that Roster supports
-    #at this time. If it is a truly invalid record type, dnspython will raise
-    #an error.
-    invalid_record_type_zone_string = (
-        '$ORIGIN    sub.university.lcl.\n'
-        'test_machine IN SPF 192.168.0.1\n')
-    self.assertRaises(roster_core.errors.UnexpectedDataError, 
-        dns_query_lib.DnsQuery, invalid_record_type_zone_string, TEST_DNS_SERVER, 
-        self.port)
 
 if( __name__ == '__main__' ):
       unittest.main()
