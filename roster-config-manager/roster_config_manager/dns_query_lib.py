@@ -38,150 +38,205 @@ __version__ = '#TRUNK#'
 
 import dns.zone
 import dns.query
-import dns.exception
 
 import roster_core
+from roster_core import errors
 from roster_core import helpers_lib
 
 roster_core.core.CheckCoreVersionMatches(__version__)
 
-def DnsQuery(records, dns_server, dns_port, zone_origin):
+def DnsQuery(zone_file_string, dns_server, dns_port, zone_origin=None):
   """Queries a DNS server for all the records contained within the
-  supplied list of records.
+  supplied zone_file_string.
  
   Input:
-    records: list of record dictionaries
+    zone_file_string: string of a zone file.
     dns_server: IP Address or hostname of DNS server.
     dns_port: int of port to query DNS server on.
-    zone_origin: string of zone_origin
+    zone_origin: string of zone_origin to replace 
+      the $ORIGIN in zone_file_string.
  
     Output:
       (good_records, bad_records): a tuple of 2 lists,
       the first being all the records that were able to 
       be verified, the second being all the records unable
-      to be verified."""
+      to be verified.
+
+      example: ([u'0.168.192.in-addr.arpa. 86400 IN NS ns2.university.lcl.',
+                 u'1.0.168.192.in-addr.arpa. 86400 IN PTR router.university.lcl.',
+                 u'11.0.168.192.in-addr.arpa. 86400 IN PTR desktop-1.university.lcl.',
+                 u'12.0.168.192.in-addr.arpa. 86400 IN PTR desktop-2.university.lcl.'],
+
+                [u'13.0.168.192.in-addr.arpa. 86400 IN PTR desktop-3.university.lcl.'])
+
+    Raises:
+      errors.UnexpectedDataError: No zone origin supplied.
+      errors.UnexpectedDataError: Invalid record type.
+      errors.UnexpectedDataError: Invalid record class."""
+
   if( dns_server == 'localhost' ):
     dns_server = '127.0.0.1'
 
+  #If the ORIGIN redirective is not found, we ask for it
+  if( '$ORIGIN' not in zone_file_string and zone_origin is None ):
+    raise errors.UnexpectedDataError('No zone origin supplied.')
+
+  #Constructing the Zone object
+  else:
+    zone = dns.zone.from_text(zone_file_string, check_origin=False,
+        origin=zone_origin)
+
   good_records = []
-  record_types = {
-                   u'a':     dns.rdatatype.A,
-                   u'aaaa':  dns.rdatatype.AAAA,
-                   u'cname': dns.rdatatype.CNAME,
-                   u'soa':   dns.rdatatype.SOA,
-                   u'mx':    dns.rdatatype.MX,
-                   u'ns':    dns.rdatatype.NS,
-                   u'ptr':   dns.rdatatype.PTR,
-                   u'txt':   dns.rdatatype.TXT,
-                   u'hinfo': dns.rdatatype.HINFO,
-                   u'srv':   dns.rdatatype.SRV
-                 }
+  bad_records = []
+  zone_origin = str(zone.origin)
+  reverse_zone = False
+
+  #Determining if the zone is forward or reverse.
+  if( zone_origin.endswith('in-addr.arpa.') or
+      zone_origin.endswith('ip6.arpa.') ):
+    reverse_zone = True
+
+  #Making lookup tables so we can use the string values later
+  record_classes = {
+                     dns.rdataclass.IN:   'IN',
+                     dns.rdataclass.CH:   'CH',
+                     dns.rdataclass.HS:   'HS',
+                     dns.rdataclass.NONE: 'NONE',
+                     dns.rdataclass.ANY:  'ANY'
+                   }
+
+  record_types =   {
+                     dns.rdatatype.A:     'A',
+                     dns.rdatatype.AAAA:  'AAAA',
+                     dns.rdatatype.CNAME: 'CNAME',
+                     dns.rdatatype.SOA:   'SOA',
+                     dns.rdatatype.MX:    'MX',
+                     dns.rdatatype.NS:    'NS',
+                     dns.rdatatype.PTR:   'PTR',
+                     dns.rdatatype.TXT:   'TXT',
+                     dns.rdatatype.HINFO: 'HINFO',
+                     dns.rdatatype.SRV:   'SRV'
+                   }
 
   #Main loop, going through the zone records, querying the DNS server for them
-  for record in records:
-    server_responses = []
-    record_type = record['record_type']
-    rdtype = record_types[record_type]
-    record_arguments = record['record_arguments']
+  for record_tuple in zone.items():
+    record_target = unicode(record_tuple[0])
 
-    if( 'record_target' in record ):
-      record_target = record['record_target']
-    else:
-      record_target = record['target']
+    for record_set in record_tuple[1].rdatasets:
+      server_responses = []
+      for record_object in record_set.items:
 
-    #Setting query 
-    if( record_target == '@' ):
-      query = zone_origin
-    else:
-      query = '%s.%s' % (record_target, zone_origin)
+        #Setting record type, (example - TXT)
+        if( record_object.rdtype in record_types ):
+          record_type = record_types[record_object.rdtype]
+        else:
+          raise errors.UnexpectedDataError(
+              'Unknown record type: %s.\n %s' % (
+              dns.rdatatype.to_text(record_object.rdtype), record_object))
+
+        #Setting class type, (example - IN)
+        if( record_object.rdclass in record_classes ):
+          record_class = record_classes[record_object.rdclass]
+        else:
+          raise errors.UnexpectedDataError(
+              'Unknown class type: %s.\n %s' % (
+              dns.rdatatype.to_text(record_object.rdclass), record_object))
+
+        #Setting query 
+        if( record_target == '@' ):
+          query = zone_origin
+        else:
+          query = '%s.%s' % (record_target, zone_origin)
  
-    message = dns.message.make_query(query, rdtype=rdtype)
+        message = dns.message.make_query(query, rdtype=record_object.rdtype)
+        response = str(dns.query.udp(message, dns_server, 
+            port=int(dns_port), one_rr_per_rrset=True, timeout=60)).split('\n')
+        answers = response[
+            response.index(';ANSWER') + 1:response.index(';AUTHORITY')]
+        for answer in answers:
 
-    try:
-      response = dns.query.udp(message, dns_server, 
-          port=int(dns_port), one_rr_per_rrset=False, timeout=10)
-    except dns.exception.Timeout:
-      return ([], records)
+          #Stripping out the TTL because we don't care about it
+          answer_parts = answer.split(' ')
+          answer_parts.remove(answer_parts[1])
+          answer = ' '.join(answer_parts)
+          server_responses.append(answer)
 
-    answers = response.answer
+      #Building the "good response" string that we'll seach for later
+      #in the server responses. Certain record types require special syntax
 
-    #checking that record type and target match
-    for answer in answers:
-      if( int(answer.rdtype) == int(rdtype) and 
-          unicode(answer.name) == unicode(query) ):
-        break
-    else:
-      continue
+      if( record_type == 'AAAA' ):
+        #We need to do this so the server response looks the same as the
+        #good_response. I.e. 3fff:::::: is the same ip address as 3FFF::::::
+        #but '3fff:::::' != '3FFF::::::'
+        ip_address = helpers_lib.UnExpandIPV6(str(record_object).lower())
+        good_response = '%s %s %s %s' % (query, record_class, 
+            record_type, ip_address)
 
-    for answer_set in answers:
-      for answer in answer_set:
-        if( record_type == u'soa' ):
-          if( record_arguments[u'refresh_seconds'] == answer.refresh and 
-              record_arguments[u'expiry_seconds']  == answer.expire  and
-              record_arguments[u'minimum_seconds'] == answer.minimum and
-              record_arguments[u'retry_seconds']   == answer.retry   and
-              record_arguments[u'name_server'] == unicode(answer.mname) and 
-              record_arguments[u'admin_email'] == unicode(answer.rname) ):
-            good_records.append(record)
-            break
+      elif( record_type == 'SOA' and not reverse_zone ):
+        record_parts = str(record_object).split(' ')
+        if( record_parts[0].endswith('.') and record_parts[1].endswith('.') ):
+          good_response = '%s %s %s %s' % (query, record_class, 
+              record_type, str(record_object))
+        else:
+          record_parts[0] = '%s.%s' % (record_parts[0], zone_origin)
+          record_parts[1] = '%s.%s' % (record_parts[1], zone_origin)
+          new_record_object = ' '.join(record_parts)
+          good_response = '%s %s %s %s' % (query, record_class, 
+              record_type, str(new_record_object))
 
-        elif( record_type == u'a' ):
-          if( record_arguments[u'assignment_ip'] == answer.address ):
-            good_records.append(record)
-            break
+      elif( record_type == 'SOA' and reverse_zone ):
+        good_response = '%s %s %s %s' % (query, record_class, 
+            record_type, str(record_object))
 
-        elif( record_type == u'aaaa' ):
-          if( record_arguments[u'assignment_ip'] == helpers_lib.ExpandIPV6(
-                unicode(answer.address)) ):
-            good_records.append(record)
-            break
+      elif( record_type == 'CNAME' and not reverse_zone ):
+        if( str(record_object) == '@' ):
+          good_response = '%s %s %s %s' % (query, record_class, 
+              record_type, zone_origin)
+        else:
+          if( str(record_object).endswith('.') ):
+            good_response = '%s %s %s %s' % (query, record_class, 
+                record_type, str(record_object))
+          else:
+            good_response = '%s %s %s %s.%s' % (query, record_class, 
+                record_type, str(record_object), zone_origin)
 
-        elif( record_type == u'cname' ):
-          if( record_arguments[u'assignment_host'] == unicode(answer.target) ):
-            good_records.append(record)
-            break
+      elif( record_type in ['SRV', 'NS', 'MX'] and not reverse_zone ):
+        good_response = '%s %s %s %s.%s' % (query, record_class, 
+            record_type, str(record_object), zone_origin)
 
-        elif( record_type == u'ptr' ):
-          if( record_arguments[u'assignment_host'] == unicode(answer.target) ):
-            good_records.append(record)
-            break
+      elif( record_type == 'PTR' ):
+        if( str(record_object).endswith('.') ):
+          good_response = '%s %s %s %s' % (query, record_class, 
+              record_type, str(record_object))
+        else:
+          good_response = '%s %s %s %s.%s' % (query, record_class, 
+              record_type, str(record_object), zone_origin)
 
-        elif( record_type == u'mx' ):
-          if( record_arguments[u'priority']    == answer.preference and
-              record_arguments[u'mail_server'] == unicode(answer.exchange) ):
-            good_records.append(record)
-            break
+      else:
+        good_response = '%s %s %s %s' % (query, record_class, 
+            record_type, str(record_object))
 
-        elif( record_type == u'ns' ):
-          if( record_arguments[u'name_server'] == unicode(answer.target) ):
-            good_records.append(record)
-            break
+      #Checking for good_response
+      found_good_response = False
+      for server_response in server_responses:
 
-        elif( record_type == u'hinfo' ):
-          if( record_arguments[u'hardware'] == unicode(answer.cpu) and
-              record_arguments[u'os']       == unicode(answer.os) ):
-            good_records.append(record)
-            break
+        #Removing the soa serial because it might be incremented,
+        #so we don't compare it.
+        if( record_type == 'SOA' ):
+          good_response_parts = good_response.split(' ')
+          good_response_parts.remove(good_response_parts[5])
+          good_response = ' '.join(good_response_parts)
 
-        elif( record_type == u'txt' ):
-          if( record_arguments[u'quoted_text'] == u'"%s"' % (
-                answer.strings[0]) ):
-            good_records.append(record)
-            break
+          server_response_parts = server_response.split(' ')
+          server_response_parts.remove(server_response_parts[5])
+          server_response = ' '.join(server_response_parts)
 
-  #Takes all the records that never made it into good_records, and declares
-  #them as bad_records.
-  for record in good_records:
-    records.remove(record)
+        if( good_response == server_response ):
+          found_good_response = True
 
-  bad_records = records
-  
-  #This is purely for asthetic reasons. If you were to print bad_records,
-  #you'd see a bunch of None's which doesn't help you. It just clutters
-  #the screen.
-  for record in bad_records:
-    if( u'record_zone_name' in record ):
-      if( record[u'record_zone_name'] is None ):
-        del record[u'record_zone_name']
+      if( found_good_response ):
+        good_records.append(unicode(good_response))
+      else:
+        bad_records.append(unicode(good_response))
 
   return (good_records, bad_records)

@@ -222,6 +222,14 @@ class TestCoreHelpers(unittest.TestCase):
             u'domain.example.lcl', u'sub_domain',
             u'drumandbass.domain.example.lcl.',	view_name=u'test_view3')
 
+  def testFixHostname(self):
+    self.assertEqual(self.core_helper_instance._FixHostname(u'host', u'sub.university.lcl.'),
+                     u'host.sub.university.lcl.')
+    self.assertEqual(self.core_helper_instance._FixHostname(u'@', u'sub.university.lcl.'),
+                     u'sub.university.lcl.')
+    self.assertEqual(self.core_helper_instance._FixHostname(u'university.lcl.', u'sub.university.lcl.'),
+                     u'university.lcl.')
+
   def testAddFormattedRecords(self):    
     self.core_instance.MakeView(u'test_view4')
     self.core_instance.MakeView(u'test_view5')

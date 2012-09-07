@@ -114,6 +114,22 @@ class CoreHelpers(object):
 
     return views
 
+  def _FixHostname(self, host_name, origin):
+    """Checks name and returns fqdn.
+
+    Inputs:
+      host_name: string of host name
+      origin: string of the zone origin
+
+    Outputs:
+      string of fully qualified domain name
+    """
+    if( host_name == u'@' ):
+      host_name = origin
+    elif( not host_name.endswith('.') ):
+      host_name = '%s.%s' % (host_name, origin)
+    return unicode(host_name)
+
   def AddFormattedRecords(self, zone_name, zone_file_string,
                           view):
     """Adds records from a string of a partial zone file
@@ -126,26 +142,112 @@ class CoreHelpers(object):
     Outputs:
       int: Amount of records added to db.
     """
-    all_views = self.core_instance.ListZones(zone_name=zone_name)[
-        zone_name]
-    origin = all_views[view][u'zone_origin']
+    origin = self.core_instance.ListZones(zone_name=zone_name)[
+          zone_name][view][u'zone_origin']
 
     zone = None
     #If the file doesn't have an origin, we need to give it something
     #otherwise dns.zone will raise an UnknownOrigin exception
-    if( "$ORIGIN" not in zone_file_string ):
+    if( zone_file_string.find("$ORIGIN") == -1 ):
       zone = dns.zone.from_text(str(zone_file_string), check_origin=False,
         origin=origin)
     else:
       zone = dns.zone.from_text(str(zone_file_string), check_origin=False)   
 
-    make_record_args_list = helpers_lib.CreateRecordsFromZoneObject(zone, 
-        zone_name=zone_name, view_name=view, zone_origin=origin,
-        views_list=all_views)
+    make_record_args_list = []
+    for record_tuple in zone.items():
+      record_target = unicode(record_tuple[0])
 
-    self.ProcessRecordsBatch(add_records=make_record_args_list, 
-        zone_import=True)
+      for record_set in record_tuple[1].rdatasets:
+        ttl = record_set.ttl
+        for record_object in record_set.items:
+          if( record_object.rdtype == dns.rdatatype.PTR ):
+            record_type = u'ptr'
+            assignment_host = self._FixHostname(unicode(record_object), origin)
+            record_args_dict = {u'assignment_host': assignment_host}
 
+          elif( record_object.rdtype == dns.rdatatype.A ):
+            record_type = u'a'
+            record_args_dict = {u'assignment_ip': unicode(record_object)}
+
+          elif( record_object.rdtype == dns.rdatatype.AAAA ):
+            record_type = u'aaaa'
+            record_args_dict = {u'assignment_ip':
+                                    unicode(IPy.IP(str(
+                                        record_object)).strFullsize())}
+
+          elif( record_object.rdtype == dns.rdatatype.CNAME ):
+            record_type = u'cname'
+            assignment_host = self._FixHostname(unicode(record_object), origin)
+            record_args_dict = {u'assignment_host': assignment_host}
+
+          elif( record_object.rdtype == dns.rdatatype.HINFO ):
+            record_type = u'hinfo'
+            record_args_dict = {u'hardware': unicode(record_object.cpu),
+                                u'os': unicode(record_object.os)}
+
+          elif( record_object.rdtype == dns.rdatatype.TXT ):
+            record_type = u'txt'
+            record_args_dict = {u'quoted_text': unicode(record_object)}
+
+          elif( record_object.rdtype == dns.rdatatype.MX ):
+            record_type = u'mx'
+            mail_server = self._FixHostname(unicode(record_object.exchange), origin)
+            record_args_dict = {u'priority': record_object.preference,
+                                u'mail_server': mail_server}
+
+          elif( record_object.rdtype == dns.rdatatype.NS ):
+            record_type = u'ns'
+            name_server = self._FixHostname(unicode(record_object), origin)
+            record_args_dict = {u'name_server': name_server}
+
+          elif( record_object.rdtype == dns.rdatatype.SRV ):
+            record_type = u'srv'
+            assignment_host = self._FixHostname(unicode(record_object.target), origin)
+            record_args_dict = {u'priority': record_object.priority,
+                                u'weight': record_object.weight,
+                                u'port': record_object.port,
+                                u'assignment_host': assignment_host}
+
+          elif( record_object.rdtype == dns.rdatatype.SOA ):
+            record_type = u'soa'
+            name_server = self._FixHostname(unicode(record_object.mname), origin)
+            admin_email = self._FixHostname(unicode(record_object.rname), origin)
+            record_args_dict = {u'name_server': name_server,
+                                u'admin_email': admin_email,
+                                u'serial_number': record_object.serial,
+                                u'retry_seconds': record_object.retry,
+                                u'refresh_seconds': record_object.refresh,
+                                u'expiry_seconds': record_object.expire,
+                                u'minimum_seconds': record_object.minimum}
+
+          else:
+            raise errors.UnexpectedDataError(
+                'Unkown record type: %s.\n %s' % (
+                    dns.rdatatype.to_text(record_object.rdtype), record_object))
+
+          if( record_object.rdtype == dns.rdatatype.SOA and view == u'any'):
+            all_views = self.core_instance.ListZones(zone_name=zone_name)[zone_name]
+
+            for single_view in all_views:
+              if( single_view != u'any' ):
+                make_record_args_list.append(
+                  {u'record_type': record_type,
+                   u'record_target': record_target,
+                   u'record_zone_name': zone_name,
+                   u'record_arguments': record_args_dict,
+                   u'record_view_dependency': single_view,
+                   u'ttl': ttl})
+          else:
+            make_record_args_list.append(
+                {u'record_type': record_type,
+                 u'record_target': record_target,
+                 u'record_zone_name': zone_name,
+                 u'record_arguments': record_args_dict,
+                 u'record_view_dependency': view,
+                 u'ttl': ttl})
+
+    self.ProcessRecordsBatch(add_records=make_record_args_list, zone_import=True)
     return len(make_record_args_list)
 
   def GetCIDRBlocksByView(self, view, username):

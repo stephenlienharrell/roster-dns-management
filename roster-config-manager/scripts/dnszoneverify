@@ -35,15 +35,10 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
-import dns.zone
 import sys
 from optparse import OptionParser
 from roster_config_manager import dns_query_lib
-from roster_config_manager import tree_exporter
 from roster_core import errors
-from roster_core import core_helpers
-from roster_core import config
-from roster_core import constants
 
 def main(args):
   usage = ('\n'
@@ -54,26 +49,28 @@ def main(args):
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
-  parser.add_option('-c', '--config-file', action='store', dest='config_file',
-                    help='Config File Location', metavar='<config-file>',
-                    default='/etc/roster/roster_server.conf')
+  parser.add_option('-f', '--file', action='store', dest='file',
+                    help='Zone file to load in for verifying.', metavar='<file>',
+                    default=None)
+  parser.add_option('-s', '--server', action='store', dest='server',
+                    help='DNS server to query.', metavar='<server>',
+                    default=None)
+  parser.add_option('-o', '--origin', action='store', dest='zone_origin',
+                    help='Zone origin - required if $ORIGIN not present in '
+                    'zone file.', metavar='<zone_origin>', default=None)
   parser.add_option('-p', '--port', action='store', dest='port',
                     help='Port to query DNS server on.', metavar='<port>',
                     default=53)
-  parser.add_option('-i', '--id', dest='id',
-                    help='ID of tarfile output from Roster tree export.',
-                    metavar='<id>', action='store', dest='id', default=None)
-  parser.add_option('q', action='store', dest='quiet',
-                    help='Suppresses reporting.',
-                    metavar='<quiet>', default=False)
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  if( options.id is None ):
-    print 'Must specify -i/--id flag.'
+  if( options.server is None ):
+    print 'Must specify -s/--server flag.'
     sys.exit(1)
 
-  config_instance = config.Config(options.config_file)
+  if( options.file is None ):
+    print 'Must specify -f/--file flag.'
+    sys.exit(1)
 
   try:
     zone_file_handle = open(options.file, 'r')
@@ -83,22 +80,12 @@ def main(args):
     print 'Unable to read file %s: %s' % (options.file, str(error))
     sys.exit(1)
 
-  if( '$ORIGIN' not in zone_file_string and options.zone_origin is None ):
-    raise errors.UnexpectedDataError('No zone origin supplied.')
-  else:
-    zone = dns.zone.from_text(str(zone_file_string), check_origin=False,
-        origin=options.zone_origin)
-
-  fake_core_instance = FakeCore(db_instance)
-  core_helpers_instance = core_helpers.CoreHelpers(fake_core_instance)
-  record_list = core_helpers_instance.CreateRecordsFromZoneObject(zone, 
-      zone_origin=options.zone_origin)
-
-  if( options.zone_origin is None ):
-    options.zone_origin = str(zone.origin)
-  
-  good_records, bad_records = dns_query_lib.DnsQuery(record_list, 
-      options.dns_server, options.port, options.zone_origin) 
+  try:
+    good_records, bad_records = dns_query_lib.DnsQuery(zone_file_string, 
+        options.server, options.port, zone_origin=options.zone_origin)
+  except errors.UnexpectedDataError as error:
+    print error
+    sys.exit(1)
 
   print 'Able to verify %s records.' % len(good_records)
   print 'Unable to verify %s records.' % len(bad_records)
@@ -107,7 +94,7 @@ def main(args):
     print '\nUnverifiable records:'
     for bad_record in bad_records:
       print bad_record
-  
+
 if( __name__ == "__main__" ):
   main(sys.argv[1:])
   
