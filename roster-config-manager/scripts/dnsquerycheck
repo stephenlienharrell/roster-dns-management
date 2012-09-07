@@ -51,7 +51,7 @@ def main(args):
   usage = ('\n'
            '\n'
            'To run a query check on a DNS server:\n'
-           '\t%s [-c <config-file>] [-d <dns-server>]\n' % sys.argv[0])
+           '\t%s [-c <config-file>] [-i ID]\n' % sys.argv[0])
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
@@ -72,6 +72,10 @@ def main(args):
                     metavar='<quiet>', default=False)
 
   (globals()["options"], args) = parser.parse_args(args)
+
+  if( options.id is None ):
+    print 'Must specify -i/--id flag.'
+    sys.exit(1)
 
   config_instance = config.Config(options.config_file)
   config_file_root_config_dir = config_instance.config_file[

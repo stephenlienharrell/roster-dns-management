@@ -45,19 +45,6 @@ from roster_core import core_helpers
 from roster_core import config
 from roster_core import constants
 
-#To create a core_helpers_instance, you supply the constructor with a
-#core_instance. The problem is, we don't have a core_instance. So we
-#make a fake one, since all core_helpers needs (for the purposes of this tool)
-#is a db_instance. This is hacky, but...I don't know how else to fix this other
-#than copying and pasting the core_helper functions we need into this tool and 
-#calling them directly.
-class FakeCore(object):
-  def __init__(self, db_instance):
-    self.core_instance = None
-    self.db_instance = db_instance
-    self.user_instance = None
-    self.log_instance = None 
-
 def main(args):
   usage = ('\n'
            '\n'
@@ -67,34 +54,26 @@ def main(args):
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
-  parser.add_option('-f', '--file', action='store', dest='file',
-                    help='Zone file to load in for verifying.', metavar='<file>',
-                    default=None)
-  parser.add_option('-s', '--server', action='store', dest='dns_server',
-                    help='DNS server to query.', metavar='<dns_server>',
-                    default=None)
-  parser.add_option('-o', '--origin', action='store', dest='zone_origin',
-                    help='Zone origin - required if $ORIGIN not present in '
-                    'zone file.', metavar='<zone_origin>', default=None)
-  parser.add_option('-p', '--port', action='store', dest='port',
-                    help='Port to query DNS server on.', metavar='<port>',
-                    default=53)
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
                     default='/etc/roster/roster_server.conf')
+  parser.add_option('-p', '--port', action='store', dest='port',
+                    help='Port to query DNS server on.', metavar='<port>',
+                    default=53)
+  parser.add_option('-i', '--id', dest='id',
+                    help='ID of tarfile output from Roster tree export.',
+                    metavar='<id>', action='store', dest='id', default=None)
+  parser.add_option('q', action='store', dest='quiet',
+                    help='Suppresses reporting.',
+                    metavar='<quiet>', default=False)
 
   (globals()["options"], args) = parser.parse_args(args)
 
-  if( options.dns_server is None ):
-    print 'Must specify -s/--server flag.'
-    sys.exit(1)
-
-  if( options.file is None ):
-    print 'Must specify -f/--file flag.'
+  if( options.id is None ):
+    print 'Must specify -i/--id flag.'
     sys.exit(1)
 
   config_instance = config.Config(options.config_file)
-  db_instance = config_instance.GetDb()
 
   try:
     zone_file_handle = open(options.file, 'r')

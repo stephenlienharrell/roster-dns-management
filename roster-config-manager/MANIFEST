@@ -17,4 +17,3 @@ scripts/dnszoneimporter
 scripts/dnsrecover
 scripts/dnsnamedimporter
 scripts/dnszoneverify
-scripts/dnsquerycheck
