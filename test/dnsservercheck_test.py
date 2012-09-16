@@ -134,7 +134,7 @@ class TestDnsServerCheck(unittest.TestCase):
     output = os.popen('python %s -d localhost -c %s' %
         (SERVER_CHECKER_EXEC, CONFIG_FILE))
     self.assertEqual(output.read(),
-            'ERROR: Backup directory %s  does not contain any files or directories.\n' % self.root_backup_dir)
+            'ERROR: Backup directory %s does not contain any files or directories.\n' % self.root_backup_dir)
     output.close()
     self.core_instance.RemoveDnsServer(u'localhost')
 

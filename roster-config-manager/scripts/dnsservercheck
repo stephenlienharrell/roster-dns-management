@@ -34,8 +34,10 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
+import roster_config_manager
+import sys
+
 from optparse import OptionParser
-from roster_config_manager import config_lib
 from roster_core import errors
 
 DNS_SERVER_REQUIRED_TOOLS = ['named-checkconf', 'named-checkzone',
@@ -63,9 +65,9 @@ def main(args):
                     help='Roster Server Config File Location.',
                     default='/etc/roster/roster_server.conf', 
                     metavar='<config-file>')
-  parser.add_option('-i','--id', action='store', dest='audit_id', help='Audit Log ID '
-                    'for the tarfile output from Roster tree export',
-                    default=None, metavar='<audit-id>')
+  parser.add_option('-i','--id', action='store', dest='audit_id',
+                    help='Audit Log ID for the tarfile output from Roster '
+                    'tree export', default=None, metavar='<audit-id>')
 
   (globals()['options'], args) = parser.parse_args(args)
 
@@ -75,11 +77,13 @@ def main(args):
   else:
     options.dns_server = u'%s' % options.dns_server
  
+  config_lib_instance = roster_config_manager.ConfigLib(options.config_file)
+
   if( options.audit_id is None ):
     try:
       options.audit_id, filename = \
           config_lib_instance.FindNewestDnsTreeFilename()
-    except config_lib as err:
+    except roster_config_manager.config_lib.ConfigManagerError as err:
       print 'ERROR: %s' % err
       sys.exit(1)
 
@@ -89,7 +93,7 @@ def main(args):
                                        config_lib_instance.ToolList)
     config_lib_instance.TarDnsTree(options.audit_id)
   except errors.UserError as err:
-    print 'USERERROR: %s' % err
+    print 'ERROR: %s' % err
 
 if __name__ == "__main__":
       main(sys.argv[1:])
