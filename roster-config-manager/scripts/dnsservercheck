@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Server check tool for Roster"""
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+from optparse import OptionParser
+from roster_config_manager import config_lib
+from roster_core import errors
+
+DNS_SERVER_REQUIRED_TOOLS = ['named-checkconf', 'named-checkzone',
+                             'named-compilezone', 'tar']
+
+def main(args):
+  """Collects command line arguments.  Checks servers to confirm server
+  information and to check for available tools.
+
+  Inputs:
+    args: list of arguments from the command line
+  """
+  usage = ('\n'
+           '\n'
+           'To check a DNS server:\n'
+           '\t%s -d <dns-server> [-c <config-file>] [-i <audit-id>]' %
+           sys.argv[0])
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
+
+  parser.add_option('-d','--dns-server', action='store', dest='dns_server',
+                    help='DNS Server to check.', default=None, 
+                    metavar='<dns-server>')
+  parser.add_option('-c','--config-file', action='store', dest='config_file',
+                    help='Roster Server Config File Location.',
+                    default='/etc/roster/roster_server.conf', 
+                    metavar='<config-file>')
+  parser.add_option('-i','--id', action='store', dest='audit_id', help='Audit Log ID '
+                    'for the tarfile output from Roster tree export',
+                    default=None, metavar='<audit-id>')
+
+  (globals()['options'], args) = parser.parse_args(args)
+
+  if( options.dns_server is None ):
+    print('ERROR: A DNS Server must be spcified.')
+    sys.exit(1)
+  else:
+    options.dns_server = u'%s' % options.dns_server
+ 
+  if( options.audit_id is None ):
+    try:
+      options.audit_id, filename = \
+          config_lib_instance.FindNewestDnsTreeFilename()
+    except config_lib as err:
+      print 'ERROR: %s' % err
+      sys.exit(1)
+
+  try:
+    config_lib_instance.UnTarDnsTree(options.audit_id)
+    config_lib_instance.CheckDnsServer(options.dns_server, 
+                                       config_lib_instance.ToolList)
+    config_lib_instance.TarDnsTree(options.audit_id)
+  except errors.UserError as err:
+    print 'USERERROR: %s' % err
+
+if __name__ == "__main__":
+      main(sys.argv[1:])
