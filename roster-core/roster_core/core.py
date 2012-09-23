@@ -945,11 +945,13 @@ class Core(object):
 
     Outputs:
       Dictionary keyed by view name or dns server set name with values of
-      lists of view names or dns server sets depending on key_by_view bool
-        example keyed by view_name: {'view1': ['set1', 'set2'],
-                                     'view2': ['set2']}
-        example keyed by dns_server_set_name: {'set1': ['view1']
-                                               'set2': ['view1', 'view2']}
+      lists of tuples of view_name or dns_server_sets with view_order as
+      the second memeber of the tuple.
+        example keyed by view_name: {'view1': [('set1', 1), ('set2', 2)],
+                                     'view2': [('set2', 2)]}
+        example keyed by dns_server_set_name: {'set1': [('view1', 1)]
+                                               'set2': [('view1', 1), 
+                                                        ('view2', 1)]}
     """
     self.user_instance.Authorize('ListDnsServerSetViewAssignments')
     assignment_dict = self.db_instance.GetEmptyRowDict(
@@ -975,9 +977,10 @@ class Core(object):
               assignment['dns_server_set_view_assignments_view_name']] = []
 
         assignments_dict[
-            assignment['dns_server_set_view_assignments_view_name']].append(
+            assignment['dns_server_set_view_assignments_view_name']].append((
                 assignment[
-                    'dns_server_set_view_assignments_dns_server_set_name'])
+                    'dns_server_set_view_assignments_dns_server_set_name'],
+                assignment['view_order']))
       else:
         if( not assignment[
               'dns_server_set_view_assignments_dns_server_set_name'] in
@@ -987,16 +990,18 @@ class Core(object):
                   'dns_server_set_view_assignments_dns_server_set_name']] = []
 
         assignments_dict[assignment[
-            'dns_server_set_view_assignments_dns_server_set_name']].append(
-                assignment['dns_server_set_view_assignments_view_name'])
+            'dns_server_set_view_assignments_dns_server_set_name']].append((
+                assignment['dns_server_set_view_assignments_view_name'],
+                assignment['view_order']))
 
     return assignments_dict
 
-  def MakeDnsServerSetViewAssignments(self, view_name, dns_server_set_name):
+  def MakeDnsServerSetViewAssignments(self, view_name, view_order, dns_server_set_name):
     """Make dns server set view assignment
 
     Inputs:
       view_name: string of the view name
+      view_order: order that views should be added to named.conf
       dns_server_set_name: string of the dns server set name
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
@@ -1007,6 +1012,7 @@ class Core(object):
     assignment_dict['dns_server_set_view_assignments_view_name'] = view_name
     assignment_dict['dns_server_set_view_assignments_dns_server_set_name'] = (
         dns_server_set_name)
+    assignment_dict['view_order'] = view_order
 
     success = False
     try:
@@ -1042,12 +1048,18 @@ class Core(object):
     assignment_dict['dns_server_set_view_assignments_dns_server_set_name'] = (
         dns_server_set_name)
 
+    row_count = 0
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
-        row_count = self.db_instance.RemoveRow(
-            'dns_server_set_view_assignments', assignment_dict)
+        rows = self.db_instance.ListRow('dns_server_set_view_assignments',
+                                        assignment_dict)
+        if(rows):
+          # can assume there is only one row because view_name and
+          # dns_server_set_name are a unique pair in the sql table
+          row_count = self.db_instance.RemoveRow(
+              'dns_server_set_view_assignments', rows[0])
 
       except:
         self.db_instance.EndTransaction(rollback=True)

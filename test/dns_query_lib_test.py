@@ -192,7 +192,7 @@ class TestZoneVerify(unittest.TestCase):
     self.core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
         u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
         'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test

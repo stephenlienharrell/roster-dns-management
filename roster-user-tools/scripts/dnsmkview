@@ -141,10 +141,11 @@ def main(args):
         u'MakeDnsServerSetViewAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        args=[options.view_name, options.dns_server_set])
+        args=[options.view_name, options.view_order, options.dns_server_set])
     if( not options.quiet ):
       print ('ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: %s '
-             'dns_server_set: %s' % (options.view_name, options.dns_server_set))
+             'dns_server_set: %s view_order: %s' % (options.view_name, options.dns_server_set,
+                                                    options.view_order))
 
   elif( command == 'acl' ):
     if( options.view_name not in views ):

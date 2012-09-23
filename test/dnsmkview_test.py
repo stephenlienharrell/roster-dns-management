@@ -177,20 +177,20 @@ class Testdnsmkview(unittest.TestCase):
   def testMakeDnsServerSetAssignment(self):
     self.core_instance.MakeACL(u'outside', u'192.168.1.0/24')
     self.core_instance.MakeDnsServerSet(u'set2')
-    command = os.popen('python %s dns_server_set -v test_view -e set2 '
+    command = os.popen('python %s dns_server_set -v test_view -r 2 -e set2 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
                      'CLIENT ERROR: View "test_view" does not exist.\n')
-    command = os.popen('python %s dns_server_set -v test_view -e set2 '
+    command = os.popen('python %s dns_server_set -v test_view -r 2 -e set2 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
                      'CLIENT ERROR: View "test_view" does not exist.\n')
     self.core_instance.MakeView(u'test_view')
-    command = os.popen('python %s dns_server_set -v test_view -e set1 '
+    command = os.popen('python %s dns_server_set -v test_view -r 1 -e set1 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
@@ -198,23 +198,23 @@ class Testdnsmkview(unittest.TestCase):
                      'CLIENT ERROR: Dns Server Set "set1" does not exist.\n')
     command.close()
     self.core_instance.MakeDnsServerSet(u'set1')
-    command = os.popen('python %s dns_server_set -v test_view -e set1 '
+    command = os.popen('python %s dns_server_set -v test_view -r 2 -e set1 '
                        '-c %s -u %s -p %s '
                        '--config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
                      'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
-                     'test_view dns_server_set: set1\n')
+                     'test_view dns_server_set: set1 view_order: 2\n')
     command.close()
-    command = os.popen('python %s dns_server_set -v test_view -e set2 '
+    command = os.popen('python %s dns_server_set -v test_view -r 1 -e set2 '
                        '-c %s -u %s -p %s '
                        '--config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
                      'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
-                     'test_view dns_server_set: set2\n')
+                     'test_view dns_server_set: set2 view_order: 1\n')
     command.close()
 
   def testErrors(self):
@@ -237,7 +237,7 @@ class Testdnsmkview(unittest.TestCase):
     self.assertEqual(command.read(),
         'CLIENT ERROR: The -v/--view-name flag is required.\n')
     command.close()
-    command = os.popen('python %s dns_server_set -e set1 '
+    command = os.popen('python %s dns_server_set -e set1 -r 1 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))

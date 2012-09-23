@@ -145,7 +145,7 @@ class TestdbAccess(unittest.TestCase):
     self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
@@ -247,7 +247,7 @@ class TestdbAccess(unittest.TestCase):
     self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()

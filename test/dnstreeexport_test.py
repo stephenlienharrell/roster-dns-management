@@ -362,6 +362,7 @@ class TestDnsMkHost(unittest.TestCase):
             u'internal_dns')
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'internal'
+    dns_server_set_view_assignments_dict['view_order'] = 2
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 
@@ -370,6 +371,7 @@ class TestDnsMkHost(unittest.TestCase):
             u'internal_dns')
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'external'
+    dns_server_set_view_assignments_dict['view_order'] = 1
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 
@@ -378,6 +380,7 @@ class TestDnsMkHost(unittest.TestCase):
             u'external_dns')
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'external'
+    dns_server_set_view_assignments_dict['view_order'] = 1
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 
@@ -386,6 +389,7 @@ class TestDnsMkHost(unittest.TestCase):
             u'private_dns')
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'private'
+    dns_server_set_view_assignments_dict['view_order'] = 3
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 

@@ -179,16 +179,16 @@ class Testdnsmkview(unittest.TestCase):
   def testMakeDnsServerSetAssignment(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeDnsServerSet(u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     command = os.popen('python %s dns_server_set -v test_view -e set1 '
                        '-c %s -u %s -p %s '
                        '--config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-                     'dns_server_set view_name\n'
-                     '------------------------\n'
-                     'set1           test_view\n\n')
+                     'dns_server_set view_name view_order\n'
+                     '-----------------------------------\n'
+                     'set1           test_view 1\n\n')
     command.close()
 
   def testErrors(self):

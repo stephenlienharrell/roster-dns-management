@@ -111,11 +111,14 @@ def main(args):
         server_name=options.server)['core_return']
 
     if( not options.no_header ):
-      print_list = [['dns_server_set', 'view_name']]
+      print_list = [['dns_server_set', 'view_name', 'view_order']]
 
-    for assignment in dns_server_set_view_assignments:
-      print_list.append(
-          [assignment, ', '.join(dns_server_set_view_assignments[assignment])])
+
+    for server_set in dns_server_set_view_assignments:
+      for assignment in dns_server_set_view_assignments[server_set]:
+        print_list.append([server_set,
+                          assignment[0], 
+                          assignment[1]])
 
     print cli_common_lib.PrintColumns(print_list,
         first_line_header=not options.no_header)

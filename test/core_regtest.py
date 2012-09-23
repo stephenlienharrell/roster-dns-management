@@ -42,6 +42,7 @@ __version__ = '#TRUNK#'
 
 import cPickle
 import datetime
+import MySQLdb
 import time
 import unittest
 import os
@@ -261,23 +262,30 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set3')
     self.core_instance.MakeView(u'view1', u'')
     self.core_instance.MakeView(u'view2', u'')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'view1', u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'view2', u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'view1', u'set2')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'view2', u'set3')
-    self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(
-      key_by_view=True), {u'view1': [u'set1', u'set2'],
-                          u'view2': [u'set1', u'set3']})
     self.core_instance.MakeView(u'view3', u'')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'view3', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'view1', 1, u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'view2', 2, u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'view1', 1, u'set2')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'view2', 2, u'set3')
+    # try duplicate view orders on the same set
+    self.assertRaises(MySQLdb.IntegrityError,
+                      self.core_instance.MakeDnsServerSetViewAssignments,
+                      u'view3', 1, u'set1')
+
+
+    self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(
+      key_by_view=True), {u'view1': [(u'set1', 1), (u'set2', 1)],
+                          u'view2': [(u'set1', 2), (u'set3', 2)]})
+    self.core_instance.MakeDnsServerSetViewAssignments(u'view3', 3, u'set1')
     self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
-                     {u'set1': [u'view1', u'view2', u'view3'],
-                      u'set2': [u'view1'], u'set3': [u'view2']})
+                     {u'set1': [(u'view1', 1), (u'view2', 2), (u'view3', 3)],
+                      u'set2': [(u'view1', 1)], 
+                      u'set3': [(u'view2', 2)]})
     self.assertTrue(self.core_instance.RemoveDnsServerSetViewAssignments(
         u'view2', u'set1'))
     self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
-                     {u'set1': [u'view1', u'view3'], u'set2': [u'view1'],
-                      u'set3': [u'view2']})
+                     {u'set1': [(u'view1', 1), (u'view3', 3)], u'set2': [(u'view1', 1)],
+                      u'set3': [(u'view2', 2)]})
 
   def testACLMakeRemoveListUpdate(self):
     self.assertEqual(self.core_instance.ListACLs(),

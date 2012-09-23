@@ -461,7 +461,13 @@ class BindTreeExport(object):
           named_conf_lines.append('\t%s;' % cidr)
         named_conf_lines.append('};\n')
 
-    for view_name in cooked_data['dns_server_sets'][dns_server_set]['views']:
+    view_orders = cooked_data['dns_server_sets'][dns_server_set][
+        'view_order'].keys()
+    view_orders.sort()
+    for view_order in view_orders:
+      view_name = view_orders = cooked_data['dns_server_sets'][
+          dns_server_set]['view_order'][view_order]
+
       named_conf_lines.append('view "%s" {' % view_name)
       clients = []
       found_acl = False
@@ -743,13 +749,19 @@ class BindTreeExport(object):
               'dns_servers'].append(dns_server_set_assignment[
                   'dns_server_set_assignments_dns_server_name'])
 
+          cooked_data['dns_server_sets'][dns_server_set_name]['view_order'] = {}
+
       for dns_server_set_view_assignment in data[
             'dns_server_set_view_assignments']:
         dns_server_set_name = dns_server_set_view_assignment[
             'dns_server_set_view_assignments_dns_server_set_name']
         view_name = dns_server_set_view_assignment[
             'dns_server_set_view_assignments_view_name']
+        view_order = dns_server_set_view_assignment['view_order']
         if( dns_server_set_name == dns_server_set['dns_server_set_name'] ):
+
+          cooked_data['dns_server_sets'][dns_server_set_name]['view_order'][
+              view_order] = view_name
 
           for view_dependency in data['view_dependency_assignments']:
             if( view_name == view_dependency[

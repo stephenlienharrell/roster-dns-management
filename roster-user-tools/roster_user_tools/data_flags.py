@@ -266,6 +266,7 @@ class View(core_flags.CoreFlags):
   """Command line view flags"""
   def SetDataFlags(self):
     """Sets flags for self.parser"""
+    make = self.action == 'Make'
     not_list = self.action != 'List'
     self.parser.add_option('-v', '--view-name', action='store',
                            dest='view_name', help='String of view.',
@@ -283,6 +284,11 @@ class View(core_flags.CoreFlags):
                            dest='dns_server_set', default=None,
                            help='String of dns server set name.')
     self.AddFlagRule('dns_server_set', required=not_list,
+                     command='dns_server_set')
+    self.parser.add_option('-r', '--view-order', type='int', action='store',
+                           dest='view_order', default=None,
+                           help='View order in named.conf')
+    self.AddFlagRule('view_order', required=make,
                      command='dns_server_set')
     self.parser.add_option('-a', '--acl', action='store', dest='acl',
                            help='String of access control list name.',

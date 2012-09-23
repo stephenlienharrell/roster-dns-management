@@ -101,7 +101,7 @@ class TestDnsServerCheck(unittest.TestCase):
     
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
         u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
         'controls { inet 127.0.0.1 port 5555 allow{localhost;} keys {rndc-key;};};' % (os.getcwd())) # So we can test

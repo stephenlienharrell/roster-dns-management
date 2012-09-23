@@ -360,6 +360,7 @@ class TestTreeExporter(unittest.TestCase):
             u'internal_dns')
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'internal'
+    dns_server_set_view_assignments_dict['view_order'] = 2
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 
@@ -368,6 +369,7 @@ class TestTreeExporter(unittest.TestCase):
             u'internal_dns')
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'external'
+    dns_server_set_view_assignments_dict['view_order'] = 1
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 
@@ -376,6 +378,7 @@ class TestTreeExporter(unittest.TestCase):
             u'external_dns')
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'external'
+    dns_server_set_view_assignments_dict['view_order'] = 1
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 
@@ -384,6 +387,7 @@ class TestTreeExporter(unittest.TestCase):
             u'private_dns')
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'private'
+    dns_server_set_view_assignments_dict['view_order'] = 3
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 
@@ -1364,19 +1368,6 @@ class TestTreeExporter(unittest.TestCase):
         '\t10.10/32;\n'
         '};\n'
         '\n'
-        'view "internal" {\n'
-        '\tmatch-clients { !secret; !public; };\n'
-        '\tzone "university.edu" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "%s/named/internal/university.edu.db";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '\tzone "168.192.in-addr.arpa" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '};\n'
         'view "external" {\n'
         '\tmatch-clients { public; };\n'
         '\tzone "university.edu" {\n'
@@ -1387,6 +1378,19 @@ class TestTreeExporter(unittest.TestCase):
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
         '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};\n'
+        'view "internal" {\n'
+        '\tmatch-clients { !secret; !public; };\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/internal/university.edu.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "168.192.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};' % tuple(['%s/%s' % (os.getcwd(), self.named_dir.rstrip('/')) for x in range(5)]))
@@ -1613,6 +1617,7 @@ class TestTreeExporter(unittest.TestCase):
             {'dns_servers': [u'ns1.university.edu',
              u'dns2.university.edu',
              u'dns3.university.edu'],
+             u'view_order': {1: u'external'},
              'views': {u'external': {'zones': {u'university.edu': {
                  'zone_type': u'master',
              'records': [{'target': '@',
@@ -1702,6 +1707,7 @@ class TestTreeExporter(unittest.TestCase):
     self.assertEqual(cooked_data['dns_server_sets']['private_dns'],
             {'dns_servers': [u'ns1.int.university.edu',
              u'dns4.university.edu'],
+             u'view_order': {3: u'private'},
              'views': {u'private': {'zones': {u'university.edu': {
                  'zone_type': u'master',
              'records': [{'target': '@',
@@ -1754,6 +1760,7 @@ class TestTreeExporter(unittest.TestCase):
     self.assertEqual(cooked_data['dns_server_sets']['internal_dns'],
         {'dns_servers': [u'ns1.int.university.edu',
          u'dns1.university.edu'],
+         'view_order': {1: u'external', 2: u'internal'},
          'views': {u'internal': {'zones': {u'university.edu': {
              'zone_type': u'master',
          'records': [{'target': '@',
@@ -2102,19 +2109,6 @@ class TestTreeExporter(unittest.TestCase):
         '\t10.10/32;\n'
         '};\n'
         '\n'
-        'view "internal" {\n'
-        '\tmatch-clients { !secret; !public; };\n'
-        '\tzone "university.edu" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "%s/named/internal/university.edu.db";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '\tzone "168.192.in-addr.arpa" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '};\n'
         'view "external" {\n'
         '\tmatch-clients { public; };\n'
         '\tzone "university.edu" {\n'
@@ -2125,6 +2119,19 @@ class TestTreeExporter(unittest.TestCase):
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
         '\t\tfile "%s/named/external/4.3.2.1.in-addr.arpa.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};\n'
+        'view "internal" {\n'
+        '\tmatch-clients { !secret; !public; };\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/internal/university.edu.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "168.192.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "%s/named/internal/168.192.in-addr.arpa.db";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};' % tuple(['%s/%s' % (os.getcwd(), self.named_dir.rstrip('/')) for x in range(5)]))

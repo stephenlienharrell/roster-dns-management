@@ -508,6 +508,7 @@ CREATE TABLE `dns_server_set_assignments` (
 CREATE TABLE `dns_server_set_view_assignments` (
   `dns_server_set_view_assignments_id` smallint unsigned NOT NULL
       auto_increment,
+  `view_order` smallint unsigned NOT NULL,
   `dns_server_set_view_assignments_dns_server_set_name` varchar(255) 
       NOT NULL,
   `dns_server_set_view_assignments_view_name` varchar(255) NOT NULL,
@@ -516,6 +517,9 @@ CREATE TABLE `dns_server_set_view_assignments` (
   UNIQUE KEY `dns_server_set_view_assignments_unique_1`
     (`dns_server_set_view_assignments_dns_server_set_name`,
      `dns_server_set_view_assignments_view_name`),
+  UNIQUE KEY `dns_server_set_view_assignments_unique_2`
+    (`dns_server_set_view_assignments_dns_server_set_name`,
+     `view_order`),
 
   CONSTRAINT `view_name_3` FOREIGN KEY 
     (`dns_server_set_view_assignments_view_name`) REFERENCES `views` 

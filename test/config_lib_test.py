@@ -90,7 +90,7 @@ class TestServerCheck(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'master')
     self.core_instance.MakeDnsServerSetAssignments(u'localhost', u'master')
     self.core_instance.MakeDnsServerSetAssignments(u'255.254.253.252', u'master')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'external', u'master')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'external', 1, u'master')
     self.core_instance.MakeZone(u'forward_zone', u'master', u'university.lcl.', u'external')
     self.core_instance.MakeRecord(u'soa', u'@', u'forward_zone', {u'refresh_seconds':500,
         u'expiry_seconds':500, u'name_server':u'ns.university.lcl.', u'minimum_seconds':500, 
