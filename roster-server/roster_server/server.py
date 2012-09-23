@@ -240,17 +240,26 @@ class Server(object):
     core_instance_dict = {}
     for core_instance_dict in self.core_store:
       if( core_instance_dict['user_name'] == user_name ):
-        break
+        if( core_instance_dict['core_instance'].dirty ):
+          self.core_store.remove(core_instance_dict)
+        else:
+          break
     else:
       new_core_instance = roster_core.Core(user_name, self.config_instance,
                                            unittest_timestamp=(
-                                               self.unittest_timestamp))
+                                             self.unittest_timestamp),
+                                           parent_server_instance = self)
       core_instance_dict = {'user_name': user_name,
                             'last_used': datetime.datetime.now(),
                             'core_instance': new_core_instance}
       self.core_store.append(core_instance_dict)
 
     return core_instance_dict['core_instance']
+
+  def SetCoreCacheDirty(self):
+    core_instance_dict = {}
+    for core_instance_dict in self.core_store:
+      core_instance_dict['core_instance'].dirty = True
 
   def CoreRun(self, function, user_name, credfile, args = None, kwargs = None):
     """Runs a function in core_instance with arbitrary parameters

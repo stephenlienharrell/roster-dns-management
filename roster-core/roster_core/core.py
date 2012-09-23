@@ -56,20 +56,25 @@ class Core(object):
 
   All errors raised will be a subclass of CoreError.
   """
-  def __init__(self, user_name, config_instance, unittest_timestamp=None):
+  def __init__(self, user_name, config_instance, unittest_timestamp=None,
+      parent_server_instance=None):
     """Sets self.db_instance and self.user_instance for usage in the class.
 
     Inputs:
       user_name: string of user name
       config_instance: instantiated Config class object
       unittest_timestamp: datetime object timestamp for unit testing
+      parent_server_instance: Roster Server instance that has this 
+                              Core instance in it's core_store.
     """
+    self.dirty = False
     self.unittest_timestamp = unittest_timestamp
     self.db_instance = config_instance.GetDb()
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
     self.user_instance = user.User(user_name, self.db_instance,
                                    self.log_instance)
+    self.parent_server_instance = parent_server_instance
 
   def MakeUser(self, user_name, access_level):
     """Create a user.
@@ -1923,6 +1928,7 @@ class Core(object):
                   group_perm)
           self.db_instance.MakeRow('group_forward_permissions',
                                    group_forward_permissions_dict)
+
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -1931,6 +1937,8 @@ class Core(object):
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
+      if( self.parent_server_instance is not None ):
+        self.parent_server_instance.SetCoreCacheDirty()
 
   def UpdateGroupForwardPermission(self, zone_name, group_name, 
                                    new_permissions):
@@ -1944,7 +1952,6 @@ class Core(object):
     Raises:
       AuthorizationError: Group does not have access to supplied zone
     """
-
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
@@ -2002,14 +2009,17 @@ class Core(object):
               'group_forward_permissions_group_permission'] = permission
           self.db_instance.MakeRow('group_forward_permissions',
                                      group_forward_permissions_dict)
+  
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.EndTransaction()
       success = True
+      self.db_instance.EndTransaction()
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
+      if( self.parent_server_instance is not None ):
+        self.parent_server_instance.SetCoreCacheDirty()
 
   def RemoveForwardZonePermission(self, zone_name, group_name,
                                   group_permission):
@@ -2080,11 +2090,13 @@ class Core(object):
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.EndTransaction()
       success = True
+      self.db_instance.EndTransaction()
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
+      if( self.parent_server_instance is not None ):
+        self.parent_server_instance.SetCoreCacheDirty()
 
     return row_count
 
@@ -2149,11 +2161,13 @@ class Core(object):
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.EndTransaction()
       success = True
+      self.db_instance.EndTransaction()
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
+      if( self.parent_server_instance is not None ):
+        self.parent_server_instance.SetCoreCacheDirty()
 
     ## Construct dict to return
     reverse_range_perms_dict = {}
@@ -2219,6 +2233,8 @@ class Core(object):
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
+      if( self.parent_server_instance is not None ):
+        self.parent_server_instance.SetCoreCacheDirty()
 
   def UpdateGroupReversePermission(self, cidr_block, group_name, 
                                    new_permissions):
@@ -2292,11 +2308,13 @@ class Core(object):
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
-      self.db_instance.EndTransaction()
       success = True
+      self.db_instance.EndTransaction()
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
+      if( self.parent_server_instance is not None ):
+        self.parent_server_instance.SetCoreCacheDirty()
 
   def RemoveReverseRangePermission(self, cidr_block, group_name,
                                    group_permission):
@@ -2364,6 +2382,7 @@ class Core(object):
             row_count = row_count + self.db_instance.RemoveRow(
                 'reverse_range_permissions', reverse_range_permissions_dict)
           ## Associated group_reverse_permissions deleted by CASCADE in DB
+
       except:
         self.db_instance.EndTransaction(rollback=True)
         raise
@@ -2372,6 +2391,8 @@ class Core(object):
     finally:
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
+      if( self.parent_server_instance is not None ):
+        self.parent_server_instance.SetCoreCacheDirty()
 
     return row_count
 

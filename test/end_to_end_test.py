@@ -280,7 +280,6 @@ class TestComplete(unittest.TestCase):
     self.init_thread.start()
     time.sleep(3)
 
-
     ## User tool: dnsmkdnsserver
     ## dnsmkdnsserver dns_server -d dns1
     command_string = (
@@ -680,6 +679,8 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'CLIENT ERROR: Reserved word not found.\n')
     command.close()
+
+
     ## User tool: dnsmkreservedword
     ## dnsmkreservedword -w testreserved
     command_string = (
