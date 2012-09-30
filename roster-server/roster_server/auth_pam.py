@@ -60,6 +60,5 @@ class AuthenticationMethod:
     if ((not user_name) or (not password)):
       authenticated = False
     else:
-      return True
       authenticated = self.module.authenticate(user_name, password, 'passwd')
     return authenticated
