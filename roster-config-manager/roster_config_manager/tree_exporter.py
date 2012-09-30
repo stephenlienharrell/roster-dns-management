@@ -94,8 +94,7 @@ class BindTreeExport(object):
       self.named_dir = os.path.abspath(os.path.expanduser(
           directory))
     else:
-      self.named_dir = os.path.abspath(os.path.expanduser(
-          config_instance.config_file['exporter']['named_dir']))
+      self.named_dir = config_instance.config_file['exporter']['named_dir']
     self.backup_dir = os.path.abspath(os.path.expanduser(
         config_instance.config_file['exporter']['backup_dir']))
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
@@ -281,19 +280,21 @@ class BindTreeExport(object):
                   cooked_data['dns_server_sets'][dns_server_set]['views'][view][
                       'zones'][zone]['zone_origin'],
                   record_argument_definitions, zone, view)
-              zone_file_handle = open(zone_file, 'wb')
+              zone_file_handle = open(zone_file, 'w')
               zone_file_handle.write(zone_file_string)
               zone_file_handle.close()
           named_conf_file = '%s/named.conf.a' % named_directory.rstrip('/')
           named_conf_binary_file = '%s/named.conf.b' % (
               named_directory.rstrip('/'))
-          named_conf_file_string = self.MakeNamedConf(data, cooked_data,
-                                                      dns_server_set)
+          named_conf_a_file_string = self.MakeNamedConf(data, cooked_data,
+                                                      dns_server_set, 'db')
+          named_conf_b_file_string = self.MakeNamedConf(data, cooked_data,
+                                                      dns_server_set, 'aa')
           named_conf_file_handle = open(named_conf_file, 'w')
-          named_conf_file_handle.write(named_conf_file_string)
+          named_conf_file_handle.write(named_conf_a_file_string)
           named_conf_file_handle.close()
           named_conf_binary_file_handle = open(named_conf_binary_file, 'w')
-          named_conf_binary_file_handle.write(named_conf_file_string)
+          named_conf_binary_file_handle.write(named_conf_b_file_string)
           named_conf_binary_file_handle.close()
 
       audit_log_replay_dump, full_database_dump = self.CookRawDump(raw_dump)
@@ -314,9 +315,7 @@ class BindTreeExport(object):
     shutil.move(temp_tar_file_name, self.tar_file_name)
 
     audit_log_replay_dump_file = bz2.BZ2File(
-        '%s/audit_log_replay_dump-%s.bz2' % (self.backup_dir, log_id),
-
-        'w')
+        '%s/audit_log_replay_dump-%s.bz2' % (self.backup_dir, log_id), 'w')
     try:
       for audit_index, audit_entry in enumerate(audit_log_replay_dump):
         audit_log_replay_dump[audit_index] = audit_entry.encode('utf-8')
@@ -421,13 +420,14 @@ class BindTreeExport(object):
       return iscpy.Deserialize(newest_config)
     return newest_config
 
-  def MakeNamedConf(self, data, cooked_data, dns_server_set):
+  def MakeNamedConf(self, data, cooked_data, dns_server_set, extension):
     """Makes named.conf file strings
 
     Inputs:
       data: data from GetRawData
       cooked_data: data from cooked_data
       dns_server_set: string of dns_server_set
+      extension: bind extension, e.g., .db, .aa (binary), etc
 
     Outputs:
       string: string of named.conf file
@@ -494,8 +494,8 @@ class BindTreeExport(object):
               'zones'][zone]['zone_origin'].rstrip('.')))
         named_conf_lines.append('\t\ttype %s;' % cooked_data['dns_server_sets'][
             dns_server_set]['views'][view_name]['zones'][zone]['zone_type'])
-        named_conf_lines.append('\t\tfile "%s/named/%s/%s.db";' % (
-            self.named_dir.rstrip('/'), view_name, zone))
+        named_conf_lines.append('\t\tfile "%s/%s.%s";' % (
+            view_name, zone, extension))
         zone_options = cooked_data['dns_server_sets'][dns_server_set]['views'][
             view_name]['zones'][zone]['zone_options'].replace('\n', '\n\t\t')
         named_conf_lines.append('\t\t%s' % zone_options.rsplit('\n\t\t', 1)[0])
