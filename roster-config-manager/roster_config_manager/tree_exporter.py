@@ -465,8 +465,8 @@ class BindTreeExport(object):
         'view_order'].keys()
     view_orders.sort()
     for view_order in view_orders:
-      view_name = view_orders = cooked_data['dns_server_sets'][
-          dns_server_set]['view_order'][view_order]
+      view_name = cooked_data['dns_server_sets'][dns_server_set][
+          'view_order'][view_order]
 
       named_conf_lines.append('view "%s" {' % view_name)
       clients = []
