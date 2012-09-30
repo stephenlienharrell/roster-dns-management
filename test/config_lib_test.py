@@ -46,6 +46,7 @@ import os
 import shutil
 import unittest
 import roster_core
+import tarfile
 
 from roster_config_manager import config_lib
 from roster_config_manager import tree_exporter
@@ -95,6 +96,8 @@ class TestServerCheck(unittest.TestCase):
     self.core_instance.MakeRecord(u'soa', u'@', u'forward_zone', {u'refresh_seconds':500,
         u'expiry_seconds':500, u'name_server':u'ns.university.lcl.', u'minimum_seconds':500, 
         u'retry_seconds': 500, u'serial_number':1000, u'admin_email': u'admin.localhost.lcl.'}, u'external')
+    self.core_instance.MakeRecord(u'ns', u'@', u'forward_zone', {u'name_server':u'ns.university.lcl.'})
+    self.core_instance.MakeRecord(u'a', u'ns', u'forward_zone', {u'assignment_ip':u'1.2.3.4'})
     self.core_instance.MakeNamedConfGlobalOption(
         u'master', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
         'controls { inet 127.0.0.1 port 5555 allow{localhost;} keys {rndc-key;};};' % (os.getcwd()))
@@ -109,7 +112,7 @@ class TestServerCheck(unittest.TestCase):
     config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
     tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
     tree_exporter_instance.ExportAllBindTrees()
-    file_name = 'dns_tree_%s-16.tar.bz2' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
+    file_name = 'dns_tree_%s-16.tar.gz' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
     self.assertEqual(config_lib_instance.FindDnsTreeFilename('16'), file_name)
     self.assertRaises(config_lib.ExporterAuditIdError, config_lib_instance.FindDnsTreeFilename, None)
 
@@ -119,7 +122,7 @@ class TestServerCheck(unittest.TestCase):
 
     self.assertEqual(config_lib_instance.FindDnsTreeFilename('18'), None)
     os.rename('%s/%s' % (self.backup_dir, file_name), 
-              '%s/dns_tree_fail_file.tar.bz2' % self.backup_dir)
+              '%s/dns_tree_fail_file.tar.gz' % self.backup_dir)
     self.assertRaises(config_lib.ExporterFileError, config_lib_instance.FindDnsTreeFilename, '16')
 
   def testFindNewestDnsTreeFilename(self):
@@ -130,15 +133,15 @@ class TestServerCheck(unittest.TestCase):
 
     tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
     tree_exporter_instance.ExportAllBindTrees()
-    file_name = 'dns_tree_%s-16.tar.bz2' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
+    file_name = 'dns_tree_%s-16.tar.gz' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
     audit_id, filename = config_lib_instance.FindNewestDnsTreeFilename()
     self.assertEqual(filename, file_name)
     self.assertEqual(audit_id, 16)
     
     os.rename('%s/%s' % (self.backup_dir, file_name),
-              '%s/dns_tree_fail.tar.bz2' % self.backup_dir)
+              '%s/dns_tree_fail.tar.gz' % self.backup_dir)
     self.assertRaises(config_lib.ExporterFileNameError, config_lib_instance.FindNewestDnsTreeFilename)
-    os.remove('%s/dns_tree_fail.tar.bz2' % self.backup_dir)
+    os.remove('%s/dns_tree_fail.tar.gz' % self.backup_dir)
     self.assertRaises(config_lib.ExporterNoFileError, config_lib_instance.FindNewestDnsTreeFilename)
     
     config_lib_instance.backup_dir = '/bad/directory'
@@ -161,9 +164,6 @@ class TestServerCheck(unittest.TestCase):
     self.assertRaises(config_lib.ExporterListFileError, config_lib_instance.TarDnsTree, '16')
     os.mkdir(self.root_config_dir)
     config_lib_instance.UnTarDnsTree('16')
-    #Need this temporarily until the tree exporter is complete
-    os.remove('%s/localhost/named/localhost_config' % self.root_config_dir)
-    os.remove('%s/255.254.253.252/named/255.254.253.252_config' % self.root_config_dir)
 
     self.assertEqual(config_lib_instance.TarDnsTree('16'), None)
 
@@ -390,7 +390,7 @@ class TestServerCheck(unittest.TestCase):
     # End of needing to remove
     
     # No .info file
-    self.assertRaises(config_lib.ServerCheckError, config_lib_instance.GetDnsServerInfo, 'localhost')
+    #self.assertRaises(config_lib.ServerCheckError, config_lib_instance.GetDnsServerInfo, 'localhost')
 
     # Invalid .info file
     invalid_file = open('%s/localhost/localhost.info' % self.root_config_dir, 'w')
@@ -436,6 +436,50 @@ class TestServerCheck(unittest.TestCase):
     # No existing server
     self.assertRaises(config_lib.ServerCheckError, config_lib_instance.GetDnsServerInfo, 'bad_server')
 
+  def testTarDnsBindFiles(self):
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
+    
+    # No DNS tree yet
+    self.assertRaises(config_lib.ExporterNoFileError, config_lib_instance.TarDnsBindFiles, 'localhost')
+    
+    tree_exporter_instance.ExportAllBindTrees()
+    audit_id, filename = config_lib_instance.FindNewestDnsTreeFilename()
+    config_lib_instance.UnTarDnsTree(audit_id)
+
+    # No such DNS server
+    self.assertRaises(config_lib.ServerCheckError, config_lib_instance.TarDnsBindFiles, 'bad')
+
+    # Invalid tree format
+    f = open('%s/localhost/named/bad.txt' % self.root_config_dir, 'w')
+    f.close()
+    self.assertRaises(config_lib.ExporterListFileError, config_lib_instance.TarDnsBindFiles, 'localhost')
+    os.remove('%s/localhost/named/bad.txt' % self.root_config_dir)
+
+    # Success
+    config_lib_instance.TarDnsBindFiles('localhost')
+    self.assertTrue(os.path.exists('%s/localhost/localhost.tar.gz' % self.root_config_dir))
+    os.mkdir('%s/test/' % self.root_config_dir)
+    shutil.move('%s/localhost/localhost.tar.gz' % self.root_config_dir,
+                '%s/test/localhost.tar.gz' % self.root_config_dir)
+    tar_file = tarfile.open('%s/test/localhost.tar.gz' % self.root_config_dir, 'r:gz')
+    tarred_files = tar_file.getnames()
+    for tarred in tarred_files:
+      self.assertTrue(os.path.exists('%s/localhost/%s' % (self.root_config_dir, tarred)))
+
+  def testGetZoneList(self):
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
+    self.assertRaises(config_lib.ServerCheckError, config_lib_instance.GetZoneList, 'bad')
+    tree_exporter_instance.ExportAllBindTrees()
+
+    config_lib_instance.UnTarDnsTree()
+    f = open('%s/localhost/named/external/local.db' % self.root_config_dir, 'wb')
+    f.close()
+    self.assertRaises(errors.FunctionError, config_lib_instance.GetZoneList, 'localhost')
+    os.remove('%s/localhost/named/external/local.db' % self.root_config_dir)
+
+    self.assertEqual(config_lib_instance.GetZoneList('localhost'), {'external':{'university.lcl.':'forward_zone.db'}})
 
 if( __name__ == '__main__' ):
   unittest.main()

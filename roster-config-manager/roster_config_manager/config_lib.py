@@ -119,8 +119,8 @@ class ConfigLib(object):
     tar_file.close()
 
   def TarDnsTree(self, audit_log_id):
-    """Compresses the uncompressed Dns Tree in the root configuration directory
-    to the compressed Dns Tree in the Bind Directory.
+    """Compresses the uncompressed Roster Tree in the root configuration
+        directory to the compressed Roster Tree in the Bind Directory.
 
     Inputs:
       audit_log_id: id of the audit log to a backup tree
@@ -366,7 +366,7 @@ class ConfigLib(object):
 
     return server_info_dict
 
-  def WriteDnsServerInfo(self, server_info_dict, force=False):
+  def WriteDnsServerInfo(self, server_info_dict):
     """Writes the information about a DNS server to the dns_server.info file.
 
     Inputs:
@@ -486,8 +486,7 @@ class ConfigLib(object):
       if( 'No such file or directory' in result ):
         raise ServerCheckError('The remote test directory %s does not exist '
             'or the user %s does not have permission.' % 
-            (dns_server_info['server_info']['test_dir'],
-             dns_server_info['server_info']['server_host']))
+            (dns_server_info['server_info']['test_dir'], ssh_host))
     
       # Testing for tools
       if( 'tools' not in dns_server_info ):
@@ -509,3 +508,86 @@ class ConfigLib(object):
     finally:
       fabric_network.disconnect_all()
 
+  def TarDnsBindFiles(self, dns_server):
+    """Tars the BIND tree for a DNS server.
+    
+    Inputs:
+      dns_server: name of dns_server
+    """
+    if( not os.path.exists(self.root_config_dir) ):
+      raise ExporterNoFileError('DNS tree does not exist or has not been '
+                                'exported yet.')
+    if( not os.path.exists('%s/%s' % (self.root_config_dir, dns_server)) ):
+      raise ServerCheckError('DNS server %s does not exist.' % dns_server)
+    dns_tar_file = tarfile.open('%s/%s/%s.tar.bz2' % (self.root_config_dir,
+        dns_server,dns_server), 'w:bz2')
+
+    try:
+      server_files = os.listdir('%s/%s' % (self.root_config_dir, dns_server))
+      for server_file in server_files:
+        if( os.path.isdir('%s/%s/%s' % (self.root_config_dir, dns_server, 
+                                        server_file)) ):
+          try:
+            named_files = os.listdir('%s/%s/%s' % (self.root_config_dir,
+                dns_server, server_file))
+          except OSError:
+            raise ExporterListFileError('Can not list files in %s/%s/%s.' %
+                (self.root_config_dir, dns_server, server_file))
+          for view in named_files:
+            try:
+              view_files = os.listdir('%s/%s/%s/%s' % (self.root_config_dir,
+                  dns_server, server_file, view))
+            except OSError:
+              raise ExporterListFileError('Invalid tree format, can not list files in %s/%s/%s/%s.'
+                  % (self.root_config_dir, dns_server, server_file, view))
+            for zone in view_files:
+              self.__AddToTarFile__('%s/%s/%s' % (server_file,
+                  view, zone), '%s/%s' % (self.root_config_dir, dns_server), dns_tar_file)
+        else:
+          self.__AddToTarFile__(server_file, '%s/%s' % ( 
+              self.root_config_dir, dns_server), dns_tar_file)
+    except ExporterFileError:
+      dns_tar_file.close()
+      os.remove('%s/%s/%s.tar.bz2' % (self.root_config_dir, dns_server, 
+                                      dns_server))
+      raise
+    dns_tar_file.close()
+
+  # There are 2 ways to get zones.  By reading the zone files, or by named.conf
+  #   This uses the first.  Opens more files, but has less room for mistakes
+  #   because there is less parsing that is done.
+  def GetZoneList(self, dns_server):
+    """Gets all of the zones from a BIND tree for a DNS server.
+
+    Inputs:
+      dns_server: name of a DNS server
+
+    Outputs:
+      dict: {'view1': {'zone1': '/zone/file', 'zone2': '/zone/file'},
+             'view2': {'zone3': '/zone/file', 'zone4': '/zone/file'}}
+    """
+    try:
+      views = os.listdir('%s/%s/named/' % (self.root_config_dir, dns_server))
+      zone_dict = {}
+      for view in views:
+        if( view not in zone_dict ):
+          zone_dict[view] = {}
+        zone_files = os.listdir('%s/%s/named/%s' % (self.root_config_dir, 
+                                               dns_server, view))
+        for zone_file_name in zone_files:
+          zone_file = open('%s/%s/named/%s/%s' % (self.root_config_dir, 
+              dns_server, view, zone_file_name))
+          zone_origin = ''
+          for line in zone_file:
+            if( 'ORIGIN' in line ):
+              zone_origin = line.lstrip('$ORIGIN ').rstrip('.\n')
+              break
+          else:
+            zone_file.close()
+            raise errors.FunctionError('Invalid zone file format for %s.' % 
+                                       zone_file_name)
+          zone_file.close()
+          zone_dict[view][zone_origin] = zone_file_name
+    except OSError as err:
+      raise ServerCheckError('Can not list files in %s.' % err.filename)
+    return zone_dict
