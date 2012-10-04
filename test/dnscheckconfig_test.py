@@ -63,6 +63,7 @@ SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TESTDIR = u'%s/unittest_dir/' % os.getcwd()
 BINDDIR = u'%s/test_data/named/' % os.getcwd()
+NAMED_DIR = u'%s/test_data/named/named' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
 DNS_SERVER = u'dns1'
 
@@ -98,11 +99,7 @@ class TestCheckConfig(unittest.TestCase):
         'exporter']['root_config_dir'].lstrip('./').rstrip('/')
     self.backup_dir = self.config_instance.config_file[
         'exporter']['backup_dir'].lstrip('./').rstrip('/')
-    self.named_dir = self.config_instance.config_file[
-        'exporter']['named_dir'].lstrip('./').rstrip('/')
     self.bind_config_dir = os.path.expanduser(self.root_config_dir)
-    self.named_dir = os.path.expanduser(
-        self.config_instance.config_file['exporter']['named_dir'])
     self.lockfile = self.config_instance.config_file[
         'server']['lock_file']
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
@@ -134,10 +131,10 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.root_config_dir)
     if( os.path.exists('temp_dir') ):
       shutil.rmtree('temp_dir')
-    if( os.path.exists('%s/named' % self.named_dir) ):
-      shutil.rmtree('%s/named' % self.named_dir)
-    if( os.path.exists('%s/named.conf' % self.named_dir) ):
-      os.remove('%s/named.conf' % self.named_dir)
+    if( os.path.exists('%s/named' % BIND_DIR) ):
+      shutil.rmtree('%s/named' % BIND_DIR)
+    if( os.path.exists('%s/named.conf' % BIND_DIR) ):
+      os.remove('%s/named.conf' % BIND_DIR)
     if( os.path.exists(self.lockfile) ):
       os.remove(self.lockfile)
 
@@ -265,7 +262,7 @@ class TestCheckConfig(unittest.TestCase):
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
         '%s/%s/named.conf' % (self.root_config_dir, DNS_SERVER),
-        'options { directory "%snamed"; };' % self.named_dir,
+        'options { directory "%s"; };' % NAMED_DIR,
         '\noptions\n{\ndirectory "another";\n};\noptions {\n print-time yes;};\n')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))

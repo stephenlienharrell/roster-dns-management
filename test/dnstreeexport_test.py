@@ -55,6 +55,7 @@ import roster_core
 
 TESTDIR = u'%s/unittest_dir/' % os.getcwd()
 BINDDIR = u'%s/test_data/named/' % os.getcwd()
+NAMED_DIR = u'%snamed' % BINDDIR
 SSH_USER = unicode(getpass.getuser())
 USER_CONFIG = 'test_data/roster_user_tools.conf'
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -71,8 +72,6 @@ class TestDnsMkHost(unittest.TestCase):
         'root_config_dir']
     self.backup_dir = self.config_instance.config_file['exporter'][
         'backup_dir']
-    self.named_dir = self.config_instance.config_file['exporter'][
-        'named_dir'].rstrip('/')
 
     db_instance = self.config_instance.GetDb()
     self.db_instance = db_instance
@@ -1197,8 +1196,8 @@ class TestDnsMkHost(unittest.TestCase):
         '[server_info]\n'
         'test_dir = %s/unittest_dir/\n'
         'bind_version = undetermined\n'
-        'server_user = %s\n'
         'server_name = ns1.university.edu\n'
+        'server_user = %s\n'
         'bind_dir = %s/test_data/named/\n'
         '\n'
         '[tools]\n'
@@ -1218,7 +1217,7 @@ class TestDnsMkHost(unittest.TestCase):
         'category "client" { "null"; };\n'
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
-        'options { directory "%s/named";\n'
+        'options { directory "%s";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
@@ -1243,7 +1242,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\t\tfile "external/4.3.2.1.in-addr.db";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '};' % self.named_dir)
+        '};' % NAMED_DIR)
     handle.close()
     handle = open(
         './%s/ns1.university.edu/named/external/4.3.2.1.in-addr.db' %
@@ -1277,8 +1276,8 @@ class TestDnsMkHost(unittest.TestCase):
         '[server_info]\n'
         'test_dir = %s/unittest_dir/\n'
         'bind_version = undetermined\n'
-        'server_user = %s\n'
         'server_name = ns1.int.university.edu\n'
+        'server_user = %s\n'
         'bind_dir = %s/test_data/named/\n'
         '\n'
         '[tools]\n'
@@ -1297,7 +1296,7 @@ class TestDnsMkHost(unittest.TestCase):
         'category "client" { "null"; };\n'
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
-        'options { directory "%s/named";\n'
+        'options { directory "%s";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
@@ -1335,7 +1334,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\t\tfile "internal/168.192.in-addr.db";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '};' % self.named_dir)
+        '};' % NAMED_DIR)
     handle.close()
     handle = open(
         './%s/ns1.int.university.edu/named/external/4.3.2.1.in-addr.db' % 
@@ -1395,8 +1394,8 @@ class TestDnsMkHost(unittest.TestCase):
         '[server_info]\n'
         'test_dir = %s/unittest_dir/\n'
         'bind_version = undetermined\n'
-        'server_user = %s\n'
         'server_name = dns4.university.edu\n'
+        'server_user = %s\n'
         'bind_dir = %s/test_data/named/\n'
         '\n'
         '[tools]\n'
@@ -1415,7 +1414,7 @@ class TestDnsMkHost(unittest.TestCase):
             'category "client" { "null"; };\n'
             'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
             'print-time yes; }; };\n'
-            'options { directory "%s/named";\n'
+            'options { directory "%s";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
             'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
@@ -1435,7 +1434,7 @@ class TestDnsMkHost(unittest.TestCase):
             '\t\tfile "private/university.edu.db";\n'
             '\t\tallow-update { none; };\n'
             '\t};\n'
-            '};' % self.named_dir)
+            '};' % NAMED_DIR)
     handle.close()
     handle = open(
         './%s/dns4.university.edu/named/private/university.edu.db' %

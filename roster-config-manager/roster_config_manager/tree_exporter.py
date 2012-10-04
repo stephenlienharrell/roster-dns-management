@@ -76,7 +76,7 @@ class ChangesNotFoundError(Error):
 
 class BindTreeExport(object):
   """This class exports zones"""
-  def __init__(self, config_file_name, directory=None):
+  def __init__(self, config_file_name):
     """Sets self.db_instance
 
     Inputs:
@@ -90,11 +90,6 @@ class BindTreeExport(object):
     self.cooked_data = {}
     self.root_config_dir = config_instance.config_file['exporter'][
         'root_config_dir']
-    if( directory ):
-      self.named_dir = os.path.abspath(os.path.expanduser(
-          directory))
-    else:
-      self.named_dir = config_instance.config_file['exporter']['named_dir']
     self.backup_dir = os.path.abspath(os.path.expanduser(
         config_instance.config_file['exporter']['backup_dir']))
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
@@ -244,13 +239,15 @@ class BindTreeExport(object):
             os.makedirs(dns_server_directory)
 
           # Write server info file
+          bind_dir = cooked_data['dns_servers'][dns_server][
+              'dns_server_remote_bind_directory']
+
           info_file_dict = {
               'server_info': {
                   'server_name': dns_server,
                   'server_user': cooked_data['dns_servers'][dns_server][
                       'dns_server_ssh_username'],
-                  'bind_dir': cooked_data['dns_servers'][dns_server][
-                      'dns_server_remote_bind_directory'],
+                  'bind_dir': bind_dir,
                   'test_dir': cooked_data['dns_servers'][dns_server][
                       'dns_server_remote_test_directory'],
                   'bind_version': 'undetermined'},
@@ -287,9 +284,9 @@ class BindTreeExport(object):
           named_conf_binary_file = '%s/named.conf.b' % (
               named_directory.rstrip('/'))
           named_conf_a_file_string = self.MakeNamedConf(data, cooked_data,
-                                                      dns_server_set, 'db')
+                                                      dns_server_set, 'db', bind_dir)
           named_conf_b_file_string = self.MakeNamedConf(data, cooked_data,
-                                                      dns_server_set, 'aa')
+                                                      dns_server_set, 'aa', bind_dir)
           named_conf_file_handle = open(named_conf_file, 'w')
           named_conf_file_handle.write(named_conf_a_file_string)
           named_conf_file_handle.close()
@@ -420,7 +417,7 @@ class BindTreeExport(object):
       return iscpy.Deserialize(newest_config)
     return newest_config
 
-  def MakeNamedConf(self, data, cooked_data, dns_server_set, extension):
+  def MakeNamedConf(self, data, cooked_data, dns_server_set, extension, remote_bind_dir):
     """Makes named.conf file strings
 
     Inputs:
@@ -428,6 +425,7 @@ class BindTreeExport(object):
       cooked_data: data from cooked_data
       dns_server_set: string of dns_server_set
       extension: bind extension, e.g., .db, .aa (binary), etc
+      remote_bind_dir: string of remote server bind dir
 
     Outputs:
       string: string of named.conf file
@@ -440,7 +438,7 @@ class BindTreeExport(object):
       raise Error('Named conf global options missing for server set "%s"' % (
           dns_server_set))
     named_conf_header = self.NamedHeaderChangeDirectory(
-        named_conf_header, '%s/named' % self.named_dir.rstrip('/'))
+        named_conf_header, '%s/named' % remote_bind_dir.rstrip('/'))
     named_conf_lines.append(named_conf_header)
     for acl_range in data['acl_ranges']:
       if( not acl_range['acl_ranges_acl_name'] in acl_dict ):

@@ -144,8 +144,6 @@ class TestCheckConfig(unittest.TestCase):
     self.backup_dir = self.config_instance.config_file[
         'exporter']['backup_dir'].rstrip('/').lstrip('./')
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
-    self.named_dir = os.path.expanduser(
-        self.config_instance.config_file['exporter']['named_dir'])
     self.lockfile = self.config_instance.config_file[
         'server']['lock_file']
 
@@ -174,10 +172,10 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.backup_dir)
     if( os.path.exists(self.root_config_dir) ):
       shutil.rmtree(self.root_config_dir)
-    if( os.path.exists('%s/named' % self.named_dir) ):
-      shutil.rmtree('%s/named' % self.named_dir)
-    if( os.path.exists('%s/named.conf' % self.named_dir) ):
-      os.remove('%s/named.conf' % self.named_dir)
+    if( os.path.exists('%s/named' % BINDDIR) ):
+      shutil.rmtree('%s/named' % BINDDIR)
+    if( os.path.exists('%s/named.conf' % BINDDIR) ):
+      os.remove('%s/named.conf' % BINDDIR)
     if( os.path.exists(self.lockfile) ):
       os.remove(self.lockfile)
 
@@ -206,8 +204,8 @@ class TestCheckConfig(unittest.TestCase):
     self.tree_exporter_instance.ExportAllBindTrees()
     # Copy blank named.conf to start named with
     shutil.copyfile('test_data/named.blank.conf',
-                    '%s/named.conf' % self.named_dir)
-    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+                    '%s/named.conf' % BINDDIR)
+    named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
     named_file_contents = named_file_contents.replace(
         'RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
     named_file_contents = named_file_contents.replace(
@@ -218,13 +216,13 @@ class TestCheckConfig(unittest.TestCase):
         'RNDC_PORT', str(self.rndc_port))
     named_file_contents = named_file_contents.replace(
         'SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
-    named_file_handle = open('%s/named.conf' % self.named_dir, 'w')
+    named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
-    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
     # Start named
     out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %s/named.conf' % (
-        self.port, SSH_USER, self.named_dir), capture=True)
+        self.port, SSH_USER, BINDDIR), capture=True)
     time.sleep(2)
 
     output = os.popen('python %s -f --config-file %s '

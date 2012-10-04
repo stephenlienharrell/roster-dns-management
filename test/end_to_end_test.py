@@ -141,7 +141,6 @@ class TestComplete(unittest.TestCase):
     self.rndc_port = PickUnusedPort()
     self.named_port = PickUnusedPort()
     self.server_name = 'https://%s:%s' % (HOST, self.port)
-    self.named_dir = config.get('exporter', 'named_dir')
 
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
@@ -161,10 +160,10 @@ class TestComplete(unittest.TestCase):
     ## kill rosterd deamon threads
     if( os.path.exists(LOCKFILE) ):
       os.remove(LOCKFILE)
-    if( os.path.exists('%s/named' % self.named_dir) ):
-      shutil.rmtree('%s/named' % self.named_dir)
-    if( os.path.exists('%s/named.conf' % self.named_dir) ):
-      os.remove('%s/named.conf' % self.named_dir)
+    if( os.path.exists('%s/named' % BINDDIR) ):
+      shutil.rmtree('%s/named' % BINDDIR)
+    if( os.path.exists('%s/named.conf' % BINDDIR) ):
+      os.remove('%s/named.conf' % BINDDIR)
     if( os.path.exists('./temp_dir') ):
       shutil.rmtree('./temp_dir')
 
@@ -229,20 +228,20 @@ class TestComplete(unittest.TestCase):
       self.fail('User tools config file was not created.')
 
     # Copy blank named.conf to start named with
-    shutil.copyfile('test_data/named.blank.conf', '%s/named.conf' % self.named_dir)
-    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    shutil.copyfile('test_data/named.blank.conf', '%s/named.conf' % BINDDIR)
+    named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
     named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
     named_file_contents = named_file_contents.replace('NAMED_DIR', '%s/test_data/named' % os.getcwd())
     named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
     named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
-    named_file_handle = open('%s/named.conf' % self.named_dir, 'w')
+    named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
-    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
     # Start named
     named_proc = os.popen('/usr/sbin/named -p %s -u %s -c %s/named.conf' % ( 
-        self.named_port, SSH_USER, self.named_dir))
+        self.named_port, SSH_USER, BINDDIR))
     output = named_proc.read()
     time.sleep(2)
 

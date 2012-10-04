@@ -90,8 +90,7 @@ CONFIG_FILE_SCHEMA = {'database': {'server': 'str', 'login': 'str',
                       'credentials': {'authentication_method': 'str',
                                       'exp_time': 'int'},
                       'exporter': {'backup_dir': 'str',
-                                   'root_config_dir': 'str',
-                                   'named_dir': 'str'}}
+                                   'root_config_dir': 'str'}}
 
 
 # The SUPPORTED_METHODS hash contains a hash for every supported method.
