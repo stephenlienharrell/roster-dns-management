@@ -1,0 +1,313 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2009, Purdue University
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# Redistributions in binary form must reproduce the above copyright notice, this
+# list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+# 
+# Neither the name of the Purdue University nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""This script is used for verifying zone files are correctly loaded on a 
+name server."""
+
+__copyright__ = 'Copyright (C) 2009, Purdue University'
+__license__ = 'BSD'
+__version__ = '#TRUNK#'
+
+import dns.zone
+import dns.query
+import dns.exception
+import sys
+import os
+import random
+
+from optparse import OptionParser
+from roster_core import errors
+from roster_core import helpers_lib
+from roster_config_manager import config_lib
+
+def DnsQuery(records, dns_server, dns_port, zone_origin):
+  """Queries a DNS server for all the records contained within the
+  supplied list of records.
+ 
+  Input:
+    records: list of record dictionaries
+    dns_server: IP Address or hostname of DNS server.
+    dns_port: int of port to query DNS server on.
+    zone_origin: string of zone_origin
+ 
+    Output:
+      (good_records, bad_records): a tuple of 2 lists,
+      the first being all the records that were able to 
+      be verified, the second being all the records unable
+      to be verified."""
+  if( dns_server == 'localhost' ):
+    dns_server = '127.0.0.1'
+
+  good_records = []
+  record_types = {
+                   u'a':     dns.rdatatype.A,
+                   u'aaaa':  dns.rdatatype.AAAA,
+                   u'cname': dns.rdatatype.CNAME,
+                   u'soa':   dns.rdatatype.SOA,
+                   u'mx':    dns.rdatatype.MX,
+                   u'ns':    dns.rdatatype.NS,
+                   u'ptr':   dns.rdatatype.PTR,
+                   u'txt':   dns.rdatatype.TXT,
+                   u'hinfo': dns.rdatatype.HINFO,
+                   u'srv':   dns.rdatatype.SRV
+                 }
+
+  #Main loop, going through the zone records, querying the DNS server for them
+  for record in records:
+    server_responses = []
+    record_type = record['record_type']
+    rdtype = record_types[record_type]
+    record_arguments = record['record_arguments']
+
+    if( 'record_target' in record ):
+      record_target = record['record_target']
+    else:
+      record_target = record['target']
+
+    #Setting query 
+    if( record_target == '@' ):
+      query = zone_origin
+    else:
+      query = '%s.%s' % (record_target, zone_origin)
+ 
+    message = dns.message.make_query(query, rdtype=rdtype)
+
+    try:
+      response = dns.query.udp(message, dns_server, 
+          port=int(dns_port), one_rr_per_rrset=False, timeout=10)
+    except dns.exception.Timeout:
+      return ([], records)
+
+    answers = response.answer
+
+    #checking that record type and target match
+    for answer in answers:
+      if( int(answer.rdtype) == int(rdtype) and 
+          unicode(answer.name) == unicode(query) ):
+        break
+    else:
+      continue
+
+    for answer_set in answers:
+      for answer in answer_set:
+        if( record_type == u'soa' ):
+          if( record_arguments[u'refresh_seconds'] == answer.refresh and 
+              record_arguments[u'expiry_seconds']  == answer.expire  and
+              record_arguments[u'minimum_seconds'] == answer.minimum and
+              record_arguments[u'retry_seconds']   == answer.retry   and
+              record_arguments[u'name_server'] == unicode(answer.mname) and 
+              record_arguments[u'admin_email'] == unicode(answer.rname) ):
+            good_records.append(record)
+            break
+
+        elif( record_type == u'a' ):
+          if( record_arguments[u'assignment_ip'] == answer.address ):
+            good_records.append(record)
+            break
+
+        elif( record_type == u'aaaa' ):
+          if( record_arguments[u'assignment_ip'] == helpers_lib.ExpandIPV6(
+                unicode(answer.address)) ):
+            good_records.append(record)
+            break
+
+        elif( record_type == u'cname' ):
+          if( record_arguments[u'assignment_host'] == unicode(answer.target) ):
+            good_records.append(record)
+            break
+
+        elif( record_type == u'ptr' ):
+          if( record_arguments[u'assignment_host'] == unicode(answer.target) ):
+            good_records.append(record)
+            break
+
+        elif( record_type == u'mx' ):
+          if( record_arguments[u'priority']    == answer.preference and
+              record_arguments[u'mail_server'] == unicode(answer.exchange) ):
+            good_records.append(record)
+            break
+
+        elif( record_type == u'ns' ):
+          if( record_arguments[u'name_server'] == unicode(answer.target) ):
+            good_records.append(record)
+            break
+
+        elif( record_type == u'hinfo' ):
+          if( record_arguments[u'hardware'] == unicode(answer.cpu) and
+              record_arguments[u'os']       == unicode(answer.os) ):
+            good_records.append(record)
+            break
+
+        elif( record_type == u'txt' ):
+          if( record_arguments[u'quoted_text'] == u'"%s"' % (
+                answer.strings[0]) ):
+            good_records.append(record)
+            break
+
+  #Takes all the records that never made it into good_records, and declares
+  #them as bad_records.
+  for record in good_records:
+    records.remove(record)
+
+  bad_records = records
+  
+  #This is purely for asthetic reasons. If you were to print bad_records,
+  #you'd see a bunch of None's which doesn't help you. It just clutters
+  #the screen.
+  for record in bad_records:
+    if( u'record_zone_name' in record ):
+      if( record[u'record_zone_name'] is None ):
+        del record[u'record_zone_name']
+
+  return (good_records, bad_records)
+
+def QueryFromZoneFile(zone_file_name, view_name=None):
+  zone_name = zone_file_name.split('/').pop().split('.')[0]
+  try:
+    zone_file_handle = open(zone_file_name, 'r')
+    zone_file_string = zone_file_handle.read()
+    zone_file_handle.close()
+  except IOError:
+    print 'Unable to open zone file %s' % zone_file_name
+    print 'Zone %s does not appear to be online for server %s' % (
+        zone_name, options.server)
+    return
+
+  zone_object = dns.zone.from_text(
+      str(zone_file_string), check_origin=False)
+  zone_origin = zone_object.origin
+  all_zone_records_list = helpers_lib.CreateRecordsFromZoneObject(
+      zone_object, zone_name=zone_name, view_name=view_name)
+  zone_records_list = []
+
+  #Generating list of random records to query
+  if( str(options.number).strip().lower() == 'all' ):
+    zone_records_list = all_zone_records_list
+  else:
+    for i in range(options.number):
+      #If we've run out of records to pop, break out of the loop
+      if( len(all_zone_records_list) == 0 ):
+        break
+
+      random_record_index = random.randint(0, len(all_zone_records_list) - 1)
+      random_record = all_zone_records_list.pop(random_record_index) 
+      zone_records_list.append(random_record)
+
+    (good_records, bad_records) = DnsQuery(
+        zone_records_list, options.server, options.port, zone_origin)
+
+    if( len(bad_records) != 0 ):
+      print 'Zone %s does not appear to be online for server %s' % (
+          zone_name, options.server)
+
+def main(args):
+  usage = ('\n'
+           '\n'
+           'To test a DNS server:\n'
+           '\t%s -c <config-file> -i <audit-log-id> -s <dns-server> '
+           '(-z <zone-name>) (-v <view-name>) or\n'
+           '\t%s -f <zone-file> '
+           '-s <dns-server>\n') % (sys.argv[0], sys.argv[0])
+
+  parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
+
+  parser.add_option('-c', '--config-file', action='store', dest='config_file',
+                    help='Roster Server config file', metavar='<config_file>',
+                    default='/etc/roster/roster_server.conf')
+  parser.add_option('-i', '--id', action='store', dest='id',
+                    help='Audit log ID', metavar='<id>',
+                    default=None)
+  parser.add_option('-s', '--server', action='store', dest='server',
+                    help='DNS server to query.', metavar='<server>',
+                    default=None)
+  parser.add_option('-p', '--port', action='store', dest='port',
+                    help='Port to query DNS server on.', metavar='<port>',
+                    default=53)
+  parser.add_option('-n', '--number', action='store', dest='number',
+                    help='Number of random records to query for. Default=5\n'
+                    'To query all records, use -n all',
+                    metavar='<number>', default=5)
+  parser.add_option('-f', '--file', action='store', dest='zone_file',
+                    help='Zone file to use for queries, instead of audit '
+                    'log id.', metavar='<zone_file>', default=None)
+  parser.add_option('-v', '--view', action='store', dest='view_name',
+                    help='Check only a specific view. (optional)',
+                    metavar='<view_name>', default=None)
+  parser.add_option('-z', '--zone', action='store', dest='zone_name',
+                    help='Check only a specific zone. (optional)',
+                    metavar='<zone_name>', default=None)
+
+  (globals()["options"], args) = parser.parse_args(args)
+
+  if( options.server is None ):
+    print 'Must specify -s/--server flag.'
+    sys.exit(1)
+
+  if( (options.config_file is None or options.id is None) and 
+       options.zone_file is None ):
+    print 'Must specify -i/--id and -c/--config-file or the -f/--file flag.'
+    sys.exit(1)
+
+  #If we're querying from id and config file
+  if( not options.zone_file ):
+    config_lib_instance = config_lib.ConfigLib(options.config_file)
+    config_lib_instance.UnTarDnsTree(options.id)
+    server_dir = os.path.join(config_lib_instance.root_config_dir, options.server)
+
+    view_list = config_lib_instance.GetZoneList(options.server)
+  
+    if( options.view_name is not None ):
+      if( options.view_name not in view_list ):
+        print 'View %s not found' % options.view_name
+        sys.exit(1)
+      else:
+        view_list = {options.view_name: view_list[options.view_name]}
+
+    for view_name in view_list:
+      zone_list = view_list[view_name]
+
+      if( options.zone_name is not None ):
+        if( options.zone_name not in zone_list ):
+          print 'Zone %s not found' % options.zone_name
+          sys.exit(1)
+        else:
+          zone_list = {options.zone_name: zone_list[options.zone_name]}
+
+      for zone_name in zone_list:
+        zone_file_name = zone_list[zone_name]
+
+        zone_file = os.path.join(server_dir, 'named', view_name, zone_file_name)
+        QueryFromZoneFile(zone_file, view_name=view_name)
+  else:
+    QueryFromZoneFile(options.zone_file)
+
+if( __name__ == "__main__" ):
+  main(sys.argv[1:])
+  

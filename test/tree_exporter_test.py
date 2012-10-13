@@ -1159,7 +1159,10 @@ class TestTreeExporter(unittest.TestCase):
 
   def tearDown(self):
     if( os.path.exists(self.root_config_dir) ):
-        shutil.rmtree(self.root_config_dir)
+      shutil.rmtree(self.root_config_dir)
+    for i in range(4):
+      os.system('rm -rf dns%s.university.edu' % (i + 1))
+    os.system('rm -rf ns1.*')
 
   def testTreeExporterListRecordArgumentDefinitions(self):
     search_record_arguments_dict = self.db_instance.GetEmptyRowDict(

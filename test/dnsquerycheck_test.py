@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Regression test for dnszoneverify
+"""Regression test for dnsquerycheck
 
 Make sure you are running this against a database that can be destroyed.
 
@@ -47,7 +47,6 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
-
 import getpass
 import os
 import sys
@@ -61,16 +60,19 @@ from fabric import state as fabric_state
 
 import roster_core
 from roster_config_manager import tree_exporter
+from roster_config_manager import config_lib
 
 CONFIG_FILE = 'test_data/roster.conf'
 CONFIG_SYNC_EXEC = '../roster-config-manager/scripts/dnsconfigsync'
 ZONE_IMPORTER_EXEC='../roster-config-manager/scripts/dnszoneimporter'
-ZONE_VERIFY_EXEC='../roster-config-manager/scripts/dnszoneverify'
+QUERY_CHECK_EXEC='../roster-config-manager/scripts/dnsquerycheck'
+SERVER_CHECK_EXEC='../roster-config-manager/scripts/dnsservercheck'
 KEY_FILE = 'test_data/rndc.key'
 RNDC_CONF_FILE = 'test_data/rndc.conf'
 USERNAME = u'sharrell'
-TESTDIR = u'%s/unittest_dir/' % os.getcwd()
-BINDDIR = u'%s/test_data/named/' % os.getcwd()
+TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/bind_dir/' % os.getcwd()
+NAMED_DIR = '%s/test_data/bind_dir/named'  % os.getcwd()
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 SSH_ID = 'test_data/roster_id_dsa'
@@ -96,7 +98,7 @@ RNDC_KEY_DATA = ('key "rndc-key" {\n'
 RNDC_CONF = 'test_data/rndc.conf'
 RNDC_KEY = 'test_data/rndc.key'
 
-class TestZoneVerify(unittest.TestCase):
+class TestQueryCheck(unittest.TestCase):
   def setUp(self):
     def PickUnusedPort():
       s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -130,8 +132,6 @@ class TestZoneVerify(unittest.TestCase):
         self.config_instance.config_file['exporter']['root_config_dir'])
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
-    self.named_dir = os.path.expanduser(
-        self.config_instance.config_file['exporter']['named_dir'])
     self.lockfile = self.config_instance.config_file[
         'server']['lock_file']
 
@@ -147,22 +147,35 @@ class TestZoneVerify(unittest.TestCase):
     self.core_instance.RemoveZone(u'bio.university.edu')
     self.core_instance.RemoveZone(u'eas.university.edu')
 
+    if( not os.path.exists(BINDDIR) ):
+      os.mkdir(BINDDIR)
+    if( not os.path.exists(NAMED_DIR) ):
+      os.mkdir(NAMED_DIR)
+    if( not os.path.exists(TESTDIR) ):
+      os.mkdir(TESTDIR)
+
   def tearDown(self):
     fabric_api.local('killall named', capture=True)
     fabric_network.disconnect_all()
     time.sleep(1) # Wait for disk to settle
-    if( os.path.exists('%s/named' % self.named_dir) ):
-      shutil.rmtree('%s/named' % self.named_dir)
-    if( os.path.exists('%s/named.conf' % self.named_dir) ):
-      os.remove('%s/named.conf' % self.named_dir)
     if( os.path.exists('backup') ):
       shutil.rmtree('backup')
     if( os.path.exists('test_data/backup_dir') ):
       shutil.rmtree('test_data/backup_dir')
+    if( os.path.exists('root_config_dir') ):
+      shutil.rmtree('root_config_dir')
+    #Clearing unittest_dir to empty directory
     if( os.path.exists(self.lockfile) ):
       os.remove(self.lockfile)
 
-  def testZoneVerify(self):
+    if( os.path.exists(BINDDIR) ):
+      shutil.rmtree(BINDDIR)
+    if( os.path.exists(NAMED_DIR) ):
+      shutil.rmtree(NAMED_DIR)
+    if( os.path.exists(TESTDIR) ):
+      shutil.rmtree(TESTDIR)
+
+  def testErrors(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'forward_zone', u'master',
                                 u'sub.university.lcl.', view_name=u'test_view')
@@ -210,64 +223,112 @@ class TestZoneVerify(unittest.TestCase):
         'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
+
     # Copy blank named.conf to start named with
-    shutil.copyfile('test_data/named.blank.conf', '%s/named.conf' % self.named_dir)
-    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    shutil.copyfile('test_data/named.blank.conf', 
+                    os.path.join(BINDDIR, 'named.conf'))
+    named_file_contents = open(os.path.join(BINDDIR, 'named.conf')).read()
     named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
-    named_file_contents = named_file_contents.replace('NAMED_DIR', '%s/test_data/named' % os.getcwd())
+    named_file_contents = named_file_contents.replace('NAMED_DIR', NAMED_DIR)
     named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
-    named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
-    named_file_handle = open('%s/named.conf' % self.named_dir, 'w')
+    Named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
+    named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
-    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+
     # Start named
-    out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %s/named.conf' % (
-        self.port, SSH_USER, self.named_dir), capture=True)
+    out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %snamed.conf' % (
+        self.port, SSH_USER, BINDDIR), capture=True)
     time.sleep(2)
 
-    command = os.popen(
-        'python %s --rndc-key test_data/rndc.key --rndc-port %s -u %s '
-        '--ssh-id %s --config-file %s --rndc-port %s' % (
-            CONFIG_SYNC_EXEC, self.rndc_port, SSH_USER, SSH_ID, 
-            CONFIG_FILE, self.rndc_port))
-    lines = command.read().split('\n')
-    # These lines will likely need changed depending on implementation
-    self.assertTrue('Connecting to "%s"' % TEST_DNS_SERVER in lines)
-    self.assertTrue('[%s@%s] out: server reload successful\r' % (
-        SSH_USER, TEST_DNS_SERVER) in lines)
-    self.assertTrue('Disconnecting from %s... done.' % (
-            TEST_DNS_SERVER) in lines)
+    # Running dnsservercheck
+    command = os.popen('python %s --config-file %s -i 17 -d %s' % (
+        SERVER_CHECK_EXEC, CONFIG_FILE, TEST_DNS_SERVER))
+    output = command.read()
     command.close()
- 
-    #Checking output of dnszoneverify
-    command = os.popen('python %s -f test_data/test_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
-    self.assertEqual(command.read(), 
-                     'Able to verify 15 records.\nUnable to verify 0 records.\n')
-    command.close()
-    command = os.popen('python %s -f test_data/test_reverse_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
-    self.assertEqual(command.read(), 
-                     'Able to verify 5 records.\nUnable to verify 0 records.\n')
-    command.close()
-    command = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
-    self.assertEqual(command.read(), 
-                     'Able to verify 4 records.\nUnable to verify 0 records.\n')
-    command.close()
+    self.assertEqual(output, '')
 
-  def testErrors(self):
-    self.core_instance.MakeView(u'test_view')
+    # Running dnsconfisync
+    command = os.popen(
+        'python %s -d localhost --config-file %s -i 17 '
+        '--rndc-key %s --rndc-conf %s --rndc-port %s' % (
+            CONFIG_SYNC_EXEC, CONFIG_FILE, RNDC_KEY, RNDC_CONF, self.rndc_port))
+    output = command.read()
+    command.close()
+    self.assertEqual(output, '')
+
+    #Messing with the zone files so that dnsquerycheck will not pass
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    config_lib_instance.UnTarDnsTree()
+    zone_dir = 'root_config_dir/%s/named/test_view' % TEST_DNS_SERVER
+    for zone_file_name in os.listdir(zone_dir):
+      zone_file_path = os.path.join(zone_dir, zone_file_name)
+
+      zone_file_handle = open(zone_file_path, 'r')
+      zone_file_string = zone_file_handle.read()
+      zone_file_string = zone_file_string.replace('.lcl', '.lol')
+      zone_file_handle.close()
+
+      zone_file_handle = open(zone_file_path, 'w')
+      zone_file_handle.write(zone_file_string)
+      zone_file_handle.close()
+
+    config_lib_instance.TarDnsTree(17)
+
+    # Running dnsquerycheck
+    command = os.popen(
+        'python %s -s %s -c %s -p %s -i 17' % (
+        QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
+    output = command.read()
+    command.close()
+    self.assertEqual(output, 
+        'Zone reverse_ipv6_zone does not appear to be online '
+        'for server localhost\n'
+        'Zone reverse_zone does not appear to be online '
+        'for server localhost\n'
+        'Zone forward_zone does not appear to be online '
+        'for server localhost\n')
+
+    command = os.popen(
+        'python %s -s %s -p %s -f no_file' % (
+        QUERY_CHECK_EXEC, TEST_DNS_SERVER, self.port))
+    output = command.read()
+    command.close()
+    self.assertEqual(output, 
+        'Unable to open zone file no_file\nZone no_file does not appear to be online for server localhost\n')
+
+  def testQueryCheck(self):
+    self.core_instance.MakeView(u'test_view1')
+    #self.core_instance.MakeView(u'test_view2')
+    self.core_instance.MakeZone(u'forward_zone', u'master',
+                                u'sub.university.lcl.', view_name=u'test_view1')
+    self.core_instance.MakeZone(u'reverse_zone', u'master',
+                                u'0.168.192.in-addr.arpa.', view_name=u'test_view1')
     self.core_instance.MakeZone(u'reverse_ipv6_zone', u'master',
-                                u'8.0.e.f.f.3.ip6.arpa.', view_name=u'test_view')
+                                u'8.0.e.f.f.3.ip6.arpa.', view_name=u'test_view1')
     self.assertEqual(self.core_instance.ListRecords(), [])
+    output = os.popen('python %s -f test_data/test_zone.db '
+                      '--view test_view1 -u %s --config-file %s '
+                      '-z forward_zone' % ( 
+                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
+    self.assertEqual(output.read(),
+                     'Loading in test_data/test_zone.db\n'
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
+    output.close()
+    output = os.popen('python %s -f test_data/test_reverse_zone.db '
+                      '--view test_view1 -u %s --config-file %s '
+                      '-z reverse_zone' % ( 
+                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
+    self.assertEqual(output.read(),
+                     'Loading in test_data/test_reverse_zone.db\n'
+                     '6 records loaded from zone '
+                     'test_data/test_reverse_zone.db\n'
+                     '6 total records added\n')
+    output.close()
     output = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                      '--view test_view -u %s --config-file %s '
+                      '--view test_view1 -u %s --config-file %s '
                       '-z reverse_ipv6_zone' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
     self.assertEqual(output.read(),
@@ -280,109 +341,83 @@ class TestZoneVerify(unittest.TestCase):
     self.core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view1', 1, u'set1')
+    #self.core_instance.MakeDnsServerSetViewAssignments(u'test_view2', 2, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
         u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
         'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'any', 1)
+    self.core_instance.MakeViewToACLAssignments(u'test_view1', u'any', 1)
+    #self.core_instance.MakeViewToACLAssignments(u'test_view2', u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
+
+
     # Copy blank named.conf to start named with
-    shutil.copyfile('test_data/named.blank.conf', '%s/named.conf' % self.named_dir)
-    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    shutil.copyfile('test_data/named.blank.conf', 
+                    os.path.join(BINDDIR, 'named.conf'))
+    named_file_contents = open(os.path.join(BINDDIR, 'named.conf')).read()
     named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
-    named_file_contents = named_file_contents.replace('NAMED_DIR', '%s/test_data/named' % os.getcwd())
+    named_file_contents = named_file_contents.replace('NAMED_DIR', NAMED_DIR)
     named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
-    named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
-    named_file_handle = open('%s/named.conf' % self.named_dir, 'w')
+    Named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
+    named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
-    named_file_contents = open('%s/named.conf' % self.named_dir, 'r').read()
+    #named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
+
     # Start named
-    out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %s/named.conf' % (
-        self.port, SSH_USER, self.named_dir), capture=True)
+    out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %snamed.conf' % (
+        self.port, SSH_USER, BINDDIR), capture=True)
     time.sleep(2)
 
+    # Running dnsservercheck
+    command = os.popen('python %s --config-file %s -i 17 -d %s' % (
+        SERVER_CHECK_EXEC, CONFIG_FILE, TEST_DNS_SERVER))
+    output = command.read()
+    command.close()
+    self.assertEqual(output, '')
+
+    # Running dnsconfisync
     command = os.popen(
-        'python %s --rndc-key test_data/rndc.key --rndc-port %s -u %s '
-        '--ssh-id %s --config-file %s --rndc-port %s' % (
-            CONFIG_SYNC_EXEC, self.rndc_port, SSH_USER, SSH_ID, 
-            CONFIG_FILE, self.rndc_port))
-    lines = command.read().split('\n')
-    # These lines will likely need changed depending on implementation
-    self.assertTrue('Connecting to "%s"' % TEST_DNS_SERVER in lines)
-    self.assertTrue('[%s@%s] out: server reload successful\r' % (
-        SSH_USER, TEST_DNS_SERVER) in lines)
-    self.assertTrue('Disconnecting from %s... done.' % (
-            TEST_DNS_SERVER) in lines)
+        'python %s -d localhost --config-file %s -i 17 '
+        '--rndc-key %s --rndc-conf %s --rndc-port %s' % (
+            CONFIG_SYNC_EXEC, CONFIG_FILE, RNDC_KEY, RNDC_CONF, self.rndc_port))
+    output = command.read()
     command.close()
+    self.assertEqual(output, '')
 
-    command = os.popen('python %s -f test_data/test_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
-    self.assertEqual(command.read(),
-        'Able to verify 0 records.\n'
-        'Unable to verify 15 records.\n'
-        '\n'
-        'Unverifiable records:\n'
-        'sub.university.lcl. IN SOA ns.university.lcl. hostmaster.ns.university.lcl. 794 10800 3600 3600000 86400\n'
-        'sub.university.lcl. IN NS ns2.sub.university.lcl.\n'
-        'sub.university.lcl. IN MX 20 mail2.sub.university.lcl.\n'
-        'sub.university.lcl. IN TXT "Contact 1:  Stephen Harrell (sharrell@university.lcl)"\n'
-        'sub.university.lcl. IN A 192.168.0.1\n'
-        'ns.sub.university.lcl. IN A 192.168.1.103\n'
-        'desktop-1.sub.university.lcl. IN AAAA 3ffe:800::2a8:79ff:fe32:1982\n'
-        'desktop-1.sub.university.lcl. IN A 192.168.1.100\n'
-        'ns2.sub.university.lcl. IN A 192.168.1.104\n'
-        'ns2.sub.university.lcl. IN HINFO "PC" "NT"\n'
-        'www.sub.university.lcl. IN CNAME sub.university.lcl.\n'
-        'localhost.sub.university.lcl. IN A 127.0.0.1\n'
-        'www.data.sub.university.lcl. IN CNAME ns.university.lcl.\n'
-        'mail1.sub.university.lcl. IN A 192.168.1.101\n'
-        'mail2.sub.university.lcl. IN A 192.168.1.102\n')
+    # Running dnsquerycheck with audit log
+    command = os.popen(
+        'python %s -s %s -c %s -p %s -i 17 ' % (
+        QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
+    output = command.read()
     command.close()
+    self.assertEqual(output, '')
 
-    command = os.popen('python %s -f test_data/test_reverse_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
-    self.assertEqual(command.read(),
-        'Able to verify 0 records.\n'
-        'Unable to verify 5 records.\n'
-        '\n'
-        'Unverifiable records:\n'
-        '0.168.192.in-addr.arpa. IN SOA ns.university.lcl. hostmaster.university.lcl. 4 10800 3600 3600000 86400\n'
-        '0.168.192.in-addr.arpa. IN NS ns2.university.lcl.\n'
-        '1.0.168.192.in-addr.arpa. IN PTR router.university.lcl.\n'
-        '11.0.168.192.in-addr.arpa. IN PTR desktop-1.university.lcl.\n'
-        '12.0.168.192.in-addr.arpa. IN PTR desktop-2.university.lcl.\n')
+    # Running dnsquerycheck with the view flag 
+    command = os.popen(
+        'python %s -s %s -c %s -p %s -i 17 --view test_view1 ' % (
+        QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
+    output = command.read()
     command.close()
-    command = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER, 
-                                        self.port))
-    self.assertEqual(command.read(), 
-                     'Able to verify 4 records.\nUnable to verify 0 records.\n')
-    command.close()
+    self.assertEqual(output, '')
 
-    command = os.popen('python %s -f test_data/no_zone.db '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER,
-                                        self.port))
-    self.assertEqual(command.read(),
-        "Unable to read file test_data/no_zone.db: "
-        "[Errno 2] No such file or directory: 'test_data/no_zone.db'\n")
+    # Running dnsquerycheck with on a view/zone pair
+    command = os.popen(
+        'python %s -s %s -c %s -p %s -i 17 --view test_view1 '
+        '--zone sub.university.lcl ' % (
+        QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
+    output = command.read()
     command.close()
+    self.assertEqual(output, '')
 
-    command = os.popen('python %s -f test_data/test_zone.db '
-                       '-p %s' % (ZONE_VERIFY_EXEC, self.port))
-    self.assertEqual(command.read(),
-                     'Must specify -s/--server flag.\n')
+    # Running dnsquerycheck with file
+    command = os.popen(
+        'python %s -s %s -c %s -p %s -f test_data/test_zone.db' % (
+        QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
+    output = command.read()
     command.close()
-
-    command = os.popen('python %s '
-                       '-s %s -p %s' % (ZONE_VERIFY_EXEC, TEST_DNS_SERVER,
-                       self.port))
-    self.assertEqual(command.read(),
-        'Must specify -f/--file flag.\n')
-    command.close()
+    self.assertEqual(output, '')
 
 if( __name__ == '__main__' ):
       unittest.main()
