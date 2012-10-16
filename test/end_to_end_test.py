@@ -190,13 +190,11 @@ class TestComplete(unittest.TestCase):
         '--ssl-cert %s --ssl-key %s '
         '--root-config-dir %s --backup-dir %s -i %s/init --server-log-file %s '
         '--run-as %s --force' % (
-            self.userconfig,
-            self.login, USERNAME, self.password,
-            self.database,
-            self.server,
+            self.userconfig, self.login, USERNAME, self.password,
+            self.database, self.server,
             self.cert, self.key,
-            TESTDIR,
-            self.backup_dir,
+            self.root_config_dir, self.backup_dir,
+            #self.backup_dir,
             TESTDIR,
             self.logfile,
             os.getuid()))
@@ -903,15 +901,15 @@ class TestComplete(unittest.TestCase):
         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set2 view_order: 2\n')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview dns_server_set -v test_view3 -e set3 -r 3
+    ## dnsmkview dns_server_set -v test_view2 -e set3 -r 2
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view2 -e set3 -r 3 '
+        'dns_server_set -v test_view2 -e set3 -r 2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set3\n')
+        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set3 view_order: 2\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview view -v test_view3 --acl test_acl
@@ -926,15 +924,15 @@ class TestComplete(unittest.TestCase):
          'ADDED VIEW ACL ASSIGNMENT: view: test_view3 acl: test_acl allowed: 1\n')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview dns_server_set -v test_view3 -e set3
+    ## dnsmkview dns_server_set -v test_view3 -e set3 -r 3
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view3 -e set3 '
+        'dns_server_set -v test_view3 -e set3 -r 3 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view3 dns_server_set: set3\n')
+         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view3 dns_server_set: set3 view_order: 3\n')
     command.close()
     ## User tool: dnslsviews
     ## dnslsviews view
@@ -960,11 +958,13 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name\n'
-        '------------------------\n'
-        'set1           test_view, test_view2\n'
-        'set2           test_view2\n'
-        'set3           test_view2, test_view3\n\n')
+        'dns_server_set view_name  view_order\n'
+        '------------------------------------\n'
+        'set1           test_view  1\n'
+        'set1           test_view2 2\n'
+        'set2           test_view2 2\n'
+        'set3           test_view2 2\n'
+        'set3           test_view3 3\n\n')
     command.close()
     ## User tool: dnslsviews
     ## dnslsviews dns_server_set
@@ -1043,11 +1043,12 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name\n'
-        '------------------------\n'
-        'set1           test_view, test_view2\n'
-        'set2           test_view2\n'
-        'set3           test_view2\n\n')
+        'dns_server_set view_name  view_order\n'
+        '------------------------------------\n'
+        'set1           test_view  1\n'
+        'set1           test_view2 2\n'
+        'set2           test_view2 2\n'
+        'set3           test_view2 2\n\n')
     command.close()
     ## User tool: dnsrmview
     ## dnsrmview dns_server_set -v test_view3 -e set3
@@ -1132,11 +1133,12 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name\n'
-        '------------------------\n'
-        'set1           test_view, test_view2\n'
-        'set2           test_view2\n'
-        'set3           test_view2\n\n')
+        'dns_server_set view_name  view_order\n'
+        '------------------------------------\n'
+        'set1           test_view  1\n'
+        'set1           test_view2 2\n'
+        'set2           test_view2 2\n'
+        'set3           test_view2 2\n\n')
     command.close()
     ## User tool: dnslsviews
     ## dnslsviews dns_server_set
@@ -1236,10 +1238,10 @@ class TestComplete(unittest.TestCase):
         'CLIENT ERROR: View "test_view2" already exists.\n')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview dns_server_set -v test_view2 -e set1 
+    ## dnsmkview dns_server_set -v test_view2 -e set1 -r 2 
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view2 -e set1 '
+        'dns_server_set -v test_view2 -e set1 -r 2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1260,15 +1262,15 @@ class TestComplete(unittest.TestCase):
         'CLIENT ERROR: View ACL Assignment already exists.\n')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview dns_server_set -v test_view -e set1
+    ## dnsmkview dns_server_set -v test_view -e set1 -r 1
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'dns_server_set -v test_view -e set3 '
+        'dns_server_set -v test_view -e set3 -r 1 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view dns_server_set: set3\n')
+        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view dns_server_set: set3 view_order: 1\n')
     command.close()
 
     ## User tool: dnsmkzone
@@ -3042,24 +3044,26 @@ class TestComplete(unittest.TestCase):
         '')
     command.close()
 
-    ## dnsconfigsync -i <timestamp> --config-file ./completeconfig.conf
-    ## connection to rsync is not successfully established.
+    ## dnsservercheck -d localhost -i <audit-log-id> -c config-file
     command_string = (
-        'python ../roster-config-manager/scripts/dnsconfigsync '
-        ' -i %s -u %s --ssh-id %s -c %s --rndc-port %s --rndc-key %s' % (
-            tarfilename[0], SSH_USER, SSH_ID, self.userconfig,
-	    self.rndc_port, RNDC_KEY)) # ADD RNDC PORT CALC
+        'python ../roster-config-manager/scripts/dnsservercheck '
+        '-d %s -i %s -c %s' % (TEST_DNS_SERVER, tarfilename[0], self.userconfig))
     command = os.popen(command_string)
     output = command.read()
-    output = re.sub('\d+\s','',output)
-    output = re.sub('\d+\.','',output)
-    # Below we remove the last "Disconnecting" line since the text
-    # can vary depending on operating system
-    self.assertEqual(output.split("Disconnecting")[0],
-        'Connecting to "%s"\n'
-        '[%s@%s] out: server reload successful\r\n' % (
-            TEST_DNS_SERVER, SSH_USER, TEST_DNS_SERVER))
     command.close()
+    self.assertEqual(output, '')
+
+    ## dnsconfigsync -i <audit-log-id> --config-file ./completeconfig.conf
+    command_string = (
+        'python ../roster-config-manager/scripts/dnsconfigsync '
+        ' -i %s -c %s -d %s --rndc-key %s --rndc-conf %s --rndc-port %s' % (
+            tarfilename[0], self.userconfig, TEST_DNS_SERVER, RNDC_KEY, 
+            RNDC_CONF, self.rndc_port))
+    command = os.popen(command_string)
+    output = command.read()
+    self.assertEqual(output, '')
+    command.close()
+
     ## dnsmkzone forward -z sub.university.edu -v test_view -t master --origin sub.university.edu.
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkzone '

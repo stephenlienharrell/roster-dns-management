@@ -66,7 +66,7 @@ def PushFiles(dns_server, root_config_dir, config_lib_instance,
   
   dns_server_directory = '%s/%s' % (root_config_dir, dns_server)
   if( not os.path.exists(dns_server_directory) ):
-    raise config_lib.ServerCheckError('DNS server %s does not exist.' % 
+    raise config_lib.ServerCheckError('DNS server %s does not exist. %s' % 
                                       dns_server)
   
   dns_server_info = config_lib_instance.GetDnsServerInfo(dns_server)
@@ -96,7 +96,7 @@ def PushFiles(dns_server, root_config_dir, config_lib_instance,
       fabric_state.output[out] = False
     fabric_api.env.host_string = ssh_host
     fabric_api.run('rm -rf %s/*' % dns_server_info['server_info']['test_dir'])
-    
+
     # Prepare and push BIND tree to server
     if( tar ):
       config_lib_instance.TarDnsBindFiles(dns_server)
@@ -129,6 +129,7 @@ def PushFiles(dns_server, root_config_dir, config_lib_instance,
             'to server %s.' % dns_server)
     fabric_api.run('rm %s/%s.info' % (dns_server_info['server_info'][
         'test_dir'], dns_server))
+    
 
     # Check and prepare named.conf file
     result = fabric_api.run('ls %s/named' % dns_server_info[

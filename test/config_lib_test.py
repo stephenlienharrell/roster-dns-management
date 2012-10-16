@@ -62,6 +62,8 @@ SSH_USER = unicode(getpass.getuser())
 class TestServerCheck(unittest.TestCase):
 
   def setUp(self):
+    if( not os.path.exists(TESTDIR) ):
+      os.system('mkdir %s' % TESTDIR)
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
     self.root_config_dir = self.config_instance.config_file['exporter']['root_config_dir'].rstrip('/')
     self.backup_dir = self.config_instance.config_file['exporter']['backup_dir'].rstrip('/')
@@ -112,17 +114,17 @@ class TestServerCheck(unittest.TestCase):
     config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
     tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
     tree_exporter_instance.ExportAllBindTrees()
-    file_name = 'dns_tree_%s-16.tar.gz' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
-    self.assertEqual(config_lib_instance.FindDnsTreeFilename('16'), file_name)
+    file_name = 'dns_tree_%s-18.tar.bz2' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
+    self.assertEqual(config_lib_instance.FindDnsTreeFilename('18'), file_name)
     self.assertRaises(config_lib.ExporterAuditIdError, config_lib_instance.FindDnsTreeFilename, None)
 
     config_lib_instance.backup_dir = '/bad/dir/'
     self.assertRaises(config_lib.ExporterFileError, config_lib_instance.FindDnsTreeFilename, '16')
     config_lib_instance.backup_dir = self.backup_dir
 
-    self.assertEqual(config_lib_instance.FindDnsTreeFilename('18'), None)
+    self.assertEqual(config_lib_instance.FindDnsTreeFilename('16'), None)
     os.rename('%s/%s' % (self.backup_dir, file_name), 
-              '%s/dns_tree_fail_file.tar.gz' % self.backup_dir)
+              '%s/dns_tree_fail_file.tar.bz2' % self.backup_dir)
     self.assertRaises(config_lib.ExporterFileError, config_lib_instance.FindDnsTreeFilename, '16')
 
   def testFindNewestDnsTreeFilename(self):
@@ -133,15 +135,15 @@ class TestServerCheck(unittest.TestCase):
 
     tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
     tree_exporter_instance.ExportAllBindTrees()
-    file_name = 'dns_tree_%s-16.tar.gz' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
+    file_name = 'dns_tree_%s-18.tar.bz2' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
     audit_id, filename = config_lib_instance.FindNewestDnsTreeFilename()
     self.assertEqual(filename, file_name)
-    self.assertEqual(audit_id, 16)
+    self.assertEqual(audit_id, 18)
     
     os.rename('%s/%s' % (self.backup_dir, file_name),
-              '%s/dns_tree_fail.tar.gz' % self.backup_dir)
+              '%s/dns_tree_fail.tar.bz2' % self.backup_dir)
     self.assertRaises(config_lib.ExporterFileNameError, config_lib_instance.FindNewestDnsTreeFilename)
-    os.remove('%s/dns_tree_fail.tar.gz' % self.backup_dir)
+    os.remove('%s/dns_tree_fail.tar.bz2' % self.backup_dir)
     self.assertRaises(config_lib.ExporterNoFileError, config_lib_instance.FindNewestDnsTreeFilename)
     
     config_lib_instance.backup_dir = '/bad/directory'
@@ -163,7 +165,7 @@ class TestServerCheck(unittest.TestCase):
     self.assertRaises(config_lib.ExporterAuditIdError, config_lib_instance.TarDnsTree, None)
     self.assertRaises(config_lib.ExporterListFileError, config_lib_instance.TarDnsTree, '16')
     os.mkdir(self.root_config_dir)
-    config_lib_instance.UnTarDnsTree('16')
+    config_lib_instance.UnTarDnsTree('18')
 
     self.assertEqual(config_lib_instance.TarDnsTree('16'), None)
 
@@ -458,11 +460,11 @@ class TestServerCheck(unittest.TestCase):
 
     # Success
     config_lib_instance.TarDnsBindFiles('localhost')
-    self.assertTrue(os.path.exists('%s/localhost/localhost.tar.gz' % self.root_config_dir))
+    self.assertTrue(os.path.exists('%s/localhost/localhost.tar.bz2' % self.root_config_dir))
     os.mkdir('%s/test/' % self.root_config_dir)
-    shutil.move('%s/localhost/localhost.tar.gz' % self.root_config_dir,
-                '%s/test/localhost.tar.gz' % self.root_config_dir)
-    tar_file = tarfile.open('%s/test/localhost.tar.gz' % self.root_config_dir, 'r:gz')
+    shutil.move('%s/localhost/localhost.tar.bz2' % self.root_config_dir,
+                '%s/test/localhost.tar.bz2' % self.root_config_dir)
+    tar_file = tarfile.open('%s/test/localhost.tar.bz2' % self.root_config_dir, 'r:bz2')
     tarred_files = tar_file.getnames()
     for tarred in tarred_files:
       self.assertTrue(os.path.exists('%s/localhost/%s' % (self.root_config_dir, tarred)))
@@ -479,7 +481,7 @@ class TestServerCheck(unittest.TestCase):
     self.assertRaises(errors.FunctionError, config_lib_instance.GetZoneList, 'localhost')
     os.remove('%s/localhost/named/external/local.db' % self.root_config_dir)
 
-    self.assertEqual(config_lib_instance.GetZoneList('localhost'), {'external':{'university.lcl.':'forward_zone.db'}})
+    self.assertEqual(config_lib_instance.GetZoneList('localhost'), {'external':{'university.lcl':'forward_zone.db'}})
 
 if( __name__ == '__main__' ):
   unittest.main()

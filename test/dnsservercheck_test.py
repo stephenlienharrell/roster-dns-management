@@ -54,6 +54,7 @@ import time
 import unittest
 
 from roster_config_manager import tree_exporter
+from roster_config_manager import config_lib
 
 CONFIG_FILE = 'test_data/roster.conf'
 EXEC = '../roster-config-manager/scripts/dnscheckconfig'
@@ -63,12 +64,13 @@ USERNAME = u'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
-BINDDIR = u'%s/test_data/named/' % os.getcwd()
+BINDDIR = u'%s/test_data/bind_dir/' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
 
 class TestDnsServerCheck(unittest.TestCase):
   def setUp(self):
     self.config_instance = roster_core.Config(CONFIG_FILE)
+    self.config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
     self.root_config_dir = self.config_instance.config_file['exporter'][
         'root_config_dir'].rstrip('/')
     self.root_backup_dir = self.config_instance.config_file['exporter'][
@@ -95,8 +97,8 @@ class TestDnsServerCheck(unittest.TestCase):
 
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
-    self.core_instance.RemoveZone(u'cs.university.edu')
-    self.core_instance.RemoveZone(u'bio.university.edu')
+    self.core_instance.RemoveZone(u'cs.university.edu') 
+    self.core_instance.RemoveZone(u'bio.university.edu') 
     self.core_instance.RemoveZone(u'eas.university.edu')
     
     self.core_instance.MakeDnsServerSet(u'set1')
@@ -166,6 +168,7 @@ class TestDnsServerCheck(unittest.TestCase):
 
     self.core_instance.UpdateDnsServer(u'localhost', u'localhost', SSH_USER,
                                        BINDDIR, u'/some_test_dir/')
+    self.tree_exporter_instance.ExportAllBindTrees()
     output = os.popen('python %s -d localhost -c %s' %
         (SERVER_CHECKER_EXEC, CONFIG_FILE))
     self.assertEqual(output.read(), 'ERROR: The remote test directory '
@@ -175,17 +178,20 @@ class TestDnsServerCheck(unittest.TestCase):
 
     self.core_instance.UpdateDnsServer(u'localhost', u'localhost', SSH_USER,
                                        BINDDIR, TESTDIR)
-    audit_id = self.tree_exporter_instance.ExportAllBindTrees()
-    file_name = 'dns_tree_%s-22.tar.bz2' %  datetime.datetime.now().strftime('%d_%m_%yT%H_%M')
-    output = os.popen('python %s -d localhost -c %s -i 22' %
+    self.tree_exporter_instance.ExportAllBindTrees()
+    file_name = 'dns_tree_%s-23.tar.bz2' % (
+        datetime.datetime.now().strftime('%d_%m_%yT%H_%M'))
+    output = os.popen('python %s -d localhost -c %s -i 23' %
         (SERVER_CHECKER_EXEC, CONFIG_FILE))
     self.assertEqual(output.read(), '')
     output.close()
 
-    shutil.rmtree(self.root_config_dir)
-    config_lib_instance.UnTarDnsTree(self.backup_dir, self.root_config_dir, 22)
+    if( os.path.exists(self.root_config_dir) ):
+      shutil.rmtree(self.root_config_dir)
 
-    self.assertTrue(os.path.exists('%s/localhost/localhost.info' % self.root_config_dir))
+    self.config_lib_instance.UnTarDnsTree(23)
+    self.assertTrue(
+        os.path.exists('%s/localhost/localhost.info' % self.root_config_dir))
     localhost_info = ConfigParser.SafeConfigParser()
     localhost_info.read('%s/localhost/localhost.info' % self.root_config_dir)
     self.assertTrue(localhost_info.has_section('tools'))

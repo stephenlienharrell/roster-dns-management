@@ -73,7 +73,7 @@ SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 SSH_ID = 'test_data/roster_id_dsa'
 TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
-BINDDIR = u'/etc/bind/' #Set to working BIND directory
+BINDDIR = u'%s/test_data/bind_dir/' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
 TEST_DNS_SERVER = u'localhost'
 NS_IP_ADDRESS = '127.0.0.1'
@@ -93,8 +93,8 @@ RNDC_KEY_DATA = ('key "rndc-key" {\n'
                  '   algorithm hmac-md5;\n'
                  '   secret "yTB86M+Ai8vKJYGYo2ossQ==";\n'
                  ' };')
-RNDC_CONF = '/etc/bind/rndc.conf'
-RNDC_KEY = '/etc/bind/rndc.key'
+RNDC_CONF = 'test_data/bind_dir/rndc.conf'
+RNDC_KEY = 'test_data/bind_dir/rndc.key'
 
 
 class TestCheckConfig(unittest.TestCase):

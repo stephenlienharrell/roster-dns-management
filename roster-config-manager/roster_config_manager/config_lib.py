@@ -486,7 +486,8 @@ class ConfigLib(object):
       if( 'No such file or directory' in result ):
         raise ServerCheckError('The remote test directory %s does not exist '
             'or the user %s does not have permission.' % 
-            (dns_server_info['server_info']['test_dir'], ssh_host))
+            (dns_server_info['server_info']['test_dir'], 
+             dns_server_info['server_info']['server_user']))
     
       # Testing for tools
       if( 'tools' not in dns_server_info ):

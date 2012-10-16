@@ -56,6 +56,14 @@ class TestHelpersLib(unittest.TestCase):
                      {'acl_name': 'UnicodeString'})
     self.assertEqual(helpers_lib.GetRowDict('notvalid'), {}) 
 
+  def testFixHostname(self):
+    self.assertEqual(helpers_lib.FixHostname(
+        u'host', u'sub.university.lcl.'), u'host.sub.university.lcl.')
+    self.assertEqual(helpers_lib.FixHostname(
+        u'@', u'sub.university.lcl.'), u'sub.university.lcl.')
+    self.assertEqual(helpers_lib.FixHostname(
+        u'university.lcl.', u'sub.university.lcl.'), u'university.lcl.')
+
   def testReverseIP(self):
     self.assertEqual(helpers_lib.ReverseIP(
         u'192.168.0/26'), u'0/26.168.192.in-addr.arpa.')
