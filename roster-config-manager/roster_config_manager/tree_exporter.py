@@ -484,7 +484,18 @@ class BindTreeExport(object):
 
       if( clients == [] and found_acl ):
         clients = [u'any;']
-      named_conf_lines.append('\tmatch-clients { %s };' % ' '.join(clients))
+
+      # sort the acls with the negatives first
+      sorted_clients = []
+      for client in clients:
+        if( client.startswith('!') ):
+          sorted_clients.insert(0, client)
+        else:
+          sorted_clients.append(client)
+
+      named_conf_lines.append('\tmatch-clients { \n\t\t%s\n\t };' % (
+          '\n\t\t'.join(sorted_clients)))
+
       for zone in cooked_data['dns_server_sets'][dns_server_set]['views'][
           view_name]['zones']:
         named_conf_lines.append('\tzone "%s" {' % (

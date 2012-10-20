@@ -1231,7 +1231,9 @@ class TestDnsMkHost(unittest.TestCase):
         '};\n'
         '\n'
         'view "external" {\n'
-        '\tmatch-clients { public; };\n'
+        '\tmatch-clients { \n'
+        '\t\tpublic;\n'
+        '\t };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "external/university.edu.db";\n'
@@ -1243,6 +1245,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};' % NAMED_DIR)
+
     handle.close()
     handle = open(
         './%s/ns1.university.edu/named/external/4.3.2.1.in-addr.db' %
@@ -1310,7 +1313,9 @@ class TestDnsMkHost(unittest.TestCase):
         '};\n'
         '\n'
         'view "external" {\n'
-        '\tmatch-clients { public; };\n'
+        '\tmatch-clients { \n'
+        '\t\tpublic;\n'
+        '\t };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "external/university.edu.db";\n'
@@ -1323,7 +1328,10 @@ class TestDnsMkHost(unittest.TestCase):
         '\t};\n'
         '};\n'
         'view "internal" {\n'
-        '\tmatch-clients { secret; !public; };\n'
+        '\tmatch-clients { \n'
+        '\t\t!public;\n'
+        '\t\tsecret;\n'
+        '\t };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "internal/university.edu.db";\n'
@@ -1428,7 +1436,9 @@ class TestDnsMkHost(unittest.TestCase):
             '};\n'
             '\n'
             'view "private" {\n'
-            '\tmatch-clients { !secret; };\n'
+            '\tmatch-clients { \n'
+            '\t\t!secret;\n'
+            '\t };\n'
             '\tzone "university.edu" {\n'
             '\t\ttype master;\n'
             '\t\tfile "private/university.edu.db";\n'

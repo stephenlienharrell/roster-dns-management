@@ -198,7 +198,7 @@ class TestTreeExporter(unittest.TestCase):
     zone_view_assignments_dict['zone_view_assignments_zone_type'] = u'master'
     zone_view_assignments_dict['zone_origin'] = u'university.edu.'
     zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'allow-update { none; };\n')
+        u'allow-update { none; };\n''')
 
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = u'any'
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
@@ -260,7 +260,7 @@ class TestTreeExporter(unittest.TestCase):
         u'bio.university.edu')
     zone_view_assignments_dict['zone_origin'] = u'university.edu.'
     zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'allow-transfer { any; };\n')
+        u'allow-transfer { any; };\n''')
 
     zone_view_assignments_dict['zone_origin'] = u'university4.edu.'
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
@@ -997,7 +997,7 @@ class TestTreeExporter(unittest.TestCase):
     records_dict['records_id'] = None
     records_dict['record_type'] = u'ptr'
     file = codecs.open('test_data/snowman',encoding='utf-8',mode='r')
-    records_dict['record_target'] = file.read().replace('\n','')
+    records_dict['record_target'] = file.read().replace('\n''','')
     file.close()
     records_dict['record_ttl'] = 3600
     records_dict['record_zone_name'] = u'4.3.2.1.in-addr.arpa'
@@ -1085,16 +1085,16 @@ class TestTreeExporter(unittest.TestCase):
                         named_conf_global_options_dict)
 
     named_conf_global_options_dict['global_options'] = iscpy.Serialize(
-        u'options {\n\tdirectory "/var/domain";\n\trecursion no;\n'
-        '\tmax-cache-size 512M;\n};\n\nlogging {\n\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n\t};\n\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n\t\tseverity info;\n\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n};\n\ncontrols {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n};\n\n'
-        'include "/etc/rndc.key";\n')
+        u'options {\n''\tdirectory "/var/domain";\n''\trecursion no;\n'''
+        '\tmax-cache-size 512M;\n''};\n''\n''logging {\n''\tchannel "security" {\n'''
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'''
+        '\t\tprint-time yes;\n''\t};\n''\tchannel "query_logging" {\n'''
+        '\t\tsyslog local5;\n''\t\tseverity info;\n''\t};\n'''
+        '\tcategory "client" { "null"; };\n'''
+        '\tcategory "update-security" { "security"; };\n'''
+        '\tcategory "queries" { "query_logging"; };\n''};\n''\n''controls {\n'''
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n''};\n''\n'''
+        'include "/etc/rndc.key";\n''')
     named_conf_global_options_dict['options_created'] = datetime.datetime(
         2010, 3, 11, 13, 37, 0)
     named_conf_global_options_dict[
@@ -1105,16 +1105,16 @@ class TestTreeExporter(unittest.TestCase):
                         named_conf_global_options_dict)
 
     named_conf_global_options_dict['global_options'] = iscpy.Serialize(
-        u'options {\n\tdirectory "/var/domain";\n\trecursion no;\n'
-        '\tmax-cache-size 512M;\n};\n\nlogging {\n\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n\t};\n\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n\t\tseverity info;\n\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n};\n\ncontrols {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n};\n\n'
-        'include "/etc/rndc.key";\n')
+        u'options {\n''\tdirectory "/var/domain";\n''\trecursion no;\n'''
+        '\tmax-cache-size 512M;\n''};\n''\n''logging {\n''\tchannel "security" {\n'''
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'''
+        '\t\tprint-time yes;\n''\t};\n''\tchannel "query_logging" {\n'''
+        '\t\tsyslog local5;\n''\t\tseverity info;\n''\t};\n'''
+        '\tcategory "client" { "null"; };\n'''
+        '\tcategory "update-security" { "security"; };\n'''
+        '\tcategory "queries" { "query_logging"; };\n''};\n''\n''controls {\n'''
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n''};\n''\n'''
+        'include "/etc/rndc.key";\n''')
     named_conf_global_options_dict['options_created'] = datetime.datetime(
         2010, 3, 11, 13, 37, 0)
     named_conf_global_options_dict[
@@ -1125,16 +1125,16 @@ class TestTreeExporter(unittest.TestCase):
                         named_conf_global_options_dict)
 
     named_conf_global_options_dict['global_options'] = iscpy.Serialize(
-        u'options {\n\tdirectory "/var/domain";\n\trecursion no;\n'
-        '\tmax-cache-size 512M;\n};\n\nlogging {\n\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n\t};\n\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n\t\tseverity info;\n\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n};\n\ncontrols {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n};\n\n'
-        'include "/etc/rndc.key";\n')
+        u'options {\n''\tdirectory "/var/domain";\n''\trecursion no;\n'''
+        '\tmax-cache-size 512M;\n''};\n''\n''logging {\n''\tchannel "security" {\n'''
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'''
+        '\t\tprint-time yes;\n''\t};\n''\tchannel "query_logging" {\n'''
+        '\t\tsyslog local5;\n''\t\tseverity info;\n''\t};\n'''
+        '\tcategory "client" { "null"; };\n'''
+        '\tcategory "update-security" { "security"; };\n'''
+        '\tcategory "queries" { "query_logging"; };\n''};\n''\n''controls {\n'''
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n''};\n''\n'''
+        'include "/etc/rndc.key";\n''')
     named_conf_global_options_dict['options_created'] = datetime.datetime(
         2010, 3, 11, 13, 37, 0)
     named_conf_global_options_dict[
@@ -1350,54 +1350,59 @@ class TestTreeExporter(unittest.TestCase):
         self.cooked_data, u'internal_dns', 'db', 'remote_bind_dir')
    
     expected_n_conf = (
-       u'#This named.conf file is autogenerated. DO NOT EDIT\n'
-        'include "/etc/rndc.key";\n'
-        'logging { category "update-security" { "security"; };\n'
-        'category "queries" { "query_logging"; };\n'
-        'channel "query_logging" { syslog local5;\n'
-        'severity info; };\n'
-        'category "client" { "null"; };\n'
-        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-        'print-time yes; }; };\n'
-        'options { directory "remote_bind_dir/named";\n'
-        'recursion no;\n'
-        'max-cache-size 512M; };\n'
-        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-        'acl secret {\n'
-        '\t10.10/32;\n'
-        '};\n'
-        '\n'
-        'acl public {\n'
-        '\t192.168.1.4/30;\n'
-        '\t10.10/32;\n'
-        '};\n'
-        '\n'
-        'view "external" {\n'
-        '\tmatch-clients { public; };\n'
-        '\tzone "university.edu" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "external/university.edu.db";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '\tzone "4.3.2.1.in-addr.arpa" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '};\n'
-        'view "internal" {\n'
-        '\tmatch-clients { !secret; !public; };\n'
-        '\tzone "university.edu" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "internal/university.edu.db";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '\tzone "168.192.in-addr.arpa" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "internal/168.192.in-addr.arpa.db";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '};')
+        u'#This named.conf file is autogenerated. DO NOT EDIT\n'
+         'include "/etc/rndc.key";\n'
+         'logging { category "update-security" { "security"; };\n'
+         'category "queries" { "query_logging"; };\n'
+         'channel "query_logging" { syslog local5;\n'
+         'severity info; };\n'
+         'category "client" { "null"; };\n'
+         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
+         'print-time yes; }; };\n'
+         'options { directory "remote_bind_dir/named";\n'
+         'recursion no;\n'
+         'max-cache-size 512M; };\n'
+         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
+         'acl secret {\n'
+         '\t10.10/32;\n'
+         '};\n'
+         '\n'
+         'acl public {\n'
+         '\t192.168.1.4/30;\n'
+         '\t10.10/32;\n'
+         '};\n'
+         '\n'
+         'view "external" {\n'
+         '\tmatch-clients { \n'
+         '\t\tpublic;\n'
+         '\t };\n'
+         '\tzone "university.edu" {\n'
+         '\t\ttype master;\n'
+         '\t\tfile "external/university.edu.db";\n'
+         '\t\tallow-update { none; };\n'
+         '\t};\n'
+         '\tzone "4.3.2.1.in-addr.arpa" {\n'
+         '\t\ttype master;\n'
+         '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
+         '\t\tallow-update { none; };\n'
+         '\t};\n'
+         '};\n'
+         'view "internal" {\n'
+         '\tmatch-clients { \n'
+         '\t\t!public;\n'
+         '\t\t!secret;\n'
+         '\t };\n'
+         '\tzone "university.edu" {\n'
+         '\t\ttype master;\n'
+         '\t\tfile "internal/university.edu.db";\n'
+         '\t\tallow-update { none; };\n'
+         '\t};\n'
+         '\tzone "168.192.in-addr.arpa" {\n'
+         '\t\ttype master;\n'
+         '\t\tfile "internal/168.192.in-addr.arpa.db";\n'
+         '\t\tallow-update { none; };\n'
+         '\t};\n'
+         '};')
 
     self.assertEqual(n_conf, expected_n_conf)
     for fname in ['audit_log_replay_dump-1.bz2', 'full_database_dump-1.bz2',
@@ -1513,49 +1518,49 @@ class TestTreeExporter(unittest.TestCase):
         ({'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
          u'master', 'zone_view_assignments_zone_name': u'university.edu', 
           'zone_view_assignments_view_dependency': u'any', 'zone_options': 
-         u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
+         u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}, 
          {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
          u'master', 'zone_view_assignments_zone_name': u'university.edu', 
           'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
          {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'university.edu', 
           'zone_view_assignments_view_dependency': u'external_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
          {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
          u'master', 'zone_view_assignments_zone_name': u'university.edu', 
           'zone_view_assignments_view_dependency': u'private_dep', 'zone_options':
-         u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, {'zone_origin':
+         u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}, {'zone_origin':
          u'university2.edu.', 'zone_view_assignments_zone_type': u'master', 
           'zone_view_assignments_zone_name': u'int.university.edu', 
           'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
          {'zone_origin': u'university2.edu.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'int.university.edu',
           'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
          {'zone_origin': u'university3.edu.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'priv.university.edu',
           'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
          {'zone_origin': u'168.192.in-addr.arpa.', 
           'zone_view_assignments_zone_type': u'master', 
           'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
           'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
          {'zone_origin': u'168.192.in-addr.arpa.', 
           'zone_view_assignments_zone_type': u'master', 
           'zone_view_assignments_zone_name': u'168.192.in-addr.arpa', 
           'zone_view_assignments_view_dependency': u'external_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
+          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}, 
          {'zone_origin': u'168.192.in-addr.arpa.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
           'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
+          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}, 
          {'zone_origin': u'4.3.2.1.in-addr.arpa.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'4.3.2.1.in-addr.arpa', 
           'zone_view_assignments_view_dependency': u'external_dep', 'zone_options': 
-         u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}))
+         u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}))
 
     ## Testing the RawDump raw_data[1]
     self.assertEqual(raw_data[1]['zones']['rows'],
@@ -1963,51 +1968,51 @@ class TestTreeExporter(unittest.TestCase):
             self.data[0], u'internal_dns'))
     self.assertEqual(
         global_options_internal, (
-            u'include "/etc/rndc.key";\n'
-            'logging { category "update-security" { "security"; };\n'
-            'category "queries" { "query_logging"; };\n'
-            'channel "query_logging" { syslog local5;\n'
-            'severity info; };\n'
-            'category "client" { "null"; };\n'
-            'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-            'print-time yes; }; };\n'
-            'options { directory "/var/domain";\n'
-            'recursion no;\n'
-            'max-cache-size 512M; };\n'
+            u'include "/etc/rndc.key";\n'''
+            'logging { category "update-security" { "security"; };\n'''
+            'category "queries" { "query_logging"; };\n'''
+            'channel "query_logging" { syslog local5;\n'''
+            'severity info; };\n'''
+            'category "client" { "null"; };\n'''
+            'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'''
+            'print-time yes; }; };\n'''
+            'options { directory "/var/domain";\n'''
+            'recursion no;\n'''
+            'max-cache-size 512M; };\n'''
             'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
     global_options_external = (
         self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
             self.data[0], u'external_dns'))
     self.assertEqual(
         global_options_external,
-            u'include "/etc/rndc.key";\n'
-            'logging { category "update-security" { "security"; };\n'
-            'category "queries" { "query_logging"; };\n'
-            'channel "query_logging" { syslog local5;\n'
-            'severity info; };\n'
-            'category "client" { "null"; };\n'
-            'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-            'print-time yes; }; };\n'
-            'options { directory "/var/domain";\n'
-            'recursion no;\n'
-            'max-cache-size 512M; };\n'
+            u'include "/etc/rndc.key";\n'''
+            'logging { category "update-security" { "security"; };\n'''
+            'category "queries" { "query_logging"; };\n'''
+            'channel "query_logging" { syslog local5;\n'''
+            'severity info; };\n'''
+            'category "client" { "null"; };\n'''
+            'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'''
+            'print-time yes; }; };\n'''
+            'options { directory "/var/domain";\n'''
+            'recursion no;\n'''
+            'max-cache-size 512M; };\n'''
             'controls { inet * allow { control-hosts; } keys { rndc-key; }; };')
     global_options_private = (
         self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
             self.data[0], u'private_dns'))
     self.assertEqual(
         global_options_private,
-            u'include "/etc/rndc.key";\n'
-            'logging { category "update-security" { "security"; };\n'
-            'category "queries" { "query_logging"; };\n'
-            'channel "query_logging" { syslog local5;\n'
-            'severity info; };\n'
-            'category "client" { "null"; };\n'
-            'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-            'print-time yes; }; };\n'
-            'options { directory "/var/domain";\n'
-            'recursion no;\n'
-            'max-cache-size 512M; };\n'
+            u'include "/etc/rndc.key";\n'''
+            'logging { category "update-security" { "security"; };\n'''
+            'category "queries" { "query_logging"; };\n'''
+            'channel "query_logging" { syslog local5;\n'''
+            'severity info; };\n'''
+            'category "client" { "null"; };\n'''
+            'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'''
+            'print-time yes; }; };\n'''
+            'options { directory "/var/domain";\n'''
+            'recursion no;\n'''
+            'max-cache-size 512M; };\n'''
             'controls { inet * allow { control-hosts; } keys { rndc-key; }; };')
 
   def testTreeExporterExpportAllBindTrees(self):
@@ -2038,21 +2043,26 @@ class TestTreeExporter(unittest.TestCase):
         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'acl secret {\n'
         '\t10.10/32;\n'
-        '};\n\n'
+        '};\n'
+        '\n'
         'acl public {\n'
         '\t192.168.1.4/30;\n'
-        '\t10.10/32;\n};\n\n'
+        '\t10.10/32;\n'\
+        '};\n'
+        '\n'
         'view "external" {\n'
-        '\tmatch-clients { public; };\n'
+        '\tmatch-clients { \n'
+        '\t\tpublic;\n'
+        '\t };\n'
         '\tzone "university.edu" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "external/university.edu.%s";\n'
+        '\t\ttype master;\n\t\tfile "external/university.edu.%s";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
         '\t\tfile "external/4.3.2.1.in-addr.arpa.%s";\n'
-        '\t\tallow-update { none; };\n\t};\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
         '};')
 
     # Test named_conf_a
@@ -2087,78 +2097,83 @@ class TestTreeExporter(unittest.TestCase):
         '%s/ns1.university.edu/named/external/4.3.2.1.in-addr.arpa.db' %
         self.root_config_dir, 'r')
     self.assertEqual(handle.read(),
-                     '; This zone file is autogenerated. DO NOT EDIT.\n'
-                     '$ORIGIN 4.3.2.1.in-addr.arpa.\n'
+                     '; This zone file is autogenerated. DO NOT EDIT.\n'''
+                     '$ORIGIN 4.3.2.1.in-addr.arpa.\n'''
                      '4.3.2.1.in-addr.arpa. 3600 in soa ns1.university.edu. '
-                     'admin@university.edu. 20091224 5 5 5 5\n'
-                     'xn--35gc625a.sn 3600 in ptr computer1\n')
+                     'admin@university.edu. 20091224 5 5 5 5\n'''
+                     'xn--35gc625a.sn 3600 in ptr computer1\n''')
     handle.close()
     handle = open(
         '%s/ns1.university.edu/named/external/university.edu.db' %
         self.root_config_dir, 'r')
     self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN university.edu.\n'
+        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'''
+        '$ORIGIN university.edu.\n'''
         'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091227 5 5 5 5\n'
-        '@ 3600 in ns ns1.university.edu\n'
-        '@ 3600 in ns ns2.university.edu\n'
-        '@ 3600 in mx 1 mail2.university.edu.\n'
-        '@ 3600 in mx 1 mail1.university.edu.\n'
-        'computer1 3600 in a 1.2.3.5\n'
-        'computer3 3600 in a 1.2.3.6\n')
+        'admin@university.edu. 20091227 5 5 5 5\n'''
+        '@ 3600 in ns ns1.university.edu\n'''
+        '@ 3600 in ns ns2.university.edu\n'''
+        '@ 3600 in mx 1 mail2.university.edu.\n'''
+        '@ 3600 in mx 1 mail1.university.edu.\n'''
+        'computer1 3600 in a 1.2.3.5\n'''
+        'computer3 3600 in a 1.2.3.6\n''')
     handle.close()
 
     # Test dns1 named_conf
     generic_expected_dns1_university_edu_named_conf_string = (
-        '#This named.conf file is autogenerated. DO NOT EDIT\n'
-        'include "/etc/rndc.key";\n'
-        'logging { category "update-security" { "security"; };\n'
-        'category "queries" { "query_logging"; };\n'
-        'channel "query_logging" { syslog local5;\n'
-        'severity info; };\n'
-        'category "client" { "null"; };\n'
-        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-        'print-time yes; }; };\n'
-        'options { directory "%s/named";\n'
-        'recursion no;\n'
-        'max-cache-size 512M; };\n'
-        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-        'acl secret {\n'
-        '\t10.10/32;\n'
-        '};\n'
-        '\n'
-        'acl public {\n'
-        '\t192.168.1.4/30;\n'
-        '\t10.10/32;\n'
-        '};\n'
-        '\n'
-        'view "external" {\n'
-        '\tmatch-clients { public; };\n'
-        '\tzone "university.edu" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "external/university.edu.%s";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '\tzone "4.3.2.1.in-addr.arpa" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "external/4.3.2.1.in-addr.arpa.%s";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '};\n'
-        'view "internal" {\n'
-        '\tmatch-clients { !secret; !public; };\n'
-        '\tzone "university.edu" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "internal/university.edu.%s";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '\tzone "168.192.in-addr.arpa" {\n'
-        '\t\ttype master;\n'
-        '\t\tfile "internal/168.192.in-addr.arpa.%s";\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '};')
+      '#This named.conf file is autogenerated. DO NOT EDIT\n'
+      'include "/etc/rndc.key";\n'
+      'logging { category "update-security" { "security"; };\n'
+      'category "queries" { "query_logging"; };\n'
+      'channel "query_logging" { syslog local5;\n'
+      'severity info; };\n'
+      'category "client" { "null"; };\n'
+      'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
+      'print-time yes; }; };\n'
+      'options { directory "%s/named";\n'
+      'recursion no;\n'
+      'max-cache-size 512M; };\n'
+      'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
+      'acl secret {\n'
+      '\t10.10/32;\n'
+      '};\n'
+      '\n'
+      'acl public {\n'
+      '\t192.168.1.4/30;\n'
+      '\t10.10/32;\n'
+      '};\n'
+      '\n'
+      'view "external" {\n'
+      '\tmatch-clients { \n'
+      '\t\tpublic;\n'
+      '\t };\n'
+      '\tzone "university.edu" {\n'
+      '\t\ttype master;\n'
+      '\t\tfile "external/university.edu.%s";\n'
+      '\t\tallow-update { none; };\n'
+      '\t};\n'
+      '\tzone "4.3.2.1.in-addr.arpa" {\n'
+      '\t\ttype master;\n'
+      '\t\tfile "external/4.3.2.1.in-addr.arpa.%s";\n'
+      '\t\tallow-update { none; };\n'
+      '\t};\n'
+      '};\n'
+      'view "internal" {\n'
+      '\tmatch-clients { \n'
+      '\t\t!public;\n'
+      '\t\t!secret;\n'
+      '\t };\n'
+      '\tzone "university.edu" {\n'
+      '\t\ttype master;\n'
+      '\t\tfile "internal/university.edu.%s";\n'
+      '\t\tallow-update { none; };\n'
+      '\t};\n'
+      '\tzone "168.192.in-addr.arpa" {\n'
+      '\t\ttype master;\n'
+      '\t\tfile "internal/168.192.in-addr.arpa.%s";\n'
+      '\t\tallow-update { none; };\n'
+      '\t};\n'
+      '};')
 
 
     # Test named_conf_a
@@ -2193,52 +2208,52 @@ class TestTreeExporter(unittest.TestCase):
         '%s/ns1.int.university.edu/named/external/4.3.2.1.in-addr.arpa.db' %
         self.root_config_dir, 'r')
     self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN 4.3.2.1.in-addr.arpa.\n'
+        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'''
+        '$ORIGIN 4.3.2.1.in-addr.arpa.\n'''
         '4.3.2.1.in-addr.arpa. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091224 5 5 5 5\n'
-        'xn--35gc625a.sn 3600 in ptr computer1\n')
+        'admin@university.edu. 20091224 5 5 5 5\n'''
+        'xn--35gc625a.sn 3600 in ptr computer1\n''')
     handle.close()
     handle = open(
         '%s/dns1.university.edu/named/external/university.edu.db' %
         self.root_config_dir, 'r')
     self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN university.edu.\n'
+        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'''
+        '$ORIGIN university.edu.\n'''
         'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091227 5 5 5 5\n'
-        '@ 3600 in ns ns1.university.edu\n'
-        '@ 3600 in ns ns2.university.edu\n'
-        '@ 3600 in mx 1 mail2.university.edu.\n'
-        '@ 3600 in mx 1 mail1.university.edu.\n'
-        'computer1 3600 in a 1.2.3.5\n'
-        'computer3 3600 in a 1.2.3.6\n')
+        'admin@university.edu. 20091227 5 5 5 5\n'''
+        '@ 3600 in ns ns1.university.edu\n'''
+        '@ 3600 in ns ns2.university.edu\n'''
+        '@ 3600 in mx 1 mail2.university.edu.\n'''
+        '@ 3600 in mx 1 mail1.university.edu.\n'''
+        'computer1 3600 in a 1.2.3.5\n'''
+        'computer3 3600 in a 1.2.3.6\n''')
     handle.close()
     handle = open(
         '%s/dns1.university.edu/named/internal/168.192.in-addr.arpa.db' %
         self.root_config_dir, 'r')
     self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN 168.192.in-addr.arpa.\n'
+        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'''
+        '$ORIGIN 168.192.in-addr.arpa.\n'''
         '168.192.in-addr.arpa. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091223 5 5 5 5\n'
-        '4 3600 in ptr computer4\n')
+        'admin@university.edu. 20091223 5 5 5 5\n'''
+        '4 3600 in ptr computer4\n''')
     handle.close()
     handle = open(
         '%s/dns1.university.edu/named/internal/university.edu.db' %
         self.root_config_dir, 'r')
     self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN university.edu.\n'
+        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'''
+        '$ORIGIN university.edu.\n'''
         'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091225 5 5 5 5\n'
-        '@ 3600 in ns ns1.university.edu\n'
-        '@ 3600 in ns ns2.university.edu\n'
-        '@ 3600 in mx 1 mail2.university.edu.\n'
-        '@ 3600 in mx 1 mail1.university.edu.\n'
-        'computer1 3600 in a 192.168.1.1\n'
-        'computer2 3600 in a 192.168.1.2\n'
-        'computer4 3600 in a 192.168.1.4\n')
+        'admin@university.edu. 20091225 5 5 5 5\n'''
+        '@ 3600 in ns ns1.university.edu\n'''
+        '@ 3600 in ns ns2.university.edu\n'''
+        '@ 3600 in mx 1 mail2.university.edu.\n'''
+        '@ 3600 in mx 1 mail1.university.edu.\n'''
+        'computer1 3600 in a 192.168.1.1\n'''
+        'computer2 3600 in a 192.168.1.2\n'''
+        'computer4 3600 in a 192.168.1.4\n''')
     handle.close()
 
     # Test dns4 named_conf
@@ -2266,7 +2281,9 @@ class TestTreeExporter(unittest.TestCase):
         '};\n'
         '\n'
         'view "private" {\n'
-        '\tmatch-clients { secret; };\n'
+        '\tmatch-clients { \n'
+        '\t\tsecret;\n'
+        '\t };\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "private/university.edu.%s";\n'
@@ -2306,40 +2323,40 @@ class TestTreeExporter(unittest.TestCase):
         '%s/dns4.university.edu/named/private/university.edu.db' %
         self.root_config_dir, 'r')
     self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN university.edu.\n'
+        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'''
+        '$ORIGIN university.edu.\n'''
         'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091225 5 5 5 5\n'
-        '@ 3600 in ns ns1.university.edu\n'
-        '@ 3600 in ns ns2.university.edu\n'
-        '@ 3600 in mx 1 mail2.university.edu.\n'
-        '@ 3600 in mx 1 mail1.university.edu.\n')
+        'admin@university.edu. 20091225 5 5 5 5\n'''
+        '@ 3600 in ns ns1.university.edu\n'''
+        '@ 3600 in ns ns2.university.edu\n'''
+        '@ 3600 in mx 1 mail2.university.edu.\n'''
+        '@ 3600 in mx 1 mail1.university.edu.\n''')
     handle.close()
 
   def testTreeExporterAddToTarFile(self):
     tar_string = (  ## The string was arbitrarily chosen.
-        u'options {\n'
-        '\tdirectory "/var/domain";\n'
-        '\trecursion no;\n'
-        '\tmax-cache-size 512M;\n'
-        '};\n\n'
-        'logging {\n'
-        '\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n'
-        '\t};\n'
-        '\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n'
-        '\t\tseverity info;\n'
-        '\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n'
-        '};\n\n'
-        'controls {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
-        '};\n\n'
-        'include "/etc/rndc.key";\n')
+        u'options {\n'''
+        '\tdirectory "/var/domain";\n'''
+        '\trecursion no;\n'''
+        '\tmax-cache-size 512M;\n'''
+        '};\n''\n'''
+        'logging {\n'''
+        '\tchannel "security" {\n'''
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'''
+        '\t\tprint-time yes;\n'''
+        '\t};\n'''
+        '\tchannel "query_logging" {\n'''
+        '\t\tsyslog local5;\n'''
+        '\t\tseverity info;\n'''
+        '\t};\n'''
+        '\tcategory "client" { "null"; };\n'''
+        '\tcategory "update-security" { "security"; };\n'''
+        '\tcategory "queries" { "query_logging"; };\n'''
+        '};\n''\n'''
+        'controls {\n'''
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'''
+        '};\n''\n'''
+        'include "/etc/rndc.key";\n''')
 
     if not (os.path.exists(self.root_config_dir)):
         os.mkdir(self.root_config_dir)
@@ -2360,183 +2377,183 @@ class TestTreeExporter(unittest.TestCase):
 
   def testNamedHeaderChangeDirectory(self):
     header_string = (  ## The string was arbitrarily chosen.
-        '#Comment1\n'
-        '//options\n'
-        '//{\n'
-        '//directory "test";\n'
-        '//};\n'
-        '/*\n'
-        'options\n'
-        '{\n'
-        '  directory "test";\n'
-        '}\n'
-        '*/\n'
-        'otherstanza{\n'
-        '\tstuff\n'
-        '};\n'
-        'options {\n'
-        '\tdirectory "/var/domain";\n'
-        '\trecursion no;\n'
-        '\tmax-cache-size 512M;\n'
-        '};\n\n'
-        'logging {\n'
-        '\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n'
-        '\t};\n'
-        '\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n'
-        '\t\tseverity info;\n'
-        '\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n'
-        '};\n\n'
-        'controls {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
-        '};\n\n'
-        'include "/etc/rndc.key";\n')
+        '#Comment1\n'''
+        '//options\n'''
+        '//{\n'''
+        '//directory "test";\n'''
+        '//};\n'''
+        '/*\n'''
+        'options\n'''
+        '{\n'''
+        '  directory "test";\n'''
+        '}\n'''
+        '*/\n'''
+        'otherstanza{\n'''
+        '\tstuff\n'''
+        '};\n'''
+        'options {\n'''
+        '\tdirectory "/var/domain";\n'''
+        '\trecursion no;\n'''
+        '\tmax-cache-size 512M;\n'''
+        '};\n''\n'''
+        'logging {\n'''
+        '\tchannel "security" {\n'''
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'''
+        '\t\tprint-time yes;\n'''
+        '\t};\n'''
+        '\tchannel "query_logging" {\n'''
+        '\t\tsyslog local5;\n'''
+        '\t\tseverity info;\n'''
+        '\t};\n'''
+        '\tcategory "client" { "null"; };\n'''
+        '\tcategory "update-security" { "security"; };\n'''
+        '\tcategory "queries" { "query_logging"; };\n'''
+        '};\n''\n'''
+        'controls {\n'''
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'''
+        '};\n''\n'''
+        'include "/etc/rndc.key";\n''')
     self.assertEqual(self.tree_exporter_instance.NamedHeaderChangeDirectory(
         header_string, '/tmp/newdir'),
-        'include "/etc/rndc.key";\n'
-        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-        'logging { category "update-security" { "security"; };\n'
-        'category "queries" { "query_logging"; };\n'
-        'channel "query_logging" { syslog local5;\n'
-        'severity info; };\n'
-        'category "client" { "null"; };\n'
-        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-        'print-time yes; }; };\n'
-        'options { directory "/tmp/newdir";\n'
-        'recursion no;\n'
-        'max-cache-size 512M; };\n'
+        'include "/etc/rndc.key";\n'''
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'''
+        'logging { category "update-security" { "security"; };\n'''
+        'category "queries" { "query_logging"; };\n'''
+        'channel "query_logging" { syslog local5;\n'''
+        'severity info; };\n'''
+        'category "client" { "null"; };\n'''
+        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'''
+        'print-time yes; }; };\n'''
+        'options { directory "/tmp/newdir";\n'''
+        'recursion no;\n'''
+        'max-cache-size 512M; };\n'''
         'otherstanza { stuff; };')
     header_string = (  ## The string was arbitrarily chosen.
-        '#Comment1\n'
-        '//options\n'
-        '//{\n'
-        '//directory "test";\n'
-        '//};\n'
-        '/*\n'
-        'options\n'
-        '{\n'
-        '  directory "test";\n'
-        '}\n'
-        '*/\n'
-        'otherstanza{\n'
-        '\tstuff\n'
-        '};\n' # No options stanza
-        'logging {\n'
-        '\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n'
-        '\t};\n'
-        '\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n'
-        '\t\tseverity info;\n'
-        '\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n'
-        '};\n\n'
-        'controls {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
-        '};\n\n'
-        'include "/etc/rndc.key";\n')
+        '#Comment1\n'''
+        '//options\n'''
+        '//{\n'''
+        '//directory "test";\n'''
+        '//};\n'''
+        '/*\n'''
+        'options\n'''
+        '{\n'''
+        '  directory "test";\n'''
+        '}\n'''
+        '*/\n'''
+        'otherstanza{\n'''
+        '\tstuff\n'''
+        '};\n''' # No options stanza
+        'logging {\n'''
+        '\tchannel "security" {\n'''
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'''
+        '\t\tprint-time yes;\n'''
+        '\t};\n'''
+        '\tchannel "query_logging" {\n'''
+        '\t\tsyslog local5;\n'''
+        '\t\tseverity info;\n'''
+        '\t};\n'''
+        '\tcategory "client" { "null"; };\n'''
+        '\tcategory "update-security" { "security"; };\n'''
+        '\tcategory "queries" { "query_logging"; };\n'''
+        '};\n''\n'''
+        'controls {\n'''
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'''
+        '};\n''\n'''
+        'include "/etc/rndc.key";\n''')
     self.assertEqual(self.tree_exporter_instance.NamedHeaderChangeDirectory(
         header_string, '/tmp/newdir'),
-        'include "/etc/rndc.key";\n'
-        'logging { category "update-security" { "security"; };\n'
-        'category "queries" { "query_logging"; };\n'
-        'channel "query_logging" { syslog local5;\n'
-        'severity info; };\n'
-        'category "client" { "null"; };\n'
-        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-        'print-time yes; }; };\n'
-        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-        'otherstanza { stuff; };\n'
+        'include "/etc/rndc.key";\n'''
+        'logging { category "update-security" { "security"; };\n'''
+        'category "queries" { "query_logging"; };\n'''
+        'channel "query_logging" { syslog local5;\n'''
+        'severity info; };\n'''
+        'category "client" { "null"; };\n'''
+        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'''
+        'print-time yes; }; };\n'''
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'''
+        'otherstanza { stuff; };\n'''
         'options { directory "/tmp/newdir"; };')
     header_string = (  ## The string was arbitrarily chosen.
-        '#Comment1\n'
-        '//options\n'
-        '//{\n'
-        '//directory "test";\n'
-        '//};\n'
-        '/*\n'
-        'options\n'
-        '{\n'
-        '  directory "test";\n'
-        '}\n'
-        '*/\n'
-        'otherstanza{\n'
-        '\tstuff\n'
-        '};\n'
-        'options {\n'
-        '};\n\n'
-        'logging {\n'
-        '\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n'
-        '\t};\n'
-        '\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n'
-        '\t\tseverity info;\n'
-        '\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n'
-        '};\n\n'
-        'controls {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
-        '};\n\n'
-        'include "/etc/rndc.key";\n')
+        '#Comment1\n'''
+        '//options\n'''
+        '//{\n'''
+        '//directory "test";\n'''
+        '//};\n'''
+        '/*\n'''
+        'options\n'''
+        '{\n'''
+        '  directory "test";\n'''
+        '}\n'''
+        '*/\n'''
+        'otherstanza{\n'''
+        '\tstuff\n'''
+        '};\n'''
+        'options {\n'''
+        '};\n''\n'''
+        'logging {\n'''
+        '\tchannel "security" {\n'''
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'''
+        '\t\tprint-time yes;\n'''
+        '\t};\n'''
+        '\tchannel "query_logging" {\n'''
+        '\t\tsyslog local5;\n'''
+        '\t\tseverity info;\n'''
+        '\t};\n'''
+        '\tcategory "client" { "null"; };\n'''
+        '\tcategory "update-security" { "security"; };\n'''
+        '\tcategory "queries" { "query_logging"; };\n'''
+        '};\n''\n'''
+        'controls {\n'''
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'''
+        '};\n''\n'''
+        'include "/etc/rndc.key";\n''')
     self.assertEqual(self.tree_exporter_instance.NamedHeaderChangeDirectory(
         header_string, '/tmp/newdir'),
-        'include "/etc/rndc.key";\n'
-        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-        'logging { category "update-security" { "security"; };\n'
-        'category "queries" { "query_logging"; };\n'
-        'channel "query_logging" { syslog local5;\n'
-        'severity info; };\n'
-        'category "client" { "null"; };\n'
-        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-        'print-time yes; }; };\n'
-        'options { directory "/tmp/newdir"; };\n'
+        'include "/etc/rndc.key";\n'''
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'''
+        'logging { category "update-security" { "security"; };\n'''
+        'category "queries" { "query_logging"; };\n'''
+        'channel "query_logging" { syslog local5;\n'''
+        'severity info; };\n'''
+        'category "client" { "null"; };\n'''
+        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'''
+        'print-time yes; }; };\n'''
+        'options { directory "/tmp/newdir"; };\n'''
         'otherstanza { stuff; };')
 
     header_string = (  ## The string was arbitrarily chosen.
-        'otherstanza{\n'
-        '\tstuff\n'
-        '};\n'
-        'logging {\n'
-        '\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n'
-        '\t};\n'
-        '\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n'
-        '\t\tseverity info;\n'
-        '\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n'
-        '};\n\n'
-        'controls {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'
-        '};\n\n'
-        'include "/etc/rndc.key";\n')
+        'otherstanza{\n'''
+        '\tstuff\n'''
+        '};\n'''
+        'logging {\n'''
+        '\tchannel "security" {\n'''
+        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'''
+        '\t\tprint-time yes;\n'''
+        '\t};\n'''
+        '\tchannel "query_logging" {\n'''
+        '\t\tsyslog local5;\n'''
+        '\t\tseverity info;\n'''
+        '\t};\n'''
+        '\tcategory "client" { "null"; };\n'''
+        '\tcategory "update-security" { "security"; };\n'''
+        '\tcategory "queries" { "query_logging"; };\n'''
+        '};\n''\n'''
+        'controls {\n'''
+        '\tinet * allow { control-hosts; } keys {rndc-key; };\n'''
+        '};\n''\n'''
+        'include "/etc/rndc.key";\n''')
     self.assertEqual(self.tree_exporter_instance.NamedHeaderChangeDirectory(
         header_string, '/tmp/newdir'),
-        'include "/etc/rndc.key";\n'
-        'logging { category "update-security" { "security"; };\n'
-        'category "queries" { "query_logging"; };\n'
-        'channel "query_logging" { syslog local5;\n'
-        'severity info; };\n'
-        'category "client" { "null"; };\n'
-        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-        'print-time yes; }; };\n'
-        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-        'otherstanza { stuff; };\n'
+        'include "/etc/rndc.key";\n'''
+        'logging { category "update-security" { "security"; };\n'''
+        'category "queries" { "query_logging"; };\n'''
+        'channel "query_logging" { syslog local5;\n'''
+        'severity info; };\n'''
+        'category "client" { "null"; };\n'''
+        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'''
+        'print-time yes; }; };\n'''
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'''
+        'otherstanza { stuff; };\n'''
         'options { directory "/tmp/newdir"; };')
 
 
