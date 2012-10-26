@@ -496,6 +496,11 @@ class BindTreeExport(object):
       named_conf_lines.append('\tmatch-clients { \n\t\t%s\n\t };' % (
           '\n\t\t'.join(sorted_clients)))
 
+      if( cooked_data['dns_server_sets'][dns_server_set]['views'][view_name][
+            'view_options'] ):
+        named_conf_lines.append('\t%s' % cooked_data['dns_server_sets'][
+            dns_server_set]['views'][view_name]['view_options'])
+
       for zone in cooked_data['dns_server_sets'][dns_server_set]['views'][
           view_name]['zones']:
         named_conf_lines.append('\tzone "%s" {' % (
@@ -582,6 +587,9 @@ class BindTreeExport(object):
         'view_dependency_assignments')
     data['view_dependency_assignments'] = self.db_instance.ListRow(
         'view_dependency_assignments', view_dependency_assignments_dict)
+
+    views_dict = self.db_instance.GetEmptyRowDict('views')
+    data['views'] = self.db_instance.ListRow('views', views_dict)
 
     view_acl_assignments_dict = self.db_instance.GetEmptyRowDict(
         'view_acl_assignments')
@@ -777,8 +785,16 @@ class BindTreeExport(object):
                   'view_dependency_assignments_view_name'] ):
               if( not view_name in cooked_data['dns_server_sets'][
                     dns_server_set_name]['views'] ):
-                cooked_data['dns_server_sets'][dns_server_set_name]['views'][
-                    view_name] = {}
+                cooked_data['dns_server_sets'][dns_server_set_name][
+                    'views'][view_name] = {}
+
+                for view_and_options in data['views']:
+                  if( view_and_options['view_name'] == view_name ):
+                    cooked_data['dns_server_sets'][dns_server_set_name][
+                      'views'][view_name]['view_options'] = (
+                        iscpy.Deserialize(view_and_options['view_options']).replace('\n', '\n\t'))
+                    break
+
               if( not 'acls' in cooked_data['dns_server_sets'][
                     dns_server_set_name]['views'][view_name] ):
                 cooked_data['dns_server_sets'][dns_server_set_name]['views'][

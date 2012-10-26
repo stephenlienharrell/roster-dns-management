@@ -136,6 +136,19 @@ class Testdnsmkview(unittest.TestCase):
         'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl1 allowed: 1\n')
     command.close()
 
+
+  def testMakeViewWithViewOptions(self):
+    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
+    command = os.popen('python %s view -v test_view -a acl1 '
+                       '--options="recursion no;" '
+                       '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+        'ADDED VIEW: view_name: test_view options recursion no;\n'
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl1 allowed: 1\n')
+    command.close()
+
   def testMakeViewAclAssignment(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeACL(u'acl2', u'10.10.1.0/24')

@@ -105,7 +105,7 @@ class TestDnsMkHost(unittest.TestCase):
     # Make Views
     views_dict = {}
 
-    views_dict['view_options'] = u'recursion no;'
+    views_dict['view_options'] = iscpy.Serialize(u'recursion no;')
 
     views_dict['view_name'] = u'internal'
     db_instance.MakeRow('views', views_dict)
@@ -1176,6 +1176,7 @@ class TestDnsMkHost(unittest.TestCase):
   def testMakeFilesFromDB(self):
     output = os.popen('python %s -c %s' % (
         EXEC, CONFIG_FILE))
+    output.read()
     output.close()
     for fname in os.listdir(self.backup_dir):
       if( not fname.endswith('.tar.bz2') ):
@@ -1234,6 +1235,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\tmatch-clients { \n'
         '\t\tpublic;\n'
         '\t };\n'
+        '\trecursion no;\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "external/university.edu.db";\n'
@@ -1316,6 +1318,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\tmatch-clients { \n'
         '\t\tpublic;\n'
         '\t };\n'
+        '\trecursion no;\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "external/university.edu.db";\n'
@@ -1332,6 +1335,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\t\t!public;\n'
         '\t\tsecret;\n'
         '\t };\n'
+        '\trecursion no;\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "internal/university.edu.db";\n'
@@ -1439,6 +1443,7 @@ class TestDnsMkHost(unittest.TestCase):
             '\tmatch-clients { \n'
             '\t\t!secret;\n'
             '\t };\n'
+            '\trecursion no;\n'
             '\tzone "university.edu" {\n'
             '\t\ttype master;\n'
             '\t\tfile "private/university.edu.db";\n'
@@ -1462,13 +1467,15 @@ class TestDnsMkHost(unittest.TestCase):
 
     output = os.popen('python %s -c %s' % (
         EXEC, CONFIG_FILE))
-    self.assertEquals(output.read(), 'No changes made to database. In order '
-                                     'to export use the --force flag.\n')
+    output_string = output.read()
     output.close()
+    self.assertEquals(output_string, 'No changes made to database. In order '
+                                     'to export use the --force flag.\n')
     output = os.popen('python %s -c %s --force' % (
         EXEC, CONFIG_FILE))
-    self.assertEquals(output.read(), '')
+    output_string = output.read()
     output.close()
+    self.assertEquals(output_string, '')
 
   for fname in os.listdir('.'):
     if( fname.endswith('.bz2') ):
@@ -1485,14 +1492,15 @@ class TestDnsMkHost(unittest.TestCase):
       self.db_instance.EndTransaction()
     output = os.popen('python %s -c %s -f' % (
         EXEC, CONFIG_FILE))
-    self.assertEquals(output.read(),
-        'ERROR: Server set private_dns has no zones in private view.\n')
+    output_string = output.read()
     output.close()
+    self.assertEquals(output_string,
+        'ERROR: Server set private_dns has no zones in private view.\n')
 
     views_dict = {}
     try:
       self.db_instance.StartTransaction()
-      views_dict['view_options'] = u'recursion no;'
+      views_dict['view_options'] = iscpy.Serialize(u'recursion no;')
 
       views_dict['view_name'] = u'internal'
       self.db_instance.RemoveRow('views', views_dict)
@@ -1507,9 +1515,10 @@ class TestDnsMkHost(unittest.TestCase):
 
     output = os.popen('python %s -c %s' % (
         EXEC, CONFIG_FILE))
-    self.assertEquals(output.read(),
-        'ERROR: Server set external_dns has no views.\n')
+    output_string = output.read()
     output.close()
+    self.assertEquals(output_string,
+        'ERROR: Server set external_dns has no views.\n')
 
 
     dns_server_sets_dict = {}
@@ -1528,8 +1537,9 @@ class TestDnsMkHost(unittest.TestCase):
 
     output = os.popen('python %s -c %s' % (
         EXEC, CONFIG_FILE))
-    self.assertEquals(output.read(), 'ERROR: No dns server sets found.\n')
+    output_string = output.read()
     output.close()
+    self.assertEquals(output_string, 'ERROR: No dns server sets found.\n')
 
   for fname in os.listdir('.'):
     if( fname.endswith('.bz2') ):

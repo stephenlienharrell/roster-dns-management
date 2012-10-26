@@ -104,7 +104,7 @@ class TestTreeExporter(unittest.TestCase):
     # Make Views
     views_dict = {}
 
-    views_dict['view_options'] = u'recursion no;'
+    views_dict['view_options'] = iscpy.Serialize(u'recursion no;')
 
     views_dict['view_name'] = u'internal'
     db_instance.MakeRow('views', views_dict)
@@ -1376,6 +1376,7 @@ class TestTreeExporter(unittest.TestCase):
          '\tmatch-clients { \n'
          '\t\tpublic;\n'
          '\t };\n'
+         '\trecursion no;\n'
          '\tzone "university.edu" {\n'
          '\t\ttype master;\n'
          '\t\tfile "external/university.edu.db";\n'
@@ -1392,6 +1393,7 @@ class TestTreeExporter(unittest.TestCase):
          '\t\t!public;\n'
          '\t\t!secret;\n'
          '\t };\n'
+         '\trecursion no;\n'
          '\tzone "university.edu" {\n'
          '\t\ttype master;\n'
          '\t\tfile "internal/university.edu.db";\n'
@@ -1627,7 +1629,9 @@ class TestTreeExporter(unittest.TestCase):
              u'dns2.university.edu',
              u'dns3.university.edu'],
              u'view_order': {1: u'external'},
-             'views': {u'external': {'zones': {u'university.edu': {
+             'views': {u'external': {
+               'view_options': u'recursion no;',
+               'zones': {u'university.edu': {
                  'zone_type': u'master',
              'records': [{'target': '@',
              'ttl': 3600,
@@ -1717,7 +1721,9 @@ class TestTreeExporter(unittest.TestCase):
             {'dns_servers': [u'ns1.int.university.edu',
              u'dns4.university.edu'],
              u'view_order': {3: u'private'},
-             'views': {u'private': {'zones': {u'university.edu': {
+             'views': {u'private': {
+               'view_options': u'recursion no;',
+               'zones': {u'university.edu': {
                  'zone_type': u'master',
              'records': [{'target': '@',
              'ttl': 3600,
@@ -1770,7 +1776,9 @@ class TestTreeExporter(unittest.TestCase):
         {'dns_servers': [u'ns1.int.university.edu',
          u'dns1.university.edu'],
          'view_order': {1: u'external', 2: u'internal'},
-         'views': {u'internal': {'zones': {u'university.edu': {
+         'views': {u'internal': {
+           'view_options': u'recursion no;',
+           'zones': {u'university.edu': {
              'zone_type': u'master',
          'records': [{'target': '@',
          'ttl': 3600,
@@ -1863,7 +1871,9 @@ class TestTreeExporter(unittest.TestCase):
          'zone_options': u'allow-update { none; };'}},
          'acls': [u'secret',
          u'public']},
-         u'external': {'zones': {u'university.edu': {'zone_type': u'master',
+         u'external': {
+           'view_options': u'recursion no;',
+           'zones': {u'university.edu': {'zone_type': u'master',
          'records': [{'target': '@',
          'ttl': 3600,
          u'priority': 1,
@@ -2054,6 +2064,7 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { \n'
         '\t\tpublic;\n'
         '\t };\n'
+        '\trecursion no;\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n\t\tfile "external/university.edu.%s";\n'
         '\t\tallow-update { none; };\n'
@@ -2147,6 +2158,7 @@ class TestTreeExporter(unittest.TestCase):
       '\tmatch-clients { \n'
       '\t\tpublic;\n'
       '\t };\n'
+      '\trecursion no;\n'
       '\tzone "university.edu" {\n'
       '\t\ttype master;\n'
       '\t\tfile "external/university.edu.%s";\n'
@@ -2163,6 +2175,7 @@ class TestTreeExporter(unittest.TestCase):
       '\t\t!public;\n'
       '\t\t!secret;\n'
       '\t };\n'
+      '\trecursion no;\n'
       '\tzone "university.edu" {\n'
       '\t\ttype master;\n'
       '\t\tfile "internal/university.edu.%s";\n'
@@ -2284,6 +2297,7 @@ class TestTreeExporter(unittest.TestCase):
         '\tmatch-clients { \n'
         '\t\tsecret;\n'
         '\t };\n'
+        '\trecursion no;\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "private/university.edu.%s";\n'
