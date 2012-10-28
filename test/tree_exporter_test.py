@@ -1337,6 +1337,33 @@ class TestTreeExporter(unittest.TestCase):
                                'last_user': u'sharrell',
                                'zone_name': u'university.edu'}}})
 
+  def testTreeExporterExportAllBindTreesError(self):
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_view_assignments_dict['zone_origin'] = u'university3.edu.'
+    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
+        u'private_dep')
+    zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
+        u'priv.university.edu')
+
+    self.db_instance.StartTransaction()
+    rows = self.db_instance.ListRow(
+      'zone_view_assignments', zone_view_assignments_dict)
+    self.assertEqual(len(rows), 1)
+    row = rows[0]
+
+    #Removing the private_dep assignment
+    self.db_instance.RemoveRow('zone_view_assignments', row)
+
+    #Chaning it to any
+    row['zone_view_assignments_view_dependency'] = u'any'
+    self.db_instance.MakeRow('zone_view_assignments', row)
+    self.db_instance.EndTransaction()
+
+    self.core_instance.SetMaintenanceFlag(0)
+    self.assertRaises(tree_exporter.Error,
+                      self.tree_exporter_instance.ExportAllBindTrees)
+
   def testTreeExporterMakeNamedConf(self):
     self.core_instance.SetMaintenanceFlag(1)
     self.assertRaises(tree_exporter.MaintenanceError,
