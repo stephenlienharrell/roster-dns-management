@@ -128,6 +128,34 @@ class TestDnsMkZone(unittest.TestCase):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
 
+  def testNoReverseRangeZoneAssignmentForMakeSlaveZone(self):
+    self.core_instance.MakeView(u'test_view')
+    output = os.popen('python %s reverse -v test_view -z test_zone1 --cidr-block '
+                      '192.168.1.0/24 --type master '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ADDED REVERSE ZONE: zone_name: test_zone1 '
+        'zone_type: master zone_origin: 1.168.192.in-addr.arpa. '
+        'zone_options: None view_name: test_view\n'
+        'ADDED REVERSE RANGE ZONE ASSIGNMENT: zone_name: test_zone1 '
+        'cidr_block: 192.168.1.0/24 \n')
+    output.close()
+
+    output = os.popen('python %s reverse -v test_view -z test_zone2 --cidr-block '
+                      '192.168.2.0/24 --type slave '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    #Note, since this is a slave zone, there is no added reverse range zone
+    #assignment. The previous zone, a master zone, does have add a reverse
+    #range zone assignment.
+    self.assertEqual(output.read(),
+        'ADDED REVERSE ZONE: zone_name: test_zone2 '
+        'zone_type: slave zone_origin: 2.168.192.in-addr.arpa. '
+        'zone_options: None view_name: test_view\n')
+    output.close()
 
   def testMakeZoneWithView(self):
     self.core_instance.MakeView(u'test_view')

@@ -97,6 +97,7 @@ def main(args):
         server_name=options.server,
         kwargs={'zone_name': options.zone_name,
                 'cidr_block': options.cidr_block})['core_return']
+
     if( options.cidr_block ):
       options.origin = roster_client_lib.RunFunction(
           u'ReverseIP', options.username, credfile=options.credfile,
@@ -122,16 +123,18 @@ def main(args):
                  options.zone_name, options.type,
                  options.origin, options.options,
                  options.view_name))
-    if( len(reverse_range_zone_assignments) == 0 ):
+
+    if( len(reverse_range_zone_assignments) == 0 and
+        options.type.lower() != 'slave' ):
       roster_client_lib.RunFunction(
           u'MakeReverseRangeZoneAssignment', options.username,
           credfile=options.credfile, credstring=options.credstring,
           server_name=options.server,
           args=[options.zone_name, options.cidr_block])
-    if( not options.quiet ):
-      print ('ADDED REVERSE RANGE ZONE ASSIGNMENT: zone_name: %s '
-             'cidr_block: %s ' % (
-                 options.zone_name, options.cidr_block))
+      if( not options.quiet ):
+        print ('ADDED REVERSE RANGE ZONE ASSIGNMENT: zone_name: %s '
+               'cidr_block: %s ' % (
+                   options.zone_name, options.cidr_block))
 
   elif( command == 'forward' ):
     roster_client_lib.RunFunction(
