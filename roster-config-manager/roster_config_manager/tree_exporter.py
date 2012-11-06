@@ -92,6 +92,8 @@ class BindTreeExport(object):
         'root_config_dir']
     self.backup_dir = os.path.abspath(os.path.expanduser(
         config_instance.config_file['exporter']['backup_dir']))
+    self.root_hint_file = os.path.abspath(os.path.expanduser(
+        config_instance.config_file['exporter']['root_hint_file']))
     self.log_instance = audit_log.AuditLog(log_to_syslog=True, log_to_db=True,
                                            db_instance=self.db_instance)
 
@@ -287,12 +289,21 @@ class BindTreeExport(object):
                                                       dns_server_set, 'db', bind_dir)
           named_conf_b_file_string = self.MakeNamedConf(data, cooked_data,
                                                       dns_server_set, 'aa', bind_dir)
-          named_conf_file_handle = open(named_conf_file, 'w')
-          named_conf_file_handle.write(named_conf_a_file_string)
-          named_conf_file_handle.close()
+          root_hint_file = '%s/named.ca' % named_directory.rstrip('/')
+          root_hint_file_string = open(self.root_hint_file, 'r').read()
+
+          root_hint_file_handle = open(root_hint_file, 'w')
           named_conf_binary_file_handle = open(named_conf_binary_file, 'w')
-          named_conf_binary_file_handle.write(named_conf_b_file_string)
-          named_conf_binary_file_handle.close()
+          named_conf_file_handle = open(named_conf_file, 'w')
+          try:
+            named_conf_file_handle.write(named_conf_a_file_string)
+            named_conf_binary_file_handle.write(named_conf_b_file_string)
+            root_hint_file_handle.write(root_hint_file_string)
+          finally:
+            named_conf_file_handle.close()
+            named_conf_binary_file_handle.close()
+            root_hint_file_handle.close()
+          
 
       audit_log_replay_dump, full_database_dump = self.CookRawDump(raw_dump)
 
@@ -500,6 +511,12 @@ class BindTreeExport(object):
             'view_options'] ):
         named_conf_lines.append('\t%s' % cooked_data['dns_server_sets'][
             dns_server_set]['views'][view_name]['view_options'])
+
+      # add root hint file
+      named_conf_lines.append('\tzone "." {')
+      named_conf_lines.append('\t\ttype hint;')
+      named_conf_lines.append('\t\tfile "named.ca";')
+      named_conf_lines.append('\t};')
 
       for zone in cooked_data['dns_server_sets'][dns_server_set]['views'][
           view_name]['zones']:
