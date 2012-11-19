@@ -153,28 +153,42 @@ class TestDnsMassAdd(unittest.TestCase):
     self.core_instance.MakeReverseRangeZoneAssignment(u'reverse_zone',
                                                   u'192.168.1/24')
     self.core_instance.MakeRecord(
-        u'soa', u'soa1', u'forward_zone',
+        u'soa', u'@', u'forward_zone',
         {u'name_server': u'ns1.university.edu.',
          u'admin_email': u'admin.university.edu.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
-        u'soa', u'soa1', u'reverse_zone',
+        u'soa', u'@', u'forward_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view3')
+    self.core_instance.MakeRecord(
+        u'soa', u'@', u'reverse_zone',
         {u'name_server': u'ns1.university.edu.',
          u'admin_email': u'admin.university.edu.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
-        u'soa', u'soa1', u'foward_zone_ipv6',
+        u'soa', u'@', u'reverse_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view2')
+    self.core_instance.MakeRecord(
+        u'soa', u'@', u'foward_zone_ipv6',
         {u'name_server': u'ns1.university.edu.',
          u'admin_email': u'admin.university.edu.',
          u'serial_number': 1, u'refresh_seconds': 5,
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
     self.core_instance.MakeRecord(
-        u'soa', u'soa1', u'reverse_zone_ipv6',
+        u'soa', u'@', u'reverse_zone_ipv6',
         {u'name_server': u'ns1.university.edu.',
          u'admin_email': u'admin.university.edu.',
          u'serial_number': 1, u'refresh_seconds': 5,
@@ -207,25 +221,25 @@ class TestDnsMassAdd(unittest.TestCase):
     ## Check initial records
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'),
-            [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+            [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'@',
             u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
             'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
             'view_name': u'test_view', 'last_user': u'sharrell',
             'zone_name': u'forward_zone', u'admin_email': u'admin.university.edu.',
             u'expiry_seconds': 5},
-             {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'reverse_zone', u'admin_email': u'admin.university.edu.',
              u'expiry_seconds': 5},
-             {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'foward_zone_ipv6',
              u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-             {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
@@ -271,49 +285,45 @@ class TestDnsMassAdd(unittest.TestCase):
     self.assertEqual(command.communicate(input='n')[0], 
         'Commit flag not specified. Would you like to commit?\n'
         'Respond y or n: HOSTS TO BE REMOVED: \n'
-        '# type target    zone         view\n'
-        '----------------------------------\n'
-        '0 ptr  5         forward_zone test_view\n'
-        '1 a    host3     forward_zone test_view\n'
-        '2 a    www.host3 forward_zone test_view\n'
-        '3 aaaa host2     forward_zone test_view\n'
-        '\n'
-        '\n'
+        '# type target    zone             view\n'
+        '--------------------------------------\n'
+        '0 ptr  5         reverse_zone     test_view\n'
+        '1 a    host3     forward_zone     test_view\n'
+        '2 a    www.host3 forward_zone     test_view\n'
+        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
         'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone         view\n'
-        '------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone test_view\n'
-        '1 ptr  5                                         forward_zone test_view\n'
-        '2 aaaa computer2                                 forward_zone test_view\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n'
-        '4 aaaa computer3                                 forward_zone test_view\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n'
-        '\n'
-        '\n'
+        '# type target                                    zone              view\n'
+        '-----------------------------------------------------------------------\n'
+        '0 a    computer1                                 forward_zone      test_view\n'
+        '1 ptr  5                                         reverse_zone      test_view\n'
+        '2 aaaa computer2                                 forward_zone      test_view\n'
+        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n'
+        '4 aaaa computer3                                 forward_zone      test_view\n'
+        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n\n\n'
         'Commit flag not specified. Changes will not be made to the database.\n')
 
     ## Ensure nothing got changed
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'),
-          [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+          [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'@',
             u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
             'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
             'view_name': u'test_view', 'last_user': u'sharrell',
             'zone_name': u'forward_zone', u'admin_email': u'admin.university.edu.',
             u'expiry_seconds': 5},
-             {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'reverse_zone', u'admin_email': u'admin.university.edu.',
              u'expiry_seconds': 5},
-             {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'foward_zone_ipv6',
              u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-             {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
@@ -346,45 +356,45 @@ class TestDnsMassAdd(unittest.TestCase):
     ## Check output of replaced hosts
     self.assertEqual(command.communicate(input='y')[0],
         'Commit flag not specified. Would you like to commit?\n'
-        'Respond y or n: HOSTS TO BE REMOVED: \n' 
-        '# type target    zone         view\n'
-        '----------------------------------\n'
-        '0 ptr  5         forward_zone test_view\n'
-        '1 a    host3     forward_zone test_view\n'
-        '2 a    www.host3 forward_zone test_view\n'
-        '3 aaaa host2     forward_zone test_view\n\n\n'
+        'Respond y or n: HOSTS TO BE REMOVED: \n'
+        '# type target    zone             view\n'
+        '--------------------------------------\n'
+        '0 ptr  5         reverse_zone     test_view\n'
+        '1 a    host3     forward_zone     test_view\n'
+        '2 a    www.host3 forward_zone     test_view\n'
+        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
         'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone         view\n'
-        '------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone test_view\n'
-        '1 ptr  5                                         forward_zone test_view\n'
-        '2 aaaa computer2                                 forward_zone test_view\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n'
-        '4 aaaa computer3                                 forward_zone test_view\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n\n')
+        '# type target                                    zone              view\n'
+        '-----------------------------------------------------------------------\n'
+        '0 a    computer1                                 forward_zone      test_view\n'
+        '1 ptr  5                                         reverse_zone      test_view\n'
+        '2 aaaa computer2                                 forward_zone      test_view\n'
+        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n'
+        '4 aaaa computer3                                 forward_zone      test_view\n'
+        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n\n')
     
     ## Check output of replaced hosts
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'), 
-        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1', 
+        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'@', 
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
            'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
            'view_name': u'test_view', 'last_user': u'sharrell', 
            'zone_name': u'forward_zone', u'admin_email': 
           u'admin.university.edu.', u'expiry_seconds': 5}, 
-         {u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1', 
+         {u'serial_number': 5, u'refresh_seconds': 5, 'target': u'@', 
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
            'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
            'view_name': u'test_view', 'last_user': u'sharrell', 
            'zone_name': u'reverse_zone', u'admin_email': 
           u'admin.university.edu.', u'expiry_seconds': 5}, 
-         {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+         {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
            'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
            'view_name': u'test_view', 'last_user': u'sharrell', 'zone_name':
           u'foward_zone_ipv6', u'admin_email': u'admin.university.edu.', 
           u'expiry_seconds': 5}, {u'serial_number': 3, u'refresh_seconds': 5,
-           'target': u'soa1', u'name_server': u'ns1.university.edu.', 
+           'target': u'@', u'name_server': u'ns1.university.edu.', 
           u'retry_seconds': 5, 'ttl': 3600, u'minimum_seconds': 5, 
            'record_type': u'soa', 'view_name': u'test_view', 'last_user': 
           u'sharrell', 'zone_name': u'reverse_zone_ipv6', u'admin_email': 
@@ -417,25 +427,25 @@ class TestDnsMassAdd(unittest.TestCase):
     ## Check initial records
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'),
-            [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+            [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'@',
             u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
             'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
             'view_name': u'test_view', 'last_user': u'sharrell',
             'zone_name': u'forward_zone', u'admin_email': u'admin.university.edu.',
             u'expiry_seconds': 5},
-             {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'reverse_zone', u'admin_email': u'admin.university.edu.',
              u'expiry_seconds': 5},
-             {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'foward_zone_ipv6',
              u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-             {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
@@ -480,21 +490,21 @@ class TestDnsMassAdd(unittest.TestCase):
     self.assertEqual(command.read(), (
         'Commit flag not specified. Changes will not be made to the database.\n\n'
         'HOSTS TO BE REMOVED: \n'
-        '# type target    zone         view\n'
-        '----------------------------------\n'
-        '0 ptr  5         forward_zone test_view\n'
-        '1 a    host3     forward_zone test_view\n'
-        '2 a    www.host3 forward_zone test_view\n'
-        '3 aaaa host2     forward_zone test_view\n\n\n'
+        '# type target    zone             view\n'
+        '--------------------------------------\n'
+        '0 ptr  5         reverse_zone     test_view\n'
+        '1 a    host3     forward_zone     test_view\n'
+        '2 a    www.host3 forward_zone     test_view\n'
+        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
         'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone         view\n'
-        '------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone test_view\n'
-        '1 ptr  5                                         forward_zone test_view\n'
-        '2 aaaa computer2                                 forward_zone test_view\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n'
-        '4 aaaa computer3                                 forward_zone test_view\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n\n\n'
+        '# type target                                    zone              view\n'
+        '-----------------------------------------------------------------------\n'
+        '0 a    computer1                                 forward_zone      test_view\n'
+        '1 ptr  5                                         reverse_zone      test_view\n'
+        '2 aaaa computer2                                 forward_zone      test_view\n'
+        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n'
+        '4 aaaa computer3                                 forward_zone      test_view\n'
+        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n\n\n'
         'Commit flag not specified. Changes will not be made to the database.\n'))
 
     command.close()
@@ -502,25 +512,25 @@ class TestDnsMassAdd(unittest.TestCase):
     ## Ensure nothing got changed
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'),
-          [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+          [{u'serial_number': 4, u'refresh_seconds': 5, 'target': u'@',
             u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
             'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
             'view_name': u'test_view', 'last_user': u'sharrell',
             'zone_name': u'forward_zone', u'admin_email': u'admin.university.edu.',
             u'expiry_seconds': 5},
-             {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 4, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'reverse_zone', u'admin_email': u'admin.university.edu.',
              u'expiry_seconds': 5},
-             {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'foward_zone_ipv6',
              u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-             {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'soa1',
+             {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
@@ -551,45 +561,45 @@ class TestDnsMassAdd(unittest.TestCase):
     
     self.assertEqual(command.read(), (
         'HOSTS TO BE REMOVED: \n'
-        '# type target    zone         view\n'
-        '----------------------------------\n'
-        '0 ptr  5         forward_zone test_view\n'
-        '1 a    host3     forward_zone test_view\n'
-        '2 a    www.host3 forward_zone test_view\n'
-        '3 aaaa host2     forward_zone test_view\n\n\n'
+        '# type target    zone             view'
+        '\n--------------------------------------\n'
+        '0 ptr  5         reverse_zone     test_view\n'
+        '1 a    host3     forward_zone     test_view\n'
+        '2 a    www.host3 forward_zone     test_view\n'
+        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
         'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone         view\n'
-        '------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone test_view\n'
-        '1 ptr  5                                         forward_zone test_view\n'
-        '2 aaaa computer2                                 forward_zone test_view\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n'
-        '4 aaaa computer3                                 forward_zone test_view\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 forward_zone test_view\n\n'))
+        '# type target                                    zone              view\n'
+        '-----------------------------------------------------------------------\n'
+        '0 a    computer1                                 forward_zone      test_view\n'
+        '1 ptr  5                                         reverse_zone      test_view\n'
+        '2 aaaa computer2                                 forward_zone      test_view\n'
+        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n'
+        '4 aaaa computer3                                 forward_zone      test_view\n'
+        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n\n'))
     command.close()
     
     ## Check output of replaced hosts
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'), 
-        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1', 
+        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'@', 
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
            'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
            'view_name': u'test_view', 'last_user': u'sharrell', 
            'zone_name': u'forward_zone', u'admin_email': 
           u'admin.university.edu.', u'expiry_seconds': 5}, 
-         {u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1', 
+         {u'serial_number': 5, u'refresh_seconds': 5, 'target': u'@', 
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
            'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
            'view_name': u'test_view', 'last_user': u'sharrell', 
            'zone_name': u'reverse_zone', u'admin_email': 
           u'admin.university.edu.', u'expiry_seconds': 5}, 
-         {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+         {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 
            'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa', 
            'view_name': u'test_view', 'last_user': u'sharrell', 'zone_name':
           u'foward_zone_ipv6', u'admin_email': u'admin.university.edu.', 
           u'expiry_seconds': 5}, {u'serial_number': 3, u'refresh_seconds': 5,
-           'target': u'soa1', u'name_server': u'ns1.university.edu.', 
+           'target': u'@', u'name_server': u'ns1.university.edu.', 
           u'retry_seconds': 5, 'ttl': 3600, u'minimum_seconds': 5, 
            'record_type': u'soa', 'view_name': u'test_view', 'last_user': 
           u'sharrell', 'zone_name': u'reverse_zone_ipv6', u'admin_email': 
@@ -631,23 +641,23 @@ class TestDnsMassAdd(unittest.TestCase):
     ## Check output of a failed run, make sure nothing changed.
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'),
-        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1',
+        [{u'serial_number': 5, u'refresh_seconds': 5, 'target': u'@',
         u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
         'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
         'view_name': u'test_view', 'last_user': u'sharrell',
         'zone_name': u'forward_zone', u'admin_email': u'admin.university.edu.',
         u'expiry_seconds': 5},
-        {u'serial_number': 5, u'refresh_seconds': 5, 'target': u'soa1',
+        {u'serial_number': 5, u'refresh_seconds': 5, 'target': u'@',
         u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 'ttl': 3600,
         u'minimum_seconds': 5, 'record_type': u'soa', 'view_name': u'test_view',
         'last_user': u'sharrell', 'zone_name': u'reverse_zone',
         u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-        {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+        {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
         u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 'ttl': 3600,
         u'minimum_seconds': 5, 'record_type': u'soa', 'view_name': u'test_view',
         'last_user': u'sharrell', 'zone_name': u'foward_zone_ipv6',
         u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
-        {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'soa1',
+        {u'serial_number': 3, u'refresh_seconds': 5, 'target': u'@',
         u'name_server': u'ns1.university.edu.', u'retry_seconds': 5, 'ttl': 3600,
         u'minimum_seconds': 5, 'record_type': u'soa', 'view_name': u'test_view',
         'last_user': u'sharrell', 'zone_name': u'reverse_zone_ipv6',
@@ -677,6 +687,110 @@ class TestDnsMassAdd(unittest.TestCase):
         u'assignment_host': u'computer3.university.edu.'}])
 
     command.close()
+
+  def testMassAddWithAny(self):
+
+    ## Check initial records
+    self.assertEqual(
+        self.core_instance.ListRecords(view_name=u'any'), [])
+
+    ## Get test_file
+    handle = open(TEST_FILE, 'r')
+    try:
+      file_contents = handle.read()
+    finally:
+      handle.close()
+
+    self.assertEqual(file_contents,
+        '192.168.1.5 computer1\n'
+        '4321::1:2:3:4:567:89ab computer2\n'
+        '4321::1:2:3:4:567:89ac computer3\n')
+    
+    ## Run script against running database with no-commit flag
+    command = os.popen(('python %s -v %s -z %s --no-commit '
+                       '-f %s -s %s -u %s -p %s --config-file %s' % (
+                         EXEC, 'any', 'forward_zone', TEST_FILE,
+                         self.server_name, USERNAME, PASSWORD, USER_CONFIG)))
+
+    ## Check output of replaced hosts
+    self.assertEqual(command.read(), (
+        'Commit flag not specified. Changes will not be made to the database.\n\n'
+        'HOSTS TO BE REMOVED: \n'
+        '# type target    zone             view\n'
+        '--------------------------------------\n'
+        '0 ptr  5         reverse_zone     test_view\n'
+        '1 a    host3     forward_zone     test_view\n'
+        '2 a    www.host3 forward_zone     test_view\n'
+        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
+        'HOSTS TO BE ADDED: \n'
+        '# type target                                    zone              view\n'
+        '-----------------------------------------------------------------------\n'
+        '0 a    computer1                                 forward_zone      any\n'
+        '1 ptr  5                                         reverse_zone      any\n'
+        '2 aaaa computer2                                 forward_zone      any\n'
+        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 any\n'
+        '4 aaaa computer3                                 forward_zone      any\n'
+        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 any\n\n\n'
+        'Commit flag not specified. Changes will not be made to the database.\n'))
+
+    command.close()
+
+    ## Ensure nothing got changed
+    self.assertEqual(
+        self.core_instance.ListRecords(view_name=u'any'), [])
+
+    ## Run script against running database
+    command = os.popen(('python %s -v %s -z %s --commit '
+                       '-f %s -s %s -u %s -p %s --config-file %s' % (
+                         EXEC, u'any', u'forward_zone', TEST_FILE,
+                         self.server_name, USERNAME, PASSWORD, USER_CONFIG)))
+    
+    self.assertEqual(command.read(), 
+        'HOSTS TO BE REMOVED: \n'
+        '# type target    zone             view\n'
+        '--------------------------------------\n'
+        '0 ptr  5         reverse_zone     test_view\n'
+        '1 a    host3     forward_zone     test_view\n'
+        '2 a    www.host3 forward_zone     test_view\n'
+        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
+        'HOSTS TO BE ADDED: \n'
+        '# type target                                    zone              view\n'
+        '-----------------------------------------------------------------------\n'
+        '0 a    computer1                                 forward_zone      any\n'
+        '1 ptr  5                                         reverse_zone      any\n'
+        '2 aaaa computer2                                 forward_zone      any\n'
+        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 any\n'
+        '4 aaaa computer3                                 forward_zone      any\n'
+        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 any\n\n')
+    command.close()
+    
+    ## Check output of replaced hosts
+    self.assertEqual(
+        self.core_instance.ListRecords(view_name=u'any'), 
+            [{'target': u'computer1', 'ttl': 3600, 'record_type': u'a',
+              'view_name': u'any', 'last_user': u'sharrell',
+              'zone_name': u'forward_zone', u'assignment_ip': u'192.168.1.5'},
+             {'target': u'5', 'ttl': 3600, 'record_type': u'ptr',
+              'view_name': u'any', 'last_user': u'sharrell',
+              'zone_name': u'reverse_zone',
+             u'assignment_host': u'computer1.university.edu.'},
+             {'target': u'computer2', 'ttl': 3600, 'record_type': u'aaaa',
+              'view_name': u'any', 'last_user': u'sharrell',
+              'zone_name': u'forward_zone',
+             u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
+             {'target': u'b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1', 'ttl': 3600,
+              'record_type': u'ptr', 'view_name': u'any',
+              'last_user': u'sharrell', 'zone_name': u'reverse_zone_ipv6',
+             u'assignment_host': u'computer2.university.edu.'},
+             {'target': u'computer3', 'ttl': 3600, 'record_type': u'aaaa',
+              'view_name': u'any', 'last_user': u'sharrell',
+              'zone_name': u'forward_zone',
+             u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'},
+             {'target': u'c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1', 'ttl': 3600,
+              'record_type': u'ptr', 'view_name': u'any', 'last_user': u'sharrell',
+              'zone_name': u'reverse_zone_ipv6',
+             u'assignment_host': u'computer3.university.edu.'}])
+
 
   def testMassAddErrors(self):
     ## Required flags

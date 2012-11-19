@@ -540,7 +540,7 @@ class MassAdd(core_flags.CoreFlags):
                            help=('String of the view name <view-name>. '
                                  'Example: '
                                  '"internal"'), metavar='<view-name>',
-                           default='any')
+                           default='None')
     self.SetAllFlagRule('view_name', required=True)
 
     self.parser.add_option('-f', '--file', action='store', dest='file',

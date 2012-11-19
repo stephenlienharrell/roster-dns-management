@@ -159,12 +159,12 @@ def main(args):
   count = 0
   for record in records_to_remove:
     record_list = []
-    record_list.append( '%s' % count )
+    record_list.append(count)
     count += 1
-    record_list.append( record['record_type'] )
-    record_list.append( record['record_target'] )
-    record_list.append( options.zone_name )
-    record_list.append( options.view_name )
+    record_list.append(record['record_type'])
+    record_list.append(record['record_target'])
+    record_list.append(record['record_zone_name'])
+    record_list.append(record['view_name'])
     print_list.append(record_list)
   print cli_common_lib.PrintColumns(
       print_list=print_list, first_line_header=True)
@@ -175,12 +175,12 @@ def main(args):
   count = 0
   for record in records_to_add:
     record_list = []
-    record_list.append( '%s' % count )
+    record_list.append(count)
     count += 1
-    record_list.append( record['record_type'] )
-    record_list.append( record['record_target'] )
-    record_list.append( options.zone_name )
-    record_list.append( options.view_name )
+    record_list.append(record['record_type'])
+    record_list.append(record['record_target'])
+    record_list.append(record['record_zone_name'])
+    record_list.append(options.view_name)
     print_list.append(record_list)
   print cli_common_lib.PrintColumns(
       print_list=print_list, first_line_header=True)
