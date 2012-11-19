@@ -272,6 +272,10 @@ class BindTreeExport(object):
                 view]['zones']:
               if( view not in zone_view_assignments[zone] ):
                 continue
+              if(not cooked_data['dns_server_sets'][dns_server_set]['views'][
+                  view]['zones'][zone]['records']):
+                continue
+
               zone_file = '%s/%s/%s.db' % (dns_server_directory, view, zone)
               zone_file_string = zone_exporter_lib.MakeZoneString(
                   cooked_data['dns_server_sets'][dns_server_set]['views'][view][
@@ -826,9 +830,10 @@ class BindTreeExport(object):
                 view_dependency_name = view_dependency[
                     'view_dependency_assignments_view_dependency']
                 zone_name = zone['zone_view_assignments_zone_name']
-                if( view_dependency_name == zone[
-                      'zone_view_assignments_view_dependency'] and
-                      (zone_name, view_dependency_name) in sorted_records ):
+                if( (view_dependency_name == zone[
+                    'zone_view_assignments_view_dependency'] and
+                    (zone_name, view_dependency_name) in sorted_records) or
+                    zone['zone_view_assignments_zone_type'] == 'slave' ):
                   if( not zone_name in cooked_data['dns_server_sets'][
                         dns_server_set_name]['views'][view_name]['zones'] ):
                     cooked_data['dns_server_sets'][dns_server_set_name][
@@ -838,6 +843,24 @@ class BindTreeExport(object):
                           zone_name] ):
                     cooked_data['dns_server_sets'][dns_server_set_name][
                         'views'][view_name]['zones'][zone_name]['records'] = []
+
+
+                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                      view_name]['zones'][zone_name]['zone_origin'] = (
+                          punycode_lib.Uni2Puny(zone['zone_origin']))
+
+                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                      view_name]['zones'][zone_name][
+                          'zone_options'] = iscpy.Deserialize(zone[
+                              'zone_options'])
+
+                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
+                      view_name]['zones'][zone_name]['zone_type'] = zone[
+                          'zone_view_assignments_zone_type']
+
+                  # if the zone is a slave
+                  if((zone_name, view_dependency_name) not in sorted_records):
+                    continue
 
                   for record in sorted_records[(
                       zone_name, view_dependency_name)].values():
@@ -854,19 +877,6 @@ class BindTreeExport(object):
                       view_name]['zones'][zone_name][
                           'records'].extend(sorted_records[(
                               zone_name, view_dependency_name)].values())
-
-                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
-                      view_name]['zones'][zone_name]['zone_origin'] = (
-                          punycode_lib.Uni2Puny(zone['zone_origin']))
-
-                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
-                      view_name]['zones'][zone_name][
-                          'zone_options'] = iscpy.Deserialize(zone[
-                              'zone_options'])
-
-                  cooked_data['dns_server_sets'][dns_server_set_name]['views'][
-                      view_name]['zones'][zone_name]['zone_type'] = zone[
-                          'zone_view_assignments_zone_type']
 
     # Insert dns_servers into cooked_data
     for dns_server in data['dns_servers']:
