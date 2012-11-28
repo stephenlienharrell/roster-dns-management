@@ -48,6 +48,8 @@ from fabric import state as fabric_state
 
 from optparse import OptionParser
 
+from roster_config_manager import config_lib
+
 
 def ChangeNamedDirectory(file_name, directory):
   """Changed the directory for named in options.
@@ -60,10 +62,32 @@ def ChangeNamedDirectory(file_name, directory):
   try:
     file_contents = file_handle.readlines()
     file_handle.close()
-    named_dict = iscpy.ParseISCString(''.join(file_contents))
-    named_dict['options']['directory'] = "\"%s\"" % directory
-    file_handle = open(file_name, 'w')
-    file_handle.writelines(iscpy.MakeISC(named_dict))
+
+    for line_index, line in enumerate(file_contents):
+      if( ' directory "' in line ):
+        line_contents = line.split(' directory "')
+        new_line = '%s directory "%s"%s' % (line_contents[0],
+                                            directory,
+                                            line_contents[1].split('"', 1)[1])
+        file_contents[line_index] = new_line
+        file_handle = open(file_name, 'w')
+        file_handle.writelines(file_contents)
+        break
+      # Also check for newline in front of directory and do same
+      elif( '\ndirectory "' in line ):
+        line_contents = line.split('\ndirectory "')
+        new_line = '%s directory "%s"%s' % (line_contents[0],
+                                            directory,
+                                            line_contents[1].split('"', 1)[1])
+        file_contents[line_index] = new_line
+        file_handle = open(file_name, 'w')
+        file_handle.writelines(file_contents)
+        break
+
+    else:
+      print "Couldn't find directory in named conf file"
+      sys.exit(1)
+
   finally:
     file_handle.close()
 
@@ -82,6 +106,8 @@ def main(args):
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
+  parser.add_option('-s', '--server', action='store', dest='server',
+                    help='Server to check config file for.', metavar='<server>')
   parser.add_option('-d', '--directory', action='store', dest='directory',
                     help='Directory to scan.', metavar='<directory>',
                     default=None)
@@ -102,9 +128,13 @@ def main(args):
   parser.add_option('--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
                     default='/etc/roster/roster_server.conf')
+  parser.add_option('--info-file', action='store', dest='info_file',
+                    help='Server Info File Location', metavar='<info-file>')
   parser.add_option('-i', '--id', dest='id',
                     help='ID of tarfile output from Roster tree export.',
                     metavar='<id>', default=None)
+  parser.add_option('--just-local', action='store_true', dest='just_local',
+                    help='Only check config locally.', default=False)
 
   (globals()['options'], args) = parser.parse_args(args)
 
@@ -114,6 +144,11 @@ def main(args):
 
   server_config_file = ConfigParser.SafeConfigParser()
   server_config_file.read(options.config_file)
+
+  # Check info file for server using config_lib
+  if( options.server ):
+    config_lib_instance = config_lib.ConfigLib(options.config_file)
+    config_lib_instance.CheckDnsServer(options.server, [])
 
   backup_directory = options.directory
   if( not options.directory ):
@@ -181,7 +216,7 @@ def main(args):
       sys.exit(1)
     tar = tarfile.open('%s/%s' % (backup_directory, file_name))
     try:
-      tar.extractall()
+      tar.extractall(temp_root_directory)
     finally:
       tar.close()
     shutil.move(temp_root_directory, options.output_directory)
@@ -196,7 +231,7 @@ def main(args):
   fabric_state.output['running'] = False
   fabric_state.output['warnings'] = False
   fabric_api.env.warn_only = True
-  named_files = glob.glob('%s/*/named.conf' % options.output_directory)
+  named_files = glob.glob('%s/*/named.conf.a' % options.output_directory)
   for current_file in named_files:
     ChangeNamedDirectory(current_file, options.output_directory)
     checknamed_text = fabric_api.local('%s %s' % (

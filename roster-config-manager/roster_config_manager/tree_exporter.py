@@ -290,9 +290,11 @@ class BindTreeExport(object):
           named_conf_binary_file = '%s/named.conf.b' % (
               named_directory.rstrip('/'))
           named_conf_a_file_string = self.MakeNamedConf(data, cooked_data,
-                                                      dns_server_set, 'db', bind_dir)
+                                                        dns_server_set, 'db',
+                                                        bind_dir)
           named_conf_b_file_string = self.MakeNamedConf(data, cooked_data,
-                                                      dns_server_set, 'aa', bind_dir)
+                                                        dns_server_set, 'aa',
+                                                        bind_dir)
           root_hint_file = '%s/named.ca' % named_directory.rstrip('/')
           root_hint_file_string = open(self.root_hint_file, 'r').read()
 
@@ -432,7 +434,8 @@ class BindTreeExport(object):
       return iscpy.Deserialize(newest_config)
     return newest_config
 
-  def MakeNamedConf(self, data, cooked_data, dns_server_set, extension, remote_bind_dir):
+  def MakeNamedConf(self, data, cooked_data, dns_server_set, extension,
+                    remote_bind_dir):
     """Makes named.conf file strings
 
     Inputs:

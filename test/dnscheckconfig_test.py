@@ -53,6 +53,7 @@ import getpass
 
 import roster_core
 from roster_config_manager import tree_exporter
+from roster_config_manager import config_lib
 
 CONFIG_FILE = 'test_data/roster.conf'
 EXEC = '../roster-config-manager/scripts/dnscheckconfig'
@@ -61,8 +62,8 @@ KEY_FILE = 'test_data/rndc.key'
 USERNAME = u'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
-TESTDIR = u'%s/unittest_dir/' % os.getcwd()
-BINDDIR = u'%s/test_data/named/' % os.getcwd()
+TEST_DIR = u'%s/unittest_dir/' % os.getcwd()
+BIND_DIR = u'%s/test_data/named/' % os.getcwd()
 NAMED_DIR = u'%s/test_data/named/named' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
 DNS_SERVER = u'dns1'
@@ -103,6 +104,8 @@ class TestCheckConfig(unittest.TestCase):
     self.lockfile = self.config_instance.config_file[
         'server']['lock_file']
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
+
+    self.config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
     db_instance.CreateRosterDatabase()
@@ -150,25 +153,53 @@ class TestCheckConfig(unittest.TestCase):
                      '17 total records added\n')
     output.close()
 
-    self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BINDDIR, TESTDIR)
+    self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BIND_DIR, TEST_DIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
+    self.config_lib_instance.UnTarDnsTree()
 
     output = subprocess.Popen(('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
         KEY_FILE, EXEC)).split(), stderr=subprocess.PIPE).stderr
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
-
     output = os.popen('python %s -i 12 --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), '')
     output.close()
- 
+
+  def testCheckServerInfo(self):
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    output = os.popen('python %s -f test_data/test_zone.db '
+                      '--view test_view -u %s --config-file %s '
+                      '-z sub.university.lcl' % (
+                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
+    self.assertEqual(output.read(),
+                     'Loading in test_data/test_zone.db\n'
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
+    output.close()
+
+    self.core_instance.MakeDnsServer(u'localhost', SSH_USER, BIND_DIR, TEST_DIR)
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSetAssignments(u'localhost', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
+
+    self.tree_exporter_instance.ExportAllBindTrees()
+    self.config_lib_instance.UnTarDnsTree()
+    self.assertTrue(os.path.isdir(self.root_config_dir))
+
+    output = os.popen('python %s -s localhost --config-file %s' % (
+        EXEC, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
+    self.assertEqual(output.read(), '')
+    output.close()
+
   def testCheckErrorConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
     output = os.popen('python %s -f test_data/test_zone.db '
@@ -181,17 +212,19 @@ class TestCheckConfig(unittest.TestCase):
                      '17 total records added\n')
     output.close()
 
-    self.core_instance.MakeDnsServer(DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
+    self.core_instance.MakeDnsServer(DNS_SERVER, SSH_USER, BIND_DIR, TEST_DIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
+    self.config_lib_instance.UnTarDnsTree()
+    self.assertTrue(os.path.isdir(self.root_config_dir))
+
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named/test_view/sub.university.lcl.db' % (
-            self.root_config_dir, DNS_SERVER),
+        '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aaq 192.168.1.104')
     output = os.popen('python %s --config-file %s --' % (
         EXEC, CONFIG_FILE))
@@ -204,21 +237,19 @@ class TestCheckConfig(unittest.TestCase):
         'file temp_dir/dns1/named/test_view/sub.university.lcl.db '
         'failed: unknown class/type\n' % DNS_SERVER)
     output.close()
-    
+
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named/test_view/sub.university.lcl.db' % (
-            self.root_config_dir, DNS_SERVER),
+        '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         'ns2 3600 in aaq 192.168.1.104', 'ns2 3600 in a 192.168.1.104')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named/test_view/sub.university.lcl.db' % (
-            self.root_config_dir, DNS_SERVER),
+        '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         ' 796 10800', ' 10800')
     output = os.popen('python %s --config-file %s --verbose' % (
         EXEC, CONFIG_FILE))
     self.assertEqual(output.read(),
-        'Finished - temp_dir/%s/named.conf\n'
+        'Finished - temp_dir/%s/named.conf.a\n'
         'Finished - temp_dir/%s/named/test_view/sub.university.lcl.db\n'
         '--------------------------------------------------------------------\n'
         'Checked 1 named.conf file(s) and 1 zone file(s)\n'
@@ -228,11 +259,11 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named/test_view/sub.university.lcl.db' % (
-            self.root_config_dir, DNS_SERVER), ' 10800', ' 810 10800')
+        '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
+        ' 10800', ' 810 10800')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named.conf' % (self.root_config_dir, DNS_SERVER),
+        '%s/named.conf.a' % DNS_SERVER,
         'type master;', 'type bad_type;')
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -241,11 +272,11 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named.conf' % (self.root_config_dir, DNS_SERVER), 
+        '%s/named.conf.a' % DNS_SERVER, 
         'type bad_type;', 'type master;')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named.conf' % (self.root_config_dir, DNS_SERVER),
+        '%s/named.conf.a' % DNS_SERVER,
         'type master;',
         'type master;\nwrong;')
     output = os.popen('python %s --config-file %s' % (
@@ -256,12 +287,12 @@ class TestCheckConfig(unittest.TestCase):
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named.conf' % (self.root_config_dir, DNS_SERVER),
+        '%s/named.conf.a' % DNS_SERVER,
         'wrong;',
         '')
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
-        '%s/%s/named.conf' % (self.root_config_dir, DNS_SERVER),
+        '%s/named.conf.a' % DNS_SERVER,
         'options { directory "%s"; };' % NAMED_DIR,
         '\noptions\n{\ndirectory "another";\n};\noptions {\n print-time yes;};\n')
     output = os.popen('python %s --config-file %s' % (
