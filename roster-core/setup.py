@@ -66,5 +66,5 @@ setup(name='RosterCore',
                    'Programming Language :: Python :: 2.5',
                    'Topic :: Internet :: Name Service (DNS)'],
       scripts = ['scripts/roster_database_bootstrap'],
-      install_requires = ['IPy>=0.62', 'MySQL-python>=1.2.2', 'iscpy']
+      install_requires = ['IPy>=0.62', 'MySQL-python>=1.2.2', 'iscpy>=1.04']
      )
