@@ -208,7 +208,7 @@ def QueryFromZoneFile(zone_file_name, view_name=None):
   zone_records_list = []
 
   #Generating list of random records to query
-  if( str(options.number).strip().lower() == 'all' ):
+  if( options.number == 0 ):
     zone_records_list = all_zone_records_list
   else:
     for i in range(options.number):
@@ -220,12 +220,12 @@ def QueryFromZoneFile(zone_file_name, view_name=None):
       random_record = all_zone_records_list.pop(random_record_index) 
       zone_records_list.append(random_record)
 
-    (good_records, bad_records) = DnsQuery(
-        zone_records_list, options.server, options.port, zone_origin)
+  (good_records, bad_records) = DnsQuery(
+      zone_records_list, options.server, options.port, zone_origin)
 
-    if( len(bad_records) != 0 ):
-      print 'Zone %s does not appear to be online for server %s' % (
-          zone_name, options.server)
+  if( len(bad_records) != 0 ):
+    print 'Zone %s does not appear to be online for server %s' % (
+        zone_name, options.server)
 
 def main(args):
   usage = ('\n'
@@ -251,8 +251,9 @@ def main(args):
                     help='Port to query DNS server on.', metavar='<port>',
                     default=53)
   parser.add_option('-n', '--number', action='store', dest='number',
-                    help='Number of random records to query for. Default=5\n'
-                    'To query all records, use -n all',
+                    type='int', help='Number of random records to query for. '
+                                     'Default=5\n'
+                                     'To query all records, use -n 0',
                     metavar='<number>', default=5)
   parser.add_option('-f', '--file', action='store', dest='zone_file',
                     help='Zone file to use for queries, instead of audit '
