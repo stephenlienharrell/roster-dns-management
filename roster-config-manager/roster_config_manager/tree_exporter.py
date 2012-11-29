@@ -295,7 +295,7 @@ class BindTreeExport(object):
           named_conf_b_file_string = self.MakeNamedConf(data, cooked_data,
                                                         dns_server_set, 'aa',
                                                         bind_dir)
-          root_hint_file = '%s/named.ca' % named_directory.rstrip('/')
+          root_hint_file = '%s/named/named.ca' % named_directory.rstrip('/')
           root_hint_file_string = open(self.root_hint_file, 'r').read()
 
           root_hint_file_handle = open(root_hint_file, 'w')
