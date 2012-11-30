@@ -109,6 +109,12 @@ class TestServerCheck(unittest.TestCase):
       shutil.rmtree(self.config_instance.config_file['exporter']['backup_dir'])
     if( os.path.exists(self.config_instance.config_file['exporter']['root_config_dir']) ):
       shutil.rmtree(self.config_instance.config_file['exporter']['root_config_dir'])
+    if( os.path.exists('test_data/root_config_dir') ):
+      shutil.rmtree('test_data/root_config_dir')
+    if( os.path.exists('test_data/root_config_dir_abs') ):
+      shutil.rmtree('test_data/root_config_dir_abs')
+    if( os.path.exists('test_data/config_test_dir') ):
+      shutil.rmtree('test_data/config_test_dir')
 
   def testFindDnsTreeFilename(self):
     config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
@@ -168,6 +174,34 @@ class TestServerCheck(unittest.TestCase):
     config_lib_instance.UnTarDnsTree('18')
 
     self.assertEqual(config_lib_instance.TarDnsTree('16'), None)
+
+  def testUnTarInCorrectLocation(self):
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
+    tree_exporter_instance.ExportAllBindTrees()
+    config_lib_instance.UnTarDnsTree()
+    self.assertTrue(os.path.exists('%s/localhost' % self.root_config_dir))
+    config_lib_instance.backup_dir = '%s/%s' % (os.getecwd(), config_lib_instance.backup_dir)
+    
+    config_lib_instance.root_config_dir = 'config_test_dir/config'
+    os.chdir('test_data')
+    config_lib_instance.UnTarDnsTree()
+    os.chdir('../')
+    self.assertTrue(os.path.exists('test_data/config_test_dir/config/localhost'))
+    shutil.rmtree('test_data/config_test_dir')
+    
+    config_lib_instance.root_config_dir = '../root_config_dir'
+    os.chdir('test_data/named')
+    config_lib_instance.UnTarDnsTree()
+    os.chdir('../../')
+    self.assertTrue(os.path.exists('test_data/root_config_dir/localhost'))
+    shutil.rmtree('test_data/root_config_dir')
+    
+    config_lib_instance.root_config_dir = '%s/test_data/root_config_dir_abs' % os.getcwd()
+    config_lib_instance.UnTarDnsTree()
+    self.assertTrue(os.path.exists('test_data/root_config_dir_abs/localhost'))
+    shutil.rmtree('test_data/root_config_dir_abs')
+
 
   def testCheckDnsServer(self):
     # This does not test the raise ServerCheckError: Unable to run 'named'
