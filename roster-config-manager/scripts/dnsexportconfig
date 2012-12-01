@@ -35,27 +35,79 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
-
-import sys
-import os
-import shutil
-
-from optparse import OptionParser
 import ConfigParser
+import os
+import sys
+import shutil
+import socket
 
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from fabric import api as fabric_api
+from optparse import OptionParser
+from roster_config_manager import ConfigLib
+from roster_core import config
+from roster_core import errors
 
-def RunCommand(command):
+# The following import allows a fake smtplib module to be used for unit tests.
+if( os.getenv('ROSTERTESTPATH') is not None ):
+  sys.path.insert(0,os.getenv('ROSTERTESTPATH'))
+import smtplib
+
+def EmailError(error_messages, to_address, from_address, smtp_server, subject):
+  """Sends an email to report an error in exporting.
+
+  Inputs:
+    error_string: string of the body of the email
+    to_address: string of email address to send error report to
+  """
+  error_string = '\n'.join(error_messages)
+  if( None not in [error_string, to_address, from_address, smtp_server] ):
+    email_message = MIMEMultipart('alternative')
+    email_message['Subject'] = subject
+    email_message['From'] = from_address
+    email_message['To'] = to_address
+
+    html_message = ''
+    for error in error_messages:
+      html_message = '%s<br/><h4>%s</h4><p>%s</p>' % (html_message, 
+          error.split('\n')[0], error.lstrip('%s\n' % \
+              error.split('\n')[0]).replace('\n','<br/>'))
+    html_message = '<html><head></head><body>%s</body></html>' % html_message
+
+    email_message.attach(MIMEText(error_string, 'plain'))
+    email_message.attach(MIMEText(html_message, 'html'))
+
+    smtp_handle = None
+    try:
+      smtp_handle = smtplib.SMTP(smtp_server)
+    except socket.gaierror:
+      print '%s is an invalid smtp server.' % smtp_server
+    except smtplib.SMTPConnectError:
+      print 'Failed to connect to %s.' % smtp_server
+    if( smtp_handle is not None ):
+      try:
+        smtp_handle.sendmail(from_address,[to_address],email_message.as_string())
+      except smtplib.SMTPRecipientsRefused:
+        print '%s is an invalid email address.' % to_address
+      smtp_handle.quit()
+
+def RunCommand(command, debug=False):
   """Runs a command and returns proper return code
 
   Inputs:
     command: string of command to run
   Outputs:
-    int: standard return code of command
+    tuple of program output and return code
   """
-  return_code = os.system(command)
+  result = fabric_api.local(command, capture=True)
+  return_string = '%s\n%s' % (result.stderr, result.stdout)
+  return_code = result.return_code
+  if( debug ):
+    print return_string
   if( return_code is None ):
     return_code = 0
-  return os.WEXITSTATUS(return_code)
+  return (return_string, return_code)
 
 
 def main(args):
@@ -67,60 +119,63 @@ def main(args):
   usage = ('\n'
            '\n'
            'To export database to config files:\n'
-           '\t%s [-d <output-directory>] [-f] '
-           '\t[--config-file <config-file>] [-t <tree-exporter-executable>]\n'
-           '\t[-c <check-config-executable>] [-s <config-sync-excutable>]\n'
-           '\t[--named-checkzone <named-checkzone-executable>\n'
-           '\t[--named-checkconf <named-checkconf-executable>\n' % sys.argv[0])
+           '\t%s [-i <audit-id>] [-c <config-file>] [-q <quiet>]'
+           '\n' % sys.argv[0])
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-i', '--id', dest='id',
                     help='ID of tarfile output from Roster tree export.',
-                    metavar='<id>', default=None)
-  parser.add_option('-d', '--directory', action='store', dest='directory',
-                    help='Backup directory to scan.', metavar='<directory>',
-                    default=None)
-  parser.add_option('-t', '--tree-exporter', action='store', dest='tree_export',
+                    metavar='<audit-id>', default=None)
+  parser.add_option('-c', '--config-file', action='store', dest='config_file',
+                    help='Roster config file location.', 
+                    metavar='<config-file>', 
+                    default='/etc/roster/roster_server.conf')
+  parser.add_option('-q','--quiet', action='store_false', dest='quiet',
+                    help='Suppress program output.', metavar='<quiet>',
+                    default=False)
+  parser.add_option('--tree-exporter', action='store', dest='tree_export',
                     help='Location of "dnstreeexport" binary.',
                     default='dnstreeexport')
-  parser.add_option('-c', '--check-config', action='store', dest='check_config',
+  parser.add_option('--check-config', action='store', dest='check_config',
                     help='Location of "dnscheckconfig" binary.',
                     default='dnscheckconfig')
-  parser.add_option('-s', '--config-sync', action='store', dest='config_sync',
+  parser.add_option('--server-check', action='store', dest='server_check',
+                    help='Location of "dnsservercheck" binary.',
+                    default='dnsservercheck')
+  parser.add_option('--config-sync', action='store', dest='config_sync',
                     help='Location of "dnsconfigsync" binary.',
                     default='dnsconfigsync')
+  parser.add_option('--query-check', action='store', dest='query_check',
+                    help='Location of "dnsquerycheck" binary.',
+                    default='dnsquerycheck')
+  parser.add_option('-f', '--force', action='store_true', dest='force',
+                    help='(dnstreeexport)Export trees even if nothing has '
+                         'changed in the database.', default=False)
+  parser.add_option('-d', '--directory', action='store', dest='directory',
+                    help='(dnscheckconfig)Backup directory to scan.', 
+                    metavar='<directory>', default=None)
+  parser.add_option('-o', '--output-directory', action='store',
+                    dest='output_directory',
+                    help='(dnscheckconfig)Directory to temporarily output '
+                         'files to. Must be same in named.conf.',
+                    metavar='<output-directory>', default='temp_dir')
   parser.add_option('--named-checkzone', action='store',
                     dest='named_checkzone',
-                    help='Location of named_checkzone binary.',
-                    default=None)
+                    help='(dnscheckconfig)Location of named_checkzone binary.',
+                    default='/usr/sbin/named-checkzone')
   parser.add_option('--named-checkconf', action='store',
                     dest='named_checkconf',
-                    help='Location of named_checkconf binary.',
-                    default=None)
-  parser.add_option('--config-file', action='store', dest='config_file',
-                    help='Roster config file location.',
-                    default='/etc/roster/roster_server.conf')
-  parser.add_option('--destination-directory',
-                    dest='destination_directory',
-                    help='(dnsconfigsync)Destination directory on dns servers.',
-                    metavar='<destination-directory>',
-                    default=None)
-  parser.add_option('-u', '--user-name', action='store', dest='user_name',
-                    help='(dnsconfigsync)Rsync username.',
-                    metavar='<user-name>', default=None)
-  parser.add_option('--rsync-port', action='store', dest='rsync_port',
-                    help='(dnsconfigsync)Rsync port number.', metavar='<port>',
-                    default=None)
-  parser.add_option('--ssh-port', action='store', dest='ssh_port',
-                    help='(dnsconfigsync)SSH port number.',
-                    metavar='<ssh-port>', default=None)
+                    help='(dnscheckconfig)Location of named_checkconf binary.',
+                    default='/usr/sbin/named-checkconf')
+  parser.add_option('--info-file', action='store', dest='info_file',
+                    help='(dnscheckconfig)Server info file location')
+  parser.add_option('--just-local', action='store_true', dest='just_local',
+                    help='(dnscheckconfig)Only check config locally.',
+                    default=False)
   parser.add_option('--ssh-id', action='store', dest='ssh_id',
                     help='(dnsconfigsync)SSH id file.', metavar='<ssh-id>',
                     default=None)
-  parser.add_option('-r', '--rsync-exec', action='store', dest='rsync_exec',
-                    help='(dnsconfigsync)Rsync executable location.',
-                    metavar='<rsync-exec>', default=None)
   parser.add_option('--rndc-exec', action='store', dest='rndc_exec',
                     help='(dnsconfigsync)Rndc executable location.',
                     metavar='<rndc-exec>', default=None)
@@ -131,100 +186,180 @@ def main(args):
                     help='(dnsconfigsync)Rndc conf file.',
                     metavar='<rndc-conf>', default=None)
   parser.add_option('--rndc-port', action='store', dest='rndc_port',
-                    help='Rndc communication port.', metavar='<rndc-port>',
-                    default=None)
-  parser.add_option('--ssh-exec', action='store', dest='ssh_exec',
-                    help='(dnsconfigsync)SSH executable location.',
-                    metavar='<ssh-exec>', default=None)
-  parser.add_option('-o', '--output-directory', action='store',
-                    dest='output_directory',
-                    help='(dnscheckconfig)Directory to temporarily output '
-                         'files to. Must be same in named.conf.',
-                         default=None)
-  parser.add_option('-v', '--verbose', dest='verbose', action='store_true',
-                    help='(dnscheckconfig)Make command verbose.', default=False)
-  parser.add_option('-f', '--force', action='store_true', dest='force',
-                    help='(dnstreeexport)Export trees even if nothing has '
-                         'changed in the database.', default=False)
-  parser.add_option('-q', '--quiet', action='store_true', dest='quiet',
-                    help='(dnstreeexport)Suppress program output.',
-                    default=False)
+                    help='(dnsconfigsync)Rndc communication port.', 
+                    metavar='<rndc-port>', default=None)
+  parser.add_option('-p','--port', action='store', dest='port',
+                    help='(dnsquerycheck)Port to query DNS server on.',
+                    metavar='<port>', default=53)
+  parser.add_option('-n', '--number', action='store', dest='number',
+                    help='(dnsquerycheck)Number of random records to query for '
+                         'Default=5\nTo query all records, use \'-n all\'',
+                    metavar='<number>', default=5)
 
 
   (globals()['options'], args) = parser.parse_args(args)
 
-  if( options.directory ):
-    if( os.path.exists(options.directory) and not options.force ):
-      print 'ERROR: Directory "%s" exists, use -f flag to overwrite.' % (
-          options.directory)
-      sys.exit(1)
-    elif( os.path.exists(options.directory) and options.force ):
-      shutil.rmtree(options.directory)
-  else:
-    server_config_file = ConfigParser.SafeConfigParser()
-    server_config_file.read(options.config_file)
-    options.directory = server_config_file.get('exporter',
-                                               'backup_dir'.rstrip('/'))
+  if( options.config_file is None ):
+    print 'The --config_file flag is required.'
+    sys.exit(1)
 
+  config_lib_instance = ConfigLib(options.config_file)
 
-  dnstreeexport_array = [options.tree_export]
-  if( options.config_file ):
-    dnstreeexport_array.extend(['-c', options.config_file])
-  if( options.force ):
-    dnstreeexport_array.append('--force')
-  if( options.quiet ):
-    dnstreeexport_array.append('--quiet')
-  tree_return = RunCommand(' '.join(dnstreeexport_array))
+  if( os.path.exists(config_lib_instance.root_config_dir) ):
+    shutil.rmtree(config_lib_instance.root_config_dir)
 
-  if( tree_return != 0 ):
-    sys.exit(tree_return)
-
-  dnscheckconfig_array = [options.check_config]
-  if( options.config_file ):
-    dnscheckconfig_array.extend(['--config-file', options.config_file])
-  if( options.directory ):
-    dnscheckconfig_array.extend(['-d', options.directory])
-  if( options.output_directory ):
-    dnscheckconfig_array.extend('-o', options.output_directory)
-  if( options.named_checkzone ):
-    dnscheckconfig_array.extend(['-z', options.named_checkzone])
-  if( options.named_checkconf ):
-    dnscheckconfig_array.extend(['-c', options.named_checkconf])
-  if( options.verbose ):
-    dnscheckconfig_array.append('-v')
-  if( options.id ):
-    dnscheckconfig_array.extend(['-i', options.id])
-  config_return = RunCommand(' '.join(dnscheckconfig_array))
-  if( config_return != 0 ):
-    sys.exit(config_return)
+  error_messages = []
+  try:
+    config_instance = config.Config(file_name=options.config_file)
+    smtp_server = config_instance.config_file['exporter']['smtp_server']
+    to_email = config_instance.config_file['exporter']['failure_'
+                                                       'notification_email']
+    from_email = config_instance.config_file['exporter']['system_email']
+    subject = config_instance.config_file['exporter']['email_subject']
+    debug = True
+    if config_instance.config_file['exporter']['exporter_debug'] == 'off':
+      debug = False
+  except KeyError:
+    print 'Incomplete config-file, error log emailing is disabled.'
+    smtp_server = None
+    to_email = None
+    from_email = None
   
-  dnsconfigsync_array = [options.config_sync]
-  if( options.rndc_port ):
-    dnsconfigsync_array.extend(['--rndc-port', options.rndc_port])
-  if( options.config_file ):
-    dnsconfigsync_array.extend(['--config-file', options.config_file])
-  if( options.destination_directory ):
-    dnsconfigsync_array.extend(['-d', options.destination_directory])
-  if( options.id ):
-    dnsconfigsync_array.extend(['-i', options.id])
-  if( options.user_name ):
-    dnsconfigsync_array.extend(['-u', options.user_name])
-  if( options.rsync_port ):
-    dnsconfigsync_array.extend(['--rsync-port', options.rsync_port])
-  if( options.ssh_port ):
-    dnsconfigsync_array.extend(['--ssh-port', options.ssh_port])
-  if( options.ssh_id ):
-    dnsconfigsync_array.extend(['--ssh-id', options.ssh_id])
-  if( options.rsync_exec ):
-    dnsconfigsync_array.extend(['--rsync-exec', options.rsync_exec])
-  if( options.rndc_key ):
-    dnsconfigsync_array.extend(['--rndc-key', options.rndc_key])
-  if( options.rndc_conf ):
-    dnsconfigsync_array.extend(['--rndc-conf', options.rndc_conf])
-  if( options.ssh_exec ):
-    dnsconfigsync_array.extend(['--ssh-exec', options.ssh_exec])
-  sys.exit(RunCommand(' '.join(dnsconfigsync_array)))
+  fabric_api.output['status'] = False
+  fabric_api.output['stdout'] = False
+  fabric_api.output['stderr'] = False
+  fabric_api.output['user'] = False
+  fabric_api.output['aborts'] = False
+  fabric_api.output['debug'] = False
+  fabric_api.output['warnings'] = debug
+  fabric_api.output['running'] = debug
+  fabric_api.env.warn_only = True
+  
+  try:
+    if( options.directory ):
+      if( os.path.exists(options.directory) and not options.force ):
+        print 'ERROR: Directory "%s" exists, use -f flag to overwrite.' % (
+            options.directory)
+        sys.exit(1)
+      elif( os.path.exists(options.directory) and options.force ):
+        shutil.rmtree(options.directory)
+    else:
+      server_config_file = ConfigParser.SafeConfigParser()
+      server_config_file.read(options.config_file)
+      options.directory = server_config_file.get('exporter',
+                                                 'backup_dir'.rstrip('/'))
+    # Running dnstreexport
+    dnstreeexport_array = [options.tree_export]
+    dnstreeexport_array.extend(['-c', options.config_file])
+    if( options.force ):
+      dnstreeexport_array.append('--force')
+    if( options.quiet ):
+      dnstreeexport_array.append('--quiet')
+    output, tree_return = RunCommand(' '.join(dnstreeexport_array), debug)
 
+    if( tree_return != 0 ):
+      raise ConfigError('dnstreeexport has failed with error\n%s' % output)
+   
+    if( options.id is None ):
+      options.id, filename = config_lib_instance.FindNewestDnsTreeFilename()
+
+    # Preparing dnscheckconfig
+    dnscheckconfig_array = [options.check_config]
+    dnscheckconfig_array.extend(['-i', '%s' % options.id])
+    dnscheckconfig_array.extend(['--config-file', options.config_file])
+    if( options.directory ):
+      dnscheckconfig_array.extend(['-d', options.directory])
+    if( options.output_directory ):
+      dnscheckconfig_array.extend(['-o', options.output_directory])
+    if( options.named_checkzone ):
+      dnscheckconfig_array.extend(['-z', options.named_checkzone])
+    if( options.named_checkconf ):
+      dnscheckconfig_array.extend(['-c', options.named_checkconf])
+    if( options.just_local ):
+      dnscheckconfig_array.extend(['--just-local', options.just_local])
+    if( options.info_file ):
+      dnscheckconfig_array.extend(['--info-file', options.info_file])
+    if( not options.quiet ):
+      dnscheckconfig_array.append('-v')
+    check_config_arg_string = ' '.join(dnscheckconfig_array)
+    
+    # Preparing dnsservercheck
+    dnsservercheck_array = [options.server_check]
+    dnsservercheck_array.extend(['-c', options.config_file])
+    dnsservercheck_array.extend(['-i', '%s' % options.id])
+    server_check_arg_string = ' '.join(dnsservercheck_array)
+
+    # Preparing dnsconfigsync
+    dnsconfigsync_array = [options.config_sync]
+    dnsconfigsync_array.extend(['-i', '%s' % options.id])
+    dnsconfigsync_array.extend(['-c', options.config_file])
+    if( options.ssh_id ):
+      dnsconfigsync_array.extend(['--ssh-id', options.ssh_id])
+    if( options.rndc_exec ):
+      dnsconfigsync_array.extend(['--rndc-exec', options.rndc_exec])
+    if( options.rndc_port ):
+      dnsconfigsync_array.extend(['--rndc-port', options.rndc_port])
+    if( options.rndc_key ):
+      dnsconfigsync_array.extend(['--rndc-key', options.rndc_key])
+    if( options.rndc_conf ):
+      dnsconfigsync_array.extend(['--rndc-conf', options.rndc_conf])
+    config_sync_arg_string = ' '.join(dnsconfigsync_array)
+
+    # Preparing dnsquerycheck
+    dnsquerycheck_array = [options.query_check]
+    dnsquerycheck_array.extend(['-c', options.config_file])
+    dnsquerycheck_array.extend(['-i', '%s' % options.id])
+    dnsquerycheck_array.extend(['-n', '%s' % options.number])
+    dnsquerycheck_array.extend(['-p', '%s' % options.port])
+    query_check_arg_string = ' '.join(dnsquerycheck_array)
+
+    config_lib_instance.UnTarDnsTree(options.id)
+    all_dns_servers = config_lib_instance.FindAllDnsServers()
+
+    # Running commands for each server
+    for dns_server in all_dns_servers:
+      output, config_return = RunCommand('%s -s %s' % (
+          check_config_arg_string, dns_server), debug)
+      if( config_return != 0 ):
+        error_messages.append('dnscheckconfig has failed on server\'%s\' '
+                              'with the following error:'
+                              '\n%s' % (dns_server, output))
+        continue
+      output, check_return = RunCommand('%s -d %s' % (
+          server_check_arg_string, dns_server), debug)
+      if( check_return != 0 ):
+        # Clean up the error messages
+        error_messages.append(
+            'dnsservercheck failed on server \'%s\' with the following error:\n'
+            '%s' % (
+            dns_server, output))
+        continue
+      output, sync_return = RunCommand('%s -d %s' % (
+          config_sync_arg_string, dns_server), debug)
+      if( sync_return != 0 ):
+        error_messages.append(
+            'dnsconfigsync failed on server \'%s\' with the following error:\n'
+            '%s' % (
+            dns_server, output))
+        continue
+      output, check_return = RunCommand('%s -s %s' % (
+          query_check_arg_string, dns_server), debug)
+      if( check_return != 0 ):
+        error_messages.append(
+            'dnsquerycheck failed on server \'%s\' with the following error:'
+            '\n%s' % (
+            dns_server, output))
+        continue
+
+  except Exception as error:
+    error_messages.append(str(error))
+    raise error
+  finally:
+    if( os.path.exists(config_lib_instance.root_config_dir) ):
+      shutil.rmtree(config_lib_instance.root_config_dir)
+    if( len(error_messages) > 0 ):
+      EmailError(error_messages, to_email, from_email, smtp_server, subject)
+      sys.exit(1)
 
 if __name__ == '__main__':
   main(sys.argv[1:])

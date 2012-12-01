@@ -51,6 +51,7 @@ import tarfile
 import StringIO
 import socket
 import time
+import smtplib
 from fabric import api as fabric_api
 from fabric import network as fabric_network
 from fabric import state as fabric_state
@@ -65,12 +66,12 @@ KEY_FILE = 'test_data/rndc.key'
 USERNAME = 'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
-TESTDIR = u'%s/unittest_dir/' % os.getcwd()
-BINDDIR = u'%s/test_data/named/' % os.getcwd()
+TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
+BINDDIR = u'/etc/bind/' #u'%s/test_data/named/' % os.getcwd()
 TEST_DNS_SERVER = u'localhost'
 SSH_ID = 'test_data/roster_id_dsa'
 SSH_USER = unicode(getpass.getuser())
-SESSION_KEYFILE = 'test_data/session.key'
+SESSION_KEYFILE = '%s/test_data/session.key' % os.getcwd()
 RNDC_CONF_DATA = ('# Start of rndc.conf\n'
                   'key "rndc-key" {\n'
                   '    algorithm hmac-md5;\n'
@@ -84,8 +85,8 @@ RNDC_KEY_DATA = ('key "rndc-key" {\n'
                  '   algorithm hmac-md5;\n'
                  '   secret "yTB86M+Ai8vKJYGYo2ossQ==";\n'
                  ' };')
-RNDC_CONF = 'test_data/rndc.conf'
-RNDC_KEY = 'test_data/rndc.key'
+RNDC_CONF = '%s/rndc.conf' % BINDDIR.rstrip('/')
+RNDC_KEY = '%s/rndc.key' % BINDDIR.rstrip('/')
 
 
 class TestCheckConfig(unittest.TestCase):
@@ -172,10 +173,10 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.backup_dir)
     if( os.path.exists(self.root_config_dir) ):
       shutil.rmtree(self.root_config_dir)
-    if( os.path.exists('%s/named' % BINDDIR) ):
-      shutil.rmtree('%s/named' % BINDDIR)
-    if( os.path.exists('%s/named.conf' % BINDDIR) ):
-      os.remove('%s/named.conf' % BINDDIR)
+    if( os.path.exists('%s/named' % BINDDIR.rstrip('/')) ):
+      shutil.rmtree('%s/named' % BINDDIR.rstrip('/'))
+    if( os.path.exists('%s/named.conf' % BINDDIR.rstrip('/')) ):
+      os.remove('%s/named.conf' % BINDDIR.rstrip('/'))
     if( os.path.exists(self.lockfile) ):
       os.remove(self.lockfile)
 
@@ -199,40 +200,163 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
-        u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid"; };\ncontrols { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
+        u'set1', u'include "%s"; options { pid-file "test_data/named.pid"; };\ncontrols { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (RNDC_KEY, self.rndc_port)) # So we can test
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
     # Copy blank named.conf to start named with
+    if( not os.path.exists(BINDDIR) ):
+      os.mkdir(BINDDIR)
     shutil.copyfile('test_data/named.blank.conf',
-                    '%s/named.conf' % BINDDIR)
-    named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
+                    '%s/named.conf' % BINDDIR.rstrip('/'))
+    named_file_contents = open('%s/named.conf' % BINDDIR.rstrip('/'), 'r').read()
     named_file_contents = named_file_contents.replace(
-        'RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
+        'RNDC_KEY', '%s' % RNDC_KEY)
     named_file_contents = named_file_contents.replace(
-        'NAMED_DIR', '%s/test_data/named' % os.getcwd())
+        'NAMED_DIR', '%s' % BINDDIR.rstrip('/'))
     named_file_contents = named_file_contents.replace(
         'NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace(
         'RNDC_PORT', str(self.rndc_port))
     named_file_contents = named_file_contents.replace(
-        'SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
-    named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
+        'SESSION_KEYFILE', '%s' % str(SESSION_KEYFILE))
+    named_file_handle = open('%s/named.conf' % BINDDIR.rstrip('/'), 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
-    named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
+    named_file_contents = open('%s/named.conf' % BINDDIR.rstrip('/'), 'r').read()
     # Start named
     out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %s/named.conf' % (
-        self.port, SSH_USER, BINDDIR), capture=True)
+        self.port, SSH_USER, BINDDIR.rstrip('/')), capture=True)
     time.sleep(2)
-
+   
     output = os.popen('python %s -f --config-file %s '
-    '-u %s --ssh-id %s --rndc-port %s --rndc-key %s --rndc-conf %s' % (
-        EXEC, CONFIG_FILE, SSH_USER, SSH_ID, self.rndc_port, RNDC_KEY,
+    '--ssh-id %s --rndc-port %s --rndc-key %s --rndc-conf %s' % (
+        EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY,
         RNDC_CONF))
     lines = output.read().split('\n')
-    self.assertTrue('[%s@%s] out: server reload successful\r' % (
-        SSH_USER, TEST_DNS_SERVER) in lines)
     output.close()
+
+    self.assertTrue('[localhost] local: dnstreeexport -c test_data/roster.conf.real --force' in lines)
+    self.assertTrue('[localhost] local: dnscheckconfig -i 14 --config-file test_data/roster.conf.real -d test_data/backup -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s localhost' in lines)
+    self.assertTrue('Finished - temp_dir/%s/named.conf.a' % TEST_DNS_SERVER in lines)
+    self.assertTrue('Finished - temp_dir/%s/named/test_view/sub.university.lcl.db' % TEST_DNS_SERVER in lines)
+    self.assertTrue('All checks successful' in lines)
+    self.assertTrue('[localhost] local: dnsservercheck -c test_data/roster.conf.real -i 14 -d %s' % TEST_DNS_SERVER in lines)
+    self.assertTrue('[localhost] local: dnsquerycheck -c test_data/roster.conf.real -i 14 -n 5 -p 53 -s %s' % TEST_DNS_SERVER in lines)
+
+    self.core_instance.MakeDnsServer(u'bad.server.local', SSH_USER, BINDDIR, TESTDIR)
+    self.core_instance.MakeDnsServerSetAssignments(u'bad.server.local', u'set1')
+    output = os.popen('export ROSTERTESTPATH=%s && export ROSTERTESTSMTPERROR='
+        'server_error && python %s -f --config-file %s --ssh-id %s '
+        '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
+            EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
+    lines = output.read().split('\n')
+    output.close()
+    self.assertTrue('[localhost] local: dnscheckconfig -i 17 --config-file test_data/roster.conf.real -d test_data/backup -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s bad.server.local' in lines)
+    self.assertTrue('bad.server.local is an invalid smtp server.' in lines)
+
+    output = os.popen('export ROSTERTESTPATH=%s && export ROSTERTESTSMTPERROR='
+        'connect_error && python %s -f --config-file %s --ssh-id %s '
+        '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
+            EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
+    lines = output.read().split('\n')
+    output.close()
+    self.assertTrue('Failed to connect to bad.server.local.' in lines)
+
+    output = os.popen('export ROSTERTESTPATH=%s && export ROSTERTESTSMTPERROR='
+        'message_error && python %s -f --config-file %s --ssh-id %s '
+        '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
+            EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
+    lines = output.read().split('\n')
+    output.close()
+    self.assertTrue('%s is an invalid email address.' % self.config_instance.config_file[
+        'exporter']['failure_notification_email'] in lines)
+
+    # Can't connect to server (dnscheckconf)
+    output = os.popen('export ROSTERTESTPATH=%s && python %s -f --config-file %s --ssh-id %s '
+        '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
+            EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
+    out_str = output.read()
+    output.close()
+    self.assertTrue("""<html><head></head><body><br/><h4>dnscheckconfig has failed on server'bad.server.local' with the following error:</h4>""" in out_str)
+    self.assertTrue("""raise ServerCheckError('Could not connect to %s via SSH.' % dns_server)<br/>""" in out_str)
+    self.assertTrue("""roster_config_manager.config_lib.ServerCheckError: Could not connect to bad.server.local via SSH.<br/></p></body></html>""" in out_str)
+
+    
+    self.assertTrue("""dnscheckconfig has failed on server'bad.server.local' with the following error:\n""" in out_str)
+    self.assertTrue("""Traceback (most recent call last):\n""" in out_str)
+    self.assertTrue("""config_lib_instance.CheckDnsServer(options.server, [])\n """ in out_str)
+    self.assertTrue("""raise ServerCheckError('Could not connect to %s via SSH.' % dns_server)\n""" in out_str)
+    self.assertTrue("""roster_config_manager.config_lib.ServerCheckError: Could not connect to bad.server.local via SSH.""" in out_str)
+
+    # No ns record for zone (dnscheckconf)
+    self.core_instance.RemoveDnsServer(u'bad.server.local')
+    self.core_instance.RemoveRecord(u'a', u'ns', u'sub.university.lcl', {u'assignment_ip': u'192.168.1.103'}, u'test_view')
+    output = os.popen('export ROSTERTESTPATH=%s && python %s -f --config-file %s --ssh-id %s '
+        '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
+            EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
+    out_str = output.read()
+    output.close()
+    self.assertTrue("""Content-Type: text/plain; charset="us-ascii"\n""" in out_str)
+    self.assertTrue("""MIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\n""" in out_str)
+    self.assertTrue("""dnscheckconfig has failed on server'%s' with the following error:\n\n""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""Finished - temp_dir/%s/named.conf.a\n""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""ERROR: zone sub.university.lcl/IN: NS 'ns.sub.university.lcl' has no address records (A or AAAA)\n""" in out_str)
+    self.assertTrue("""zone sub.university.lcl/IN: not loaded due to errors.""" in out_str)
+
+    self.assertTrue("""Content-Type: text/html; charset="us-ascii"\n""" in out_str)
+    self.assertTrue("""<html><head></head><body><br/><h4>dnscheckconfig has failed on server'%s' with the following error:</h4>""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""<p>Finished - temp_dir/%s/named.conf.a<br/>""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""ERROR: zone sub.university.lcl/IN: NS 'ns.sub.university.lcl' has no address records (A or AAAA)<br/>""" in out_str)
+    self.assertTrue("""zone sub.university.lcl/IN: not loaded due to errors.</p></body></html>""" in out_str)
+
+    self.core_instance.MakeRecord(u'a', u'ns', u'sub.university.lcl', {u'assignment_ip': u'192.168.1.103'}, u'test_view')
+
+    # bad test directory on server (dnscheckconf)
+    self.core_instance.UpdateDnsServer(TEST_DNS_SERVER, TEST_DNS_SERVER, SSH_USER, u'/bad/directory/', TESTDIR)
+    output = os.popen('export ROSTERTESTPATH=%s && python %s -f --config-file %s --ssh-id %s '
+        '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
+            EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
+    out_str = output.read()
+    output.close()
+    self.assertTrue("""Content-Type: text/plain; charset="us-ascii"\n""" in out_str)
+    self.assertTrue("""MIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\n""" in out_str)
+    self.assertTrue("""dnscheckconfig has failed on server'%s' with the following error:\n""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""Traceback (most recent call last):\n""" in out_str)
+    self.assertTrue("""config_lib_instance.CheckDnsServer(options.server, [])\n """ in out_str)
+    self.assertTrue("""dns_server_info['server_info']['server_user']))\n""" in out_str)
+    self.assertTrue("""roster_config_manager.config_lib.ServerCheckError: The remote BIND directory /bad/directory/ does not exist or """ in out_str)
+    self.assertTrue("""the user %s does not have permission.""" % SSH_USER in out_str)
+
+    self.assertTrue("""Content-Type: text/html; charset="us-ascii"\n""" in out_str)
+    self.assertTrue("""<html><head></head><body><br/><h4>dnscheckconfig has failed on server'%s' with the following error:</h4>""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""<p>Traceback (most recent call last):<br/>""" in out_str)
+    self.assertTrue("""main(sys.argv[1:])<br/>""" in out_str)
+    self.assertTrue("""config_lib_instance.CheckDnsServer(options.server, [])<br/>""" in out_str)
+    self.assertTrue("""dns_server_info['server_info']['server_user']))<br/>""" in out_str)
+    self.assertTrue("""roster_config_manager.config_lib.ServerCheckError: The remote BIND directory /bad/directory/ does not exist or """ in out_str)
+    self.assertTrue("""the user %s does not have permission.<br/></p></body></html>""" % SSH_USER in out_str)
+    self.core_instance.UpdateDnsServer(TEST_DNS_SERVER, TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
+
+    # rndc reload failure (dnsconfigsync)
+    fabric_api.local('killall named', capture=True)
+    output = os.popen('export ROSTERTESTPATH=%s && python %s -f --config-file %s --ssh-id %s '
+        '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
+            EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
+    out_str = output.read()
+    output.close()
+    self.assertTrue("""Content-Type: text/plain; charset="us-ascii"\n""" in out_str)
+    self.assertTrue("""MIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\n""" in out_str)
+    self.assertTrue("""dnsconfigsync failed on server '%s' with the following error:\n\n""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""ERROR: Failed to reload """ in out_str)
+    self.assertTrue(""" BIND server: rndc: connect failed: 127.0.0.1#""" in out_str)
+    self.assertTrue(""": connection refused.""" in out_str)
+
+    self.assertTrue("""Content-Type: text/html; charset="us-ascii"\n""" in out_str)
+    self.assertTrue("""MIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\n""" in out_str)
+    self.assertTrue("""<html><head></head><body><br/><h4>dnsconfigsync failed on server '%s' with the following error:</h4>""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""<p>ERROR: Failed to reload """ in out_str)
+    self.assertTrue(""" BIND server: rndc: connect failed: 127.0.0.1#""" in out_str)
+    self.assertTrue(""": connection refused.</p></body></html>""" in out_str)
 
 if( __name__ == '__main__' ):
       unittest.main()

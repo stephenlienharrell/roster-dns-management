@@ -94,6 +94,7 @@ def main(args):
     config_lib_instance.TarDnsTree(options.audit_id)
   except errors.UserError as err:
     print 'ERROR: %s' % err
+    sys.exit(1)
 
 if __name__ == "__main__":
       main(sys.argv[1:])

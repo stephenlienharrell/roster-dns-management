@@ -226,6 +226,23 @@ class ConfigLib(object):
     """
     tar_file.add('%s/%s' % (base_directory, filename), arcname=filename)
 
+  def FindAllDnsServers(self):
+    """Finds and returns the names of all the DNS servers that we are exporting.
+
+    This must be run after the bind trees are untarred to the 
+    root_config_dir."""
+    server_list = []
+    try:
+      server_list = os.listdir(self.root_config_dir)
+    except OSError:
+      raise ExporterNoFileError('DNS tree does not exist or has not been '
+                                'exported yet.')
+    for server in server_list:
+      if( not os.path.isdir('%s/%s' % (self.root_config_dir, server)) ):
+        raise ExporterFileError('%s is not a server; '
+                                'invalid DNS tree format.' % server)
+    return server_list
+
   def FindDnsTreeFilename(self, audit_log_id):
     """Finds the filename of the Dns Tree from the audit log id given.
 

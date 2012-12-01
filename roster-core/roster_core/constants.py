@@ -91,7 +91,12 @@ CONFIG_FILE_SCHEMA = {'database': {'server': 'str', 'login': 'str',
                                       'exp_time': 'int'},
                       'exporter': {'backup_dir': 'str',
                                    'root_config_dir': 'str',
-				   'root_hint_file': 'str'}}
+				                           'root_hint_file': 'str',
+                                   'smtp_server': 'str',
+                                   'failure_notification_email': 'str',
+                                   'system_email': 'str',
+                                   'email_subject': 'str',
+                                   'exporter_debug': 'str'}}
 
 
 # The SUPPORTED_METHODS hash contains a hash for every supported method.
