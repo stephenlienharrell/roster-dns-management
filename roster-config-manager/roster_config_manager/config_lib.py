@@ -173,6 +173,10 @@ class ConfigLib(object):
               # Files in /root_config_dir/server/named
               #   All directories
               for view in named_files:
+                if( view == 'named.ca' ):
+                  self.__AddToTarFile__('%s/%s/%s' % (server_dir, server_file,
+                      view), self.root_config_dir, tar_file)
+                  continue
                 try:
                   view_files = os.listdir('%s/%s/%s/%s' % (self.root_config_dir,
                       server_dir, server_file, view))
@@ -552,15 +556,21 @@ class ConfigLib(object):
             raise ExporterListFileError('Can not list files in %s/%s/%s.' %
                 (self.root_config_dir, dns_server, server_file))
           for view in named_files:
+            if( view == 'named.ca' ):
+              self.__AddToTarFile__('%s/%s' % (server_file, view),
+                  '%s/%s' % (self.root_config_dir, dns_server), dns_tar_file)
+              continue
             try:
               view_files = os.listdir('%s/%s/%s/%s' % (self.root_config_dir,
                   dns_server, server_file, view))
             except OSError:
-              raise ExporterListFileError('Invalid tree format, can not list files in %s/%s/%s/%s.'
-                  % (self.root_config_dir, dns_server, server_file, view))
+              raise ExporterListFileError('Invalid tree format, can not list '
+                  'files in %s/%s/%s/%s.' % (self.root_config_dir, dns_server,
+                                             server_file, view))
             for zone in view_files:
               self.__AddToTarFile__('%s/%s/%s' % (server_file,
-                  view, zone), '%s/%s' % (self.root_config_dir, dns_server), dns_tar_file)
+                  view, zone), '%s/%s' % (self.root_config_dir, dns_server), 
+                  dns_tar_file)
         else:
           self.__AddToTarFile__(server_file, '%s/%s' % ( 
               self.root_config_dir, dns_server), dns_tar_file)
@@ -588,6 +598,8 @@ class ConfigLib(object):
       views = os.listdir('%s/%s/named/' % (self.root_config_dir, dns_server))
       zone_dict = {}
       for view in views:
+        if( view == 'named.ca' ):
+          continue
         if( view not in zone_dict ):
           zone_dict[view] = {}
         zone_files = os.listdir('%s/%s/named/%s' % (self.root_config_dir, 

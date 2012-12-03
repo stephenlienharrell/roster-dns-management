@@ -59,7 +59,7 @@ TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
 BINDDIR = u'%s/test_data/named/' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
 
-class TestServerCheck(unittest.TestCase):
+class TestConfigLib(unittest.TestCase):
 
   def setUp(self):
     if( not os.path.exists(TESTDIR) ):
@@ -181,13 +181,14 @@ class TestServerCheck(unittest.TestCase):
     tree_exporter_instance.ExportAllBindTrees()
     config_lib_instance.UnTarDnsTree()
     self.assertTrue(os.path.exists('%s/localhost' % self.root_config_dir))
-    config_lib_instance.backup_dir = '%s/%s' % (os.getecwd(), config_lib_instance.backup_dir)
+    config_lib_instance.backup_dir = '%s/%s' % (os.getcwd(), config_lib_instance.backup_dir)
     
     config_lib_instance.root_config_dir = 'config_test_dir/config'
     os.chdir('test_data')
     config_lib_instance.UnTarDnsTree()
     os.chdir('../')
     self.assertTrue(os.path.exists('test_data/config_test_dir/config/localhost'))
+    self.assertTrue(os.path.exists('test_data/config_test_dir/config/localhost/named/named.ca'))
     shutil.rmtree('test_data/config_test_dir')
     
     config_lib_instance.root_config_dir = '../root_config_dir'

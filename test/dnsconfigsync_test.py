@@ -317,6 +317,8 @@ class TestCheckConfig(unittest.TestCase):
     result = os.popen('rndc -c /etc/bind/rndc.conf -k /etc/bind/rndc.key -p %s reload' % self.rndc_port).readlines()
     self.assertEqual(lines, [''])
     self.assertTrue(os.path.exists('%s/named/test_view/sub.university.lcl.aa' % BINDDIR))
+    self.assertTrue(os.path.exists('%s/named/named.ca' % BINDDIR))
+    self.assertTrue(os.path.exists('%s/named.conf' % BINDDIR))
 
 if( __name__ == '__main__' ):
       unittest.main()
