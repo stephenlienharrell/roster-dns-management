@@ -518,6 +518,19 @@ class CNAME(core_flags.CoreFlags):
                            metavar='<recursive>', default=False)
     self.SetAllFlagRule('recursive', required=False)
 
+class HostFile(core_flags.CoreFlags):
+  """Command line CNAME flags"""
+  def SetDataFlags(self):
+    """Sets flags for self.parser"""
+    self.parser.add_option('-v', '--view-name', action='store',
+                           dest='view_name',
+                           help=('String of the view name <view-name>. '
+                                 'Example: "internal"'), metavar='<view-name>',
+                           default=None)
+    self.SetAllFlagRule('view_name', required=True)
+    self.parser.add_option('-d', '--domain', action='store', dest='base_domain',
+                            help='String of the base domain.', default=None)
+    self.SetAllFlagRule('base_domain', required=True)
 
 class MassAdd(core_flags.CoreFlags):
   """Command line uphost flags"""

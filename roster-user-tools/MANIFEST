@@ -13,6 +13,7 @@ scripts/dnslsauditlog
 scripts/dnslscnames
 scripts/dnslsdnsservers
 scripts/dnslshost
+scripts/dnslshostfile
 scripts/dnslsrecord
 scripts/dnslsreservedwords
 scripts/dnslsusergroup
