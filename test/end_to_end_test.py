@@ -182,14 +182,14 @@ class TestComplete(unittest.TestCase):
     ## -p <passwd> -d <database> -n <db)host> --ssl-cert <cert-file>
     ## --ssl-key <key-file> --root-config-dir <root_dir>
     ## --backup-dir <backup-dir> -i <init-file> --server-log-file <log-file>
-    ## --run-as <uuid> --force
+    ## --run-as <uuid> --force --root-hint-file test_data/named.ca
     command_string = (
         'python ../roster-core/scripts/roster_database_bootstrap '
         '-c %s -u %s -U %s -p %s '
         '-d %s -n %s '
         '--ssl-cert %s --ssl-key %s '
         '--root-config-dir %s --backup-dir %s -i %s/init --server-log-file %s '
-        '--run-as %s --force' % (
+        '--run-as %s --force --root-hint-file test_data/named.ca' % (
             self.userconfig, self.login, USERNAME, self.password,
             self.database, self.server,
             self.cert, self.key,

@@ -129,7 +129,6 @@ def PushFiles(dns_server, root_config_dir, config_lib_instance,
             'to server %s.' % dns_server)
     fabric_api.run('rm %s/%s.info' % (dns_server_info['server_info'][
         'test_dir'], dns_server))
-    
 
     # Check and prepare named.conf file
     result = fabric_api.run('ls %s/named' % dns_server_info[
@@ -236,8 +235,8 @@ def main(args):
   usage = ('\n'
            '\n'
            'To sync bind trees:\n'
-           '\t%s -i <audit-id> [-c <config-file>] [-d <dest-directory>]\n'
-           '\t[-u <rsync-user>] [-p <rsync-port>]\n' % sys.argv[0])
+           '\t%s -i <audit-id> [-c <config-file>] '
+           '[-d <dest-directory>]\n' % sys.argv[0])
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 

@@ -70,8 +70,8 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
         'python %s -c %s/config.conf -u %s -U %s '
         '-d %s -n %s '
         '--ssl-cert %s --ssl-key %s '
-        '--root-config-dir %s --backup-dir %s -i %s/init '
-        '-p %s --run-as %s --force' % (
+        '--root-config-dir %s --backup-dir %s --root-hint-file %s '
+        '-i %s/init -p %s --run-as %s --force' % (
             EXEC,
             self.cfg_exporter['backup_dir'],
             self.cfg_database['login'],u'new_user',
@@ -80,6 +80,7 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
             self.cfg_server['ssl_cert_file'], self.cfg_server['ssl_key_file'],
             self.cfg_exporter['backup_dir'],
             self.cfg_exporter['backup_dir'],
+            self.cfg_exporter['root_hint_file'],
             self.cfg_exporter['backup_dir'],
             self.cfg_database['passwd'],os.getuid()))
     ## The first number represents the auth_module chosen. This can change if
@@ -146,7 +147,7 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
         '-d %s -n %s '
         '--ssl-cert %s --ssl-key %s '
         '--root-config-dir %s --backup-dir %s -i %s/init '
-        '-p %s --run-as %s --force' % (
+        '--root-hint-file %s -p %s --run-as %s --force' % (
             EXEC,
             self.cfg_exporter['backup_dir'],
             self.cfg_database['login'],u'new_user',
@@ -156,6 +157,7 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
             self.cfg_exporter['backup_dir'],
             self.cfg_exporter['backup_dir'],
             self.cfg_exporter['backup_dir'],
+            self.cfg_exporter['root_hint_file'],
             self.cfg_database['passwd'],os.getuid()),
         shell=True,
         stdin=subprocess.PIPE,
@@ -173,7 +175,7 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
         '-d %s -n %s '
         '--ssl-cert %s --ssl-key %s '
         '--root-config-dir %s --backup-dir %s -i %s/init '
-        '-p %s --run-as %s --force' % (
+        '--root-hint-file %s -p %s --run-as %s --force' % (
             EXEC,
             self.cfg_exporter['backup_dir'],
             self.cfg_database['login'],u'another_new_user',
@@ -183,13 +185,14 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
             self.cfg_exporter['backup_dir'],
             self.cfg_exporter['backup_dir'],
             self.cfg_exporter['backup_dir'],
+            self.cfg_exporter['root_hint_file'],
             self.cfg_database['passwd'],os.getuid()),
         shell=True,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE)
     ## Check base_communicate in setUp if module selected is wrong
     self.base_communicate = (
-        'n\n1\nuid=%%s,ou=People,dc=dc,dc=university,dc=edu\n'
+        'Y\n1\nuid=%%s,ou=People,dc=dc,dc=university,dc=edu\n'
         '/etc/roster_certs/host.cert\n3\nldaps://ldap.university.edu:636\n')
     command.communicate(self.base_communicate)
 

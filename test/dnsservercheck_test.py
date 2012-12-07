@@ -64,7 +64,7 @@ USERNAME = u'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
-BINDDIR = u'%s/test_data/bind_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
 
 class TestDnsServerCheck(unittest.TestCase):
@@ -122,6 +122,9 @@ class TestDnsServerCheck(unittest.TestCase):
     soa_args_dict[u'serial_number'] = 1000
     soa_args_dict[u'admin_email'] = u'root.sub.university.lcl.'
     self.core_instance.MakeRecord(u'soa', u'@', u'sub.university.lcl', soa_args_dict, view_name=u'test_view')
+
+    if( not os.path.exists(TESTDIR) ):
+      os.system('mkdir %s' % TESTDIR)
 
   def tearDown(self):
     if( os.path.exists(self.root_backup_dir) ):

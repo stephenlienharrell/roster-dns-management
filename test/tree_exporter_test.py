@@ -193,7 +193,7 @@ class TestTreeExporter(unittest.TestCase):
     zone_view_assignments_dict['zone_view_assignments_zone_type'] = u'slave'
     zone_view_assignments_dict['zone_origin'] = u'otheruniversity.edu.'
     zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'masters { 192.168.0.1 };\n')
+        u'masters { 192.168.0.1; };\n')
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = u'any'
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
@@ -2554,7 +2554,7 @@ class TestTreeExporter(unittest.TestCase):
         '}\n'
         '*/\n'
         'otherstanza{\n'
-        '\tstuff\n'
+        '\tstuff;\n'
         '};\n'
         'options {\n'
         '\tdirectory "/var/domain";\n'
@@ -2606,7 +2606,7 @@ class TestTreeExporter(unittest.TestCase):
         '}\n'
         '*/\n'
         'otherstanza{\n'
-        '\tstuff\n'
+        '\tstuff;\n'
         '};\n' # No options stanza
         'logging {\n'
         '\tchannel "security" {\n'
@@ -2651,7 +2651,7 @@ class TestTreeExporter(unittest.TestCase):
         '}\n'
         '*/\n'
         'otherstanza{\n'
-        '\tstuff\n'
+        '\tstuff;\n'
         '};\n'
         'options {\n'
         '};\n''\n'
@@ -2688,7 +2688,7 @@ class TestTreeExporter(unittest.TestCase):
 
     header_string = (  ## The string was arbitrarily chosen.
         'otherstanza{\n'
-        '\tstuff\n'
+        '\tstuff;\n'
         '};\n'
         'logging {\n'
         '\tchannel "security" {\n'

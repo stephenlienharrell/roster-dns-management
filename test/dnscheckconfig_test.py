@@ -62,7 +62,7 @@ KEY_FILE = 'test_data/rndc.key'
 USERNAME = u'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
-TEST_DIR = u'%s/unittest_dir/' % os.getcwd()
+TEST_DIR = u'%s/test_data/unittest_dir/' % os.getcwd()
 BIND_DIR = u'%s/test_data/named/' % os.getcwd()
 NAMED_DIR = u'%s/test_data/named/named' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
@@ -116,6 +116,9 @@ class TestCheckConfig(unittest.TestCase):
     db_instance.EndTransaction()
     db_instance.close()
     self.db_instance = db_instance
+
+    if( not os.path.exists(TEST_DIR) ):
+      os.system('mkdir %s' % TEST_DIR)
 
     self.core_instance = roster_core.Core(USERNAME, self.config_instance)
     self.core_instance.RemoveZone(u'cs.university.edu')

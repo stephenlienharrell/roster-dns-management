@@ -73,7 +73,7 @@ SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 SSH_ID = 'test_data/roster_id_dsa'
 TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
-BINDDIR = u'%s/test_data/bind_dir/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
 TEST_DNS_SERVER = u'localhost'
 NS_IP_ADDRESS = '127.0.0.1'
@@ -93,8 +93,8 @@ RNDC_KEY_DATA = ('key "rndc-key" {\n'
                  '   algorithm hmac-md5;\n'
                  '   secret "yTB86M+Ai8vKJYGYo2ossQ==";\n'
                  ' };')
-RNDC_CONF = 'test_data/bind_dir/rndc.conf'
-RNDC_KEY = 'test_data/bind_dir/rndc.key'
+RNDC_CONF = '%s/test_data/rndc.conf' % os.getcwd()
+RNDC_KEY = '%s/test_data/rndc.key' % os.getcwd()
 
 
 class TestCheckConfig(unittest.TestCase):
@@ -194,7 +194,7 @@ class TestCheckConfig(unittest.TestCase):
     # Copy blank named.conf to start named with
     shutil.copyfile('test_data/named.blank.conf', '%s/named.conf' % BINDDIR.rstrip('/'))
     named_file_contents = open('%s/named.conf' % BINDDIR.rstrip('/'), 'r').read()
-    named_file_contents = named_file_contents.replace('RNDC_KEY', '%srndc.key' % BINDDIR)
+    named_file_contents = named_file_contents.replace('RNDC_KEY', RNDC_KEY)
     named_file_contents = named_file_contents.replace('NAMED_DIR', '%snamed' % BINDDIR)
     named_file_contents = named_file_contents.replace('NAMED_PID', '%snamed.pid' % BINDDIR)
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
@@ -208,10 +208,10 @@ class TestCheckConfig(unittest.TestCase):
     time.sleep(2)
     # Start of testing tool functionality
     command_string = (
-        'python %s -d %s --rndc-key %s --rndc-port %s '
-        '--ssh-id %s --config-file %s --rndc-conf %s' % (
-            EXEC, TEST_DNS_SERVER, RNDC_KEY, self.rndc_port, SSH_ID, 
-            CONFIG_FILE, RNDC_CONF))
+        'python %s -d %s --rndc-key %s --rndc-conf %s --rndc-port %s '
+        '--ssh-id %s --config-file %s ' % (
+            EXEC, TEST_DNS_SERVER, RNDC_KEY, RNDC_CONF, self.rndc_port, SSH_ID, 
+            CONFIG_FILE))
 
     audit_id, filename = self.config_lib_instance.FindNewestDnsTreeFilename()
     self.config_lib_instance.UnTarDnsTree(audit_id)
@@ -314,7 +314,8 @@ class TestCheckConfig(unittest.TestCase):
     command = os.popen(command_string)
     lines = command.read().split('\n')
 
-    result = os.popen('rndc -c /etc/bind/rndc.conf -k /etc/bind/rndc.key -p %s reload' % self.rndc_port).readlines()
+    result = os.popen('rndc -c %s -k %s -p %s reload' % (
+        RNDC_CONF, RNDC_KEY, self.rndc_port)).readlines()
     self.assertEqual(lines, [''])
     self.assertTrue(os.path.exists('%s/named/test_view/sub.university.lcl.aa' % BINDDIR))
     self.assertTrue(os.path.exists('%s/named/named.ca' % BINDDIR))

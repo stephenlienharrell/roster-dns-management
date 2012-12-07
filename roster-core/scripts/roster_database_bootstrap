@@ -164,6 +164,8 @@ def main(args):
   parser.add_option('--exporter-debug', action='store_true', dest='export_debug',
                     help='Print debug statements during Roster exporting.',
                     default=False)
+  parser.add_option('--root-hint-file', action='store', dest='root_hint_file',
+                    help='Location of root hint file.', default=None)
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -286,6 +288,7 @@ def main(args):
     config_parser.set('exporter', 'failure_notification_email', 
         options.failure_email)
     config_parser.set('exporter', 'email_subject', options.failure_subject)
+    config_parser.set('exporter', 'root_hint_file', options.root_hint_file)
     if( options.export_debug ):
       config_parser.set('exporter', 'exporter_debug', 'on')
     else:

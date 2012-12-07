@@ -67,7 +67,7 @@ USERNAME = 'sharrell'
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
-BINDDIR = u'/etc/bind/' #u'%s/test_data/named/' % os.getcwd()
+BINDDIR = u'%s/test_data/named/' % os.getcwd()
 TEST_DNS_SERVER = u'localhost'
 SSH_ID = 'test_data/roster_id_dsa'
 SSH_USER = unicode(getpass.getuser())
@@ -163,6 +163,9 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.RemoveZone(u'bio.university.edu')
     self.core_instance.RemoveZone(u'eas.university.edu')
 
+    if( not os.path.exists(TESTDIR) ):
+      os.system('mkdir %s' % TESTDIR)
+
   def tearDown(self):
     fabric_api.local('killall named', capture=True)
     fabric_network.disconnect_all()
@@ -236,7 +239,7 @@ class TestCheckConfig(unittest.TestCase):
     output.close()
 
     self.assertTrue('[localhost] local: dnstreeexport -c test_data/roster.conf.real --force' in lines)
-    self.assertTrue('[localhost] local: dnscheckconfig -i 14 --config-file test_data/roster.conf.real -d test_data/backup -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s localhost' in lines)
+    self.assertTrue('[localhost] local: dnscheckconfig -i 14 --config-file test_data/roster.conf.real -d test_data/backup_dir -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s localhost' in lines)
     self.assertTrue('Finished - temp_dir/%s/named.conf.a' % TEST_DNS_SERVER in lines)
     self.assertTrue('Finished - temp_dir/%s/named/test_view/sub.university.lcl.db' % TEST_DNS_SERVER in lines)
     self.assertTrue('All checks successful' in lines)
@@ -251,12 +254,13 @@ class TestCheckConfig(unittest.TestCase):
             EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
     lines = output.read().split('\n')
     output.close()
-    self.assertTrue('[localhost] local: dnscheckconfig -i 17 --config-file test_data/roster.conf.real -d test_data/backup -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s bad.server.local' in lines)
-    self.assertTrue('bad.server.local is an invalid smtp server.' in lines)
+    self.assertTrue('[localhost] local: dnscheckconfig -i 17 --config-file test_data/roster.conf.real -d test_data/backup_dir -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s bad.server.local' in lines)
 
+    smtp_server = self.config_instance.config_file['exporter']['smtp_server']
+    self.assertTrue('%s is an invalid smtp server.' % smtp_server in lines)
     output = os.popen('export ROSTERTESTPATH=%s && export ROSTERTESTSMTPERROR='
-        'connect_error && python %s -f --config-file %s --ssh-id %s '
-        '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
+                      'connect_error && python %s -f --config-file %s --ssh-id %s '
+                      '--rndc-port %s --rndc-key %s  --rndc-conf %s 2>&1' % (os.getcwd(),
             EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
     lines = output.read().split('\n')
     output.close()
