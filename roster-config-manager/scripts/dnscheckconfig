@@ -107,7 +107,8 @@ def main(args):
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
   parser.add_option('-s', '--server', action='store', dest='server',
-                    help='Server to check config file for.', metavar='<server>')
+                    help='Server to check config file for.', metavar='<server>',
+                    default=None)
   parser.add_option('-d', '--directory', action='store', dest='directory',
                     help='Directory to scan.', metavar='<directory>',
                     default=None)
@@ -144,6 +145,10 @@ def main(args):
 
   server_config_file = ConfigParser.SafeConfigParser()
   server_config_file.read(options.config_file)
+
+  if( not options.just_local and not options.server ):
+    print 'ERROR: Server flag "-s/--server" cannot be empty.'
+    sys.exit(1)
 
   # Check info file for server using config_lib
   if( options.server ):
