@@ -132,20 +132,7 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_view options None\n'
-        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl1 allowed: 1\n')
-    command.close()
-
-
-  def testMakeViewWithViewOptions(self):
-    self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
-    command = os.popen('python %s view -v test_view -a acl1 '
-                       '--options="recursion no;" '
-                       '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
-                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
-                           self.server_name))
-    self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_view options recursion no;\n'
+        'ADDED VIEW: view_name: test_view\n'
         'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl1 allowed: 1\n')
     command.close()
 
@@ -187,7 +174,8 @@ class Testdnsmkview(unittest.TestCase):
                      'view_subset: test_view2\n')
     command.close()
 
-  def testMakeDnsServerSetAssignment(self):
+
+  def testMakeDnsServerSetViewAssignment(self):
     self.core_instance.MakeACL(u'outside', u'192.168.1.0/24')
     self.core_instance.MakeDnsServerSet(u'set2')
     command = os.popen('python %s dns_server_set -v test_view -r 2 -e set2 '
@@ -211,6 +199,17 @@ class Testdnsmkview(unittest.TestCase):
                      'CLIENT ERROR: Dns Server Set "set1" does not exist.\n')
     command.close()
     self.core_instance.MakeDnsServerSet(u'set1')
+    command = os.popen('python %s dns_server_set -v test_view -r 1 -e set2 '
+                       '--options="recursion no;" '
+                       '-c %s -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(),
+                     'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
+                     'test_view dns_server_set: set2 view_order: 1 '
+                     'view_options: recursion no;\n')
+    command.close()
     command = os.popen('python %s dns_server_set -v test_view -r 2 -e set1 '
                        '-c %s -u %s -p %s '
                        '--config-file %s -s %s' % (
@@ -218,16 +217,8 @@ class Testdnsmkview(unittest.TestCase):
                            self.server_name))
     self.assertEqual(command.read(),
                      'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
-                     'test_view dns_server_set: set1 view_order: 2\n')
-    command.close()
-    command = os.popen('python %s dns_server_set -v test_view -r 1 -e set2 '
-                       '-c %s -u %s -p %s '
-                       '--config-file %s -s %s' % (
-                           EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
-                           self.server_name))
-    self.assertEqual(command.read(),
-                     'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
-                     'test_view dns_server_set: set2 view_order: 1\n')
+                     'test_view dns_server_set: set1 view_order: 2 '
+                     'view_options: None\n')
     command.close()
 
   def testErrors(self):

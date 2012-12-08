@@ -138,9 +138,9 @@ class TestSetCoreDirty(unittest.TestCase):
                        '-u %s -p %s -s %s' % (
                        USER_TOOLS_DIR, USERNAME, PASSWORD, self.server_name))
     self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_view options None\nADDED VIEW ACL ASSIGNMENT: view: test_view acl: test_acl allowed: 1\n')
+        'ADDED VIEW: view_name: test_view\n'
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: test_acl allowed: 1\n')
     command.close()
-
     
     command = os.popen('python %s/dnsmkzone forward -z test_zone -v test_view '
                        '--origin=university.edu. -t master '

@@ -233,6 +233,11 @@ SUPPORTED_METHODS = {
                      'write': True,
                      'access_level': ACCESS_LEVELS['dns_admin']},
 
+    'UpdateDnsServerSetViewAssignments':
+                    {'check': False,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
+
     'RemoveDnsServerSetViewAssignments':
                     {'check': False,
                      'write': True,
@@ -533,9 +538,7 @@ TABLES = {
     'acl_ranges':        {'acl_ranges_acl_name': 'UnicodeString',
                           'acl_range_cidr_block': 'CIDRBlock'},
 
-    'views':             {'view_name': 'UnicodeString',
-                          # This should probably be it's own data type
-                          'view_options': 'UnicodeString'},
+    'views':             {'view_name': 'UnicodeString'},
 
     'view_acl_assignments':
                          {'view_acl_assignments_acl_name': 'UnicodeString',
@@ -560,7 +563,8 @@ TABLES = {
 
     'dns_server_set_view_assignments':
         {'dns_server_set_view_assignments_dns_server_set_name': 'UnicodeString',
-	 'view_order': 'UnsignedInt',
+         'view_order': 'UnsignedInt',
+         'view_options': 'UnicodeString',
          'dns_server_set_view_assignments_view_name': 'UnicodeString'},
 
     'groups':            {'group_name': 'UnicodeString'},

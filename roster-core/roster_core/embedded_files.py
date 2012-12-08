@@ -411,7 +411,6 @@ CREATE TABLE `views` (
 
   `view_id` mediumint unsigned NOT NULL auto_increment,
   `view_name` varchar(255) UNIQUE NOT NULL,
-  `view_options` longtext,
 
   PRIMARY KEY (`view_id`),
   INDEX `view_name_1` (`view_name`)
@@ -509,6 +508,7 @@ CREATE TABLE `dns_server_set_view_assignments` (
   `dns_server_set_view_assignments_id` smallint unsigned NOT NULL
       auto_increment,
   `view_order` smallint unsigned NOT NULL,
+  `view_options` longtext,
   `dns_server_set_view_assignments_dns_server_set_name` varchar(255) 
       NOT NULL,
   `dns_server_set_view_assignments_view_name` varchar(255) NOT NULL,

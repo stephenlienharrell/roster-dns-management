@@ -130,12 +130,12 @@ class DbAccessThread(threading.Thread):
     self.test_instance.assertEqual(self.db_instance.ListRow(
         'views',self.db_instance.GetEmptyRowDict('views')), ())
     self.test_instance.assertTrue(self.db_instance.MakeRow(
-        'views', {'view_options': u'', 'view_name': self.view_name}))
+        'views', {'view_name': self.view_name}))
     self.test_instance.assertEqual(self.db_instance.ListRow(
         'views',self.db_instance.GetEmptyRowDict('views')),
-        ({'view_options': u'', 'view_name': self.view_name},))
+        ({'view_name': self.view_name},))
     self.test_instance.assertTrue(self.db_instance.RemoveRow(
-        'views', {'view_options': u'', 'view_name': self.view_name}))
+        'views', {'view_name': self.view_name}))
     self.test_instance.assertEqual(self.db_instance.ListRow(
         'views',self.db_instance.GetEmptyRowDict('views')), ())
     self.db_instance.EndTransaction()

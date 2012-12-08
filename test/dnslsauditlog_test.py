@@ -164,10 +164,9 @@ class Testdnslsauditlog(unittest.TestCase):
     self.core_instance.MakeView(u'test_view')
 
     audit_dict['data'] = cPickle.dumps({'replay_args':
-                                            [u'test_view', None],
+                                            [u'test_view'],
                                         'audit_args':
-                                            {'view_options': None,
-                                             'view_name': u'test_view'}})
+                                            {'view_name': u'test_view'}})
     self.db_instance.StartTransaction()
     try:
       entry3 = self.db_instance.ListRow('audit_log', audit_dict)
@@ -188,7 +187,7 @@ class Testdnslsauditlog(unittest.TestCase):
         "2  MakeACL  %s sharrell 1       "
             "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
         "3  MakeView %s sharrell 1       "
-            "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
+            "{'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
     command.close()
     command = os.popen('python %s -b %s -e %s '
@@ -203,7 +202,7 @@ class Testdnslsauditlog(unittest.TestCase):
         "2  MakeACL  %s sharrell 1       "
             "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
         "3  MakeView %s sharrell 1       "
-          "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
+          "{'view_name': u'test_view'}\n\n" % (
           entry2_timestamp, entry3_timestamp))
     command.close()
     command = os.popen('python %s -a MakeACL '
@@ -242,7 +241,7 @@ class Testdnslsauditlog(unittest.TestCase):
         "2  MakeACL  %s sharrell 1       "
             "{'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
         "3  MakeView %s sharrell 1       "
-            "{'view_options': None, 'view_name': u'test_view'}\n\n" % (
+            "{'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
     command.close()
 

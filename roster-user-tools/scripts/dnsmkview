@@ -112,11 +112,10 @@ def main(args):
     roster_client_lib.RunFunction(
         u'MakeView', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
-        args=[options.view_name, options.options])
+        args=[options.view_name])
 
     if( not options.quiet ):
-      print 'ADDED VIEW: view_name: %s options %s' % (options.view_name,
-                                                      options.options)
+      print 'ADDED VIEW: view_name: %s' % options.view_name
     roster_client_lib.RunFunction(
         u'MakeViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
@@ -141,11 +140,13 @@ def main(args):
         u'MakeDnsServerSetViewAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        args=[options.view_name, options.view_order, options.dns_server_set])
+        args=[options.view_name, options.view_order, options.dns_server_set,
+              options.options])
     if( not options.quiet ):
       print ('ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: %s '
-             'dns_server_set: %s view_order: %s' % (options.view_name, options.dns_server_set,
-                                                    options.view_order))
+             'dns_server_set: %s view_order: %s view_options: %s' % (
+               options.view_name, options.dns_server_set,
+               options.view_order, options.options))
 
   elif( command == 'acl' ):
     if( options.view_name not in views ):

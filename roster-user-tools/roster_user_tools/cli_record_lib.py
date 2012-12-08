@@ -98,7 +98,7 @@ class CliRecordLib:
             raise_errors=raise_errors)['core_return']
         record_args_dict['assignment_ip'] = expanded_ip
     ## Check if view exists
-    if( not views.has_key(options.view_name) and options.view_name != 'any' ):
+    if( not options.view_name in views and options.view_name != 'any' ):
       cli_common_lib.DnsError('View does not exist!', 2)
     ## Check if zone exists
     if( not zones.has_key(options.zone_name) ):

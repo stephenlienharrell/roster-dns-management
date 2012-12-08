@@ -279,7 +279,7 @@ class View(core_flags.CoreFlags):
     self.parser.add_option('-o', '--options', action='store', dest='options',
                            help='View options.', metavar='<options>',
                            default=None)
-    self.AddFlagRule('options', required=False, command='view')
+    self.AddFlagRule('options', required=False, command='dns_server_set')
     self.parser.add_option('-e', '--dns-server-set', action='store',
                            dest='dns_server_set', default=None,
                            help='String of dns server set name.')

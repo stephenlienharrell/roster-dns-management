@@ -161,7 +161,7 @@ class TestDnsRecover(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
 
 
     self.tree_exporter_instance.ExportAllBindTrees()
@@ -189,7 +189,7 @@ class TestDnsRecover(unittest.TestCase):
     for zone in self.core_instance.ListZones():
         self.core_instance.RemoveZone(zone)
     self.core_instance.MakeView(u'test_view')
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
     self.core_instance.MakeZone(u'university.edu', u'master',
                                 u'university.edu.', view_name=u'test_view')
     self.assertEqual(
@@ -203,16 +203,16 @@ class TestDnsRecover(unittest.TestCase):
     self.core_instance.RemoveView(u'test_view')
     self.core_instance.RemoveView(u'test_view2')
     self.core_instance.RemoveZone(u'university.edu')
-    self.assertEqual(self.core_instance.ListViews(), {})
+    self.assertEqual(self.core_instance.ListViews(), [])
     self.assertEqual(self.core_instance.ListZones(), {})
     output = os.popen('python %s -i 4 --single '
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
     self.assertEqual(output.read(),
         u"Replaying action with id 4: MakeView\n"
-         "with arguments: [u'test_view', None]\n")
+         "with arguments: [u'test_view']\n")
     output.close()
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
     output = os.popen('python %s -i 5 --single '
                       '-u %s --config-file %s' % (
                           EXEC, USERNAME, USER_CONFIG))
@@ -221,7 +221,7 @@ class TestDnsRecover(unittest.TestCase):
          "with arguments: [u'university.edu', u'master', "
          "u'university.edu.', u'test_view', None, True]\n")
     output.close()
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
     self.assertEqual(
         self.core_instance.ListZones(),
         {u'university.edu':

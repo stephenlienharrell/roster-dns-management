@@ -106,9 +106,6 @@ class TestTreeExporter(unittest.TestCase):
 
     # Make Views
     views_dict = {}
-
-    views_dict['view_options'] = iscpy.Serialize(u'recursion no;')
-
     views_dict['view_name'] = u'internal'
     db_instance.MakeRow('views', views_dict)
 
@@ -391,6 +388,8 @@ class TestTreeExporter(unittest.TestCase):
     dns_server_set_view_assignments_dict[
         'dns_server_set_view_assignments_view_name'] = u'internal'
     dns_server_set_view_assignments_dict['view_order'] = 2
+    dns_server_set_view_assignments_dict['view_options'] = iscpy.Serialize(
+        'recursion no;')
     db_instance.MakeRow('dns_server_set_view_assignments',
                         dns_server_set_view_assignments_dict)
 

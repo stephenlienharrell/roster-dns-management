@@ -183,7 +183,7 @@ class TestdbAccess(unittest.TestCase):
 
   def testRunAuditStep(self):
     self.core_instance.MakeView(u'test_view')
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': ''})
+    self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
     self.core_instance.MakeZone(u'university.edu', u'master',
                                 u'university.edu.', view_name=u'test_view')
     self.assertEqual(
@@ -197,7 +197,7 @@ class TestdbAccess(unittest.TestCase):
     self.core_instance.RemoveView(u'test_view')
     self.core_instance.RemoveView(u'test_view2')
     self.core_instance.RemoveZone(u'university.edu')
-    self.assertEqual(self.core_instance.ListViews(), {})
+    self.assertEqual(self.core_instance.ListViews(), [])
     self.assertEqual(self.core_instance.ListZones(), {})
     old_stdout = sys.stdout
     sys.stdout = StdOutStream()
@@ -205,19 +205,18 @@ class TestdbAccess(unittest.TestCase):
         self.db_recovery_instance.RunAuditStep(i + 1)
     self.assertEqual(
         sys.stdout.flush(),
-        u'Replaying action with id 1: RemoveZone\n'
-         'with arguments: [u\'eas.university.edu\', None]\n'
-         'Replaying action with id 2: RemoveZone\n'
-         'with arguments: [u\'bio.university.edu\', None]\n'
-         'Replaying action with id 3: RemoveZone\n'
-         'with arguments: [u\'cs.university.edu\', None]\n'
-         'Replaying action with id 4: MakeView\n'
-         'with arguments: [u\'test_view\', None]\n'
-         'Replaying action with id 5: MakeZone\n'
-         'with arguments: [u\'university.edu\', '
-         'u\'master\', u\'university.edu.\', u\'test_view\', None, True]\n')
+        u"Replaying action with id 1: RemoveZone\n"
+         "with arguments: [u'eas.university.edu', None]\n"
+         "Replaying action with id 2: RemoveZone\n"
+         "with arguments: [u'bio.university.edu', None]\n"
+         "Replaying action with id 3: RemoveZone\n"
+         "with arguments: [u'cs.university.edu', None]\n"
+         "Replaying action with id 4: MakeView\n"
+         "with arguments: [u'test_view']\n"
+         "Replaying action with id 5: MakeZone\n"
+         "with arguments: [u'university.edu', u'master', u'university.edu.', u'test_view', None, True]\n")
     sys.stdout = old_stdout
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': u''})
+    self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
     self.assertEqual(
         self.core_instance.ListZones(),
         {u'university.edu':
@@ -267,7 +266,7 @@ class TestdbAccess(unittest.TestCase):
           'view_name': u'test_view', 'last_user': u'sharrell',
           'zone_name': u'university.edu',
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
-    self.assertEqual(self.core_instance.ListViews(), {u'test_view': ''})
+    self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
     self.tree_exporter_instance.ExportAllBindTrees()
     old_stdout = sys.stdout
     sys.stdout = StdOutStream()

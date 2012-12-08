@@ -37,6 +37,7 @@ __version__ = '#TRUNK#'
 
 
 import sys
+import operator
 
 from roster_user_tools import cli_common_lib
 from roster_user_tools import roster_client_lib
@@ -85,20 +86,52 @@ def main(args):
   print_list = []
 
   if( command == 'view' ):
-    views = roster_client_lib.RunFunction(
-        u'ListViews', options.username, credfile=options.credfile,
-        credstring=options.credstring, server_name=options.server,
-        kwargs={u'view_name': options.view_name})['core_return']
-
     if( not options.no_header ):
-      print_list = [['view_name', 'view_options']]
+      print_list = [['dns_server_set', 'view_name', 'view_order', 'view_options']]
 
-    for view in views:
-      if( views[view] == '' ):
-        view_options = ''
+    #The user can list all views if they omit the -v/--view flag
+    all_views = roster_client_lib.RunFunction(
+        u'ListViews', options.username, credfile=options.credfile,
+        credstring=options.credstring, server_name=options.server)['core_return']
+
+    #If they didn't omit the -v/--view flag, only list the supplied view
+    #We have to check if it exists first though.
+    if( options.view_name is not None ):
+      if( options.view_name not in all_views ):
+        print 'ERROR: View %s does not exist' % options.view_name
+        sys.exit(1)
       else:
-        view_options = repr(views[view])
-      print_list.append([view, view_options])
+        all_views = [options.view_name]
+
+    server_set_dicts = []
+    for view in all_views:
+      #Grabbing all the server_set view assignments for this view
+      dns_server_set_view_assignments = roster_client_lib.RunFunction(
+          u'ListDnsServerSetViewAssignments', options.username,
+          credfile=options.credfile, credstring=options.credstring,
+          server_name=options.server, kwargs={u'view_name': view})['core_return']
+
+      #Compiling all the assignments found into the server_set_dicts list
+      #Later we sort that list, then append to print_list. That's why we
+      #don't append to print_list now.
+      for dns_server_set in dns_server_set_view_assignments:
+        view_name = dns_server_set_view_assignments[dns_server_set][0][0]
+        view_order = dns_server_set_view_assignments[dns_server_set][0][1]
+        view_options = dns_server_set_view_assignments[dns_server_set][0][2]
+        server_set_dicts.append(
+            {'dns_server_set_name': dns_server_set,
+             'view_name': view_name,
+             'view_order': view_order, 
+             'view_options': view_options})
+
+    #Sorting first by dns_server_set_name, then by view_order
+    server_set_dicts.sort(key=operator.itemgetter('dns_server_set_name', 'view_order'))
+
+    for server_set_dict in server_set_dicts:
+      print_list.append([server_set_dict['dns_server_set_name'], 
+                         server_set_dict['view_name'], 
+                         server_set_dict['view_order'], 
+                         server_set_dict['view_options']])
 
     print cli_common_lib.PrintColumns(print_list,
         first_line_header=not options.no_header)
@@ -111,14 +144,15 @@ def main(args):
         server_name=options.server)['core_return']
 
     if( not options.no_header ):
-      print_list = [['dns_server_set', 'view_name', 'view_order']]
+      print_list = [['dns_server_set', 'view_name', 'view_order', 'view_options']]
 
 
     for server_set in dns_server_set_view_assignments:
       for assignment in dns_server_set_view_assignments[server_set]:
         print_list.append([server_set,
                           assignment[0], 
-                          assignment[1]])
+                          assignment[1],
+                          assignment[2]])
 
     print cli_common_lib.PrintColumns(print_list,
         first_line_header=not options.no_header)

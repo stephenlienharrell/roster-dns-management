@@ -799,6 +799,7 @@ class BindTreeExport(object):
         view_name = dns_server_set_view_assignment[
             'dns_server_set_view_assignments_view_name']
         view_order = dns_server_set_view_assignment['view_order']
+        view_options = dns_server_set_view_assignment['view_options']
         if( dns_server_set_name == dns_server_set['dns_server_set_name'] ):
 
           cooked_data['dns_server_sets'][dns_server_set_name]['view_order'][
@@ -812,11 +813,11 @@ class BindTreeExport(object):
                 cooked_data['dns_server_sets'][dns_server_set_name][
                     'views'][view_name] = {}
 
-                for view_and_options in data['views']:
-                  if( view_and_options['view_name'] == view_name ):
+                for view_names in data['views']:
+                  if( view_names['view_name'] == view_name ):
                     cooked_data['dns_server_sets'][dns_server_set_name][
                       'views'][view_name]['view_options'] = (
-                        iscpy.Deserialize(view_and_options['view_options']).replace('\n', '\n\t'))
+                        iscpy.Deserialize(view_options).replace('\n', '\n\t'))
                     break
 
               if( not 'acls' in cooked_data['dns_server_sets'][

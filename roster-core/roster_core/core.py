@@ -835,6 +835,67 @@ class Core(object):
                                   current_args, success)
     return row_count
 
+  def UpdateDnsServerSetViewAssignments(self, search_dns_server_set_name, 
+      search_view_name, update_view_order=None, update_view_options=None):
+    """Update dns_server_set's view order and view options
+
+    Inputs:
+      search_view_name: string of view name
+      search_dns_server_set_name: string of dns_server_set name
+      update_view_order: int of new view order
+      update_view_options: string of view options,
+        for information on valid view options read:
+          http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#view_statement_grammar
+
+    Outputs:
+      int: number of rows modified
+    """
+    function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
+    self.user_instance.Authorize(function_name)
+
+    search_dns_server_set_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'dns_server_set_view_assignments')
+    search_dns_server_set_view_assignments_dict[
+        'dns_server_set_view_assignments_dns_server_set_name'] = (
+            search_dns_server_set_name)
+    search_dns_server_set_view_assignments_dict[
+        'dns_server_set_view_assignments_view_name'] = (
+            search_view_name)
+
+    update_dns_server_set_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'dns_server_set_view_assignments')
+    update_dns_server_set_view_assignments_dict[
+        'dns_server_set_view_assignments_dns_server_set_name'] = (
+            search_dns_server_set_name)
+    update_dns_server_set_view_assignments_dict[
+        'dns_server_set_view_assignments_view_name'] = (
+            search_view_name)
+
+    if( update_view_order is not None ):
+      update_dns_server_set_view_assignments_dict['view_order'] = update_view_order
+
+    if( update_view_options is not None ):
+      update_dns_server_set_view_assignments_dict['view_options'] = (
+          iscpy.Serialize(update_view_options))
+
+    success = False
+    try:
+      self.db_instance.StartTransaction()
+      try:
+        row_count = self.db_instance.UpdateRow(
+            'dns_server_set_view_assignments',
+            search_dns_server_set_view_assignments_dict,
+            update_dns_server_set_view_assignments_dict)
+      except:
+        self.db_instance.EndTransaction(rollback=True)
+        raise
+      self.db_instance.EndTransaction()
+      success = True
+    finally:
+      self.log_instance.LogAction(self.user_instance.user_name, function_name,
+                                  current_args, success)
+    return row_count
+
 
   def ListDnsServerSetAssignments(self, dns_server_name=None,
                                   dns_server_set_name=None):
@@ -945,13 +1006,16 @@ class Core(object):
 
     Outputs:
       Dictionary keyed by view name or dns server set name with values of
-      lists of tuples of view_name or dns_server_sets with view_order as
-      the second memeber of the tuple.
-        example keyed by view_name: {'view1': [('set1', 1), ('set2', 2)],
-                                     'view2': [('set2', 2)]}
-        example keyed by dns_server_set_name: {'set1': [('view1', 1)]
-                                               'set2': [('view1', 1), 
-                                                        ('view2', 1)]}
+      lists of tuples of view_name or dns_server_sets with view_order and 
+      view options as the second and third members of the tuple.
+        example keyed by view_name:
+           {'view1': [('set1', 1, u'some_view_option;'), 
+                      ('set2', 2, u'')],
+            'view2': [('set2', 2, u'')]}
+        example keyed by dns_server_set_name:
+           {'set1': [('view1', 1, u'some_view_option;')]
+            'set2': [('view1', 1, u''), 
+                     ('view2', 1, u'')]}
     """
     self.user_instance.Authorize('ListDnsServerSetViewAssignments')
     assignment_dict = self.db_instance.GetEmptyRowDict(
@@ -980,7 +1044,8 @@ class Core(object):
             assignment['dns_server_set_view_assignments_view_name']].append((
                 assignment[
                     'dns_server_set_view_assignments_dns_server_set_name'],
-                assignment['view_order']))
+                assignment['view_order'],
+                iscpy.Deserialize(assignment['view_options'])))
       else:
         if( not assignment[
               'dns_server_set_view_assignments_dns_server_set_name'] in
@@ -992,17 +1057,22 @@ class Core(object):
         assignments_dict[assignment[
             'dns_server_set_view_assignments_dns_server_set_name']].append((
                 assignment['dns_server_set_view_assignments_view_name'],
-                assignment['view_order']))
+                assignment['view_order'],
+                iscpy.Deserialize(assignment['view_options'])))
 
     return assignments_dict
 
-  def MakeDnsServerSetViewAssignments(self, view_name, view_order, dns_server_set_name):
+  def MakeDnsServerSetViewAssignments(self, view_name, view_order, dns_server_set_name,
+      view_options=None):
     """Make dns server set view assignment
 
     Inputs:
       view_name: string of the view name
       view_order: order that views should be added to named.conf
       dns_server_set_name: string of the dns server set name
+      view_options: string of view options, defaults to empty string.
+        for information on valid view options read:
+          http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#view_statement_grammar
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
@@ -1013,6 +1083,7 @@ class Core(object):
     assignment_dict['dns_server_set_view_assignments_dns_server_set_name'] = (
         dns_server_set_name)
     assignment_dict['view_order'] = view_order
+    assignment_dict['view_options'] = iscpy.Serialize(view_options)
 
     success = False
     try:
@@ -1070,29 +1141,27 @@ class Core(object):
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
 
-  def ListViews(self, view_name=None):
+  def ListViews(self):
     """Lists all views.
 
     Outputs:
-      dictionary: dict keyed by view name with a value of the view args.
-        example: {'view_1': 'also-notify {192.168.0.1;}\\nallow-transfer '
-                            '{university_networks};;',
-                  'view_2': 'other-arg { thing };'}
+      views_list: List of view names. ex - [u'test_view_1', u'test_view_2']
     """
     self.user_instance.Authorize('ListViews')
     view_dict = self.db_instance.GetEmptyRowDict('views')
-    view_dict['view_name'] = view_name
+
     self.db_instance.StartTransaction()
     try:
       views = self.db_instance.ListRow('views', view_dict)
     finally:
       self.db_instance.EndTransaction()
 
-    view_options_dict = {}
+    views_list = []
     for view in views:
-      view_options_dict[view['view_name']] = iscpy.Deserialize(view['view_options'])
+      views_list.append(view['view_name'])
 
-    return view_options_dict
+    return views_list
+
 
   def ListViewDependencies(self):
     """Lists all view dependencies.
@@ -1112,7 +1181,7 @@ class Core(object):
       view_dep_list.append(dep['view_dependency'])
     return view_dep_list
   
-  def MakeView(self, view_name, view_options=None):
+  def MakeView(self, view_name):
     """Makes a view and all of the other things that go with a view.
 
     For more information about views please see docstring for
@@ -1120,18 +1189,12 @@ class Core(object):
 
     Inputs:
       view_name: string of view name
-      view_options: string of view options, defaults to empty string.
-        for information on valid view options read:
-          http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#view_statement_grammar
     """
     function_name, current_args = helpers_lib.GetFunctionNameAndArgs()
     self.user_instance.Authorize(function_name)
 
-    if( view_options is None ):
-      view_options = iscpy.Serialize(u'')
-
-    views_dict = {'view_name': view_name,
-                  'view_options': iscpy.Serialize(view_options)}
+    views_dict = self.db_instance.GetEmptyRowDict('views')
+    views_dict['view_name'] = view_name
     view_dep_name = '%s_dep' % view_name
     view_dependencies_dict = {'view_dependency': view_dep_name}
     view_dependency_assignments_dict = {
@@ -1206,8 +1269,7 @@ class Core(object):
                                   current_args, success)
     return row_count
 
-  def UpdateView(self, search_view_name, update_view_name=None,
-                 update_view_options=None):
+  def UpdateView(self, search_view_name, update_view_name=None):
     """Updates a view.
 
     Also updates anything attatched to that view. Including any information
@@ -1216,9 +1278,6 @@ class Core(object):
     Inputs:
       search_view_name: string of view name to be updated
       update_view_name: string of view name to update with
-      update_view_options: string of view options, defaults to empty string.
-        for information on valid view options read:
-          http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#view_statement_grammar
 
     Raises:
       InvalidInputError: Cannot update view any.
@@ -1228,12 +1287,16 @@ class Core(object):
 
     if( search_view_name == u'any' ):
       raise errors.InvalidInputError('Cannot update view any')
+
     search_view_dict = self.db_instance.GetEmptyRowDict('views')
     search_view_dict['view_name'] = search_view_name
     search_view_dep_dict = {'view_dependency': '%s_dep' % search_view_name}
-    update_view_dict = {'view_name': update_view_name,
-                        'view_options': iscpy.Serialize(update_view_options)}
-    update_view_dep_dict = {'view_dependency': '%s_dep' % update_view_name}
+
+    update_view_dict = self.db_instance.GetEmptyRowDict('views')
+    update_view_dict['view_name'] = update_view_name
+
+    update_view_dep_dict = self.db_instance.GetEmptyRowDict('view_dependencies')
+    update_view_dep_dict['view_dependency'] = '%s_dep' % update_view_name
     success = False
     try:
       self.db_instance.StartTransaction()
@@ -1569,7 +1632,8 @@ class Core(object):
     self.user_instance.Authorize(function_name)
 
     if( zone_options is None ):
-      zone_options = iscpy.Serialize(u'')
+      zone_options = u''
+
     if( view_name is None ):
       view_name = u'any'
     else:

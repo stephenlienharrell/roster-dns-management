@@ -841,7 +841,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_view options None\n'
+        'ADDED VIEW: view_name: test_view\n'
         'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: test_acl allowed: 1\n')
     command.close()
     ## User tool: dnsmkview
@@ -853,7 +853,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view dns_server_set: set1 view_order: 1\n')
+        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view dns_server_set: set1 view_order: 1 view_options: None\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview view -v test_view2 --acl test_acl
@@ -864,7 +864,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-         'ADDED VIEW: view_name: test_view2 options None\n'
+         'ADDED VIEW: view_name: test_view2\n'
          'ADDED VIEW ACL ASSIGNMENT: view: test_view2 acl: test_acl allowed: 1\n')
     command.close()
     ## User tool: dnsmkview
@@ -887,7 +887,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set1 view_order: 2\n')
+        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set1 view_order: 2 view_options: None\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview dns_server_set -v test_view2 -e set2 -r 2
@@ -898,7 +898,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set2 view_order: 2\n')
+        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set2 view_order: 2 view_options: None\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview dns_server_set -v test_view2 -e set3 -r 2
@@ -909,7 +909,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set3 view_order: 2\n')
+        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set3 view_order: 2 view_options: None\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview view -v test_view3 --acl test_acl
@@ -920,8 +920,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-         'ADDED VIEW: view_name: test_view3 options None\n'
-         'ADDED VIEW ACL ASSIGNMENT: view: test_view3 acl: test_acl allowed: 1\n')
+        'ADDED VIEW: view_name: test_view3\n'
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view3 acl: test_acl allowed: 1\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview dns_server_set -v test_view3 -e set3 -r 3
@@ -932,7 +932,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view3 dns_server_set: set3 view_order: 3\n')
+        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view3 dns_server_set: set3 view_order: 3 view_options: None\n')
     command.close()
     ## User tool: dnslsviews
     ## dnslsviews view
@@ -943,11 +943,13 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'view_name  view_options\n'
-        '-----------------------\n'
-        'test_view2\n'
-        'test_view\n'
-        'test_view3\n\n')
+        'dns_server_set view_name  view_order view_options\n'
+        '-------------------------------------------------\n'
+        'set1           test_view  1\n'
+        'set1           test_view2 2\n'
+        'set2           test_view2 2\n'
+        'set3           test_view2 2\n'
+        'set3           test_view3 3\n\n')
     command.close()
     ## User tool: dnslsviews
     ## dnslsviews dns_server_set
@@ -958,8 +960,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name  view_order\n'
-        '------------------------------------\n'
+        'dns_server_set view_name  view_order view_options\n'
+        '-------------------------------------------------\n'
         'set1           test_view  1\n'
         'set1           test_view2 2\n'
         'set2           test_view2 2\n'
@@ -1043,12 +1045,13 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name  view_order\n'
-        '------------------------------------\n'
+        'dns_server_set view_name  view_order view_options\n'
+        '-------------------------------------------------\n'
         'set1           test_view  1\n'
         'set1           test_view2 2\n'
         'set2           test_view2 2\n'
-        'set3           test_view2 2\n\n')
+        'set3           test_view2 2\n'
+        '\n')
     command.close()
     ## User tool: dnsrmview
     ## dnsrmview dns_server_set -v test_view3 -e set3
@@ -1070,10 +1073,12 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'view_name  view_options\n'
-        '-----------------------\n'
-        'test_view2\n'
-        'test_view\n\n')
+        'dns_server_set view_name  view_order view_options\n'
+        '-------------------------------------------------\n'
+        'set1           test_view  1\n'
+        'set1           test_view2 2\n'
+        'set2           test_view2 2\n'
+        'set3           test_view2 2\n\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview view -v test_view --acl test_acl
@@ -1084,8 +1089,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-    'ADDED VIEW: view_name: test_subview options None\n'
-    'ADDED VIEW ACL ASSIGNMENT: view: test_subview acl: test_acl allowed: 1\n')
+        'ADDED VIEW: view_name: test_subview\n'
+        'ADDED VIEW ACL ASSIGNMENT: view: test_subview acl: test_acl allowed: 1\n')
     command.close()
     ## User tool: dnsrmview
     ## dnsrmview view -v test_subview -V 
@@ -1118,11 +1123,12 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'view_name    view_options\n'
-        '-------------------------\n'
-        'test_subview\n'
-        'test_view2\n'
-        'test_view\n\n')
+        'dns_server_set view_name  view_order view_options\n'
+        '-------------------------------------------------\n'
+        'set1           test_view  1\n'
+        'set1           test_view2 2\n'
+        'set2           test_view2 2\n'
+        'set3           test_view2 2\n\n')
     command.close()
     ## User tool: dnslsviews
     ## dnslsviews dns_server_set
@@ -1133,8 +1139,8 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name  view_order\n'
-        '------------------------------------\n'
+        'dns_server_set view_name  view_order view_options\n'
+        '-------------------------------------------------\n'
         'set1           test_view  1\n'
         'set1           test_view2 2\n'
         'set2           test_view2 2\n'
@@ -1157,7 +1163,7 @@ class TestComplete(unittest.TestCase):
         'test_subview test_acl  True\n\n')
     command.close()
     ## User tool: dnslsviews
-    ## /dnslsviews view_subset
+    ## dnslsviews view_subset
     command_string = (
         'python ../roster-user-tools/scripts/dnslsviews '
         'view_subset '
@@ -1270,7 +1276,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view dns_server_set: set3 view_order: 1\n')
+        'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view dns_server_set: set3 view_order: 1 view_options: None\n')
     command.close()
 
     ## User tool: dnsmkzone
@@ -1482,7 +1488,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'CLIENT ERROR: View not found.\n')
+        'CLIENT ERROR: Zone "testzone" does not exist in "NONE" view.\n')
     ## User tool: dnslszones
     ## dnslszones all
     command_string = (

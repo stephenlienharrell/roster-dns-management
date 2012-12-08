@@ -260,32 +260,39 @@ class TestCore(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSet(u'set2')
     self.core_instance.MakeDnsServerSet(u'set3')
-    self.core_instance.MakeView(u'view1', u'')
-    self.core_instance.MakeView(u'view2', u'')
-    self.core_instance.MakeView(u'view3', u'')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'view1', 1, u'set1')
+    self.core_instance.MakeView(u'view1')
+    self.core_instance.MakeView(u'view2')
+    self.core_instance.MakeView(u'view3')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'view1', 1, u'set1', 
+        u'some_view_option True;')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'view1', 1, u'set2',
+        u'some_other_view_option True;')
     self.core_instance.MakeDnsServerSetViewAssignments(u'view2', 2, u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'view1', 1, u'set2')
     self.core_instance.MakeDnsServerSetViewAssignments(u'view2', 2, u'set3')
+
     # try duplicate view orders on the same set
     self.assertRaises(MySQLdb.IntegrityError,
                       self.core_instance.MakeDnsServerSetViewAssignments,
                       u'view3', 1, u'set1')
 
-
     self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(
-      key_by_view=True), {u'view1': [(u'set1', 1), (u'set2', 1)],
-                          u'view2': [(u'set1', 2), (u'set3', 2)]})
+      key_by_view=True), {u'view1': [(u'set1', 1, u'some_view_option True;'), 
+                                     (u'set2', 1, u'some_other_view_option True;')],
+                          u'view2': [(u'set1', 2, u''), (u'set3', 2, u'')]})
     self.core_instance.MakeDnsServerSetViewAssignments(u'view3', 3, u'set1')
     self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
-                     {u'set1': [(u'view1', 1), (u'view2', 2), (u'view3', 3)],
-                      u'set2': [(u'view1', 1)], 
-                      u'set3': [(u'view2', 2)]})
+           {u'set1': [(u'view1', 1, u'some_view_option True;'), 
+                      (u'view2', 2, u''), 
+                      (u'view3', 3, u'')],
+            u'set2': [(u'view1', 1, u'some_other_view_option True;')], 
+            u'set3': [(u'view2', 2, u'')]})
     self.assertTrue(self.core_instance.RemoveDnsServerSetViewAssignments(
         u'view2', u'set1'))
     self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
-                     {u'set1': [(u'view1', 1), (u'view3', 3)], u'set2': [(u'view1', 1)],
-                      u'set3': [(u'view2', 2)]})
+                     {u'set1': [(u'view1', 1, u'some_view_option True;'), 
+                                (u'view3', 3, u'')], 
+                      u'set2': [(u'view1', 1, u'some_other_view_option True;')],
+                      u'set3': [(u'view2', 2, u'')]})
 
   def testACLMakeRemoveListUpdate(self):
     self.assertEqual(self.core_instance.ListACLs(),
@@ -316,24 +323,53 @@ class TestCore(unittest.TestCase):
 
   def testViewMakeRemoveListUpdate(self):
     self.assertFalse(self.core_instance.ListViews())
-    self.core_instance.MakeView(u'test_view', u'')
-    self.core_instance.MakeView(u'second_test_view', u'')
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeView(u'second_test_view')
     self.assertEquals(self.core_instance.ListViews(),
-        {u'second_test_view': '', u'test_view': ''})
+        [u'second_test_view', u'test_view'])
     self.assertTrue(self.core_instance.RemoveView(u'second_test_view'))
-    self.assertEquals(self.core_instance.ListViews(), {u'test_view': ''})
+    self.assertEquals(self.core_instance.ListViews(), [u'test_view'])
     self.assertFalse(self.core_instance.RemoveView(u'second_test_view'))
-
     self.assertTrue(self.core_instance.UpdateView(u'test_view',
                                                   u'not_test_view'))
-    self.assertEquals(self.core_instance.ListViews(), {u'not_test_view': ''})
+    self.assertEquals(self.core_instance.ListViews(), [u'not_test_view'])
     self.assertFalse(self.core_instance.UpdateView(u'test_view',
                                                    u'not_test_view'))
 
+  def testUpdateDnsServerSetAssignments(self):
+    self.assertEqual(self.core_instance.ListViewAssignments(), {})
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeDnsServer(u'server_name', u'ssh_username',
+        u'/etc/bind_dir/', u'/etc/test_dir/')
+    self.core_instance.MakeDnsServerSet(u'set_name')
+    self.core_instance.MakeDnsServerSetAssignments(u'server_name', u'set_name')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set_name',
+        view_options='recursion no;')
+
+    self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
+        {u'set_name': [(u'test_view', 1, u'recursion no;')]})
+
+    #updating nothing
+    self.core_instance.UpdateDnsServerSetViewAssignments(u'set_name', u'test_view')
+    self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
+        {u'set_name': [(u'test_view', 1, u'recursion no;')]})
+
+    #updating view order
+    self.core_instance.UpdateDnsServerSetViewAssignments(u'set_name', u'test_view', 
+        update_view_order=2)
+    self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
+        {u'set_name': [(u'test_view', 2, u'recursion no;')]})
+  
+    #updating view options
+    self.core_instance.UpdateDnsServerSetViewAssignments(u'set_name', u'test_view',
+        update_view_options=u'recursion yes;')
+    self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
+        {u'set_name': [(u'test_view', 2, u'recursion yes;')]})
+
   def testViewAssignmentsMakeRemoveList(self):
     self.assertFalse(self.core_instance.ListViewAssignments())
-    self.core_instance.MakeView(u'test_view', u'')
-    self.core_instance.MakeView(u'second_test_view', u'')
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeView(u'second_test_view')
     self.core_instance.MakeViewAssignment(u'test_view', u'second_test_view')
 
     self.assertEqual(self.core_instance.ListViewAssignments(),
@@ -350,7 +386,7 @@ class TestCore(unittest.TestCase):
 
   def testViewToACLAssignmentsMakeRemoveList(self):
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
-    self.core_instance.MakeView(u'test_view', u'')
+    self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeACL(u'test_acl', u'192.168.0/24')
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
@@ -360,7 +396,7 @@ class TestCore(unittest.TestCase):
     self.core_instance.RemoveView(u'test_view')
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
 
-    self.core_instance.MakeView(u'test_view', u'')
+    self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
                      [{'view_name': u'test_view', 'acl_range_allowed': 1,
