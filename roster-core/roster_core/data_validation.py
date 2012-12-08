@@ -356,11 +356,11 @@ class DataValidation(object):
     for key, value in row_dict.iteritems():
       if( key not in main_dict ):
         raise errors.UnexpectedDataError('Dictionary has extra key that is not '
-                                       'used: %s' % key)
+                                         'used: %s' % key)
 
       if( not 'is%s' % main_dict[key] in dir(self) ):
         raise errors.FunctionError('No function to check data '
-                                          'type: %s' % main_dict[key])
+                                   'type: %s' % main_dict[key])
       if( not getattr(self, 'is%s' % main_dict[key])(value) ):
         if( (not none_ok and not key.endswith('_id')) or
             (none_ok and value is not None) ):
