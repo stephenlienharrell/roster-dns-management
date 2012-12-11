@@ -1488,7 +1488,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'CLIENT ERROR: Zone "testzone" does not exist in "NONE" view.\n')
+        'CLIENT ERROR: View not found.\n')
     ## User tool: dnslszones
     ## dnslszones all
     command_string = (
@@ -3032,9 +3032,9 @@ class TestComplete(unittest.TestCase):
     ## dnscheckconfig -d <dir> --config-file ./completeconfig.conf
     command_string = (
         'python ../roster-config-manager/scripts/dnscheckconfig '
-        '-i %s -d %s --config-file %s -z %s -c %s' % (
-            tarfilename[0], self.backup_dir, self.userconfig,
-            CHECKZONE_EXEC, CHECKCONF_EXEC))
+        '-i %s -d %s -s %s --config-file %s -z %s -c %s' % (
+            tarfilename[0], self.backup_dir, self.server_name,
+            self.userconfig, CHECKZONE_EXEC, CHECKCONF_EXEC))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         '')
@@ -3042,9 +3042,9 @@ class TestComplete(unittest.TestCase):
     ## dnscheckconfig -d <dir> --config-file ./completeconfig.conf
     command_string = (
         'python ../roster-config-manager/scripts/dnscheckconfig '
-        '-i %s -d %s --config-file %s -z %s -c %s' % (
-            tarfilename[0], self.backup_dir, self.userconfig,
-            CHECKZONE_EXEC, CHECKCONF_EXEC))
+        '-i %s -d %s -s %s --config-file %s -z %s -c %s' % (
+            tarfilename[0], self.backup_dir, self.server_name,
+            self.userconfig, CHECKZONE_EXEC, CHECKCONF_EXEC))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         '')

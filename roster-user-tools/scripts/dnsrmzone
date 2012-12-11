@@ -89,7 +89,7 @@ def main(args):
         credstring=options.credstring, server_name=options.server,
         kwargs={u'view_name': options.view_name})['core_return']
 
-    if( options.view_name and not views and options.view_name != 'any'):
+    if( options.view_name and options.view_name not in views and options.view_name != 'any'):
       # View does not exist
       cli_common_lib.DnsError('View not found.', 1)
     else:
