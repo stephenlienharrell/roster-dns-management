@@ -60,13 +60,13 @@ EXEC = '../roster-config-manager/scripts/dnscheckconfig'
 ZONE_IMPORTER_EXEC='../roster-config-manager/scripts/dnszoneimporter'
 KEY_FILE = 'test_data/rndc.key'
 USERNAME = u'sharrell'
-SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 TEST_DIR = u'%s/test_data/unittest_dir/' % os.getcwd()
 BIND_DIR = u'%s/test_data/named/' % os.getcwd()
 NAMED_DIR = u'%s/test_data/named/named' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
-DNS_SERVER = u'dns1'
+DNS_SERVER = u'localhost'
+FAKE_SERVER = u'fake_server'
 
 class TestCheckConfig(unittest.TestCase):
   def TarReplaceString(self, tar_file_name, member, string1, string2):
@@ -124,6 +124,7 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.RemoveZone(u'cs.university.edu')
     self.core_instance.RemoveZone(u'bio.university.edu')
     self.core_instance.RemoveZone(u'eas.university.edu')
+
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'sub.university.lcl', u'master',
                                 u'sub.university.lcl.', view_name=u'test_view')
@@ -143,6 +144,10 @@ class TestCheckConfig(unittest.TestCase):
       os.remove('%s/named.conf' % BIND_DIR)
     if( os.path.exists(self.lockfile) ):
       os.remove(self.lockfile)
+    if( os.path.exists(DNS_SERVER) ):
+      shutil.rmtree(DNS_SERVER)
+    if( os.path.exists(FAKE_SERVER) ):
+      shutil.rmtree(FAKE_SERVER)
 
   def testCheckConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
@@ -156,9 +161,9 @@ class TestCheckConfig(unittest.TestCase):
                      '17 total records added\n')
     output.close()
 
-    self.core_instance.MakeDnsServer(u'dns1', SSH_USER, BIND_DIR, TEST_DIR)
+    self.core_instance.MakeDnsServer(DNS_SERVER, SSH_USER, BIND_DIR, TEST_DIR)
     self.core_instance.MakeDnsServerSet(u'set1')
-    self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
+    self.core_instance.MakeDnsServerSetAssignments(DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
@@ -169,7 +174,71 @@ class TestCheckConfig(unittest.TestCase):
         KEY_FILE, EXEC)).split(), stderr=subprocess.PIPE).stderr
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
-    output = os.popen('python %s -s dns1 -i 12 --config-file %s' % (
+    output = os.popen('python %s -s %s -i 12 --config-file %s' % (
+        EXEC, DNS_SERVER, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
+    self.assertEqual(output.read(), '')
+    output.close()
+
+  def testNamedCheckZoneWithNamedConfArgs(self):
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    output = os.popen('python %s -f test_data/test_zone.db '
+                      '--view test_view -u %s --config-file %s '
+                      '-z sub.university.lcl' % (
+                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
+    self.assertEqual(output.read(),
+                     'Loading in test_data/test_zone.db\n'
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
+    output.close()
+
+    self.core_instance.MakeDnsServer(u'localhost', SSH_USER, BIND_DIR, TEST_DIR)
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSetAssignments(u'localhost', u'set1')
+
+    #Making some garbage record
+    self.core_instance.MakeRecord(u'mx', u'ww1', u'sub.university.lcl', 
+        {u'priority': 12, u'mail_server': u'%s.lcl.' % FAKE_SERVER}, 
+        view_name=u'test_view')
+
+    #Global options
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', 
+        u'options { check-names master ignore; };\n')
+
+    #View options
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1',
+        view_options=u'check-names master warn;\n')
+
+    #Zone options
+    self.core_instance.UpdateZone(u'sub.university.lcl', 
+        update_zone_options=u'check-names fail;\n')
+
+    self.tree_exporter_instance.ExportAllBindTrees()
+    self.config_lib_instance.UnTarDnsTree()
+    self.assertTrue(os.path.isdir(self.root_config_dir))
+
+    output = os.popen('python %s -s localhost --config-file %s' % (
+        EXEC, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
+    self.assertEqual(output.read(), 
+        "ERROR: dns_rdata_fromtext: "
+        "temp_dir/localhost/named/test_view/sub.university.lcl.db:7: "
+        "near '%s.lcl.': bad name (check-names)\n"
+        "zone sub.university.lcl/IN: loading from master file "
+        "temp_dir/localhost/named/test_view/sub.university.lcl.db "
+        "failed: bad name (check-names)\n"
+        "zone sub.university.lcl/IN: not loaded due to errors.\n" % (
+            FAKE_SERVER))
+    output.close()
+
+    self.core_instance.UpdateZone(u'sub.university.lcl', 
+        update_zone_options=u'check-names ignore;\n')
+
+    self.tree_exporter_instance.ExportAllBindTrees()
+    self.config_lib_instance.UnTarDnsTree()
+    self.assertTrue(os.path.isdir(self.root_config_dir))
+
+    output = os.popen('python %s -s localhost --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), '')
@@ -265,8 +334,8 @@ class TestCheckConfig(unittest.TestCase):
         'ERROR: temp_dir/%s/named/test_view/sub.university.lcl.db:16: '
         'unknown RR type \'aaq\'\n'
         'zone sub.university.lcl/IN: loading from master '
-        'file temp_dir/dns1/named/test_view/sub.university.lcl.db '
-        'failed: unknown class/type\n' % DNS_SERVER)
+        'file temp_dir/%s/named/test_view/sub.university.lcl.db '
+        'failed: unknown class/type\n' % (DNS_SERVER, DNS_SERVER))
     output.close()
 
     self.TarReplaceString(

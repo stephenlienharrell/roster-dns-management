@@ -50,6 +50,39 @@ from optparse import OptionParser
 
 from roster_config_manager import config_lib
 
+COMMANDS_CONVERT_DICT = {
+    'check-dup-records': {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-mx':          {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-mx-cname':   {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-srv-cname':   {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-wildcard':    {'yes': 'warn', 'no': 'ignore'},
+
+    'check-names':       {'flag': '-k', 'default': 'fail'},
+    'check-integrity':   {'yes': 'full', 'no': 'none'},
+}
+
+CHECKZONE_ARGS_DICT = {
+    'check-dup-records': {'flag': '-r', 'arg': 'warn'},
+    'check-mx':          {'flag': '-m', 'arg': 'warn'},
+    'check-mx-cname':    {'flag': '-M', 'arg': 'warn'},
+    'check-srv-cname':   {'flag': '-S', 'arg': 'warn'},
+
+    'check-wildcard':    {'flag': '-W', 'arg': 'warn'},
+    'check-names':       {'flag': '-k', 'arg': 'fail'},
+    'check-integrity':   {'flag': '-i', 'arg': 'full'},
+}
+
+#Option clauses that we're interested in, and their default BIND value.
+BIND_OPTION_CLAUSES = {
+    'check-dup-records': 'warn',
+    'check-mx':          'warn',
+    'check-mx-cname':    'warn',
+    'check-srv-cname':   'warn',
+    'check-wildcard':    'yes',
+    'check-names':       'warn',
+    'check-integrity':   'yes',
+    'check-siblings':    'yes'
+}
 
 def ChangeNamedDirectory(file_name, directory):
   """Changed the directory for named in options.
@@ -91,6 +124,88 @@ def ChangeNamedDirectory(file_name, directory):
   finally:
     file_handle.close()
 
+def MergeOptionsDicts(global_options_dict, view_dict, zone_dict):
+  """Merges the options of 3 dictionaries, according to precendence.
+  zone_dict is the most importantce, while global_options_dict has the "least"
+  importantance.
+  
+    Inputs:
+      global_options_dict: dict of the options defined globally in named.conf
+      view_dict: dict of the options defined in a single view of named.conf
+      zone_dict: dict of the options defined in a single zone of named.conf
+
+    Outputs:
+      single_options_dict: dict of the merged options
+  """
+
+  single_options_dict = {}
+
+  #Go in order of least important to most important
+  for options_dict in [global_options_dict, view_dict, zone_dict]:
+    for key in options_dict.keys():
+      if( key in BIND_OPTION_CLAUSES ):
+        single_options_dict[key] = options_dict[key]
+
+  #If we didn't fill in any of the options, we want to fill in their defaults
+  for key in BIND_OPTION_CLAUSES:
+    if( key not in single_options_dict.keys() ):
+      single_options_dict[key] = BIND_OPTION_CLAUSES[key]
+
+  return single_options_dict
+
+def GenerateAdditionalNamedCheckzoneArgs(bind_options_dict):
+  """Generates additional named-checkzone command line flags and arguments based
+  on the BIND options supplied in bind_options_dict.
+  
+  Inputs:
+    bind_options_dict: dict of BIND options parsed from named.conf
+    
+  Outputs:
+    args: list of flags and their args.
+  """
+   
+  args = []
+  check_siblings = False
+
+  for option_key, option_value in bind_options_dict.items():
+    if( option_key != 'check-siblings' ):
+      checkzone_arg = None
+      if( option_value in COMMANDS_CONVERT_DICT[option_key] ):
+        checkzone_arg = COMMANDS_CONVERT_DICT[option_key][option_value]
+      else:
+        #These checks are for global and view options
+        #In some clauses, fail, warn, and ignore are not enough.
+        #master/slave/response warn/fail/ignore is the correct syntax.
+        if( 'fail' in option_value ):
+          checkzone_arg = 'fail'
+        elif( 'warn' in option_value ):
+          checkzone_arg = 'warn'
+        elif( 'ignore' in option_value ):
+          checkzone_arg = 'ignore'
+        else:
+          print 'ERROR: Unknown option "%s %s"' % (option_key, option_value)
+          sys.exit(1)
+
+      CHECKZONE_ARGS_DICT[option_key]['arg'] = checkzone_arg
+    else:
+      if( option_value == 'yes' ):
+        check_siblings = True
+
+  #if we want to check siblings, and if we are checking integrity,
+  #append '-sibling' to the -i arg of the CHECKZONE_ARGS_DICT
+  if( check_siblings and 
+      CHECKZONE_ARGS_DICT['check-integrity']['arg'] != 'none' ):
+    CHECKZONE_ARGS_DICT['check-integrity']['arg'] = '%s-sibling' % (
+      CHECKZONE_ARGS_DICT['check-integrity']['arg'])
+
+  #Transferring everything from CHECKZONE_ARGS_DICT to args list
+  for key in CHECKZONE_ARGS_DICT:
+    flag = CHECKZONE_ARGS_DICT[key]['flag']
+    arg = CHECKZONE_ARGS_DICT[key]['arg']
+
+    args.extend([flag, arg])
+
+  return args
 
 def main(args):
   """Collects command line arguments. Checks configs.
@@ -138,7 +253,6 @@ def main(args):
                     help='Only check config locally.', default=False)
 
   (globals()['options'], args) = parser.parse_args(args)
-
 
   if( os.path.exists(options.output_directory) ):
     shutil.rmtree(options.output_directory)
@@ -248,30 +362,77 @@ def main(args):
       print 'ERROR: %s' % checknamed_text
       sys.exit(1)
 
+  #Turns ['temp_dir/localhost/named.conf.a'] into ['temp_dir/localhost']
+  named_dirs = [os.path.dirname(fname) for fname in named_files]
 
-  zone_files = glob.glob('%s/*/*/*/*.db' % options.output_directory)
-  for current_file in zone_files:
-    file_handle = open(current_file, 'r')
+  #Check zones, one named_dir at a time
+  for named_dir in named_dirs:
+
+    #The named file for the zones we're about to check
+    named_file_name = os.path.join(named_dir, 'named.conf.a')
+
     try:
-      file_contents = file_handle.read().split('\n')
+      named_file_handle = open(named_file_name, 'r')
+      named_file_string = named_file_handle.read()
     finally:
-      file_handle.close()
-    for line in file_contents:
-      if( line.startswith('$ORIGIN') and len(line.split()) == 2 ):
-        origin = line.split()[1]
-        break
-    else:
-      print 'ERROR: Could not find $ORIGIN in "%s"' % current_file
-      sys.exit(1)
-    checkzone_text = fabric_api.local('%s %s %s' % (
-        options.named_checkzone, origin,
-                                    current_file), capture=True)
-    if( checkzone_text.split('\n')[1] == 'OK' ):
-      if( options.verbose ):
-        print 'Finished - %s' % current_file
-    else:
-      print 'ERROR: %s' % checkzone_text
-      sys.exit(1)
+      named_file_handle.close()
+
+    named_file_dict = iscpy.ParseISCString(named_file_string)
+    global_options_dict = named_file_dict['options']
+    zone_files = glob.glob('%s/*/*/*.db' % named_dir)
+
+    for current_file in zone_files:
+      #The view name that this current_file belongs to
+      view_name = os.path.dirname(current_file).split('/').pop()
+
+      #The zones that the view name determined above, governs
+      view_dict = named_file_dict['view "%s"' % view_name]
+
+      #Finding the zone dictionary in view_dict, that is the zone_dictionary
+      #for the zone represented by current_file
+      zone_dict = None
+      for zone in view_dict:
+        #Making sure we're checking a dictionary
+        if( type(view_dict[zone]) == type({}) ):
+          if( 'file' in view_dict[zone].keys() ):
+            if( view_dict[zone]['file'].strip('"') in current_file ):
+              zone_dict = view_dict[zone]
+              break
+      else:
+        print('Zone file %s is in the named directory %s, '
+             'but not in it\'s named.conf' % (current_file, named_dir))
+        sys.exit(1)
+
+      options_dict = MergeOptionsDicts(
+          global_options_dict, view_dict, zone_dict)
+      additional_args = GenerateAdditionalNamedCheckzoneArgs(options_dict)
+
+      file_handle = open(current_file, 'r')
+      try:
+        file_contents = file_handle.read().split('\n')
+      finally:
+        file_handle.close()
+      for line in file_contents:
+        if( line.startswith('$ORIGIN') and len(line.split()) == 2 ):
+          origin = line.split()[1]
+          break
+      else:
+        print 'ERROR: Could not find $ORIGIN in "%s"' % current_file
+        sys.exit(1)
+
+      additional_args_string = ' '.join(additional_args)
+      checkzone_command = ('%s %s %s %s' % (
+          options.named_checkzone, additional_args_string, 
+          origin, current_file))
+
+      checkzone_text = fabric_api.local(checkzone_command, capture=True)
+
+      if( checkzone_text.endswith('\nOK') ):
+        if( options.verbose ):
+          print 'Finished - %s' % current_file
+      else:
+        print 'ERROR: %s' % checkzone_text
+        sys.exit(1)
 
   if( options.verbose ):
     print '--------------------------------------------------------------------'
