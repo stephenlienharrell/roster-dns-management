@@ -954,6 +954,12 @@ class Core(object):
     try:
       self.db_instance.StartTransaction()
       try:
+        dns_server_set_assignments = self.db_instance.ListRow('dns_server_set_'
+            'assignments', assignment_dict)
+        if( len(dns_server_set_assignments) > 0 ):
+          raise errors.InvalidInputError('Dns server set assignment already '
+              'exists between server %s and set  %s.' % (dns_server_name,
+                                                         dns_server_set_name))
         self.db_instance.MakeRow('dns_server_set_assignments', assignment_dict)
       except:
         self.db_instance.EndTransaction(rollback=True)

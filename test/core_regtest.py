@@ -239,6 +239,8 @@ class TestCore(unittest.TestCase):
         u'dns2', u'set2'))
     self.assertEqual(self.core_instance.ListDnsServerSetAssignments(),
                      {u'set1': [u'dns1'], u'set2': [u'dns3']})
+    self.assertRaises(errors.InvalidInputError,
+        self.core_instance.MakeDnsServerSetAssignments, u'dns1', u'set1')
 
   def testUserGroupAssignmentsMakeRemoveList(self):
     self.assertEqual(self.core_instance.ListUserGroupAssignments(),

@@ -492,6 +492,9 @@ CREATE TABLE `dns_server_set_assignments` (
   `dns_server_set_assignments_dns_server_set_name` varchar(255) NOT NULL,
 
   PRIMARY KEY (`dns_server_set_assignments_id`),
+  UNIQUE KEY `dns_server_set_assignments_unique_1`
+    (`dns_server_set_assignments_dns_server_name`,
+     `dns_server_set_assignments_dns_server_set_name`),
 
   CONSTRAINT `dns_server_1` FOREIGN KEY 
     (`dns_server_set_assignments_dns_server_name`) REFERENCES `dns_servers` 
