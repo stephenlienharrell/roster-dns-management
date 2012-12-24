@@ -475,14 +475,10 @@ class TestCore(unittest.TestCase):
          u'test_view': {'zone_type': u'master', 'zone_options': '',
                         'zone_origin': u'test_zone.'}}})
 
-    self.assertTrue(self.core_instance.UpdateZone(
-                    u'not_test_zone', search_view_name=u'test_view',
-                    update_zone_type=u'slave'))
-
     self.assertEqual(self.core_instance.ListZones(), {u'not_test_zone':
         {u'any': {'zone_type': u'master', 'zone_options': '',
                   'zone_origin': u'test_zone.'},
-         u'test_view': {'zone_type': u'slave', 'zone_options': '',
+         u'test_view': {'zone_type': u'master', 'zone_options': '',
                         'zone_origin': u'test_zone.'}}})
     self.assertRaises(errors.CoreError, self.core_instance.MakeZone,
                       u'test_zone', u'wrongtype', u'test_zone.')
@@ -684,6 +680,8 @@ class TestCore(unittest.TestCase):
                                 u'university.edu.', view_name=u'test_view')
     self.core_instance.MakeZone(u'university.edu_rev', u'master',
                                 u'0.168.192.in-addr.arpa.')
+    self.core_instance.MakeZone(u'university_slave.edu', u'slave', 
+                                u'university_slave.edu.')
     self.assertFalse(self.core_instance.ListRecords())
     self.core_instance.MakeRecord(
         u'soa', u'soa1', u'university.edu',
@@ -693,6 +691,9 @@ class TestCore(unittest.TestCase):
          u'retry_seconds': 5, u'expiry_seconds': 5,
          u'minimum_seconds': 5}, view_name=u'test_view')
 
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+                       u'a', u'target', u'university_slave.edu',
+                      {u'assignment_ip': u'192.168.0.55'})
     self.assertRaises(errors.UnexpectedDataError, self.core_instance.MakeRecord,
                                   u'ns', u'test-target', u'university.edu',
                                   {u'name_server' : u'192.168.1.2'})

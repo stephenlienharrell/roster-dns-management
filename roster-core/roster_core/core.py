@@ -1748,15 +1748,13 @@ class Core(object):
     return row_count
 
   def UpdateZone(self, search_zone_name, search_view_name=None,
-                 update_zone_name=None, update_zone_options=None,
-                 update_zone_type=None):
+                 update_zone_name=None, update_zone_options=None):
     """Updates zone options or zone type of zone
 
     Inputs:
       search_zone_name: string of zone name
       search_view_name: string of view name
       update_zone_name: string of zone name
-      update_zone_type: string of zone type
       update_zone_options: string of zone options
                            valid zone options can be found here:
                              http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#zone_statement_grammar
@@ -1784,8 +1782,6 @@ class Core(object):
         'zone_view_assignments')
     update_zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
         update_zone_name)
-    update_zone_view_assignments_dict['zone_view_assignments_zone_type'] = (
-        update_zone_type)
     update_zone_view_assignments_dict['zone_options'] = iscpy.Serialize(update_zone_options)
 
     success = False
@@ -2639,15 +2635,35 @@ class Core(object):
                     'record_last_user': None}
     record_args_assignment_dict = self.db_instance.GetEmptyRowDict(
         'record_arguments_records_assignments')
+
+    zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
+        'zone_view_assignments')
+    zone_view_assignments_dict['zone_view_assignments_zone_name'] = zone_name
+    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = view_name
+
     success = False
     try:
       self.db_instance.StartTransaction()
       try:
+        zone_view_assignments = self.db_instance.ListRow('zone_view_assignments',
+            zone_view_assignments_dict)
+
+        if( len(zone_view_assignments) > 1 ):
+          raise errors.RecordError('Multiple zone-view assignments for '
+                                   'zone %s and view %s' % (zone_name, view_name))
+
+        zone_view_assignment = self.db_instance.ListRow('zone_view_assignments',
+            zone_view_assignments_dict)[0]
+        zone_type = zone_view_assignment['zone_view_assignments_zone_type']
+        if( zone_type != u'master' ):
+          raise errors.InvalidInputError('Cannot create records in %s zone %s' % (
+              zone_type, zone_name))
+
         if( record_type == 'cname' ):
           all_records = self.db_instance.ListRow('records', records_dict)
           if( len(all_records) > 0 ):
             raise errors.InvalidInputError('Record already exists with '
-                                     'target %s.' % target)
+                                           'target %s.' % target)
         records_dict['record_type'] = u'cname'
         cname_records = self.db_instance.ListRow(
             'records', records_dict)
