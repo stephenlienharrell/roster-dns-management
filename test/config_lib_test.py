@@ -86,7 +86,6 @@ class TestConfigLib(unittest.TestCase):
 
     self.core_instance.MakeACL(u'internal', u'127.0.0.1')
     self.core_instance.MakeView(u'external')
-    self.core_instance.MakeViewToACLAssignments(u'external', u'internal', 1)
     self.core_instance.MakeDnsServer(u'localhost', SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServer(u'255.254.253.252', SSH_USER, 
                                      BINDDIR, TESTDIR)
@@ -94,9 +93,11 @@ class TestConfigLib(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(u'localhost', u'master')
     self.core_instance.MakeDnsServerSetAssignments(u'255.254.253.252', u'master')
     self.core_instance.MakeDnsServerSetViewAssignments(u'external', 1, u'master')
+    self.core_instance.MakeViewToACLAssignments(u'external', u'master',
+                                                u'internal', 1)
     self.core_instance.MakeZone(u'forward_zone', u'master', u'university.lcl.', u'external')
     self.core_instance.MakeRecord(u'soa', u'@', u'forward_zone', {u'refresh_seconds':500,
-        u'expiry_seconds':500, u'name_server':u'ns.university.lcl.', u'minimum_seconds':500, 
+        u'expiry_seconds':500, u'name_server':u'ns.university.lcl.', u'minimum_seconds':500,
         u'retry_seconds': 500, u'serial_number':1000, u'admin_email': u'admin.localhost.lcl.'}, u'external')
     self.core_instance.MakeRecord(u'ns', u'@', u'forward_zone', {u'name_server':u'ns.university.lcl.'})
     self.core_instance.MakeRecord(u'a', u'ns', u'forward_zone', {u'assignment_ip':u'1.2.3.4'})

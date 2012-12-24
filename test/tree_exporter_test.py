@@ -1086,18 +1086,32 @@ class TestTreeExporter(unittest.TestCase):
     ## Make view ACL assignments
     view_acl_assignments_dict = {}
     view_acl_assignments_dict['view_acl_assignments_view_name'] = u'internal'
+    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
+        u'internal_dns')
     view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'secret'
     view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 0
     db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
     view_acl_assignments_dict['view_acl_assignments_view_name'] = u'internal'
+    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
+        u'internal_dns')
     view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'public'
     view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 0
     db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
     view_acl_assignments_dict['view_acl_assignments_view_name'] = u'external'
+    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
+        u'internal_dns')
+    view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'public'
+    view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 1
+    db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
+    view_acl_assignments_dict['view_acl_assignments_view_name'] = u'external'
+    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
+        u'external_dns')
     view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'public'
     view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 1
     db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
     view_acl_assignments_dict['view_acl_assignments_view_name'] = u'private'
+    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
+        u'private_dns')
     view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'secret'
     view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 1
     db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
@@ -1562,15 +1576,28 @@ class TestTreeExporter(unittest.TestCase):
          {'dns_server_set_name':u'private_dns'}))
 
     test_assignments = [{'view_acl_assignments_view_name': u'external',
+                         'view_acl_assignments_dns_server_set_name':
+                             u'internal_dns',
+                         'view_acl_assignments_acl_name': u'public',
+                         'view_acl_assignments_range_allowed': 1},
+                        {'view_acl_assignments_view_name': u'external',
+                         'view_acl_assignments_dns_server_set_name':
+                             u'external_dns',
                          'view_acl_assignments_acl_name': u'public',
                          'view_acl_assignments_range_allowed': 1},
                         {'view_acl_assignments_view_name': u'internal',
+                         'view_acl_assignments_dns_server_set_name':
+                             u'internal_dns',
                          'view_acl_assignments_acl_name': u'public',
                          'view_acl_assignments_range_allowed': 0},
                         {'view_acl_assignments_view_name': u'internal',
+                         'view_acl_assignments_dns_server_set_name':
+                             u'internal_dns',
                          'view_acl_assignments_acl_name': u'secret',
                          'view_acl_assignments_range_allowed': 0},
                         {'view_acl_assignments_view_name': u'private',
+                         'view_acl_assignments_dns_server_set_name':
+                             u'private_dns',
                          'view_acl_assignments_acl_name': u'secret',
                          'view_acl_assignments_range_allowed': 1}]
     self.assertTrue(len(raw_data[0]['view_acl_assignments']) ==

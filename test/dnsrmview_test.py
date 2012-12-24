@@ -128,7 +128,9 @@ class Testdnsmkview(unittest.TestCase):
   def testMakeView(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
+    self.core_instance.MakeDnsServerSet(u'test_set')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 0, u'test_set')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_set', u'acl1', 1)
     command = os.popen('python %s view -v test_view '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
@@ -141,8 +143,10 @@ class Testdnsmkview(unittest.TestCase):
   def testMakeViewAclAssignment(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
-    command = os.popen('python %s acl -v test_view -a acl1 '
+    self.core_instance.MakeDnsServerSet(u'test_set')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 0, u'test_set')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_set', u'acl1', 1)
+    command = os.popen('python %s acl -v test_view -a acl1 -e test_set '
                        '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
@@ -227,8 +231,10 @@ class Testdnsmkview(unittest.TestCase):
         'CLIENT ERROR: The -v/--view-name flag is required.\n')
     command.close()
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
-    command = os.popen('python %s acl -v test_view -a acl1 '
+    self.core_instance.MakeDnsServerSet(u'test_set')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 0, u'test_set')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_set', u'acl1', 1)
+    command = os.popen('python %s acl -v test_view -a acl1 -e test_set '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))

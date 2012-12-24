@@ -109,7 +109,8 @@ class TestDnsServerCheck(unittest.TestCase):
         'controls { inet 127.0.0.1 port 5555 allow{localhost;} keys {rndc-key;};};' % (os.getcwd())) # So we can test
 
     self.core_instance.MakeACL(u'test_acl', u'127.0.0.1')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'set1',
+                                                u'test_acl', 1)
 
     self.core_instance.MakeZone(u'sub.university.lcl', u'master',
                                 u'sub.university.lcl.', view_name=u'test_view')

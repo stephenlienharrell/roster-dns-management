@@ -221,7 +221,8 @@ class TestQueryCheck(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(
         u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
         'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'any', 1)
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'set1',
+                                                u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
 
     # Copy blank named.conf to start named with
@@ -346,7 +347,8 @@ class TestQueryCheck(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(
         u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
         'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
-    self.core_instance.MakeViewToACLAssignments(u'test_view1', u'any', 1)
+    self.core_instance.MakeViewToACLAssignments(u'test_view1', u'set1',
+                                                u'any', 1)
     #self.core_instance.MakeViewToACLAssignments(u'test_view2', u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
 

@@ -541,9 +541,10 @@ TABLES = {
     'views':             {'view_name': 'UnicodeString'},
 
     'view_acl_assignments':
-                         {'view_acl_assignments_acl_name': 'UnicodeString',
-                          'view_acl_assignments_view_name': 'UnicodeString',
-                          'view_acl_assignments_range_allowed': 'IntBool'},
+        {'view_acl_assignments_acl_name': 'UnicodeString',
+         'view_acl_assignments_dns_server_set_name': 'UnicodeString',
+         'view_acl_assignments_view_name': 'UnicodeString',
+         'view_acl_assignments_range_allowed': 'IntBool'},
 
     'view_dependency_assignments':
         {'view_dependency_assignments_view_name': 'UnicodeString',

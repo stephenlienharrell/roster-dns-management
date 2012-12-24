@@ -491,14 +491,17 @@ class BindTreeExport(object):
           view_name]['acls']:
         for view_acl_assignment in data['view_acl_assignments']:
           if( view_acl_assignment['view_acl_assignments_view_name'] ==
-              view_name ):
-            if( view_acl_assignment['view_acl_assignments_acl_name'] ==
-                acl_name ):
-              if( view_acl_assignment['view_acl_assignments_range_allowed'] ==
-                  True ):
-                clients.append('%s;' % acl_name)
-              else:
-                clients.append('!%s;' % acl_name)
+              view_name and
+              view_acl_assignment['view_acl_assignments_dns_server_set_name'] ==
+              dns_server_set and
+              view_acl_assignment['view_acl_assignments_acl_name'] ==
+              acl_name ):
+            found_acl = True
+            if( view_acl_assignment['view_acl_assignments_range_allowed'] ==
+                True ):
+              clients.append('%s;' % acl_name)
+            else:
+              clients.append('!%s;' % acl_name)
 
       if( clients == [] and found_acl ):
         clients = [u'any;']
@@ -554,7 +557,9 @@ class BindTreeExport(object):
     """
     acl_list = []
     for view_acl_assignment in data['view_acl_assignments']:
-      if( view_acl_assignment['view_acl_assignments_view_name'] == view ):
+      if( view_acl_assignment['view_acl_assignments_view_name'] == view and
+          view_acl_assignment['view_acl_assignments_acl_name'] not in
+              acl_list ):
         acl_list.append(view_acl_assignment['view_acl_assignments_acl_name'])
     return acl_list
 
@@ -570,6 +575,7 @@ class BindTreeExport(object):
       example:
         ({'view_acl_assignments': ({
           'view_acl_assignments_view_name': u'external',
+          'view_acl_assignments_dns_server_set_name': u'external_dns',
           'view_acl_assignments_acl_name': u'public',
           'view_acl_assignments_acl_range_allowed': 1})},
         { u'zones':

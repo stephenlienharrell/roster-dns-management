@@ -390,40 +390,48 @@ class TestCore(unittest.TestCase):
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeACL(u'test_acl', u'192.168.0/24')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
+    self.core_instance.MakeDnsServerSet(u'test_dns_server_set')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view',
+        1, u'test_dns_server_set')
+    self.core_instance.MakeViewToACLAssignments(u'test_view',
+        u'test_dns_server_set', u'test_acl', 1)
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
                      [{'view_name': u'test_view', 'acl_range_allowed': 1,
-                       'acl_name': u'test_acl'}])
+                       'acl_name': u'test_acl', 'dns_server_set_name': u'test_dns_server_set'}])
 
     self.core_instance.RemoveView(u'test_view')
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
 
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view',
+        1, u'test_dns_server_set')
+    self.core_instance.MakeViewToACLAssignments(u'test_view',
+        u'test_dns_server_set', u'test_acl', 1)
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
                      [{'view_name': u'test_view', 'acl_range_allowed': 1,
-                       'acl_name': u'test_acl'}])
+                       'acl_name': u'test_acl', 'dns_server_set_name': u'test_dns_server_set'}])
 
     self.core_instance.RemoveACL(u'test_acl')
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
 
     self.core_instance.MakeACL(u'test_acl', u'192.168.0/24')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'test_acl', 1)
+    self.core_instance.MakeViewToACLAssignments(u'test_view',
+        u'test_dns_server_set', u'test_acl', 1)
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
                      [{'view_name': u'test_view', 'acl_range_allowed': 1,
-                       'acl_name': u'test_acl'}])
+                       'acl_name': u'test_acl', 'dns_server_set_name': u'test_dns_server_set'}])
     self.core_instance.UpdateView(u'test_view', u'not_test_view')
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
                      [{'view_name': u'not_test_view', 'acl_range_allowed': 1,
-                       'acl_name': u'test_acl'}])
+                       'acl_name': u'test_acl', 'dns_server_set_name': u'test_dns_server_set'}])
     self.assertEqual(self.core_instance.ListViewToACLAssignments(),
                      [{'view_name': u'not_test_view', 'acl_range_allowed': 1,
-                       'acl_name': u'test_acl'}])
+                       'acl_name': u'test_acl', 'dns_server_set_name': u'test_dns_server_set'}])
     self.assertTrue(self.core_instance.RemoveViewToACLAssignments(
-                    u'not_test_view', u'test_acl', 1))
+                    u'not_test_view', u'test_dns_server_set', u'test_acl', 1))
     self.assertFalse(self.core_instance.ListViewToACLAssignments())
     self.assertFalse(self.core_instance.RemoveViewToACLAssignments(
-                     u'not_test_view', u'test_acl', 1))
+                     u'not_test_view', u'test_dns_server_set', u'test_acl', 1))
 
   def testZoneMakeRemoveListUpdate(self):
     self.core_instance.RemoveZone(u'cs.university.edu')

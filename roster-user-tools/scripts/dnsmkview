@@ -60,21 +60,20 @@ def main(args):
   usage = ('\n'
            '\n'
            'To make views:\n'
-           '\t%s view -v <view-name> -a <acl> \n'
-           '\t[--allow/--deny]\n'
+           '\t%s view -v <view-name>\n'
            '\n'
            'To make dns server set view assignments:\n'
            '\t%s dns_server_set -v <view-name> \n'
            '\t-e <dns-server-set> [-o <options>]\n'
            '\n'
-           'To make acl view assignments:\n'
-           '\t%s acl -v <view-name> -a <acl-name> '
+           'To make acl for dns server set view assignment:\n'
+           '\t%s acl -v <view-name> -e <dns-server-set> -a <acl-name> '
            '[--allow/--deny]\n'
            '\n'
            'To make view assignments:\n'
            '\t%s view_subset -v <view-superset-name>\n'
            '\t-V <view-subset-name>\n' % tuple(
-               [sys.argv[0] for _ in range(4)]))
+               [sys.argv[0] for _ in range(5)]))
 
   args_instance = Args(command,
       ['view', 'dns_server_set', 'acl', 'view_subset'], args, usage)
@@ -91,20 +90,6 @@ def main(args):
       kwargs={u'view_name': options.view_name})['core_return']
 
   if( command == 'view' ):
-    if( options.acl and options.allow is None ):
-      cli_common_lib.ArgumentError('Either --allow or --deny must be used.')
-    acls = roster_client_lib.RunFunction(
-        u'ListACLs', options.username, credfile=options.credfile,
-        credstring=options.credstring, server_name=options.server,
-        kwargs={u'acl_name': options.acl})['core_return']
-    if( acls == {} ):
-      cli_common_lib.DnsError(
-          'ACL "%s" does not exist.' % options.acl, 1)
-    else:
-      allowed = 0
-      if( options.allow ):
-        allowed = 1
-
     if( options.view_name in views ):
       cli_common_lib.DnsError(
           'View "%s" already exists.' % options.view_name, 1)
@@ -116,14 +101,6 @@ def main(args):
 
     if( not options.quiet ):
       print 'ADDED VIEW: view_name: %s' % options.view_name
-    roster_client_lib.RunFunction(
-        u'MakeViewToACLAssignments', options.username,
-        credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.view_name, options.acl,
-                                          allowed])
-    if( not options.quiet ):
-      print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s allowed: %s' % (
-          options.view_name, options.acl, allowed)
 
   elif( command == 'dns_server_set' ):
     if( options.view_name not in views ):
@@ -149,29 +126,53 @@ def main(args):
                options.view_order, options.options))
 
   elif( command == 'acl' ):
+    if( options.acl and options.allow is None ):
+      cli_common_lib.ArgumentError('Either --allow or --deny must be used.')
+    acls = roster_client_lib.RunFunction(
+        u'ListACLs', options.username, credfile=options.credfile,
+        credstring=options.credstring, server_name=options.server,
+        kwargs={u'acl_name': options.acl})['core_return']
+    if( acls == {} ):
+      cli_common_lib.DnsError(
+          'ACL "%s" does not exist.' % options.acl, 1)
+    else:
+      allowed = 0
+      if( options.allow ):
+        allowed = 1
+    dns_server_sets = roster_client_lib.RunFunction(
+        u'ListDnsServerSets', options.username,
+        credfile=options.credfile, credstring=options.credstring,
+        server_name=options.server)['core_return']
+    if( not options.dns_server_set in dns_server_sets ):
+      cli_common_lib.DnsError(
+          'Dns Server Set "%s" does not exist.' % options.dns_server_set, 1)
     if( options.view_name not in views ):
       cli_common_lib.DnsError(
           'View "%s" does not exist.' % options.view_name, 1)
+    view_dns_server_set_view_assignments = roster_client_lib.RunFunction(
+        u'ListDnsServerSetViewAssignments', options.username,
+        credfile=options.credfile, credstring=options.credstring,
+        server_name=options.server,
+        kwargs={'view_name': options.view_name,
+                'dns_server_set_name': options.dns_server_set})['core_return']
+    if( view_dns_server_set_view_assignments == {} ):
+      cli_common_lib.DnsError('No Dns Server Set to View Assignment.', 1)
     view_acl_assignments = roster_client_lib.RunFunction(
         u'ListViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
         server_name=options.server,
-        kwargs={'view_name': options.view_name, u'acl_name': options.acl})[
-            'core_return']
+        kwargs={'view_name': options.view_name, u'acl_name': options.acl,
+            'dns_server_set': options.dns_server_set})['core_return']
     if( view_acl_assignments ):
       cli_common_lib.DnsError('View ACL Assignment already exists.', 1)
-
-    allowed = 0
-    if( options.allow ):
-      allowed = 1
     roster_client_lib.RunFunction(
         u'MakeViewToACLAssignments', options.username,
         credfile=options.credfile, credstring=options.credstring,
-        server_name=options.server, args=[options.view_name, options.acl,
-                                          allowed])
+        server_name=options.server, args=[options.view_name,
+            options.dns_server_set, options.acl, allowed])
     if( not options.quiet ):
-      print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s' % (
-          options.view_name, options.acl)
+      print 'ADDED VIEW ACL ASSIGNMENT: view: %s acl: %s server_set: %s' % (
+          options.view_name, options.acl, options.dns_server_set)
 
   elif( command == 'view_subset' ):
     if( options.view_name not in views ):

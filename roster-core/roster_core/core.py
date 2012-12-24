@@ -1448,13 +1448,14 @@ class Core(object):
                                   current_args, success)
     return row_count
 
-  def ListViewToACLAssignments(self, view_name=None, acl_name=None,
-                               acl_range_allowed=None):
+  def ListViewToACLAssignments(self, view_name=None, dns_server_set=None,
+                               acl_name=None, acl_range_allowed=None):
     """Lists some or all view to acl assignments corresponding to the
     given args.
 
     Inputs:
       view_name: string of view name
+      dns_server_set: string of dns_server_set name
       acl_name: string of acl name
 
     Outputs:
@@ -1467,6 +1468,7 @@ class Core(object):
     self.user_instance.Authorize('ListViewToACLAssignments')
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
+        'view_acl_assignments_dns_server_set_name': dns_server_set,
         'view_acl_assignments_view_name': view_name,
         'view_acl_assignments_range_allowed': acl_range_allowed}
     self.db_instance.StartTransaction()
@@ -1481,6 +1483,8 @@ class Core(object):
       assignments_dict = {}
       assignments_dict['view_name'] = view_acl_assignment[
           'view_acl_assignments_view_name']
+      assignments_dict['dns_server_set_name'] = view_acl_assignment[
+          'view_acl_assignments_dns_server_set_name']
       assignments_dict['acl_name'] = view_acl_assignment[
           'view_acl_assignments_acl_name']
       assignments_dict['acl_range_allowed'] = view_acl_assignment[
@@ -1489,11 +1493,13 @@ class Core(object):
 
     return assignments_dicts
 
-  def MakeViewToACLAssignments(self, view_name, acl_name, acl_range_allowed):
+  def MakeViewToACLAssignments(self, view_name, dns_server_set_name,
+                               acl_name, acl_range_allowed):
     """Makes view to acl assignment
 
     Inputs:
       view_name: string of view name
+      dns_server_set_name: string of dns_server_set name
       acl_name: string of acl name
       acl_range_allowed: boolean to allow/disallow given acl range
     """
@@ -1502,6 +1508,7 @@ class Core(object):
 
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
+        'view_acl_assignments_dns_server_set_name': dns_server_set_name,
         'view_acl_assignments_view_name': view_name,
         'view_acl_assignments_range_allowed': acl_range_allowed}
     success = False
@@ -1518,11 +1525,13 @@ class Core(object):
       self.log_instance.LogAction(self.user_instance.user_name, function_name,
                                   current_args, success)
 
-  def RemoveViewToACLAssignments(self, view_name, acl_name, acl_range_allowed):
+  def RemoveViewToACLAssignments(self, view_name, dns_server_set_name,
+                                 acl_name, acl_range_allowed):
     """Removes view to acl assignment
 
     Inputs:
       view_name: string of view name
+      dns_server_set_name: string of dns_server_set name
       acl_name: string of acl name
 
     Outputs:
@@ -1533,6 +1542,7 @@ class Core(object):
 
     view_acl_assign_dict = {
         'view_acl_assignments_acl_name': acl_name,
+        'view_acl_assignments_dns_server_set_name': dns_server_set_name,
         'view_acl_assignments_view_name': view_name,
         'view_acl_assignments_range_allowed': acl_range_allowed}
     success = False

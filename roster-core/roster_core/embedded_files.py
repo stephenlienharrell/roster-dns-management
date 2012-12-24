@@ -136,12 +136,12 @@ DROP TABLE IF EXISTS `group_forward_permissions`;
 DROP TABLE IF EXISTS `forward_zone_permissions`;
 DROP TABLE IF EXISTS `user_group_assignments`;
 DROP TABLE IF EXISTS `groups`;
+DROP TABLE IF EXISTS `view_acl_assignments`;
 DROP TABLE IF EXISTS `dns_server_set_view_assignments`;
 DROP TABLE IF EXISTS `dns_server_set_assignments`;
 DROP TABLE IF EXISTS `dns_server_sets`;
 DROP TABLE IF EXISTS `dns_servers`;
 DROP TABLE IF EXISTS `view_dependency_assignments`;
-DROP TABLE IF EXISTS `view_acl_assignments`;
 DROP TABLE IF EXISTS `views`;
 DROP TABLE IF EXISTS `acl_ranges`;
 DROP TABLE IF EXISTS `acls`;
@@ -418,24 +418,6 @@ CREATE TABLE `views` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE `view_acl_assignments` (
-
-  `view_acl_assignments_id` mediumint unsigned NOT NULL auto_increment,
-  `view_acl_assignments_view_name` varchar(255) NOT NULL,
-  `view_acl_assignments_acl_name` varchar(255) NOT NULL,
-  `view_acl_assignments_range_allowed` boolean,
-
-  PRIMARY KEY (`view_acl_assignments_id`),
-  UNIQUE KEY `acl_name_view_name_1` (`view_acl_assignments_acl_name`,
-    `view_acl_assignments_view_name`),
-
-  CONSTRAINT `acl_name_2` FOREIGN KEY (`view_acl_assignments_acl_name`)
-    REFERENCES `acls` (`acl_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `view_name_2` FOREIGN KEY (`view_acl_assignments_view_name`)
-    REFERENCES `views` (`view_name`) ON DELETE CASCADE ON UPDATE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 
 CREATE TABLE `view_dependency_assignments` (
 
@@ -531,6 +513,32 @@ CREATE TABLE `dns_server_set_view_assignments` (
     (`dns_server_set_view_assignments_dns_server_set_name`) REFERENCES 
     `dns_server_sets` (`dns_server_set_name`) ON DELETE CASCADE 
     ON UPDATE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `view_acl_assignments` (
+
+  `view_acl_assignments_id` mediumint unsigned NOT NULL auto_increment,
+  `view_acl_assignments_view_name` varchar(255) NOT NULL,
+  `view_acl_assignments_dns_server_set_name` varchar(255) NOT NULL,
+  `view_acl_assignments_acl_name` varchar(255) NOT NULL,
+  `view_acl_assignments_range_allowed` boolean,
+
+  PRIMARY KEY (`view_acl_assignments_id`),
+  UNIQUE KEY `view_acl_assignments_unique_1`
+    (`view_acl_assignments_dns_server_set_name`,
+     `view_acl_assignments_view_name`, `view_acl_assignments_acl_name`),
+
+  CONSTRAINT `acl_name_2` FOREIGN KEY (`view_acl_assignments_acl_name`)
+    REFERENCES `acls` (`acl_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `view_name_dns_server_set_1` FOREIGN KEY
+    (`view_acl_assignments_dns_server_set_name`,
+     `view_acl_assignments_view_name`)
+    REFERENCES `dns_server_set_view_assignments`
+    (`dns_server_set_view_assignments_dns_server_set_name`,
+     `dns_server_set_view_assignments_view_name`)
+    ON DELETE CASCADE ON UPDATE CASCADE
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

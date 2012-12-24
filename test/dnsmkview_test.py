@@ -127,32 +127,33 @@ class Testdnsmkview(unittest.TestCase):
 
   def testMakeView(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
-    command = os.popen('python %s view -v test_view -a acl1 '
-                       '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
+    command = os.popen('python %s view -v test_view '
+                       '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_view\n'
-        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl1 allowed: 1\n')
+        'ADDED VIEW: view_name: test_view\n')
     command.close()
 
   def testMakeViewAclAssignment(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeACL(u'acl2', u'10.10.1.0/24')
     self.core_instance.MakeView(u'test_view')
-    command = os.popen('python %s acl -v test_view -a acl1 '
+    self.core_instance.MakeDnsServerSet(u'test_set')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 0, u'test_set')
+    command = os.popen('python %s acl -v test_view -a acl1 -e test_set '
                        '-c %s -u %s -p %s --config-file %s -s %s --allow' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl1\n')
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl1 server_set: test_set\n')
     command.close()
-    command = os.popen('python %s acl -v test_view -a acl2 --deny '
+    command = os.popen('python %s acl -v test_view -a acl2 --deny -e test_set '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl2\n')
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: acl2 server_set: test_set\n')
     command.close()
 
   def testMakeViewAssignment(self):
@@ -253,14 +254,14 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(), 
-        'CLIENT ERROR: The -a/--acl flag is required.\n')
-    command = os.popen('python %s view -v test_view --acl test_acl --allow '
+        'CLIENT ERROR: View "test_view" already exists.\n')
+    command = os.popen('python %s acl -v test_view --acl test_acl --allow -e server '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(), 'CLIENT ERROR: ACL "test_acl" does not '
                                      'exist.\n')
-    command = os.popen('python %s view -v test_view --acl test_acl '
+    command = os.popen('python %s acl -v test_view --acl test_acl -e server '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
