@@ -2631,7 +2631,7 @@ class Core(object):
                     'record_type': None,
                     'record_ttl': None,
                     'record_zone_name': zone_name,
-                    'record_view_dependency': view_name,
+                    'record_view_dependency': None,
                     'record_last_user': None}
     record_args_assignment_dict = self.db_instance.GetEmptyRowDict(
         'record_arguments_records_assignments')
@@ -2645,6 +2645,28 @@ class Core(object):
     try:
       self.db_instance.StartTransaction()
       try:
+        view_assignments = self.db_instance.ListRow(
+            'view_dependency_assignments',
+            {'view_dependency_assignments_view_name': None,
+             'view_dependency_assignments_view_dependency': view_name})
+        views = []
+        view_deps = []
+        for view_assignment in view_assignments:
+          if( view_assignment['view_dependency_assignments_view_name'] 
+              not in views ):
+            views.append(view_assignment['view_dependency_assignments_'
+                                         'view_name'])
+          view_assignments_dependencies = self.db_instance.ListRow(
+              'view_dependency_assignments',
+              {'view_dependency_assignments_view_name': view_assignment['view_'
+                  'dependency_assignments_view_name'],
+              'view_dependency_assignments_view_dependency': None})
+          for view in view_assignments_dependencies:
+            if( view['view_dependency_assignments_view_dependency'] 
+                not in view_deps ):
+              view_deps.append(view['view_dependency_'
+                                    'assignments_view_dependency'])
+
         zone_view_assignments = self.db_instance.ListRow('zone_view_assignments',
             zone_view_assignments_dict)
 
@@ -2662,14 +2684,20 @@ class Core(object):
         if( record_type == 'cname' ):
           all_records = self.db_instance.ListRow('records', records_dict)
           if( len(all_records) > 0 ):
+            for record in all_records:
+              if( record['record_view_dependency'] in view_deps ):
+                raise errors.InvalidInputError('Record already exists with '
+                                               'target %s.' % target)
             raise errors.InvalidInputError('Record already exists with '
                                            'target %s.' % target)
         records_dict['record_type'] = u'cname'
         cname_records = self.db_instance.ListRow(
             'records', records_dict)
         if( len(cname_records) > 0 ):
-          raise errors.InvalidInputError('CNAME already exists with '
-                                   'target %s.' % target)
+          for record in cname_records:
+            if( record['record_view_dependency'] in view_deps ):
+              raise errors.InvalidInputError('CNAME already exists with '
+                                             'target %s.' % target)
 
         records_dict['record_type'] = search_type
         raw_records = self.db_instance.ListRow(
@@ -2682,7 +2710,7 @@ class Core(object):
         records_dict['record_ttl'] = ttl
         records_dict['record_type'] = record_type
         records_dict['record_last_user'] = self.user_instance.GetUserName()
-
+        
         for record in current_records:
           for arg in record_args_dict:
             if( arg not in record ):
@@ -2690,9 +2718,12 @@ class Core(object):
             if( record_args_dict[arg] != record[arg] ):
               break
           else:
-            raise errors.InvalidInputError('Duplicate record found')
+            if( record['view_name'] in views or 
+                record['view_name'] in view_deps ):
+              raise errors.InvalidInputError('Duplicate record found')
 
         records_dict['record_type'] = record_type
+        records_dict['record_view_dependency'] = view_name
         record_id = self.db_instance.MakeRow('records', records_dict)
         for arg_name in record_args_dict:
           record_argument_assignments_dict = {

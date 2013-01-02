@@ -895,6 +895,34 @@ class TestCore(unittest.TestCase):
         u'ptr', u'5', u'university.edu_rev',
         {u'assignment_host': u'computer 5'}, ttl=10)
 
+    self.core_instance.MakeRecord(u'a', u'test_duplicate', u'university.edu',
+        {u'assignment_ip': u'192.168.1.26'}, view_name=u'test_view', ttl=583)
+    self.core_instance.MakeRecord(u'a', u'test_duplicate', u'university.edu',
+        {u'assignment_ip': u'192.168.1.126'}, view_name=u'any', ttl=583)
+    self.core_instance.MakeRecord(u'aaaa', u'test_duplicate', u'university.edu',
+        {u'assignment_ip': u'6fd1:0000:0000:0000:0000:0000:0120:0126'}, view_name=u'test_view', ttl=583)
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+        u'cname', u'test_duplicate', u'university.edu', {u'assignment_host': u'tester.university.edu.'},
+        view_name=u'test_view', ttl=400)
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+        u'cname', u'test_duplicate', u'university.edu', {u'assignment_host': u'tester.university.edu.'},
+        view_name=u'any', ttl=400)
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+        u'a', u'test_duplicate', u'university.edu', {u'assignment_ip': u'192.168.1.26'},
+        view_name=u'any', ttl=400)
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
+        u'a', u'test_duplicate', u'university.edu', {u'assignment_ip': u'192.168.1.26'},
+        view_name=u'test_view', ttl=400)
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord, 
+        u'aaaa', u'test_duplicate', u'university.edu',
+        {u'assignment_ip': u'6fd1:0000:0000:0000:0000:0000:0120:0126'}, view_name=u'test_view', ttl=583)
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord, 
+        u'aaaa', u'test_duplicate', u'university.edu',
+        {u'assignment_ip': u'6fd1:0000:0000:0000:0000:0000:0120:0126'}, view_name=u'any', ttl=583)
+    self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord, u'a',
+        u'test_duplicate', u'university.edu', {u'assignment_ip': u'192.168.1.126'},
+        view_name=u'test_view', ttl=400)
+
   def testSOA(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'university.edu', u'master',
