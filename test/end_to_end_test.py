@@ -451,10 +451,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'CLIENT ERROR: DNS Server "dns3" already exists.\n')
     command.close()
-    ## User tool: dnslsdnsservers
-    ## dnslsdnsservers dns_server
+    ## User tool: dnslsdnsserver
+    ## dnslsdnsserver dns_server
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsdnsservers '
+        'python ../roster-user-tools/scripts/dnslsdnsserver '
         'dns_server '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -539,10 +539,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'CLIENT ERROR: DNS server set "NONE" does not exist.\n')
     command.close()
-    ## User tool: dnslsdnsservers
-    ## dnslsdnsservers dns_server
+    ## User tool: dnslsdnsserver
+    ## dnslsdnsserver dns_server
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsdnsservers '
+        'python ../roster-user-tools/scripts/dnslsdnsserver '
         'dns_server '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -559,10 +559,10 @@ class TestComplete(unittest.TestCase):
     self.assertTrue(BINDDIR in output)
     self.assertTrue(TESTDIR in output)
     command.close()
-    ## User tool: dnslsdnsservers
-    ## dnslsdnsservers dns_server
+    ## User tool: dnslsdnsserver
+    ## dnslsdnsserver dns_server
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsdnsservers '
+        'python ../roster-user-tools/scripts/dnslsdnsserver '
         'dns_server_set '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -574,10 +574,10 @@ class TestComplete(unittest.TestCase):
         'set2\n'
         'set3\n\n')
     command.close()
-    ## User tool: dnslsdnsservers
-    ## dnslsdnsservers dns_server
+    ## User tool: dnslsdnsserver
+    ## dnslsdnsserver dns_server
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsdnsservers '
+        'python ../roster-user-tools/scripts/dnslsdnsserver '
         'assignment '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -651,10 +651,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'ADDED RESERVED_WORD: darn\n')
     command.close()
-    ## User tool: dnslsreservedwords
-    ## dnslsreservedwords
+    ## User tool: dnslsreservedword
+    ## dnslsreservedword
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsreservedwords '
+        'python ../roster-user-tools/scripts/dnslsreservedword '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -699,10 +699,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(output[2],
         ' (1062, "Duplicate entry \'testreserved\' for key 2"')
     command.close()
-    ## User tool: dnslsreservedwords
-    ## dnslsreservedwords
+    ## User tool: dnslsreservedword
+    ## dnslsreservedword
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsreservedwords '
+        'python ../roster-user-tools/scripts/dnslsreservedword '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -934,10 +934,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view3 dns_server_set: set3 view_order: 3 view_options: None\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews view
+    ## User tool: dnslsview
+    ## dnslsview view
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'view '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -951,10 +951,10 @@ class TestComplete(unittest.TestCase):
         'set3           test_view2 2\n'
         'set3           test_view3 3\n\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews dns_server_set
+    ## User tool: dnslsview
+    ## dnslsview dns_server_set
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'dns_server_set '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -968,10 +968,10 @@ class TestComplete(unittest.TestCase):
         'set3           test_view2 2\n'
         'set3           test_view3 3\n\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews dns_server_set
+    ## User tool: dnslsview
+    ## dnslsview dns_server_set
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'acl '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -984,10 +984,10 @@ class TestComplete(unittest.TestCase):
         'test_view2 test_acl2 True\n'
         'test_view3 test_acl  True\n\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews view_subset
+    ## User tool: dnslsview
+    ## dnslsview view_subset
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'view_subset '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1010,10 +1010,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'REMOVED VIEW TO ACL ASSIGNMENT: view_name: test_view3 acl_name: test_acl\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews dns_server_set
+    ## User tool: dnslsview
+    ## dnslsview dns_server_set
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'acl '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1036,10 +1036,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'REMOVED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view3 dns_server_set: set3\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews dns_server_set
+    ## User tool: dnslsview
+    ## dnslsview dns_server_set
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'dns_server_set '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1064,10 +1064,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'REMOVED VIEW view_name: view_name: test_view3 options None\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews view
+    ## User tool: dnslsview
+    ## dnslsview view
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'view '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1114,10 +1114,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
          'ADDED VIEW ASSIGNMENT: view_name: test_view view_subset: test_subview\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews view
+    ## User tool: dnslsview
+    ## dnslsview view
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'view '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1130,10 +1130,10 @@ class TestComplete(unittest.TestCase):
         'set2           test_view2 2\n'
         'set3           test_view2 2\n\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews dns_server_set
+    ## User tool: dnslsview
+    ## dnslsview dns_server_set
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'dns_server_set '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1146,10 +1146,10 @@ class TestComplete(unittest.TestCase):
         'set2           test_view2 2\n'
         'set3           test_view2 2\n\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews dns_server_set
+    ## User tool: dnslsview
+    ## dnslsview dns_server_set
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'acl '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1162,10 +1162,10 @@ class TestComplete(unittest.TestCase):
         'test_view2   test_acl2 True\n'
         'test_subview test_acl  True\n\n')
     command.close()
-    ## User tool: dnslsviews
-    ## dnslsviews view_subset
+    ## User tool: dnslsview
+    ## dnslsview view_subset
     command_string = (
-        'python ../roster-user-tools/scripts/dnslsviews '
+        'python ../roster-user-tools/scripts/dnslsview '
         'view_subset '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1389,10 +1389,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(output[2],
         ' (1062, "Duplicate entry \'test_zone6-test_view2_dep\' for key 2"')
     command.close()
-    ## User tool: dnslszones
-    ## dnslszones all
+    ## User tool: dnslszone
+    ## dnslszone all
     command_string = (
-        'python ../roster-user-tools/scripts/dnslszones '
+        'python ../roster-user-tools/scripts/dnslszone '
         'all '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1413,10 +1413,10 @@ class TestComplete(unittest.TestCase):
         'test_zone6 test_view2 master    6.168.192.in-addr.arpa.              192.168.6/24\n'
         'test_zone6 any        master    6.168.192.in-addr.arpa.              192.168.6/24\n\n')
     command.close()
-    ## User tool: dnslszones
-    ## dnslszones forward
+    ## User tool: dnslszone
+    ## dnslszone forward
     command_string = (
-        'python ../roster-user-tools/scripts/dnslszones '
+        'python ../roster-user-tools/scripts/dnslszone '
         'forward '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1431,10 +1431,10 @@ class TestComplete(unittest.TestCase):
         'test_zone5 test_view  master    5.168.192.in-addr.arpa.              -\n'
         'test_zone5 any        master    5.168.192.in-addr.arpa.              -\n\n')
     command.close()
-    ## User tool: dnslszones
-    ## dnslszones all
+    ## User tool: dnslszone
+    ## dnslszone all
     command_string = (
-        'python ../roster-user-tools/scripts/dnslszones '
+        'python ../roster-user-tools/scripts/dnslszone '
         'reverse '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -1489,10 +1489,10 @@ class TestComplete(unittest.TestCase):
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'CLIENT ERROR: View not found.\n')
-    ## User tool: dnslszones
-    ## dnslszones all
+    ## User tool: dnslszone
+    ## dnslszone all
     command_string = (
-        'python ../roster-user-tools/scripts/dnslszones '
+        'python ../roster-user-tools/scripts/dnslszone '
         'all '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))

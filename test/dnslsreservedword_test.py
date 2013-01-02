@@ -63,7 +63,7 @@ PASSWORD = u'test'
 KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
-EXEC = '../roster-user-tools/scripts/dnslsreservedwords'
+EXEC = '../roster-user-tools/scripts/dnslsreservedword'
 
 
 class options(object):

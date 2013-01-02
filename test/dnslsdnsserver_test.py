@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Regression test for dnslsdnsservers
+"""Regression test for dnslsdnsserver
 
 Make sure you are running this against a database that can be destroyed.
 
@@ -62,7 +62,7 @@ PASSWORD = u'test'
 KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
-EXEC='../roster-user-tools/scripts/dnslsdnsservers'
+EXEC='../roster-user-tools/scripts/dnslsdnsserver'
 
 class options(object):
   password = u'test'
@@ -87,7 +87,7 @@ class DaemonThread(threading.Thread):
                                                 CERTFILE)
     self.daemon_instance.Serve(port=self.port)
 
-class TestDnslsdnsservers(unittest.TestCase):
+class TestDnslsdnsserver(unittest.TestCase):
 
   def setUp(self):
 
