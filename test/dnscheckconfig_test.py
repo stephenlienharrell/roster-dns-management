@@ -71,7 +71,7 @@ FAKE_SERVER = u'fake_server'
 class TestCheckConfig(unittest.TestCase):
   def TarReplaceString(self, tar_file_name, member, string1, string2):
     tar_contents = {}
-    exported_file = tarfile.open(tar_file_name, 'r')
+    exported_file = tarfile.open(tar_file_name, 'r:bz2')
     for current_member in exported_file.getmembers():
       tar_contents[current_member.name] = exported_file.extractfile(
           current_member.name).read()
@@ -82,7 +82,7 @@ class TestCheckConfig(unittest.TestCase):
 
     tarred_file = tarred_file.replace(string1, string2)
 
-    exported_file = tarfile.open(tar_file_name, 'w')
+    exported_file = tarfile.open(tar_file_name, 'w:bz2')
     for current_member in tar_contents:
       info = tarfile.TarInfo(name=current_member)
       if( current_member == member ):
@@ -168,7 +168,6 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    self.config_lib_instance.UnTarDnsTree()
 
     output = subprocess.Popen(('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
         KEY_FILE, EXEC)).split(), stderr=subprocess.PIPE).stderr
@@ -214,8 +213,6 @@ class TestCheckConfig(unittest.TestCase):
         update_zone_options=u'check-names fail;\n')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    self.config_lib_instance.UnTarDnsTree()
-    self.assertTrue(os.path.isdir(self.root_config_dir))
 
     output = os.popen('python %s -s localhost --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -235,8 +232,6 @@ class TestCheckConfig(unittest.TestCase):
         update_zone_options=u'check-names ignore;\n')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    self.config_lib_instance.UnTarDnsTree()
-    self.assertTrue(os.path.isdir(self.root_config_dir))
 
     output = os.popen('python %s -s localhost --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -263,8 +258,6 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    self.config_lib_instance.UnTarDnsTree()
-    self.assertTrue(os.path.isdir(self.root_config_dir))
 
     output = os.popen('python %s -s localhost --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -291,7 +284,6 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    self.config_lib_instance.UnTarDnsTree()
 
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
@@ -319,14 +311,12 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
 
     self.tree_exporter_instance.ExportAllBindTrees()
-    self.config_lib_instance.UnTarDnsTree()
-    self.assertTrue(os.path.isdir(self.root_config_dir))
 
     self.TarReplaceString(
         self.tree_exporter_instance.tar_file_name,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aaq 192.168.1.104')
-    output = os.popen('python %s --just-local --config-file %s --' % (
+    output = os.popen('python %s --just-local --config-file %s' % (
         EXEC, CONFIG_FILE))
     # Replacement below to accomodate for later bind versions
     self.assertEqual(output.read().replace(

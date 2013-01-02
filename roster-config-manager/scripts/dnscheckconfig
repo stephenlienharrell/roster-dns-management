@@ -264,181 +264,183 @@ def main(args):
     print 'ERROR: Server flag "-s/--server" cannot be empty.'
     sys.exit(1)
 
-  # Check info file for server using config_lib
-  if( options.server ):
-    config_lib_instance = config_lib.ConfigLib(options.config_file)
-    config_lib_instance.CheckDnsServer(options.server, [])
+  config_lib_instance = config_lib.ConfigLib(options.config_file)
+  config_lib_instance.UnTarDnsTree(audit_log_id=options.id)
 
-  backup_directory = options.directory
-  if( not options.directory ):
-    backup_directory = server_config_file.get('exporter',
-                                              'backup_dir').rstrip('/')
-
-  temp_root_directory = server_config_file.get('exporter',
-                                               'root_config_dir').rstrip('/')
-  if( not os.path.exists(temp_root_directory) ):
-    os.makedirs(temp_root_directory)
-
-  err_files = []
   try:
-    file_list = os.listdir(backup_directory)
-  except OSError:
-    print ('ERROR: Directory %s does not exist or you '
-           'do not have permission.' % backup_directory)
-    sys.exit(1)
-  if( options.id ):
-    for file_name in file_list:
-      if( not file_name.startswith('dns_tree') ):
-        continue
-      try:
-        if( file_name.split('-')[1].split('.')[0] == options.id ):
-          tar = tarfile.open('%s/%s' % (backup_directory, file_name))
-          try:
-            tar.extractall()
-          finally:
-            tar.close()
-          shutil.move(temp_root_directory, options.output_directory)
-          break
-      except IndexError:
-        err_files.append(file_name)
-        continue
-        # If this error occurs, skip if correct numbered file is found.
+    backup_directory = options.directory
+    if( not options.directory ):
+      backup_directory = server_config_file.get('exporter',
+                                                'backup_dir').rstrip('/')
+
+    temp_root_directory = server_config_file.get('exporter',
+                                                 'root_config_dir').rstrip('/')
+    if( not os.path.exists(temp_root_directory) ):
+      os.makedirs(temp_root_directory)
+
+    err_files = []
+    try:
+      file_list = os.listdir(backup_directory)
+    except OSError:
+      print ('ERROR: Directory %s does not exist or you '
+             'do not have permission.' % backup_directory)
+      sys.exit(1)
+    if( options.id ):
+      for file_name in file_list:
+        if( not file_name.startswith('dns_tree') ):
+          continue
+        try:
+          if( file_name.split('-')[1].split('.')[0] == options.id ):
+            tar = tarfile.open('%s/%s' % (backup_directory, file_name))
+            try:
+              tar.extractall()
+            finally:
+              tar.close()
+            shutil.move(temp_root_directory, options.output_directory)
+            break
+        except IndexError:
+          err_files.append(file_name)
+          continue
+          # If this error occurs, skip if correct numbered file is found.
+      else:
+        # No break, could mean wrong filenames or nonexistant
+        if( err_files ):
+          print 'ERROR: Filenames: %s not named correctly' % ', '.join(err_files)
+        else:
+          print 'ERROR: ID %s not found.' % options.id
+        sys.exit(1)
     else:
-      # No break, could mean wrong filenames or nonexistant
+      newest = -1
+      new_file_name = None
+      for file_name in file_list:
+        if( not file_name.startswith('dns_tree') ):
+          continue
+        try:
+          id = int(file_name.split('-')[1].split('.')[0])
+        except IndexError:
+          err_files.append(file_name)
+          break
+          # If this error occurs, error out completely
+        if( id > newest ):
+          newest = id
+          new_file_name = file_name
+      file_name = new_file_name
       if( err_files ):
         print 'ERROR: Filenames: %s not named correctly' % ', '.join(err_files)
-      else:
-        print 'ERROR: ID %s not found.' % options.id
-      sys.exit(1)
-  else:
-    newest = -1
-    new_file_name = None
-    for file_name in file_list:
-      if( not file_name.startswith('dns_tree') ):
-        continue
-      try:
-        id = int(file_name.split('-')[1].split('.')[0])
-      except IndexError:
-        err_files.append(file_name)
-        break
-        # If this error occurs, error out completely
-      if( id > newest ):
-        newest = id
-        new_file_name = file_name
-    file_name = new_file_name
-    if( err_files ):
-      print 'ERROR: Filenames: %s not named correctly' % ', '.join(err_files)
-      sys.exit(1)
-    if( new_file_name is None ):
-      print ('ERROR: An unknown error has occurred trying to find the newest '
-             'file.')
-      sys.exit(1)
-    tar = tarfile.open('%s/%s' % (backup_directory, file_name))
-    try:
-      tar.extractall(temp_root_directory)
-    finally:
-      tar.close()
-    shutil.move(temp_root_directory, options.output_directory)
-
-  if( not os.path.exists(options.named_checkzone) ):
-    print 'ERROR: Could not find "named-checkzone" binary.'
-    sys.exit(1)
-  if( not os.path.exists(options.named_checkconf) ):
-    print 'ERROR: Could not find "named-checkconf" binary.'
-    sys.exit(1)
-
-  fabric_state.output['running'] = False
-  fabric_state.output['warnings'] = False
-  fabric_api.env.warn_only = True
-  named_files = glob.glob('%s/*/named.conf.a' % options.output_directory)
-  for current_file in named_files:
-    ChangeNamedDirectory(current_file, options.output_directory)
-    checknamed_text = fabric_api.local('%s %s' % (
-        options.named_checkconf, current_file), capture=True)
-    if( checknamed_text == '' ):
-      if( options.verbose ):
-        print 'Finished - %s' % current_file
-    else:
-      print 'ERROR: %s' % checknamed_text
-      sys.exit(1)
-
-  #Turns ['temp_dir/localhost/named.conf.a'] into ['temp_dir/localhost']
-  named_dirs = [os.path.dirname(fname) for fname in named_files]
-
-  #Check zones, one named_dir at a time
-  for named_dir in named_dirs:
-
-    #The named file for the zones we're about to check
-    named_file_name = os.path.join(named_dir, 'named.conf.a')
-
-    try:
-      named_file_handle = open(named_file_name, 'r')
-      named_file_string = named_file_handle.read()
-    finally:
-      named_file_handle.close()
-
-    named_file_dict = iscpy.ParseISCString(named_file_string)
-    global_options_dict = named_file_dict['options']
-    zone_files = glob.glob('%s/*/*/*.db' % named_dir)
-
-    for current_file in zone_files:
-      #The view name that this current_file belongs to
-      view_name = os.path.dirname(current_file).split('/').pop()
-
-      #The zones that the view name determined above, governs
-      view_dict = named_file_dict['view "%s"' % view_name]
-
-      #Finding the zone dictionary in view_dict, that is the zone_dictionary
-      #for the zone represented by current_file
-      zone_dict = None
-      for zone in view_dict:
-        #Making sure we're checking a dictionary
-        if( type(view_dict[zone]) == type({}) ):
-          if( 'file' in view_dict[zone].keys() ):
-            if( view_dict[zone]['file'].strip('"') in current_file ):
-              zone_dict = view_dict[zone]
-              break
-      else:
-        print('Zone file %s is in the named directory %s, '
-             'but not in it\'s named.conf' % (current_file, named_dir))
         sys.exit(1)
-
-      options_dict = MergeOptionsDicts(
-          global_options_dict, view_dict, zone_dict)
-      additional_args = GenerateAdditionalNamedCheckzoneArgs(options_dict)
-
-      file_handle = open(current_file, 'r')
+      if( new_file_name is None ):
+        print ('ERROR: An unknown error has occurred trying to find the newest '
+               'file.')
+        sys.exit(1)
+      tar = tarfile.open('%s/%s' % (backup_directory, file_name))
       try:
-        file_contents = file_handle.read().split('\n')
+        tar.extractall(temp_root_directory)
       finally:
-        file_handle.close()
-      for line in file_contents:
-        if( line.startswith('$ORIGIN') and len(line.split()) == 2 ):
-          origin = line.split()[1]
-          break
-      else:
-        print 'ERROR: Could not find $ORIGIN in "%s"' % current_file
-        sys.exit(1)
+        tar.close()
+      shutil.move(temp_root_directory, options.output_directory)
 
-      additional_args_string = ' '.join(additional_args)
-      checkzone_command = ('%s %s %s %s' % (
-          options.named_checkzone, additional_args_string, 
-          origin, current_file))
+    if( not os.path.exists(options.named_checkzone) ):
+      print 'ERROR: Could not find "named-checkzone" binary.'
+      sys.exit(1)
+    if( not os.path.exists(options.named_checkconf) ):
+      print 'ERROR: Could not find "named-checkconf" binary.'
+      sys.exit(1)
 
-      checkzone_text = fabric_api.local(checkzone_command, capture=True)
-
-      if( checkzone_text.endswith('\nOK') ):
+    fabric_state.output['running'] = False
+    fabric_state.output['warnings'] = False
+    fabric_api.env.warn_only = True
+    named_files = glob.glob('%s/*/named.conf.a' % options.output_directory)
+    for current_file in named_files:
+      ChangeNamedDirectory(current_file, options.output_directory)
+      checknamed_text = fabric_api.local('%s %s' % (
+          options.named_checkconf, current_file), capture=True)
+      if( checknamed_text == '' ):
         if( options.verbose ):
           print 'Finished - %s' % current_file
       else:
-        print 'ERROR: %s' % checkzone_text
+        print 'ERROR: %s' % checknamed_text
         sys.exit(1)
 
-  if( options.verbose ):
-    print '--------------------------------------------------------------------'
-    print 'Checked %s named.conf file(s) and %s zone file(s)\n' % (
-        len(named_files), len(zone_files))
-    print 'All checks successful'
+    #Turns ['temp_dir/localhost/named.conf.a'] into ['temp_dir/localhost']
+    named_dirs = [os.path.dirname(fname) for fname in named_files]
+
+    #Check zones, one named_dir at a time
+    for named_dir in named_dirs:
+
+      #The named file for the zones we're about to check
+      named_file_name = os.path.join(named_dir, 'named.conf.a')
+
+      try:
+        named_file_handle = open(named_file_name, 'r')
+        named_file_string = named_file_handle.read()
+      finally:
+        named_file_handle.close()
+
+      named_file_dict = iscpy.ParseISCString(named_file_string)
+      global_options_dict = named_file_dict['options']
+      zone_files = glob.glob('%s/*/*/*.db' % named_dir)
+
+      for current_file in zone_files:
+        #The view name that this current_file belongs to
+        view_name = os.path.dirname(current_file).split('/').pop()
+
+        #The zones that the view name determined above, governs
+        view_dict = named_file_dict['view "%s"' % view_name]
+
+        #Finding the zone dictionary in view_dict, that is the zone_dictionary
+        #for the zone represented by current_file
+        zone_dict = None
+        for zone in view_dict:
+          #Making sure we're checking a dictionary
+          if( type(view_dict[zone]) == type({}) ):
+            if( 'file' in view_dict[zone].keys() ):
+              if( view_dict[zone]['file'].strip('"') in current_file ):
+                zone_dict = view_dict[zone]
+                break
+        else:
+          print('Zone file %s is in the named directory %s, '
+               'but not in it\'s named.conf' % (current_file, named_dir))
+          sys.exit(1)
+
+        options_dict = MergeOptionsDicts(
+            global_options_dict, view_dict, zone_dict)
+        additional_args = GenerateAdditionalNamedCheckzoneArgs(options_dict)
+
+        file_handle = open(current_file, 'r')
+        try:
+          file_contents = file_handle.read().split('\n')
+        finally:
+          file_handle.close()
+        for line in file_contents:
+          if( line.startswith('$ORIGIN') and len(line.split()) == 2 ):
+            origin = line.split()[1]
+            break
+        else:
+          print 'ERROR: Could not find $ORIGIN in "%s"' % current_file
+          sys.exit(1)
+
+        additional_args_string = ' '.join(additional_args)
+        checkzone_command = ('%s %s %s %s' % (
+            options.named_checkzone, additional_args_string, 
+            origin, current_file))
+
+        checkzone_text = fabric_api.local(checkzone_command, capture=True)
+
+        if( checkzone_text.endswith('\nOK') ):
+          if( options.verbose ):
+            print 'Finished - %s' % current_file
+        else:
+          print 'ERROR: %s' % checkzone_text
+          sys.exit(1)
+
+    if( options.verbose ):
+      print '--------------------------------------------------------------------'
+      print 'Checked %s named.conf file(s) and %s zone file(s)\n' % (
+          len(named_files), len(zone_files))
+      print 'All checks successful'
+  finally:
+    if( os.path.exists(config_lib_instance.root_config_dir) ):
+      shutil.rmtree(config_lib_instance.root_config_dir)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
