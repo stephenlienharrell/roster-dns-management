@@ -258,7 +258,7 @@ def main(args):
     output, tree_return = RunCommand(' '.join(dnstreeexport_array), debug)
 
     if( tree_return != 0 ):
-      raise ConfigError('dnstreeexport has failed with error\n%s' % output)
+      raise errors.ConfigError('dnstreeexport has failed with error\n%s' % output)
    
     if( options.id is None ):
       options.id, filename = config_lib_instance.FindNewestDnsTreeFilename()

@@ -184,6 +184,15 @@ class TestCheckConfig(unittest.TestCase):
       os.remove(self.lockfile)
 
   def testCheckConfig(self):
+    output = os.popen('python %s -f --config-file %s '
+    '--ssh-id %s --rndc-port %s --rndc-key %s --rndc-conf %s' % (
+        EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY,
+        RNDC_CONF))
+    lines = output.read().split('\n')
+    output.close()
+    self.assertTrue('[localhost] local: dnstreeexport -c test_data/roster.conf.real --force' in lines)
+    self.assertTrue('ERROR: No dns server sets found.' in lines)
+
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'sub.university.lcl', u'master',
                                 u'sub.university.lcl.', view_name=u'test_view')
@@ -204,7 +213,7 @@ class TestCheckConfig(unittest.TestCase):
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
         u'set1', u'include "%s"; options { pid-file "test_data/named.pid"; };\ncontrols { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (RNDC_KEY, self.rndc_port)) # So we can test
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'any', 1)
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'set1', u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
     # Copy blank named.conf to start named with
     if( not os.path.exists(BINDDIR) ):
@@ -237,7 +246,7 @@ class TestCheckConfig(unittest.TestCase):
         RNDC_CONF))
     lines = output.read().split('\n')
     output.close()
-
+    
     self.assertTrue('[localhost] local: dnstreeexport -c test_data/roster.conf.real --force' in lines)
     self.assertTrue('[localhost] local: dnscheckconfig -i 14 --config-file test_data/roster.conf.real -d test_data/backup_dir -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s localhost' in lines)
     self.assertTrue('Finished - temp_dir/%s/named.conf.a' % TEST_DNS_SERVER in lines)
