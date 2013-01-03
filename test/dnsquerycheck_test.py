@@ -301,7 +301,6 @@ class TestQueryCheck(unittest.TestCase):
 
   def testQueryCheck(self):
     self.core_instance.MakeView(u'test_view1')
-    #self.core_instance.MakeView(u'test_view2')
     self.core_instance.MakeZone(u'forward_zone', u'master',
                                 u'sub.university.lcl.', view_name=u'test_view1')
     self.core_instance.MakeZone(u'reverse_zone', u'master',
@@ -343,15 +342,12 @@ class TestQueryCheck(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view1', 1, u'set1')
-    #self.core_instance.MakeDnsServerSetViewAssignments(u'test_view2', 2, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
         u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
         'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
     self.core_instance.MakeViewToACLAssignments(u'test_view1', u'set1',
                                                 u'any', 1)
-    #self.core_instance.MakeViewToACLAssignments(u'test_view2', u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
-
 
     # Copy blank named.conf to start named with
     shutil.copyfile('test_data/named.blank.conf', 
@@ -365,7 +361,6 @@ class TestQueryCheck(unittest.TestCase):
     named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
-    #named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
 
     # Start named
     out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %snamed.conf' % (

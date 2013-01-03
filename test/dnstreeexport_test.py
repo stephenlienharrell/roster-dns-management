@@ -1072,18 +1072,21 @@ class TestDnsMkHost(unittest.TestCase):
     view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'secret'
     view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 1
     db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
+
     view_acl_assignments_dict['view_acl_assignments_view_name'] = u'internal'
     view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
         u'internal_dns')
     view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'public'
     view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 0
     db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
+
     view_acl_assignments_dict['view_acl_assignments_view_name'] = u'external'
     view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
         u'internal_dns')
     view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'public'
     view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 1
     db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
+
     view_acl_assignments_dict['view_acl_assignments_view_name'] = u'private'
     view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
         u'private_dns')
@@ -1240,7 +1243,7 @@ class TestDnsMkHost(unittest.TestCase):
         '\n'
         'view "external" {\n'
         '\tmatch-clients { \n'
-        '\t\tpublic;\n'
+        '\t\t\n'
         '\t };\n'
         '\trecursion no;\n'
         '\tzone "." {\n'

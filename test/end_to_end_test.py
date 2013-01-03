@@ -833,16 +833,15 @@ class TestComplete(unittest.TestCase):
     command.close()
 
     ## User tool: dnsmkview
-    ## dnsmkview view -v test_view --acl test_acl
+    ## dnsmkview view -v test_view
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'view -v test_view --acl test_acl --allow '
+        'view -v test_view '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_view\n'
-        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: test_acl allowed: 1\n')
+        'ADDED VIEW: view_name: test_view\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview dns_server_set -v test_view -e set1 -r 1
@@ -856,27 +855,26 @@ class TestComplete(unittest.TestCase):
         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view dns_server_set: set1 view_order: 1 view_options: None\n')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview view -v test_view2 --acl test_acl
+    ## dnsmkview acl -v test_view -a test_acl
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'view -v test_view2 --acl test_acl --allow '
+        'acl -v test_view -a test_acl --allow '
+        '-e set1 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-         'ADDED VIEW: view_name: test_view2\n'
-         'ADDED VIEW ACL ASSIGNMENT: view: test_view2 acl: test_acl allowed: 1\n')
-    command.close()
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: test_acl server_set: set1\n')
     ## User tool: dnsmkview
-    ## dnsmkview acl -v test_view2 -a test_acl2
+    ## dnsmkview view -v test_view2
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'acl -v test_view2 -a test_acl2 --allow '
+        'view -v test_view2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED VIEW ACL ASSIGNMENT: view: test_view2 acl: test_acl2\n')
+         'ADDED VIEW: view_name: test_view2\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview dns_server_set -v test_view2 -e set1 -r 2
@@ -888,6 +886,17 @@ class TestComplete(unittest.TestCase):
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set1 view_order: 2 view_options: None\n')
+    ## User tool: dnsmkview
+    ## dnsmkview acl -v test_view2 -a test_acl2
+    command_string = (
+        'python ../roster-user-tools/scripts/dnsmkview '
+        'acl -v test_view2 -a test_acl2 --allow '
+        '-e set1 '
+        '-u %s -p %s -s %s --config-file %s ' % (
+            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
+    command = os.popen(command_string)
+    self.assertEqual(command.read(),
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view2 acl: test_acl2 server_set: set1\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview dns_server_set -v test_view2 -e set2 -r 2
@@ -901,6 +910,18 @@ class TestComplete(unittest.TestCase):
         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set2 view_order: 2 view_options: None\n')
     command.close()
     ## User tool: dnsmkview
+    ## dnsmkview acl -v test_view2 -a test_acl
+    command_string = (
+        'python ../roster-user-tools/scripts/dnsmkview '
+        'acl -v test_view2 -a test_acl --allow '
+        '-e set2 '
+        '-u %s -p %s -s %s --config-file %s ' % (
+            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
+    command = os.popen(command_string)
+    self.assertEqual(command.read(),
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view2 acl: test_acl server_set: set2\n')
+    command.close()
+    ## User tool: dnsmkview
     ## dnsmkview dns_server_set -v test_view2 -e set3 -r 2
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
@@ -912,16 +933,15 @@ class TestComplete(unittest.TestCase):
         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view2 dns_server_set: set3 view_order: 2 view_options: None\n')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview view -v test_view3 --acl test_acl
+    ## dnsmkview view -v test_view3
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'view -v test_view3 --acl test_acl --allow '
+        'view -v test_view3 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_view3\n'
-        'ADDED VIEW ACL ASSIGNMENT: view: test_view3 acl: test_acl allowed: 1\n')
+        'ADDED VIEW: view_name: test_view3\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview dns_server_set -v test_view3 -e set3 -r 3
@@ -933,6 +953,18 @@ class TestComplete(unittest.TestCase):
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view3 dns_server_set: set3 view_order: 3 view_options: None\n')
+    command.close()
+    ## User tool: dnsmkview
+    ## dnsmkview acl -v test_view3 -a test_acl -e set3
+    command_string = (
+        'python ../roster-user-tools/scripts/dnsmkview '
+        'acl -v test_view3 -a test_acl --allow '
+        '-e set3 '
+        '-u %s -p %s -s %s --config-file %s ' % (
+            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
+    command = os.popen(command_string)
+    self.assertEqual(command.read(),
+        'ADDED VIEW ACL ASSIGNMENT: view: test_view3 acl: test_acl server_set: set3\n')
     command.close()
     ## User tool: dnslsview
     ## dnslsview view
@@ -980,8 +1012,8 @@ class TestComplete(unittest.TestCase):
         'view_name  acl_name  acl_range_allowed\n'
         '--------------------------------------\n'
         'test_view  test_acl  True\n'
-        'test_view2 test_acl  True\n'
         'test_view2 test_acl2 True\n'
+        'test_view2 test_acl  True\n'
         'test_view3 test_acl  True\n\n')
     command.close()
     ## User tool: dnslsview
@@ -1003,7 +1035,7 @@ class TestComplete(unittest.TestCase):
     ## dnsrmview dns_server_set -v test_view3 -e set3
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmview '
-        'acl -v test_view3 -a test_acl --allow '
+        'acl -v test_view3 -a test_acl --allow -e set3 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1014,16 +1046,18 @@ class TestComplete(unittest.TestCase):
     ## dnslsview dns_server_set
     command_string = (
         'python ../roster-user-tools/scripts/dnslsview '
-        'acl '
+        'dns_server_set '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'view_name  acl_name  acl_range_allowed\n'
-        '--------------------------------------\n'
-        'test_view  test_acl  True\n'
-        'test_view2 test_acl  True\n'
-        'test_view2 test_acl2 True\n\n')
+        'dns_server_set view_name  view_order view_options\n'
+        '-------------------------------------------------\n'
+        'set1           test_view  1\n'
+        'set1           test_view2 2\n'
+        'set2           test_view2 2\n'
+        'set3           test_view2 2\n'
+        'set3           test_view3 3\n\n')
     command.close()
     ## User tool: dnsrmview
     ## dnsrmview dns_server_set -v test_view3 -e set3
@@ -1081,16 +1115,15 @@ class TestComplete(unittest.TestCase):
         'set3           test_view2 2\n\n')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview view -v test_view --acl test_acl
+    ## dnsmkview view -v test_view '
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'view -v test_subview --acl test_acl --allow '
+        'view -v test_subview '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_subview\n'
-        'ADDED VIEW ACL ASSIGNMENT: view: test_subview acl: test_acl allowed: 1\n')
+        'ADDED VIEW: view_name: test_subview\n')
     command.close()
     ## User tool: dnsrmview
     ## dnsrmview view -v test_subview -V 
@@ -1147,7 +1180,7 @@ class TestComplete(unittest.TestCase):
         'set3           test_view2 2\n\n')
     command.close()
     ## User tool: dnslsview
-    ## dnslsview dns_server_set
+    ## dnslsview acl
     command_string = (
         'python ../roster-user-tools/scripts/dnslsview '
         'acl '
@@ -1155,12 +1188,11 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'view_name    acl_name  acl_range_allowed\n'
-        '----------------------------------------\n'
-        'test_view    test_acl  True\n'
-        'test_view2   test_acl  True\n'
-        'test_view2   test_acl2 True\n'
-        'test_subview test_acl  True\n\n')
+        'view_name  acl_name  acl_range_allowed\n'
+        '--------------------------------------\n'
+        'test_view  test_acl  True\n'
+        'test_view2 test_acl2 True\n'
+        'test_view2 test_acl  True\n\n')
     command.close()
     ## User tool: dnslsview
     ## dnslsview view_subset
@@ -1211,10 +1243,10 @@ class TestComplete(unittest.TestCase):
         'CLIENT ERROR: Dns Server Set "NONE" does not exist.\n')
     command.close()
     ## User tool: dnsrmview
-    ## dnsrmview acl -v NONE -a test_acl
+    ## dnsrmview acl -e set1 -v NONE -a test_acl
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmview '
-        'acl -v NONE -a test_acl '
+        'acl -e set1 -v NONE -a test_acl '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1222,10 +1254,10 @@ class TestComplete(unittest.TestCase):
         'CLIENT ERROR: View "NONE" does not exist.\n')
     command.close()
     ## User tool: dnsrmview
-    ## dnsrmview acl -v test_view -a NONE
+    ## dnsrmview acl -e set1 -v test_view -a NONE
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmview '
-        'acl -v test_view -a NONE --allow '
+        'acl -e set1 -v test_view -a NONE --allow '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1233,10 +1265,10 @@ class TestComplete(unittest.TestCase):
         'CLIENT ERROR: View ACL Assignment does not exist.\n')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview view -v test_view2 --acl test_acl
+    ## dnsmkview view -v test_view2
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'view -v test_view2 --acl test_acl --allow '
+        'view -v test_view2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -1257,11 +1289,11 @@ class TestComplete(unittest.TestCase):
         ' (1062, "Duplicate entry \'set1-test_view2\' for key 2"')
     command.close()
     ## User tool: dnsmkview
-    ## dnsmkview acl -v test_view2 -a test_acl
+    ## dnsmkview acl -v test_view -a test_acl
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkview '
-        'acl -v test_view2 --acl test_acl --allow '
-        '-u %s -p %s -s %s --config-file %s ' % (
+        'acl -e set1 -v test_view --acl test_acl --allow '
+        '= -u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
@@ -3013,7 +3045,6 @@ class TestComplete(unittest.TestCase):
         'Maintenance mode is OFF\n')
     command.close()
     ## dnstreeexport -f --config-file ./completeconfig.conf
-    os.system('rm -rf temp_dir')
     command_string = (
         'python ../roster-config-manager/scripts/dnstreeexport '
         ' -f --config-file %s ' % (
@@ -3029,6 +3060,7 @@ class TestComplete(unittest.TestCase):
     tarfilename = origtarfile[0].split('/')
     tarfilename = tarfilename[2].split('-')
     tarfilename = tarfilename[1].split('.')
+
     ## dnscheckconfig -d <dir> --config-file ./completeconfig.conf
     command_string = (
         'python ../roster-config-manager/scripts/dnscheckconfig '
@@ -3039,6 +3071,7 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         '')
     command.close()
+
     ## dnscheckconfig -d <dir> --config-file ./completeconfig.conf
     command_string = (
         'python ../roster-config-manager/scripts/dnscheckconfig '
@@ -3104,9 +3137,9 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         '')
     command.close()
-    os.rename('%s/full_database_dump-145.bz2' % (self.backup_dir),
+    os.rename('%s/full_database_dump-144.bz2' % (self.backup_dir),
                                 '%s/origdb.bz2' % self.backup_dir)
-    dbdump = glob.glob('%s/*-145.*' % self.backup_dir)
+    dbdump = glob.glob('%s/*-144.*' % self.backup_dir)
     for db in dbdump:
       if( os.path.exists(db) ):
         os.remove(db)
@@ -3114,16 +3147,16 @@ class TestComplete(unittest.TestCase):
     command_string = (
         'python ../roster-config-manager/scripts/dnsrecover '
         ' -i %s '
-        '-u %s --config-file %s ' % (145,
+        '-u %s --config-file %s ' % (144,
             USERNAME, self.userconfig))
     command = os.popen(command_string)
     time.sleep(1)
     self.assertEqual(command.read(),
-        'Loading database from backup with ID 142\n'
-        'Replaying action with id 143: MakeZone\n'
+        'Loading database from backup with ID 141\n'
+        'Replaying action with id 142: MakeZone\n'
         'with arguments: [u\'sub.university.edu\', '
         'u\'master\', u\'sub.university.edu.\', u\'test_view\', None, True]\n'
-        'Replaying action with id 144: ProcessRecordsBatch\n'
+        'Replaying action with id 143: ProcessRecordsBatch\n'
         'with arguments: [[], [{u\'record_arguments\': '
         '{u\'refresh_seconds\': 10800L, u\'expiry_seconds\': '
         '3600000L, u\'name_server\': u\'ns.university.lcl.\', '
@@ -3227,7 +3260,7 @@ class TestComplete(unittest.TestCase):
     origdb.close()
     os.remove('%s/origdb.bz2' % self.backup_dir)
   
-    newdb = bz2.BZ2File('%s/full_database_dump-148.bz2' % self.backup_dir)
+    newdb = bz2.BZ2File('%s/full_database_dump-147.bz2' % self.backup_dir)
     newdump = newdb.read()
     newdump = re.sub(
         '[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}',
@@ -3237,7 +3270,7 @@ class TestComplete(unittest.TestCase):
     for line in newdump.split('\n'):
       if( line.startswith('INSERT INTO audit_log') ):
         number = int(line.split()[5].strip('(').strip(',').strip())
-        if( number < 145 ):
+        if( number < 144 ):
           newdump_list.append(line)
       else:
         newdump_list.append(line)

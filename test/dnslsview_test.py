@@ -179,7 +179,9 @@ class Testdnsmkview(unittest.TestCase):
   def testListViewAclAssignment(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
     self.core_instance.MakeView(u'test_view')
-    self.core_instance.MakeViewToACLAssignments(u'test_view', u'acl1', 1)
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
+    self.core_instance.MakeViewToACLAssignments(u'test_view', u'set1', u'acl1', 1)
     command = os.popen('python %s acl -v test_view -a acl1 '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
@@ -244,7 +246,7 @@ class Testdnsmkview(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view1', 1, u'set1')
 
-    command = os.popen('python %s view -v test_view -a acl1 '
+    command = os.popen('python %s view -v test_view '
                        '-c %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))

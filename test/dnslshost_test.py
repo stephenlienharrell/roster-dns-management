@@ -180,9 +180,6 @@ class Testdnslshost(unittest.TestCase):
     self.core_instance.MakeRecord(u'a', u'host3', u'forward_zone',
                                   {u'assignment_ip': u'192.168.1.5'},
                                   view_name=u'test_view')
-    self.core_instance.MakeRecord(u'a', u'host3', u'forward_zone',
-                                  {u'assignment_ip': u'192.168.1.5'},
-                                  view_name=u'any')
     self.core_instance.MakeRecord(u'a', u'host4', u'forward_zone',
                                   {u'assignment_ip': u'192.168.1.10'},
                                   view_name=u'test_view')
@@ -230,16 +227,13 @@ class Testdnslshost(unittest.TestCase):
                           EXEC, self.server_name,
                           USERNAME, PASSWORD, USER_CONFIG))
     lines = output.read()
-    self.assertEqual(len(lines), 187)
+    self.assertEqual(len(lines), 129)
     self.assertTrue(
         '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
         in lines)
     self.assertTrue(
         '192.168.1.5 Forward host3.university.edu forward_zone test_view\n'
         in lines)
-    self.assertTrue(
-        '192.168.1.5 Forward host3.university.edu forward_zone any\n\n'
-    in lines)
     output.close()
     output = os.popen('python %s cidr --cidr-block 192.168.1.4 '
                       '-s %s -u %s -p %s --config-file %s --no-header' % (
@@ -257,7 +251,7 @@ class Testdnslshost(unittest.TestCase):
                        EXEC, self.server_name, USERNAME,
                        PASSWORD, USER_CONFIG))
     lines = output.read()
-    self.assertEquals( len(lines), 733)
+    self.assertEquals(len(lines), 647)
     self.assertTrue(
         '4321:0000:0001:0002:0003:0004:0567:89ab Forward host2.university.edu '
         'forward_zone test_view\n'
@@ -273,10 +267,6 @@ class Testdnslshost(unittest.TestCase):
     self.assertTrue(
         '192.168.1.5                             Forward host3.university.edu '
         'forward_zone test_view\n'
-        in lines)
-    self.assertTrue(
-        '192.168.1.5                             Forward host3.university.edu '
-        'forward_zone any\n'
         in lines)
     self.assertTrue(
         '192.168.1.10                            Forward host4.university.edu '
@@ -375,7 +365,7 @@ class Testdnslshost(unittest.TestCase):
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
     lines = output.read()
-    self.assertEqual(len(lines), 913)
+    self.assertEqual(len(lines), 653)
     self.assertTrue(
         'View:       test_view2\n'
         in lines)
@@ -408,21 +398,6 @@ class Testdnslshost(unittest.TestCase):
         in lines)
     self.assertTrue(
         '192.168.1.7 --         --                   --           test_view\n'
-        in lines)
-    self.assertTrue(
-        'View:       any\n'
-        in lines)
-    self.assertTrue(
-        '192.168.1.4 --         --                   --           any\n'
-        in lines)
-    self.assertTrue(
-        '192.168.1.5 Forward    host3.university.edu forward_zone any\n'
-        in lines)
-    self.assertTrue(
-        '192.168.1.6 --         --                   --           any\n'
-        in lines)
-    self.assertTrue(
-        '192.168.1.7 --         --                   --           any\n\n'
         in lines)
 
     output.close()

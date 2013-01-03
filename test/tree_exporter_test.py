@@ -1745,9 +1745,9 @@ class TestTreeExporter(unittest.TestCase):
     cooked_data = self.tree_exporter_instance.CookData(raw_data[0])
 
     self.assertEqual(cooked_data['dns_server_sets']['external_dns'],
-            {'dns_servers': [u'ns1.university.edu',
-             u'dns2.university.edu',
-             u'dns3.university.edu'],
+            {'dns_servers': [u'dns2.university.edu',
+             u'dns3.university.edu',
+             u'ns1.university.edu'],
              u'view_order': {1: u'external'},
              'views': {u'external': {
                'view_options': u'recursion no;',
@@ -1843,8 +1843,8 @@ class TestTreeExporter(unittest.TestCase):
              'acls': [u'public']}}})
 
     self.assertEqual(cooked_data['dns_server_sets']['private_dns'],
-            {'dns_servers': [u'ns1.int.university.edu',
-             u'dns4.university.edu'],
+            {'dns_servers': [u'dns4.university.edu',
+             u'ns1.int.university.edu'],
              u'view_order': {3: u'private'},
              'views': {u'private': {
                'view_options': u'recursion no;',
@@ -1903,8 +1903,8 @@ class TestTreeExporter(unittest.TestCase):
              'acls': [u'secret']}}})
 
     self.assertEqual(cooked_data['dns_server_sets']['internal_dns'],
-        {'dns_servers': [u'ns1.int.university.edu',
-         u'dns1.university.edu'],
+        {'dns_servers': [u'dns1.university.edu',
+        u'ns1.int.university.edu'],
          'view_order': {1: u'external', 2: u'internal'},
          'views': {u'internal': {
            'view_options': u'recursion no;',

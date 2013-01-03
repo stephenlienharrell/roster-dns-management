@@ -124,22 +124,11 @@ class TestSetCoreDirty(unittest.TestCase):
       os.remove(CREDFILE)
 
   def testCoreDirty(self):
-
-    command = os.popen('python %s/dnsmkacl acl -a test_acl '
-                       '--cidr-block=192.168.0.0/24 '
+    command = os.popen('python %s/dnsmkview view -v test_view '
                        '-u %s -p %s -s %s' % (
                        USER_TOOLS_DIR, USERNAME, PASSWORD, self.server_name))
     self.assertEqual(command.read(),
-        'ADDED ACL: acl: test_acl cidr_block: 192.168.0.0/24\n')
-    command.close()
-
-    command = os.popen('python %s/dnsmkview view -v test_view -a test_acl '
-                       '--allow '
-                       '-u %s -p %s -s %s' % (
-                       USER_TOOLS_DIR, USERNAME, PASSWORD, self.server_name))
-    self.assertEqual(command.read(),
-        'ADDED VIEW: view_name: test_view\n'
-        'ADDED VIEW ACL ASSIGNMENT: view: test_view acl: test_acl allowed: 1\n')
+        'ADDED VIEW: view_name: test_view\n')
     command.close()
     
     command = os.popen('python %s/dnsmkzone forward -z test_zone -v test_view '
