@@ -73,7 +73,7 @@ def main(args):
            'To make view assignments:\n'
            '\t%s view_subset -v <view-superset-name>\n'
            '\t-V <view-subset-name>\n' % tuple(
-               [sys.argv[0] for _ in range(5)]))
+               [sys.argv[0] for _ in range(4)]))
 
   args_instance = Args(command,
       ['view', 'dns_server_set', 'acl', 'view_subset'], args, usage)
