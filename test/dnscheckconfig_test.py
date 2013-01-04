@@ -392,5 +392,52 @@ class TestCheckConfig(unittest.TestCase):
     ##self.assertTrue(re.search('\'options\' redefined near \'options\'',lines))
     output.close()
 
+  def testChangeNamedDirectory(self):
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    output = os.popen('python %s -f test_data/test_zone.db '
+                      '--view test_view -u %s --config-file %s '
+                      '-z sub.university.lcl' % (
+                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
+    self.assertEqual(output.read(),
+                     'Loading in test_data/test_zone.db\n'
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
+    output.close()
+
+    self.core_instance.MakeDnsServer(DNS_SERVER, SSH_USER, BIND_DIR, TEST_DIR)
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSetAssignments(DNS_SERVER, u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
+
+    self.tree_exporter_instance.ExportAllBindTrees()
+
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    audit_log_id, filename = config_lib_instance.FindNewestDnsTreeFilename()
+    config_lib_instance.UnTarDnsTree(audit_log_id)
+    
+    named_conf_handle = open('%s/%s/named.conf.a' % (config_lib_instance.root_config_dir, 
+                                                     DNS_SERVER), 'r')
+    named_conf_contents = named_conf_handle.read()
+    named_conf_handle.close()
+
+    options_string = 'options { directory "%snamed"; };' % BIND_DIR
+    new_options_string = 'options { \ndirectory "%snamed";\n};' % BIND_DIR
+    self.assertTrue(options_string in named_conf_contents)
+    named_conf_contents = named_conf_contents.replace(options_string, new_options_string, 1)
+    self.assertTrue(new_options_string in named_conf_contents)
+
+    named_conf_handle = open('%s/%s/named.conf.a' % (config_lib_instance.root_config_dir, 
+                                                     DNS_SERVER), 'w')
+    named_conf_handle.write(named_conf_contents)
+    named_conf_handle.close()
+    config_lib_instance.TarDnsTree(audit_log_id)
+
+    output = os.popen('python %s --config-file %s -s %s' % (
+        EXEC, CONFIG_FILE, DNS_SERVER))
+    time.sleep(2) # Wait for disk to settle
+    self.assertEqual(output.read(), '')
+    output.close()
+
 if( __name__ == '__main__' ):
       unittest.main()

@@ -107,11 +107,10 @@ def ChangeNamedDirectory(file_name, directory):
         file_handle.writelines(file_contents)
         break
       # Also check for newline in front of directory and do same
-      elif( '\ndirectory "' in line ):
-        line_contents = line.split('\ndirectory "')
-        new_line = '%s directory "%s"%s' % (line_contents[0],
-                                            directory,
-                                            line_contents[1].split('"', 1)[1])
+      elif( line.startswith('directory "') ):
+        line_contents = line.split('directory "')
+        new_line = 'directory "%s"%s' % (directory,
+                                         line_contents[1].split('"', 1)[1])
         file_contents[line_index] = new_line
         file_handle = open(file_name, 'w')
         file_handle.writelines(file_contents)
