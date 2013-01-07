@@ -87,7 +87,7 @@ def main(args):
 
   if( command == 'view' ):
     if( not options.no_header ):
-      print_list = [['dns_server_set', 'view_name', 'view_order', 'view_options']]
+      print_list = [['view_name']]
 
     #The user can list all views if they omit the -v/--view flag
     all_views = roster_client_lib.RunFunction(
@@ -103,35 +103,8 @@ def main(args):
       else:
         all_views = [options.view_name]
 
-    server_set_dicts = []
     for view in all_views:
-      #Grabbing all the server_set view assignments for this view
-      dns_server_set_view_assignments = roster_client_lib.RunFunction(
-          u'ListDnsServerSetViewAssignments', options.username,
-          credfile=options.credfile, credstring=options.credstring,
-          server_name=options.server, kwargs={u'view_name': view})['core_return']
-
-      #Compiling all the assignments found into the server_set_dicts list
-      #Later we sort that list, then append to print_list. That's why we
-      #don't append to print_list now.
-      for dns_server_set in dns_server_set_view_assignments:
-        view_name = dns_server_set_view_assignments[dns_server_set][0][0]
-        view_order = dns_server_set_view_assignments[dns_server_set][0][1]
-        view_options = dns_server_set_view_assignments[dns_server_set][0][2]
-        server_set_dicts.append(
-            {'dns_server_set_name': dns_server_set,
-             'view_name': view_name,
-             'view_order': view_order, 
-             'view_options': view_options})
-
-    #Sorting first by dns_server_set_name, then by view_order
-    server_set_dicts.sort(key=operator.itemgetter('dns_server_set_name', 'view_order'))
-
-    for server_set_dict in server_set_dicts:
-      print_list.append([server_set_dict['dns_server_set_name'], 
-                         server_set_dict['view_name'], 
-                         server_set_dict['view_order'], 
-                         server_set_dict['view_options']])
+      print_list.append([view])
 
     print cli_common_lib.PrintColumns(print_list,
         first_line_header=not options.no_header)

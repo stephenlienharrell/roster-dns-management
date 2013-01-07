@@ -152,10 +152,9 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'dns_server_set view_name  view_order view_options\n'
-        '-------------------------------------------------\n'
-        'set1           test_view1 1          some option;\n'
-        'set2           test_view1 2          recursion yes;\n'
+        'view_name\n'
+        '---------\n'
+        'test_view1\n'
         '\n')
     command.close()
 
@@ -165,14 +164,11 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'dns_server_set view_name  view_order view_options\n'
-        '-------------------------------------------------\n'
-        'set1           test_view1 1          some option;\n'
-        'set1           test_view2 2          some other option;\n'
-        'set1           test_view3 3          still some other option;\n'
-        'set2           test_view3 1          recursion no;\n'
-        'set2           test_view1 2          recursion yes;\n'
-        'set2           test_view2 3          recursion maybe;\n'
+        'view_name\n'
+        '---------\n'
+        'test_view1\n'
+        'test_view2\n'
+        'test_view3\n'
         '\n')
     command.close()
 
