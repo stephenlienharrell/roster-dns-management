@@ -42,6 +42,7 @@ __version__ = '#TRUNK#'
 import ConfigParser
 import datetime
 import getpass
+import iscpy
 import os
 import shutil
 import unittest
@@ -518,6 +519,53 @@ class TestConfigLib(unittest.TestCase):
     os.remove('%s/localhost/named/external/local.db' % self.root_config_dir)
 
     self.assertEqual(config_lib_instance.GetZoneList('localhost'), {'external':{'university.lcl':'forward_zone.db'}})
+
+  def testMergeOptionsDicts(self):
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    global_options_dict = {'directory': '"/home/cookie/Dropbox/Roster/compilezone/trunk/test/test_data/named/named"', 
+                           'pid-file': '"test_data/named.pid"'}
+    view_dict = {'zone "."': 
+                    {'type': 'hint', 'file': '"named.ca"'}, 
+                 'zone "university.lcl"': 
+                    {'type': 'master', 'file': '"external/forward_zone.db"'}, 
+                 'match-clients': {'internal': True}}
+    zone_dict = {'type': 'master', 'file': '"external/forward_zone.db"'}
+    self.assertEqual(config_lib_instance.MergeOptionsDicts(global_options_dict, view_dict, zone_dict),
+            {'check-integrity': 'yes',
+             'check-siblings': 'yes',
+             'check-srv-cname': 'warn',
+             'check-wildcard': 'yes',
+             'check-names': 'warn',
+             'check-mx': 'warn',
+             'check-dup-records': 'warn',
+             'check-mx-cname': 'warn'})
+
+  def testGenerateAdditionalNamedCheckzoneArgs(self):
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    merged_options_dict = {'check-integrity': 'yes',
+                           'check-siblings': 'yes',
+                           'check-srv-cname': 'warn',
+                           'check-wildcard': 'yes',
+                           'check-names': 'warn',
+                           'check-mx': 'warn',
+                           'check-dup-records': 'warn',
+                           'check-mx-cname': 'warn'}
+    self.assertEqual(config_lib_instance.GenerateAdditionalNamedCheckzoneArgs(merged_options_dict),
+                     ['-i', 'full-sibling',
+                      '-S', 'warn',
+                      '-W', 'warn',
+                      '-k', 'warn',
+                      '-m', 'warn',
+                      '-r', 'warn',
+                      '-M', 'warn'])
+
+  def testGetNamedZoneToolArgs(self):
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
+    tree_exporter_instance.ExportAllBindTrees()
+    config_lib_instance.UnTarDnsTree()
+    self.assertEqual(config_lib_instance.GetNamedZoneToolArgs('localhost', 'external', 'forward_zone.db'),
+        '-i full-sibling -S warn -W warn -k warn -m warn -r warn -M warn')
 
 if( __name__ == '__main__' ):
   unittest.main()

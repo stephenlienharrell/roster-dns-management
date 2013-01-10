@@ -172,17 +172,19 @@ def PushFiles(dns_server, root_config_dir, config_lib_instance,
             dns_server_info['server_info']['test_dir'], view)
         for zone_origin in zone_dict[view]:
           zone_file_name = '%s/%s' % (view_dir, zone_dict[view][zone_origin])
+          zone_tool_arguments = config_lib_instance.GetNamedZoneToolArgs(\
+              dns_server, view, zone_dict[view][zone_origin])
           if( checkzone ):
-            result = fabric_api.run('named-checkzone %s %s' % (
-                zone_origin, zone_file_name))
+            result = fabric_api.run('named-checkzone %s %s %s' % (
+                zone_tool_arguments, zone_origin, zone_file_name))
             if( result.return_code != 0 ):
               raise config_lib.ServerCheckError('Zone %s did not pass the '
                                                 'check.' % zone_origin)
 
           if( compilezone ):
             zone_binary_file_name = '%s.aa' % zone_file_name.rstrip('.db')
-            result = fabric_api.run('named-compilezone -F raw -o %s %s %s' % (
-                zone_binary_file_name, zone_origin,
+            result = fabric_api.run('named-compilezone -F raw %s -o %s %s %s' % (
+                zone_tool_arguments, zone_binary_file_name, zone_origin,
                 zone_file_name))
             fabric_api.run('rm %s' % zone_file_name)
             if( result.return_code != 0 ):
@@ -190,8 +192,8 @@ def PushFiles(dns_server, root_config_dir, config_lib_instance,
                                      zone_origin)
             
             if( checkzone ):
-              result = fabric_api.run('named-checkzone -f raw %s %s' % (
-                  zone_origin, zone_binary_file_name))
+              result = fabric_api.run('named-checkzone -f raw %s %s %s' % (
+                  zone_tool_arguments, zone_origin, zone_binary_file_name))
               if( result.return_code != 0 ):
                 raise config_lib.ServerCheckError('Zone check on binary zone '
                     '%s failed.' % zone_origin)

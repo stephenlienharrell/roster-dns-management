@@ -39,9 +39,10 @@ __version__ = '#TRUNK#'
 
 import ConfigParser
 import datetime
+import iscpy
 import os
-import shutil
 import roster_core
+import shutil
 import tarfile
 
 from fabric import api as fabric_api
@@ -80,6 +81,40 @@ class ConfigLib(object):
 
   ToolList = ['named-checkzone', 'named-compilezone', 
               'named-checkconf', 'tar']
+
+  COMMANDS_CONVERT_DICT = {
+    'check-dup-records': {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-mx':          {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-mx-cname':   {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-srv-cname':   {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-wildcard':    {'yes': 'warn', 'no': 'ignore'},
+
+    'check-names':       {'flag': '-k', 'default': 'fail'},
+    'check-integrity':   {'yes': 'full', 'no': 'none'}
+  }
+
+  CHECKZONE_ARGS_DICT = {
+    'check-dup-records': {'flag': '-r', 'arg': 'warn'},
+    'check-mx':          {'flag': '-m', 'arg': 'warn'},
+    'check-mx-cname':    {'flag': '-M', 'arg': 'warn'},
+    'check-srv-cname':   {'flag': '-S', 'arg': 'warn'},
+
+    'check-wildcard':    {'flag': '-W', 'arg': 'warn'},
+    'check-names':       {'flag': '-k', 'arg': 'fail'},
+    'check-integrity':   {'flag': '-i', 'arg': 'full'}
+  }
+
+  #Option clauses that we're interested in, and their default BIND value.
+  BIND_OPTION_CLAUSES = {
+    'check-dup-records': 'warn',
+    'check-mx':          'warn',
+    'check-mx-cname':    'warn',
+    'check-srv-cname':   'warn',
+    'check-wildcard':    'yes',
+    'check-names':       'warn',
+    'check-integrity':   'yes',
+    'check-siblings':    'yes'
+  }
 
   def __init__(self, config_file):
     """
@@ -591,8 +626,8 @@ class ConfigLib(object):
       dns_server: name of a DNS server
 
     Outputs:
-      dict: {'view1': {'zone1': '/zone/file', 'zone2': '/zone/file'},
-             'view2': {'zone3': '/zone/file', 'zone4': '/zone/file'}}
+      dict: {'view1': {'zone1.lcl': 'zone.db', 'zone2'.lcl: 'zone.db'},
+             'view2': {'zone3.lcl': 'zone.db', 'zone4.lcl': 'zone.db'}}
     """
     try:
       views = os.listdir('%s/%s/named/' % (self.root_config_dir, dns_server))
@@ -621,3 +656,129 @@ class ConfigLib(object):
     except OSError as err:
       raise ServerCheckError('Can not list files in %s.' % err.filename)
     return zone_dict
+
+  def MergeOptionsDicts(self, global_options_dict, view_dict, zone_dict):
+    """Merges the options of 3 dictionaries, according to precendence.
+    zone_dict is the most importantce, while global_options_dict has the "least"
+    importantance.
+    
+      Inputs:
+        global_options_dict: dict of the options defined globally in named.conf
+        view_dict: dict of the options defined in a single view of named.conf
+        zone_dict: dict of the options defined in a single zone of named.conf
+
+      Outputs:
+        single_options_dict: dict of the merged options
+    """
+
+    single_options_dict = {}
+
+    #Go in order of least important to most important
+    for options_dict in [global_options_dict, view_dict, zone_dict]:
+      for key in options_dict.keys():
+        if( key in self.BIND_OPTION_CLAUSES ):
+          single_options_dict[key] = options_dict[key]
+
+    #If we didn't fill in any of the options, we want to fill in their defaults
+    for key in self.BIND_OPTION_CLAUSES:
+      if( key not in single_options_dict.keys() ):
+        single_options_dict[key] = self.BIND_OPTION_CLAUSES[key]
+
+    return single_options_dict
+
+  def GenerateAdditionalNamedCheckzoneArgs(self, bind_options_dict):
+    """Generates additional named-checkzone command line flags and arguments based
+    on the BIND options supplied in bind_options_dict.
+    
+    Inputs:
+      bind_options_dict: dict of BIND options parsed from named.conf
+      
+    Outputs:
+      args: list of flags and their args.
+    """
+     
+    args = []
+    check_siblings = False
+
+    for option_key, option_value in bind_options_dict.items():
+      if( option_key != 'check-siblings' ):
+        checkzone_arg = None
+        if( option_value in self.COMMANDS_CONVERT_DICT[option_key] ):
+          checkzone_arg = self.COMMANDS_CONVERT_DICT[option_key][option_value]
+        else:
+          #These checks are for global and view options
+          #In some clauses, fail, warn, and ignore are not enough.
+          #master/slave/response warn/fail/ignore is the correct syntax.
+          if( 'fail' in option_value ):
+            checkzone_arg = 'fail'
+          elif( 'warn' in option_value ):
+            checkzone_arg = 'warn'
+          elif( 'ignore' in option_value ):
+            checkzone_arg = 'ignore'
+          else:
+            print 'ERROR: Unknown option "%s %s"' % (option_key, option_value)
+            sys.exit(1)
+
+        self.CHECKZONE_ARGS_DICT[option_key]['arg'] = checkzone_arg
+      else:
+        if( option_value == 'yes' ):
+          check_siblings = True
+
+    #if we want to check siblings, and if we are checking integrity,
+    #append '-sibling' to the -i arg of the CHECKZONE_ARGS_DICT
+    if( check_siblings and 
+        self.CHECKZONE_ARGS_DICT['check-integrity']['arg'] != 'none' ):
+      self.CHECKZONE_ARGS_DICT['check-integrity']['arg'] = '%s-sibling' % (
+        self.CHECKZONE_ARGS_DICT['check-integrity']['arg'])
+
+    #Transferring everything from CHECKZONE_ARGS_DICT to args list
+    for key in self.CHECKZONE_ARGS_DICT:
+      flag = self.CHECKZONE_ARGS_DICT[key]['flag']
+      arg = self.CHECKZONE_ARGS_DICT[key]['arg']
+
+      args.extend([flag, arg])
+
+    return args
+
+  def GetNamedZoneToolArgs(self, dns_server, view, zone_file_name):
+    """Generates the arg flags for named-checkzone and named-compilezone
+    for a specific zone-view-server combination.
+     
+     Inputs:
+       dns_server: name of a DNS server
+       view: name of a view
+       zone_file_name: the file name of a zone
+     
+     Outputs:
+       string: string of the command flags and their values for named-checkzone
+               and named-compilezone.
+    """
+    zone_name = zone_file_name.rstrip('.db')
+    server_directory = '%s/%s' % (self.root_config_dir, dns_server)
+    named_file_name = '%s/named.conf.a' % server_directory
+    try:
+      named_file_handle = open(named_file_name, 'r')
+      named_file_string = named_file_handle.read()
+    finally:
+      named_file_handle.close()
+
+    named_file_dict = iscpy.ParseISCString(named_file_string)
+    global_options_dict = named_file_dict['options']
+
+    view_dict = named_file_dict['view "%s"' % view]
+    zone_dict = None
+    for zone in view_dict:
+      #Making sure we're checking a dictionary
+      if( type(view_dict[zone]) == type({}) ):
+        if( 'file' in view_dict[zone].keys() ):
+          if( view_dict[zone]['file'].strip('"').endswith(zone_file_name) ):
+            zone_dict = view_dict[zone]
+            break
+    else:
+      raise ConfigManagerError('Could not find zone %s in view %s within named.conf' % (zone_name, view))
+
+    options_dict = self.MergeOptionsDicts(
+        global_options_dict, view_dict, zone_dict)
+    additional_args = self.GenerateAdditionalNamedCheckzoneArgs(options_dict)
+
+    return ' '.join(additional_args)
