@@ -38,9 +38,10 @@ __version__ = '#TRUNK#'
 import dns.zone
 import dns.query
 import dns.exception
-import sys
 import os
 import random
+import socket
+import sys
 
 from optparse import OptionParser
 from roster_core import errors
@@ -64,6 +65,7 @@ def DnsQuery(records, dns_server, dns_port, zone_origin):
       to be verified."""
   if( dns_server == 'localhost' ):
     dns_server = '127.0.0.1'
+  dns_server = socket.gethostbyname(dns_server)
 
   good_records = []
   record_types = {
