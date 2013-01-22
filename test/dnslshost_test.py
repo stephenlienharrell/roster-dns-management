@@ -320,11 +320,15 @@ class Testdnslshost(unittest.TestCase):
     output.close()
 
     output = os.popen('python %s zone -z forward_zone --no-header '
-                      '-v any -s %s -u %s -p %s --config-file %s' % (
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
                        EXEC, self.server_name, USERNAME,
                        PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-      '192.168.1.5 Forward host3.university.edu forward_zone any\n\n')
+        '192.168.0.1                             Forward host1.university.edu forward_zone test_view\n'
+        '4321:0000:0001:0002:0003:0004:0567:89ab Forward host2.university.edu forward_zone test_view\n'
+        '192.168.1.5                             Forward host3.university.edu forward_zone test_view\n'
+        '192.168.1.10                            Forward host4.university.edu forward_zone test_view\n'
+        '192.168.1.8                             Forward host6.university.edu forward_zone test_view\n\n')
     output.close()
 
     output = os.popen('python %s zone -z forward_zone --no-header '
@@ -402,14 +406,15 @@ class Testdnslshost(unittest.TestCase):
 
     output.close()
     output = os.popen('python %s cidr --cidr-block 192.168.1.4/30 --no-header '
-                      '-v any -s %s -u %s -p %s --config-file %s' % (
+                      '-v test_view -s %s -u %s -p %s --config-file %s' % (
                            EXEC, self.server_name, USERNAME,
                            PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-        '192.168.1.4 --      --                   --           any\n'
-        '192.168.1.5 Forward host3.university.edu forward_zone any\n'
-        '192.168.1.6 --      --                   --           any\n'
-        '192.168.1.7 --      --                   --           any\n\n')
+        '192.168.1.4 --      --                   --           test_view\n'
+        '192.168.1.5 Reverse host3.university.edu reverse_zone test_view\n'
+        '192.168.1.5 Forward host3.university.edu forward_zone test_view\n'
+        '192.168.1.6 --      --                   --           test_view\n'
+        '192.168.1.7 --      --                   --           test_view\n\n')
     output.close()
     output = os.popen('python %s cidr --cidr-block 10.0.0.4/30 --no-header '
                       '-s %s -u %s -p %s --config-file %s' % (

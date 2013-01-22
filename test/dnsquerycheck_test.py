@@ -233,7 +233,7 @@ class TestQueryCheck(unittest.TestCase):
     named_file_contents = named_file_contents.replace('NAMED_DIR', NAMED_DIR)
     named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
-    Named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
+    named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
     named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
@@ -297,7 +297,8 @@ class TestQueryCheck(unittest.TestCase):
     output = command.read()
     command.close()
     self.assertEqual(output, 
-        'Unable to open zone file no_file\nZone no_file does not appear to be online for server localhost\n')
+        'Unable to open zone file no_file\n'
+        'Zone no_file does not appear to be online for server localhost\n')
 
   def testQueryCheck(self):
     self.core_instance.MakeView(u'test_view1')
@@ -338,13 +339,20 @@ class TestQueryCheck(unittest.TestCase):
                      '5 total records added\n')
     output.close()
 
+    named_conf_global_options_string = (
+        u'include "%s/test_data/rndc.key";\n'
+        u'options {\n'
+        u'\tpid-file "test_data/named.pid";\n'
+        u'\tsession-keyfile "%s";\n'
+        u'};\n'
+        u'controls { inet 127.0.0.1 port %d allow { localhost; } '
+        u'keys { rndc-key; }; };\n') % (os.getcwd(), SESSION_KEYFILE, self.rndc_port)
+
     self.core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view1', 1, u'set1')
-    self.core_instance.MakeNamedConfGlobalOption(
-        u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
-        'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
+    self.core_instance.MakeNamedConfGlobalOption(u'set1', named_conf_global_options_string)
     self.core_instance.MakeViewToACLAssignments(u'test_view1', u'set1',
                                                 u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
@@ -357,7 +365,7 @@ class TestQueryCheck(unittest.TestCase):
     named_file_contents = named_file_contents.replace('NAMED_DIR', NAMED_DIR)
     named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
-    Named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
+    named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
     named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
@@ -374,7 +382,7 @@ class TestQueryCheck(unittest.TestCase):
     command.close()
     self.assertEqual(output, '')
 
-    # Running dnsconfisync
+    # Running dnsconfigsync
     command = os.popen(
         'python %s -d localhost --config-file %s -i 17 '
         '--rndc-key %s --rndc-conf %s --rndc-port %s' % (
@@ -382,7 +390,7 @@ class TestQueryCheck(unittest.TestCase):
     output = command.read()
     command.close()
     self.assertEqual(output, '')
-
+    
     # Running dnsquerycheck with audit log
     command = os.popen(
         'python %s -s %s -c %s -p %s -i 17 ' % (

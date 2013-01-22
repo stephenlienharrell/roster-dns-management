@@ -975,13 +975,12 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name  view_order view_options\n'
-        '-------------------------------------------------\n'
-        'set1           test_view  1\n'
-        'set1           test_view2 2\n'
-        'set2           test_view2 2\n'
-        'set3           test_view2 2\n'
-        'set3           test_view3 3\n\n')
+        'view_name\n'
+        '---------\n'
+        'test_view\n'
+        'test_view2\n'
+        'test_view3\n'
+        '\n')
     command.close()
     ## User tool: dnslsview
     ## dnslsview dns_server_set
@@ -1107,12 +1106,11 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name  view_order view_options\n'
-        '-------------------------------------------------\n'
-        'set1           test_view  1\n'
-        'set1           test_view2 2\n'
-        'set2           test_view2 2\n'
-        'set3           test_view2 2\n\n')
+         'view_name\n'
+         '---------\n'
+         'test_view\n'
+         'test_view2\n'
+         '\n')
     command.close()
     ## User tool: dnsmkview
     ## dnsmkview view -v test_view '
@@ -1156,12 +1154,12 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'dns_server_set view_name  view_order view_options\n'
-        '-------------------------------------------------\n'
-        'set1           test_view  1\n'
-        'set1           test_view2 2\n'
-        'set2           test_view2 2\n'
-        'set3           test_view2 2\n\n')
+        'view_name\n'
+        '---------\n'
+        'test_subview\n'
+        'test_view\n'
+        'test_view2\n'
+        '\n')
     command.close()
     ## User tool: dnslsview
     ## dnslsview dns_server_set

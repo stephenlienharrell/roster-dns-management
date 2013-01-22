@@ -43,6 +43,7 @@ import shutil
 import socket
 import time
 import unittest
+import re
 
 import roster_core
 
@@ -50,7 +51,6 @@ CONFIG_FILE = 'test_data/roster.conf'
 EXEC = '../roster-config-manager/scripts/dnsversioncheck'
 CORE_USERNAME = u'sharrell'
 TEST_DNS_SERVER = u'localhost'
-CURRENT_BIND_VERSION = '9.9.0'
 TESTDIR = u'%s/unittest_dir/' % os.getcwd()
 BINDDIR = u'%s/test_data/named/' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
@@ -64,28 +64,24 @@ class TestBINDVersion(unittest.TestCase):
       core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
 
   def testVersion(self):    
-    command1 = os.popen('service named status')
-    command2 = os.popen('service bind9 status')
-    words1 = command1.read().strip('\n').split(' ')
-    words2 = command2.read().strip('\n').split(' ')
+    named_command = subprocess.Popen(['service', 'named', 'status'], 
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    named_command.communicate()
 
-    if( 'running...' not in words1 and 'running...' not in words2 ):
-      print 'Neither named nor bind9 are running'
-      print 'Let me try to start them for you'
+    if( named_command.returncode ):
+      print 'Named must be running for this unittest, let me start it for you' 
       os.system('sudo service named start')
-      os.system('sudo service bind9 start')
+      time.sleep(5)
 
-    command1.close()
-    command2.close()
-      
     command = os.popen('python %s --ssh-user-name %s --core-user-name '
                        '%s --config-file %s' % (
             EXEC, SSH_USER, CORE_USERNAME, CONFIG_FILE))
     lines = command.read().split('\n')
 
     self.assertTrue('Connecting to "%s"' % TEST_DNS_SERVER in lines)
-    self.assertTrue('%s is running BIND %s' % (TEST_DNS_SERVER, 
-                                               CURRENT_BIND_VERSION) in lines)
+    #Not making this BIND version specific. 
+    self.assertTrue(re.search(
+        '%s is running BIND [0-9].[0-9].[0-9]' % TEST_DNS_SERVER, lines[3]))
     self.assertTrue('All servers are running the same version of BIND' in lines)
     command.close()
     

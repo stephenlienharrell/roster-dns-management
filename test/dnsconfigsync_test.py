@@ -78,7 +78,6 @@ SSH_USER = unicode(getpass.getuser())
 TEST_DNS_SERVER = u'localhost'
 NS_IP_ADDRESS = '127.0.0.1'
 NS_DOMAIN = '' #Blank since using localhost
-NAMEDPID_FILE = '/var/run/named/named.pid'
 SESSION_KEYFILE = 'test_data/session.key'
 RNDC_CONF_DATA = ('# Start of rndc.conf\n'
                   'key "rndc-key" {\n'
@@ -319,8 +318,8 @@ class TestCheckConfig(unittest.TestCase):
     lines = command.read().split('\n')
 
     result = os.popen('rndc -c %s -k %s -p %s reload' % (
-        RNDC_CONF, RNDC_KEY, self.rndc_port)).readlines()
-    self.assertEqual(lines, [''])
+        RNDC_CONF, RNDC_KEY, self.rndc_port)).read()
+    self.assertEqual(result, 'server reload successful\n')
     self.assertTrue(os.path.exists('%s/named/test_view/sub.university.lcl.aa' % BINDDIR))
     self.assertTrue(os.path.exists('%s/named/named.ca' % BINDDIR))
     self.assertTrue(os.path.exists('%s/named.conf' % BINDDIR))

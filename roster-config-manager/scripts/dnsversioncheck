@@ -75,7 +75,10 @@ def CheckBINDVersion(ssh_port, ssh_id, user_name, dns_server):
     fabric_state.output['running'] = False
     fabric_state.output['warnings'] = False
     fabric_api.env.host_string = ssh_command_string
-    return fabric_api.run(EXEC).strip('BIND ')
+
+    #The result of 'named -v' will be "BIND X.Y.Z*"
+    #So we return "X.Y.Z"
+    return fabric_api.run(EXEC).strip('BIND ')[:5]
 
   finally:
     fabric_network.disconnect_all()
