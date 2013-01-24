@@ -652,6 +652,10 @@ class AuditLog(core_flags.CoreFlags):
                            default=None)
     self.AddFlagRule(('begin_time', 'end_time'), required=False,
                      flag_type='dependent_args')
+    self.parser.add_option('--omit-data', action='store_true', dest='omit_data',
+                           help='Omit the data section.  Used to speed up the '
+                           'output.', default=False)
+    self.AddFlagRule('omit_data', required=False)
     self.parser.add_option('--no-header', action='store_true', dest='no_header',
                            help='Do not display a header.', default=False)
     self.AddFlagRule('no_header', required=False)

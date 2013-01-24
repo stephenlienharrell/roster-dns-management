@@ -62,7 +62,7 @@ def main(args):
            '\n'
            'To list audit log:\n'
            '\t%s [-a <action>] [-b <begin-time> -e <end-time>]\n'
-           '\t[--success <success>] [--no-header]\n' % tuple(
+           '\t[--success <success>] [--no-header] [--omit-data]\n' % tuple(
              [sys.argv[0] for _ in range(1)]))
   args_instance = Args(command, ['list'], args, usage)
   options = args_instance.options
@@ -102,16 +102,19 @@ def main(args):
               'end_timestamp': options.end_time})['core_return']
   print_list = []
   if( not options.no_header ):
-    print_list.append(['ID', 'Action', 'Timestamp', 
-                       'Username', 'Success', 'Data'])
-
+    header_list = ['ID', 'Action', 'Timestamp', 'Username', 'Success']
+    if( not options.omit_data ):
+      header_list.append('Data')
+    print_list.append(header_list)
   for entry in log:
     date = datetime.datetime.strptime(
         entry['audit_log_timestamp'].value, "%Y%m%dT%H:%M:%S")
-    print_list.append(
-        [entry['audit_log_id'], entry['action'], str(date).replace(' ', 'T'),
-         entry['audit_log_user_name'], entry['success'],
-         str(cPickle.loads(entry['data'])['audit_args'])])
+    entry_list = [entry['audit_log_id'], entry['action'],
+        str(date).replace(' ', 'T'), entry['audit_log_user_name'], 
+        entry['success']]
+    if( not options.omit_data ):
+      entry_list.append(str(cPickle.loads(entry['data'])['audit_args']))
+    print_list.append(entry_list)
 
   print cli_common_lib.PrintColumns(
       print_list, first_line_header=not options.no_header)

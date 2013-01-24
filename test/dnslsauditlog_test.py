@@ -23,7 +23,7 @@
 # DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
 # FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 # DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# SERVICES: LOSS OF USE, DATA, OR PROFITS: OR BUSINESS INTERRUPTION) HOWEVER
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
@@ -118,6 +118,7 @@ class Testdnslsauditlog(unittest.TestCase):
     self.daemon_thread.start()
     self.db_instance = db_instance
     self.core_instance = roster_core.Core(USERNAME, self.config_instance)
+    self.core_helper_instance = roster_core.CoreHelpers(self.core_instance)
     self.password = 'test'
     time.sleep(1)
     roster_client_lib.GetCredentials(USERNAME, u'test', credfile=CREDFILE,
@@ -243,6 +244,67 @@ class Testdnslsauditlog(unittest.TestCase):
         "3  MakeView %s sharrell 1       "
             "{'view_name': u'test_view'}\n\n" % (
             entry1_timestamp, entry2_timestamp, entry3_timestamp))
+    command.close()
+    
+    self.core_instance.MakeZone(u'forward_zone', u'forward', u'university.lcl.', view_name=u'test_view')
+    audit_dict['data'] = None
+    audit_dict['action'] = u'MakeZone'
+    self.db_instance.StartTransaction()
+    try:
+      entry4 = self.db_instance.ListRow('audit_log', audit_dict)
+    finally:
+      self.db_instance.EndTransaction()
+    entry4_timestamp = str(entry4[0]['audit_log_timestamp']).replace(' ', 'T')
+
+    self.core_helper_instance.ProcessRecordsBatch(add_records = \
+        [{'record_ttl': 3600, 'record_type': u'soa', 'records_id': 19, 'record_target': u'@', 'record_last_user': u'sharrell', 'record_view_dependency': u'test_view_dep', 'record_zone_name': u'forward_zone', 'record_arguments': {u'refresh_seconds': 5, u'expiry_seconds': 5, u'name_server': u'ns.university.lcl.', u'minimum_seconds': 5, u'retry_seconds': 5, u'serial_number': 999, u'admin_email': u'admin.university.lcl.'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 20, 'record_target': u'record20', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.20'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 21, 'record_target': u'record21', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.21'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 22, 'record_target': u'record22', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.22'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 23, 'record_target': u'record23', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.23'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 24, 'record_target': u'record24', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.24'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 25, 'record_target': u'record25', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.25'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 26, 'record_target': u'record26', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.26'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 27, 'record_target': u'record27', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.27'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 28, 'record_target': u'record28', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.28'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 29, 'record_target': u'record29', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.29'}},
+        {'record_ttl': 3600, 'record_type': u'a', 'records_id': 30, 'record_target': u'record30', 'record_last_user': u'sharrell', 'record_view_dependency': u'any', 'record_zone_name': u'forward_zone', 'record_arguments': {u'assignment_ip': u'192.168.1.30'}}])
+    audit_dict['action'] = u'ProcessRecordsBatch'
+    self.db_instance.StartTransaction()
+    try:
+      entry5 = self.db_instance.ListRow('audit_log', audit_dict)
+    finally:
+      self.db_instance.EndTransaction()
+    entry5_timestamp = str(entry5[0]['audit_log_timestamp']).replace(' ', 'T')
+
+    command = os.popen('python %s -U sharrell '
+                       '-u %s -p %s --config-file %s -s %s '
+                       '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
+                                  self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        "ID Action              Timestamp           Username Success Data\n"
+        "----------------------------------------------------------------\n"
+        "1  MakeACL             %s sharrell 1       {'cidr_block': u'192.168.1/24', 'acl_name': u'acl1'}\n"
+        "2  MakeACL             %s sharrell 1       {'cidr_block': u'10.10.1/24', 'acl_name': u'acl2'}\n"
+        "3  MakeView            %s sharrell 1       {'view_name': u'test_view'}\n"
+        "4  MakeZone            %s sharrell 1       {'zone_options': None, 'make_any': True, 'view_name': u'test_view', 'zone_type': u'forward', 'zone_name': u'forward_zone', 'zone_origin': u'university.lcl.'}\n"
+        "5  ProcessRecordsBatch %s sharrell 1       {'add_records': [{'record_ttl': 3600, 'record_arguments': {u'refresh_seconds': 5, u'expiry_seconds': 5, u'name_server': u'ns.university.lcl.', u'minimum_seconds': 5, u'retry_seconds': 5, u'serial_number': 999, u'admin_email': u'admin.university.lcl.'}, 'record_type': u'soa', 'records_id': 19, 'record_target': u'@', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'test_view_dep'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.20'}, 'record_type': u'a', 'records_id': 20, 'record_target': u'record20', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.21'}, 'record_type': u'a', 'records_id': 21, 'record_target': u'record21', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.22'}, 'record_type': u'a', 'records_id': 22, 'record_target': u'record22', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.23'}, 'record_type': u'a', 'records_id': 23, 'record_target': u'record23', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.24'}, 'record_type': u'a', 'records_id': 24, 'record_target': u'record24', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.25'}, 'record_type': u'a', 'records_id': 25, 'record_target': u'record25', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.26'}, 'record_type': u'a', 'records_id': 26, 'record_target': u'record26', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.27'}, 'record_type': u'a', 'records_id': 27, 'record_target': u'record27', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.28'}, 'record_type': u'a', 'records_id': 28, 'record_target': u'record28', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, "
+            "{'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.29'}, 'record_type': u'a', 'records_id': 29, 'record_target': u'record29', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}, {'record_ttl': 3600, 'record_arguments': {u'assignment_ip': u'192.168.1.30'}, 'record_type': u'a', 'records_id': 30, 'record_target': u'record30', 'record_zone_name': u'forward_zone', 'record_last_user': u'sharrell', 'record_view_dependency': u'any'}], 'delete_records': [], 'zone_import': False}\n\n" % (entry1_timestamp,
+            entry2_timestamp, entry3_timestamp, entry4_timestamp, entry5_timestamp))
+
+    command = os.popen('python %s -U sharrell '
+                       '-u %s -p %s --config-file %s -s %s --omit-data '
+                       '-c %s' % (EXEC, USERNAME, self.password, USER_CONFIG,
+                                  self.server_name, CREDFILE))
+    self.assertEqual(command.read(),
+        "ID Action              Timestamp           Username Success\n"
+        "-----------------------------------------------------------\n"
+        "1  MakeACL             %s sharrell 1\n"
+        "2  MakeACL             %s sharrell 1\n"
+        "3  MakeView            %s sharrell 1\n"
+        "4  MakeZone            %s sharrell 1\n"
+        "5  ProcessRecordsBatch %s sharrell 1\n\n" % ( entry1_timestamp,
+            entry2_timestamp, entry3_timestamp, entry4_timestamp, entry5_timestamp))
     command.close()
 
   def testErrors(self):
