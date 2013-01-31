@@ -220,8 +220,6 @@ class BindTreeExport(object):
       record_argument_definitions = self.ListRecordArgumentDefinitions(
           record_arguments)
 
-      temp_tar_file_name = 'temp_file.tar.bz2'
-      tar_file = tarfile.open(temp_tar_file_name, 'w:bz2')
       if( len(cooked_data['dns_server_sets']) == 0 ):
         raise Error('No dns server sets found.')
       for dns_server_set in cooked_data['dns_server_sets']:
@@ -314,7 +312,6 @@ class BindTreeExport(object):
       audit_log_replay_dump, full_database_dump = self.CookRawDump(raw_dump)
 
       success = True
-      tar_file.close()
     finally:
       log_id = self.log_instance.LogAction(u'tree_export_user',
                                            function_name,
@@ -326,7 +323,6 @@ class BindTreeExport(object):
         self.backup_dir, current_time.strftime("%d_%m_%yT%H_%M"), log_id)
     if( not os.path.exists(self.backup_dir) ):
       os.makedirs(self.backup_dir)
-    shutil.move(temp_tar_file_name, self.tar_file_name)
 
     audit_log_replay_dump_file = bz2.BZ2File(
         '%s/audit_log_replay_dump-%s.bz2' % (self.backup_dir, log_id), 'w')
