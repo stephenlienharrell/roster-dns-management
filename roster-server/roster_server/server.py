@@ -38,6 +38,7 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import socket
 import datetime
 import os
 import inspect
@@ -439,6 +440,7 @@ class Server(object):
     self.server.register_function(self.GetCredentials)
     self.server.register_function(self.IsAuthenticated)
     self.server.register_function(self.GetVersion)
+    self.server.shutdown_request = self.shutdown_request
     try:
       while 1:
         self.server.handle_request()
@@ -448,3 +450,13 @@ class Server(object):
           self.core_store_cleanup_running = False
     except KeyboardInterrupt:
       print "Stopped by user."
+
+  def shutdown_request(self, request):
+      try:
+        request.set_shutdown(True)
+        request.sock_shutdown(socket.SHUT_WR)
+      except socket.error as e:
+        print e
+
+        pass #some platforms may raise ENOTCONN here
+      self.server.close_request(request)
