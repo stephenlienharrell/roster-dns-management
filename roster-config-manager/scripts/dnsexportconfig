@@ -48,6 +48,7 @@ from optparse import OptionParser
 from roster_config_manager import ConfigLib
 from roster_core import config
 from roster_core import errors
+from roster_core import constants
 
 # The following import allows a fake smtplib module to be used for unit tests.
 if( os.getenv('ROSTERTESTPATH') is not None ):
@@ -130,7 +131,7 @@ def main(args):
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Roster config file location.', 
                     metavar='<config-file>', 
-                    default='/etc/roster/roster_server.conf')
+                    default=constants.SERVER_CONFIG_FILE_LOCATION)
   parser.add_option('-q','--quiet', action='store_false', dest='quiet',
                     help='Suppress program output.', metavar='<quiet>',
                     default=False)

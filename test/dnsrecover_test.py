@@ -40,6 +40,8 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import subprocess
+import shlex
 import os
 import sys
 import socket
@@ -50,6 +52,7 @@ import getpass
 import unittest
 from roster_core import audit_log
 from roster_config_manager import tree_exporter
+from roster_config_manager import db_recovery
 import roster_core
 import roster_server
 from roster_user_tools import roster_client_lib
@@ -148,12 +151,18 @@ class TestDnsRecover(unittest.TestCase):
     self.core_instance.MakeView(u'test_view2')
     self.core_instance.MakeView(u'bad_view')
 
-    output = os.popen('python %s -i 10 '
-                      '-u %s --config-file %s' % (
-                          EXEC, USERNAME, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'Loading database from backup with ID 12\n')
-    output.close()
+    command = shlex.split(str('python %s -i 10 -u %s --config-file %s' % (
+                               EXEC, USERNAME, USER_CONFIG)))
+    output = subprocess.Popen(command, stdout=subprocess.PIPE, 
+        stdin=subprocess.PIPE)
+    self.assertEqual(output.communicate('y\n'), 
+        ("Loading database from backup with ID 12\n"
+         "%s\n"
+         "Would you like to run dnstreeexport now? [y/n] \n"
+         "Running dnstreeexport\n"
+         "dnstreeexport has completed successfully\n" % (
+            db_recovery.WARNING_STRING), None))
+
     self.assertEqual(self.core_instance.ListRecords(),
         [{u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
           u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
@@ -163,27 +172,31 @@ class TestDnsRecover(unittest.TestCase):
           u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5}])
     self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
 
-
-    self.tree_exporter_instance.ExportAllBindTrees()
-    output = os.popen('python %s -i 12 --single '
-                      '-u %s --config-file %s' % (
-                          EXEC, USERNAME, USER_CONFIG))
-    self.assertEqual(output.read(),
-        u'Not replaying action with id 12, action not allowed.\n')
-    output.close()
+    command = shlex.split(str('python %s -i 12 --single -u %s --config-file %s' % (
+                               EXEC, USERNAME, USER_CONFIG)))
+    output = subprocess.Popen(command, stdout=subprocess.PIPE, 
+        stdin=subprocess.PIPE)
+    self.assertEqual(output.communicate('n\n'),
+        ('Not replaying action with id 12, action not allowed.\n'
+         '%s\n'
+         'Would you like to run dnstreeexport now? [y/n] ' % (
+            db_recovery.WARNING_STRING), None))
 
     log_instance = audit_log.AuditLog(log_to_syslog=False, log_to_db=True,
                                            db_instance=self.db_instance)
-
     log_id = log_instance.LogAction(
         u'sharrell', u'failed', {u'audit_args': {u'arg1': 1},
         u'replay_args': [1]}, 0)
-    output = os.popen('python %s -i %s --single '
-                      '-u %s --config-file %s' % (
-                          EXEC, log_id, USERNAME, USER_CONFIG))
-    self.assertEqual(output.read(),
-        'Not replaying action with id 16, action was unsuccessful.\n')
-    output.close()
+    command = shlex.split(str('python %s -i %s --single '
+                              '-u %s --config-file %s' % (
+                               EXEC, log_id, USERNAME, USER_CONFIG)))
+    output = subprocess.Popen(command, stdout=subprocess.PIPE, 
+        stdin=subprocess.PIPE)
+    self.assertEqual(output.communicate('n\n'),
+        ('Not replaying action with id 16, action was unsuccessful.\n'
+         '%s\n'
+         'Would you like to run dnstreeexport now? [y/n] ' % (
+            db_recovery.WARNING_STRING), None))
 
   def testRunAuditStep(self):
     for zone in self.core_instance.ListZones():
@@ -205,22 +218,32 @@ class TestDnsRecover(unittest.TestCase):
     self.core_instance.RemoveZone(u'university.edu')
     self.assertEqual(self.core_instance.ListViews(), [])
     self.assertEqual(self.core_instance.ListZones(), {})
-    output = os.popen('python %s -i 4 --single '
-                      '-u %s --config-file %s' % (
-                          EXEC, USERNAME, USER_CONFIG))
-    self.assertEqual(output.read(),
-        u"Replaying action with id 4: MakeView\n"
-         "with arguments: [u'test_view']\n")
-    output.close()
+    command = shlex.split(str('python %s -i 4 --single '
+                              '-u %s --config-file %s' % (
+                              EXEC, USERNAME, USER_CONFIG)))
+    output = subprocess.Popen(command, stdout=subprocess.PIPE, 
+                              stdin=subprocess.PIPE)
+    self.assertEqual(output.communicate('n\n'),
+        ("Replaying action with id 4: MakeView\n"
+         "with arguments: [u'test_view']\n"
+         "%s\n"
+         "Would you like to run dnstreeexport now? [y/n] " % (
+            db_recovery.WARNING_STRING), None))
     self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
-    output = os.popen('python %s -i 5 --single '
-                      '-u %s --config-file %s' % (
-                          EXEC, USERNAME, USER_CONFIG))
-    self.assertEqual(output.read(),
-         "Replaying action with id 5: MakeZone\n"
-         "with arguments: [u'university.edu', u'master', "
-         "u'university.edu.', u'test_view', None, True]\n")
-    output.close()
+    command = shlex.split(str('python %s -i 5 --single '
+                              '-u %s --config-file %s' % (
+                              EXEC, USERNAME, USER_CONFIG)))
+    output = subprocess.Popen(command, stdout=subprocess.PIPE, 
+                              stdin=subprocess.PIPE)
+    #Also testing invalid input response for dnsrecover
+    self.assertEqual(output.communicate('x\nn\n'),
+        ("Replaying action with id 5: MakeZone\n"
+         "with arguments: [u'university.edu', u'master', u'university.edu.', "
+         "u'test_view', None, True]\n"
+         "%s\n"
+         "Would you like to run dnstreeexport now? [y/n] " #User inputs x
+         "Would you like to run dnstreeexport now? [y/n] " % (
+            db_recovery.WARNING_STRING), None))
     self.assertEqual(self.core_instance.ListViews(), [u'test_view'])
     self.assertEqual(
         self.core_instance.ListZones(),

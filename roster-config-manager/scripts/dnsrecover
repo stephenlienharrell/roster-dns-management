@@ -36,13 +36,25 @@ __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
 
+import os
 import sys
 from optparse import OptionParser
 import ConfigParser
 import getpass
 
-import roster_core
+from roster_core import Config
 from roster_config_manager import db_recovery
+from roster_core import constants
+
+def RunDnsTreeExport(config_file):
+  """Runs dnstreeexport with the given config file.
+
+    Inputs: config_file: string of config file path."""
+
+  print '\nRunning dnstreeexport'
+  return_code = os.system('dnstreeexport -c %s' % config_file)
+  if( return_code == 0 ):
+    print 'dnstreeexport has completed successfully'
 
 def main(args):
   """Collects command line arguments. Exports tree.
@@ -72,7 +84,11 @@ def main(args):
                     default=unicode(getpass.getuser()))
   parser.add_option('--config-file', action='store', dest='config_file',
                     help='Config file location.', metavar='<file>',
-                    default=None)
+                    default=constants.SERVER_CONFIG_FILE_LOCATION)
+  parser.add_option('--auto-export', action='store_true', dest='auto_export',
+                    help='Automatically run dnstreeexport after dnsrecover '
+                    'has completeled. (Recommended)', metavar='<auto_export>',
+                    default=False)
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -88,13 +104,25 @@ def main(args):
   options.username = unicode(options.username)
   options.id = int(options.id)
 
-  config_instance = roster_core.Config(file_name=options.config_file)
+  config_instance = Config(file_name=options.config_file)
   recovery_instance = db_recovery.Recover(options.username, config_instance)
 
   if( options.single ):
-    recovery_instance.RunAuditStep(options.id)
+    success = recovery_instance.RunAuditStep(options.id)
   else:
-    recovery_instance.RunAuditRange(options.id)
+    success = recovery_instance.RunAuditRange(options.id)
+  if( not success ):
+    sys.exit(1)
+
+  if( not options.auto_export ):
+    print db_recovery.WARNING_STRING
+    user_input = ''
+    while( user_input.strip(' ').lower() not in ['y', 'n'] ):
+      user_input = raw_input('Would you like to run dnstreeexport now? [y/n] ')
+    if( user_input == 'y' ):
+      RunDnsTreeExport(options.config_file)
+  else:
+    RunDnsTreeExport(options.config_file)
 
 if __name__ == "__main__":
   main(sys.argv[1:])

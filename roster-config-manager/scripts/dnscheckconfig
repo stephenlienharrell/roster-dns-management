@@ -49,6 +49,7 @@ from fabric import state as fabric_state
 from optparse import OptionParser
 
 from roster_config_manager import config_lib
+from roster_core import constants
 
 COMMANDS_CONVERT_DICT = {
     'check-dup-records': {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
@@ -242,7 +243,7 @@ def main(args):
                     help='Make command verbose.', default=False)
   parser.add_option('--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
-                    default='/etc/roster/roster_server.conf')
+                    default=constants.SERVER_CONFIG_FILE_LOCATION)
   parser.add_option('--info-file', action='store', dest='info_file',
                     help='Server Info File Location', metavar='<info-file>')
   parser.add_option('-i', '--id', dest='id',

@@ -41,6 +41,7 @@ import sys
 from optparse import OptionParser
 
 from roster_config_manager import tree_exporter
+from roster_core import constants
 
 
 def main(args):
@@ -58,7 +59,7 @@ def main(args):
 
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
-                    default='/etc/roster/roster_server.conf')
+                    default=constants.SERVER_CONFIG_FILE_LOCATION)
   parser.add_option('-f', '--force', action='store_true', dest='force',
                     help='Export trees even if nothing has changed in the '
                          'database.', default=False)

@@ -50,6 +50,8 @@ from roster_config_manager import config_lib
 from optparse import OptionParser
 import ConfigParser
 
+from roster_core import constants
+
 def PushFiles(dns_server, root_config_dir, config_lib_instance, 
               rndc_exec='rndc', ssh_id_file=None):
   """Pushes files to a remote directory over SSH, and refreshes rndc.
@@ -247,7 +249,7 @@ def main(args):
                     default=None)
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
-                    default='/etc/roster/roster_server.conf')
+                    default=constants.SERVER_CONFIG_FILE_LOCATION)
   parser.add_option('-i', '--id', dest='id',
                     help='ID of tarfile output from Roster tree export.',
                     metavar='<id>', default=None)

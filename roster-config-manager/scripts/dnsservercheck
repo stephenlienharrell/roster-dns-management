@@ -39,6 +39,7 @@ import sys
 
 from optparse import OptionParser
 from roster_core import errors
+from roster_core import constants
 
 DNS_SERVER_REQUIRED_TOOLS = ['named-checkconf', 'named-checkzone',
                              'named-compilezone', 'tar']
@@ -63,7 +64,7 @@ def main(args):
                     metavar='<dns-server>')
   parser.add_option('-c','--config-file', action='store', dest='config_file',
                     help='Roster Server Config File Location.',
-                    default='/etc/roster/roster_server.conf', 
+                    default=constants.SERVER_CONFIG_FILE_LOCATION,
                     metavar='<config-file>')
   parser.add_option('-i','--id', action='store', dest='audit_id',
                     help='Audit Log ID for the tarfile output from Roster '

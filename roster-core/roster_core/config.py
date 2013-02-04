@@ -43,7 +43,7 @@ import errors
 
 class Config(object):
   """Abstracts a config file for Roster Core and Server"""
-  def __init__(self, file_name='/etc/roster_server.conf'):
+  def __init__(self, file_name=constants.SERVER_CONFIG_FILE_LOCATION):
     """Sets self.server, self.database, self.login and self.password from 
     a config file or passed vriables.
 

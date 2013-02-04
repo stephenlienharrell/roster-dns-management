@@ -39,6 +39,7 @@ import ConfigParser
 import sys
 import os
 import roster_client_lib
+from roster_core import constants
 
 class ArgumentError(Exception):
   pass
@@ -77,7 +78,7 @@ class CliCommonLib:
       else:
         file_locations = []
       file_locations.extend([os.path.expanduser('~/.rosterrc'),
-                             '/etc/roster/roster_user_tools.conf'])
+                             constants.SERVER_CONFIG_FILE_LOCATION])
       for config_file in file_locations:
         if( os.path.exists(config_file) ):
           self.config_file.read(config_file)

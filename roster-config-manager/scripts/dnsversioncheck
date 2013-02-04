@@ -44,6 +44,7 @@ from optparse import OptionParser
 
 import ConfigParser
 import roster_core
+from roster_core import constants
 
 def CheckBINDVersion(ssh_port, ssh_id, user_name, dns_server):
   """Checks the remote's server version of BIND
@@ -97,7 +98,7 @@ def main(args):
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Config File Location', metavar='<config-file>',
-                    default='/etc/roster/roster_server.conf')
+                    default=constants.SERVER_CONFIG_FILE_LOCATION)
   parser.add_option('-s', '--ssh-user-name', action='store', dest='ssh_username',
                     help='SSH username.', metavar='<ssh-user-name>',
                     default='root')

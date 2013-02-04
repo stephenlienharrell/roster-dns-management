@@ -45,6 +45,11 @@ import cPickle
 
 roster_core.core.CheckCoreVersionMatches(__version__)
 
+#Used in dnsrecover
+WARNING_STRING = (
+  'After running dnsrecover, running dnstreexport is recommended. '
+  'If dnstreeexport is not run, running dnsrecover again will cause '
+  'duplicate errors.')
 
 class Recover(object):
   """Roster Recovery
@@ -91,6 +96,9 @@ class Recover(object):
 
     Inputs:
       audit_log_id: integer of audit_log_id
+
+    Raises:
+      RecoverError: Should a error occur in recovery.
     """
     forbidden_actions = ['ExportAllBindTrees']
     audit_dict = self.db_instance.GetEmptyRowDict('audit_log')
@@ -102,15 +110,13 @@ class Recover(object):
       self.db_instance.EndTransaction()
     if( audit_log == () ):
       print 'Not replaying action with id %s, action is blank.' % audit_log_id
-      return
+      return False
     action = audit_log[0]['action']
     success = audit_log[0]['success']
     if( action in forbidden_actions ):
-      print 'Not replaying action with id %s, action not allowed.' % (
-          audit_log_id)
+      print 'Not replaying action with id %s, action not allowed.' % audit_log_id
     elif( not success ):
-      print 'Not replaying action with id %s, action was unsuccessful.' % (
-          audit_log_id)
+      print 'Not replaying action with id %s, action was unsuccessful.' % audit_log_id
     else:
       data = cPickle.loads(str(audit_log[0]['data']))['replay_args']
       print 'Replaying action with id %s: %s\nwith arguments: %s' % (
@@ -124,6 +130,7 @@ class Recover(object):
       else:
         raise roster_core.errors.UnexpectedDataError(
             "Function %s does not exist." % action)
+    return True
 
   def RunAuditRange(self, audit_log_id):
     """Runs a range of audit steps
@@ -146,3 +153,4 @@ class Recover(object):
 
     for current_id in range(audit_id + 1, audit_log_id):
       self.RunAuditStep(current_id)
+    return True

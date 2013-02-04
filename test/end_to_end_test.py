@@ -52,11 +52,14 @@ import sys
 import socket
 import string
 import subprocess
+import shlex
 import tarfile
 import threading
 import time
 import getpass
 import unittest
+
+from roster_config_manager import db_recovery
 
 
 UNITTEST_CONFIG = 'test_data/roster.conf'
@@ -3147,10 +3150,12 @@ class TestComplete(unittest.TestCase):
         ' -i %s '
         '-u %s --config-file %s ' % (144,
             USERNAME, self.userconfig))
-    command = os.popen(command_string)
+    command = subprocess.Popen(shlex.split(command_string), 
+        stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    output = command.communicate('y\n')
     time.sleep(1)
-    self.assertEqual(command.read(),
-        'Loading database from backup with ID 141\n'
+    self.assertEqual(output,
+       ('Loading database from backup with ID 141\n'
         'Replaying action with id 142: MakeZone\n'
         'with arguments: [u\'sub.university.edu\', '
         'u\'master\', u\'sub.university.edu.\', u\'test_view\', None, True]\n'
@@ -3237,17 +3242,11 @@ class TestComplete(unittest.TestCase):
         'u\'192.168.1.102\'}, u\'record_type\': u\'a\', '
         'u\'ttl\': 3600L, u\'record_target\': u\'mail2\', '
         'u\'record_zone_name\': u\'sub.university.edu\', '
-        'u\'record_view_dependency\': u\'test_view\'}], True]\n')
-    command.close()
-    ## dnstreeexport -f --config-file ./completeconfig.conf
-    command_string = (
-        'python ../roster-config-manager/scripts/dnstreeexport '
-        ' -f --config-file %s ' % (
-            self.userconfig))
-    command = os.popen(command_string)
-    self.assertEqual(command.read(),
-        '')
-    command.close()
+        'u\'record_view_dependency\': u\'test_view\'}], True]\n'
+        '%s\n'
+        'Would you like to run dnstreeexport now? [y/n] \n'
+        'Running dnstreeexport\n'
+        'dnstreeexport has completed successfully\n' % db_recovery.WARNING_STRING, None))
     time.sleep(1)
     ## dump reverted database
     origdb = bz2.BZ2File('%s/origdb.bz2' % self.backup_dir)
