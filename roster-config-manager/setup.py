@@ -73,5 +73,5 @@ setup(name='RosterConfigManager',
                  'scripts/dnstreeexport', 'scripts/dnscheckconfig',
                  'scripts/dnsexportconfig', 'scripts/dnsrecover',
                  'scripts/dnszonecompare', 'scripts/dnsquerycheck', 
-                 'scripts/dnsservercheck']
+                 'scripts/dnsservercheck', 'scripts/dnsversioncheck']
      )
