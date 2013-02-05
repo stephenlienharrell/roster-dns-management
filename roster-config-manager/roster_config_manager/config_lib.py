@@ -75,6 +75,9 @@ class ExporterAuditIdError(ConfigManagerError, errors.UserError):
 class ServerCheckError(ConfigManagerError, errors.UserError):
   pass
 
+class QueryCheckError(ConfigManagerError, errors.UserError):
+  pass
+
 class ConfigLib(object):
   """This class checks a DNS server for the functionality required to push
   zone files to it"""
@@ -765,7 +768,10 @@ class ConfigLib(object):
     named_file_dict = iscpy.ParseISCString(named_file_string)
     global_options_dict = named_file_dict['options']
 
+    if( 'view "%s"' % view not in named_file_dict ):
+      raise ConfigManagerError('Could not find view %s in named.conf' % view)
     view_dict = named_file_dict['view "%s"' % view]
+    
     zone_dict = None
     for zone in view_dict:
       #Making sure we're checking a dictionary

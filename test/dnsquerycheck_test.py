@@ -72,7 +72,6 @@ RNDC_CONF_FILE = 'test_data/rndc.conf'
 USERNAME = u'sharrell'
 TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
 BINDDIR = u'%s/test_data/bind_dir/' % os.getcwd()
-NAMED_DIR = '%s/test_data/bind_dir/named'  % os.getcwd()
 SCHEMA_FILE = '../roster-core/data/database_schema.sql'
 DATA_FILE = 'test_data/test_data.sql'
 SSH_ID = 'test_data/roster_id_dsa'
@@ -95,8 +94,8 @@ RNDC_KEY_DATA = ('key "rndc-key" {\n'
                  '   algorithm hmac-md5;\n'
                  '   secret "yTB86M+Ai8vKJYGYo2ossQ==";\n'
                  ' };')
-RNDC_CONF = 'test_data/rndc.conf'
-RNDC_KEY = 'test_data/rndc.key'
+RNDC_CONF = '%s/rndc.conf' % BINDDIR.rstrip('/')
+RNDC_KEY = '%s/rndc.key' % BINDDIR.rstrip('/')
 
 class TestQueryCheck(unittest.TestCase):
   def setUp(self):
@@ -128,8 +127,10 @@ class TestQueryCheck(unittest.TestCase):
     db_instance = self.config_instance.GetDb()
     db_instance.CreateRosterDatabase()
 
-    self.bind_config_dir = os.path.expanduser(
+    self.root_config_dir = os.path.expanduser(
         self.config_instance.config_file['exporter']['root_config_dir'])
+    self.backup_dir = os.path.expanduser(
+        self.config_instance.config_file['exporter']['backup_dir'])
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
 
     self.lockfile = self.config_instance.config_file[
@@ -149,33 +150,11 @@ class TestQueryCheck(unittest.TestCase):
 
     if( not os.path.exists(BINDDIR) ):
       os.mkdir(BINDDIR)
-    if( not os.path.exists(NAMED_DIR) ):
-      os.mkdir(NAMED_DIR)
+    if( not os.path.exists('%s/named/' % BINDDIR.rstrip('/')) ):
+      os.mkdir('%s/named/' % BINDDIR.rstrip('/'))
     if( not os.path.exists(TESTDIR) ):
       os.mkdir(TESTDIR)
 
-  def tearDown(self):
-    fabric_api.local('killall named', capture=True)
-    fabric_network.disconnect_all()
-    time.sleep(1) # Wait for disk to settle
-    if( os.path.exists('backup') ):
-      shutil.rmtree('backup')
-    if( os.path.exists('test_data/backup_dir') ):
-      shutil.rmtree('test_data/backup_dir')
-    if( os.path.exists('root_config_dir') ):
-      shutil.rmtree('root_config_dir')
-    #Clearing unittest_dir to empty directory
-    if( os.path.exists(self.lockfile) ):
-      os.remove(self.lockfile)
-
-    if( os.path.exists(BINDDIR) ):
-      shutil.rmtree(BINDDIR)
-    if( os.path.exists(NAMED_DIR) ):
-      shutil.rmtree(NAMED_DIR)
-    if( os.path.exists(TESTDIR) ):
-      shutil.rmtree(TESTDIR)
-
-  def testErrors(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'forward_zone', u'master',
                                 u'sub.university.lcl.', view_name=u'test_view')
@@ -203,6 +182,7 @@ class TestQueryCheck(unittest.TestCase):
                      'test_data/test_reverse_zone.db\n'
                      '6 total records added\n')
     output.close()
+
     output = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
                       '--view test_view -u %s --config-file %s '
                       '-z reverse_ipv6_zone' % ( 
@@ -219,8 +199,8 @@ class TestQueryCheck(unittest.TestCase):
     self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
     self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
     self.core_instance.MakeNamedConfGlobalOption(
-        u'set1', u'include "%s/test_data/rndc.key"; options { pid-file "test_data/named.pid";};\n'
-        'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (os.getcwd(), self.rndc_port)) # So we can test
+        u'set1', u'include "%s/rndc.key"; options { pid-file "test_data/named.pid";};\n'\
+        'controls { inet 127.0.0.1 port %d allow{localhost;} keys {rndc-key;};};' % (BINDDIR.rstrip('/'), self.rndc_port)) # So we can test
     self.core_instance.MakeViewToACLAssignments(u'test_view', u'set1',
                                                 u'any', 1)
     self.tree_exporter_instance.ExportAllBindTrees()
@@ -229,8 +209,8 @@ class TestQueryCheck(unittest.TestCase):
     shutil.copyfile('test_data/named.blank.conf', 
                     os.path.join(BINDDIR, 'named.conf'))
     named_file_contents = open(os.path.join(BINDDIR, 'named.conf')).read()
-    named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
-    named_file_contents = named_file_contents.replace('NAMED_DIR', NAMED_DIR)
+    named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/rndc.key' % BINDDIR.rstrip('/'))
+    named_file_contents = named_file_contents.replace('NAMED_DIR', '%s/named/' % BINDDIR.rstrip('/'))
     named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
     named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
@@ -243,6 +223,24 @@ class TestQueryCheck(unittest.TestCase):
         self.port, SSH_USER, BINDDIR), capture=True)
     time.sleep(2)
 
+  def tearDown(self):
+    fabric_api.local('killall named', capture=True)
+    fabric_network.disconnect_all()
+    time.sleep(1) # Wait for disk to settle
+    if( os.path.exists(self.root_config_dir) ):
+      shutil.rmtree(self.root_config_dir)
+    if( os.path.exists(self.backup_dir) ):
+      shutil.rmtree(self.backup_dir)
+    #Clearing unittest_dir to empty directory
+    if( os.path.exists(self.lockfile) ):
+      os.remove(self.lockfile)
+
+    if( os.path.exists(BINDDIR) ):
+      shutil.rmtree(BINDDIR)
+    if( os.path.exists(TESTDIR) ):
+      shutil.rmtree(TESTDIR)
+
+  def testErrors(self):
     # Running dnsservercheck
     command = os.popen('python %s --config-file %s -i 17 -d %s' % (
         SERVER_CHECK_EXEC, CONFIG_FILE, TEST_DNS_SERVER))
@@ -262,7 +260,7 @@ class TestQueryCheck(unittest.TestCase):
     #Messing with the zone files so that dnsquerycheck will not pass
     config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
     config_lib_instance.UnTarDnsTree()
-    zone_dir = 'root_config_dir/%s/named/test_view' % TEST_DNS_SERVER
+    zone_dir = '%s/%s/named/test_view' % (self.root_config_dir.rstrip('/'), TEST_DNS_SERVER)
     for zone_file_name in os.listdir(zone_dir):
       zone_file_path = os.path.join(zone_dir, zone_file_name)
 
@@ -284,97 +282,18 @@ class TestQueryCheck(unittest.TestCase):
     output = command.read()
     command.close()
     self.assertEqual(output, 
-        'Zone reverse_ipv6_zone does not appear to be online '
-        'for server localhost\n'
-        'Zone reverse_zone does not appear to be online '
-        'for server localhost\n'
-        'Zone forward_zone does not appear to be online '
-        'for server localhost\n')
+        'Zone reverse_ipv6_zone does not appear to be online.\n'
+        'Zone reverse_zone does not appear to be online.\n'
+        'Zone forward_zone does not appear to be online.\n')
 
     command = os.popen(
         'python %s -s %s -p %s -f no_file' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, self.port))
     output = command.read()
     command.close()
-    self.assertEqual(output, 
-        'Unable to open zone file no_file\n'
-        'Zone no_file does not appear to be online for server localhost\n')
+    self.assertEqual(output, 'ERROR: Unable to open zone file no_file\n')
 
   def testQueryCheck(self):
-    self.core_instance.MakeView(u'test_view1')
-    self.core_instance.MakeZone(u'forward_zone', u'master',
-                                u'sub.university.lcl.', view_name=u'test_view1')
-    self.core_instance.MakeZone(u'reverse_zone', u'master',
-                                u'0.168.192.in-addr.arpa.', view_name=u'test_view1')
-    self.core_instance.MakeZone(u'reverse_ipv6_zone', u'master',
-                                u'8.0.e.f.f.3.ip6.arpa.', view_name=u'test_view1')
-    self.assertEqual(self.core_instance.ListRecords(), [])
-    output = os.popen('python %s -f test_data/test_zone.db '
-                      '--view test_view1 -u %s --config-file %s '
-                      '-z forward_zone' % ( 
-                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
-                     'Loading in test_data/test_zone.db\n'
-                     '17 records loaded from zone test_data/test_zone.db\n'
-                     '17 total records added\n')
-    output.close()
-    output = os.popen('python %s -f test_data/test_reverse_zone.db '
-                      '--view test_view1 -u %s --config-file %s '
-                      '-z reverse_zone' % ( 
-                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
-                     'Loading in test_data/test_reverse_zone.db\n'
-                     '6 records loaded from zone '
-                     'test_data/test_reverse_zone.db\n'
-                     '6 total records added\n')
-    output.close()
-    output = os.popen('python %s -f test_data/test_reverse_ipv6_zone.db '
-                      '--view test_view1 -u %s --config-file %s '
-                      '-z reverse_ipv6_zone' % ( 
-                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
-                     'Loading in test_data/test_reverse_ipv6_zone.db\n'
-                     '5 records loaded from zone '
-                     'test_data/test_reverse_ipv6_zone.db\n'
-                     '5 total records added\n')
-    output.close()
-
-    named_conf_global_options_string = (
-        u'include "%s/test_data/rndc.key";\n'
-        u'options {\n'
-        u'\tpid-file "test_data/named.pid";\n'
-        u'\tsession-keyfile "%s";\n'
-        u'};\n'
-        u'controls { inet 127.0.0.1 port %d allow { localhost; } '
-        u'keys { rndc-key; }; };\n') % (os.getcwd(), SESSION_KEYFILE, self.rndc_port)
-
-    self.core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
-    self.core_instance.MakeDnsServerSet(u'set1')
-    self.core_instance.MakeDnsServerSetAssignments(TEST_DNS_SERVER, u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view1', 1, u'set1')
-    self.core_instance.MakeNamedConfGlobalOption(u'set1', named_conf_global_options_string)
-    self.core_instance.MakeViewToACLAssignments(u'test_view1', u'set1',
-                                                u'any', 1)
-    self.tree_exporter_instance.ExportAllBindTrees()
-
-    # Copy blank named.conf to start named with
-    shutil.copyfile('test_data/named.blank.conf', 
-                    os.path.join(BINDDIR, 'named.conf'))
-    named_file_contents = open(os.path.join(BINDDIR, 'named.conf')).read()
-    named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
-    named_file_contents = named_file_contents.replace('NAMED_DIR', NAMED_DIR)
-    named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
-    named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
-    named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
-    named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
-    named_file_handle.write(named_file_contents)
-    named_file_handle.close()
-
-    # Start named
-    out = fabric_api.local('/usr/sbin/named -p %s -u %s -c %snamed.conf' % (
-        self.port, SSH_USER, BINDDIR), capture=True)
-    time.sleep(2)
-
     # Running dnsservercheck
     command = os.popen('python %s --config-file %s -i 17 -d %s' % (
         SERVER_CHECK_EXEC, CONFIG_FILE, TEST_DNS_SERVER))

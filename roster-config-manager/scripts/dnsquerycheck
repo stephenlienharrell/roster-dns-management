@@ -64,9 +64,11 @@ def DnsQuery(records, dns_server, dns_port, zone_origin):
       the first being all the records that were able to 
       be verified, the second being all the records unable
       to be verified."""
-  if( dns_server == 'localhost' ):
-    dns_server = '127.0.0.1'
-  dns_server = socket.gethostbyname(dns_server)
+  try:
+    dns_server = socket.gethostbyname(dns_server)
+  except socket.gaierror:
+    raise config_lib.ConfigManagerError('ERROR: Could not find address '
+        'associated with %s.' % dns_server)
 
   good_records = []
   record_types = {
@@ -106,7 +108,12 @@ def DnsQuery(records, dns_server, dns_port, zone_origin):
       response = dns.query.udp(message, dns_server, 
           port=int(dns_port), one_rr_per_rrset=False, timeout=10)
     except dns.exception.Timeout:
-      return ([], records)
+      raise config_lib.QueryCheckError('Querying DNS server timed out.')
+    except dns.exception.SyntaxError:
+      raise config_lib.QueryCheckError('Invalid DNS server address.')
+    except dns.exception.DNSException:
+      raise config_lib.QueryCheckError('Unknown error during DNS query '
+                                       'process.')
 
     answers = response.answer
 
@@ -198,16 +205,22 @@ def QueryFromZoneFile(zone_file_name, view_name=None):
     zone_file_string = zone_file_handle.read()
     zone_file_handle.close()
   except IOError:
-    print 'Unable to open zone file %s' % zone_file_name
-    print 'Zone %s does not appear to be online for server %s' % (
-        zone_name, options.server)
-    return
+    raise config_lib.QueryCheckError('Unable to open zone file '
+                                     '%s' % zone_file_name)
 
-  zone_object = dns.zone.from_text(
-      str(zone_file_string), check_origin=False)
+  try:
+    zone_object = dns.zone.from_text(
+        str(zone_file_string), check_origin=False)
+  except dns.zone.NoSOA:
+    raise config_lib.QueryCheck('Zone has no SOA record.')
+  except dns.zone.NoNS:
+    raise config_lib.QueryCheckError('Zone has no A/AAAA record for NS')
   zone_origin = zone_object.origin
-  all_zone_records_list = helpers_lib.CreateRecordsFromZoneObject(
-      zone_object, zone_name=zone_name, view_name=view_name)
+  try:
+    all_zone_records_list = helpers_lib.CreateRecordsFromZoneObject(
+        zone_object, zone_name=zone_name, view_name=view_name)
+  except errors.UnexpectedDataError as e:
+    raise config_lib.QueryCheckError('Unexpected Data - %s' % e.message())
   zone_records_list = []
 
   #Generating list of random records to query
@@ -227,8 +240,8 @@ def QueryFromZoneFile(zone_file_name, view_name=None):
       zone_records_list, options.server, options.port, zone_origin)
 
   if( len(bad_records) != 0 ):
-    print 'Zone %s does not appear to be online for server %s' % (
-        zone_name, options.server)
+    return False
+  return True
 
 def main(args):
   usage = ('\n'
@@ -279,11 +292,13 @@ def main(args):
     print 'Must specify -i/--id and -c/--config-file or the -f/--file flag.'
     sys.exit(1)
 
+  bad_zones = []
   #If we're querying from id and config file
   if( not options.zone_file ):
     config_lib_instance = config_lib.ConfigLib(options.config_file)
     config_lib_instance.UnTarDnsTree(options.id)
-    server_dir = os.path.join(config_lib_instance.root_config_dir, options.server)
+    server_dir = os.path.join(config_lib_instance.root_config_dir,
+                              options.server)
 
     view_list = config_lib_instance.GetZoneList(options.server)
   
@@ -308,9 +323,26 @@ def main(args):
         zone_file_name = zone_list[zone_name]
 
         zone_file = os.path.join(server_dir, 'named', view_name, zone_file_name)
-        QueryFromZoneFile(zone_file, view_name=view_name)
+        try:
+          result = QueryFromZoneFile(zone_file, view_name=view_name)
+        except config_lib.QueryCheckError as e:
+          print 'ERROR: %s' % e.message
+          sys.exit(1)
+        if( not result ):
+          bad_zones.append(zone_file_name.split('/').pop().split('.')[0])
   else:
-    QueryFromZoneFile(options.zone_file)
+    try:
+      result = QueryFromZoneFile(options.zone_file)
+    except config_lib.QueryCheckError as e:
+      print 'ERROR: %s' % e.message
+      sys.exit(1)
+    if( not result ):
+      bad_zones.append(options.zone_file.split('/').pop().split('.')[0])
+
+  if( bad_zones is not [] ):
+    for zone in bad_zones:
+      print 'Zone %s does not appear to be online.' % zone
+    sys.exit(1)
 
 if( __name__ == "__main__" ):
   main(sys.argv[1:])
