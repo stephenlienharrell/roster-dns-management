@@ -1130,7 +1130,7 @@ class TestTreeExporter(unittest.TestCase):
 
     named_conf_global_options_dict['global_options'] = iscpy.Serialize(
         u'options {\n''\tdirectory "/var/domain";\n''\trecursion no;\n'
-        '\tmax-cache-size 512M;\n''};\n''\n''logging {\n''\tchannel "security" {\n'
+        '\tmax-cache-size 512M;\n''\tallow-query { any; };\n''};\n''\n''logging {\n''\tchannel "security" {\n'
         '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
         '\t\tprint-time yes;\n''\t};\n''\tchannel "query_logging" {\n'
         '\t\tsyslog local5;\n''\t\tseverity info;\n''\t};\n'
@@ -1434,6 +1434,7 @@ class TestTreeExporter(unittest.TestCase):
          'print-time yes; }; };\n'
          'options { directory "remote_bind_dir/named";\n'
          'recursion no;\n'
+         'allow-query { any; };\n'
          'max-cache-size 512M; };\n'
          'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
          'acl secret {\n'
@@ -1514,9 +1515,10 @@ class TestTreeExporter(unittest.TestCase):
          'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
          'print-time yes; }; };\n'
          'options { directory "remote_bind_dir/named";\n'
+         'masterfile-format raw;\n'
+         'allow-query { any; };\n'
          'recursion no;\n'
-         'max-cache-size 512M;\n'
-         'masterfile-format raw; };\n'
+         'max-cache-size 512M; };\n'
          'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
          'acl secret {\n'
          '\t10.10/32;\n'
@@ -2211,6 +2213,7 @@ class TestTreeExporter(unittest.TestCase):
             'print-time yes; }; };\n'
             'options { directory "/var/domain";\n'
             'recursion no;\n'
+            'allow-query { any; };\n'
             'max-cache-size 512M; };\n'
             'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
     global_options_external = (
