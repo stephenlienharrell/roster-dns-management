@@ -136,8 +136,8 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.backup_dir)
     if( os.path.exists(self.root_config_dir) ):
       shutil.rmtree(self.root_config_dir)
-    if( os.path.exists('temp_dir') ):
-      shutil.rmtree('temp_dir')
+    if( os.path.exists('root_config_dir') ):
+      shutil.rmtree('root_config_dir')
     if( os.path.exists('%s/named' % BIND_DIR) ):
       shutil.rmtree('%s/named' % BIND_DIR)
     if( os.path.exists('%s/named.conf' % BIND_DIR) ):
@@ -173,8 +173,8 @@ class TestCheckConfig(unittest.TestCase):
         KEY_FILE, EXEC)).split(), stderr=subprocess.PIPE).stderr
     self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
     output.close()
-    output = os.popen('python %s -s %s -i 12 --config-file %s' % (
-        EXEC, DNS_SERVER, CONFIG_FILE))
+    output = os.popen('python %s -i 12 --config-file %s' % (
+        EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), '')
     output.close()
@@ -214,15 +214,15 @@ class TestCheckConfig(unittest.TestCase):
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = os.popen('python %s -s localhost --config-file %s' % (
+    output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), 
         "ERROR: dns_rdata_fromtext: "
-        "temp_dir/localhost/named/test_view/sub.university.lcl.db:7: "
+        "root_config_dir/localhost/named/test_view/sub.university.lcl.db:7: "
         "near '%s.lcl.': bad name (check-names)\n"
         "zone sub.university.lcl/IN: loading from master file "
-        "temp_dir/localhost/named/test_view/sub.university.lcl.db "
+        "root_config_dir/localhost/named/test_view/sub.university.lcl.db "
         "failed: bad name (check-names)\n"
         "zone sub.university.lcl/IN: not loaded due to errors.\n" % (
             FAKE_SERVER))
@@ -233,7 +233,7 @@ class TestCheckConfig(unittest.TestCase):
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = os.popen('python %s -s localhost --config-file %s' % (
+    output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), '')
@@ -259,37 +259,10 @@ class TestCheckConfig(unittest.TestCase):
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = os.popen('python %s -s localhost --config-file %s' % (
-        EXEC, CONFIG_FILE))
-    time.sleep(2) # Wait for disk to settle
-    self.assertEqual(output.read(), '')
-    output.close()
-
-  def testCheckConfigMissingArgs(self):
-    self.assertEqual(self.core_instance.ListRecords(), [])
-    output = os.popen('python %s -f test_data/test_zone.db '
-                      '--view test_view -u %s --config-file %s '
-                      '-z sub.university.lcl' % (
-                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
-                     'Loading in test_data/test_zone.db\n'
-                     '17 records loaded from zone test_data/test_zone.db\n'
-                     '17 total records added\n')
-    output.close()
-
-    self.core_instance.MakeDnsServer(DNS_SERVER, SSH_USER, BIND_DIR, TEST_DIR)
-    self.core_instance.MakeDnsServerSet(u'set1')
-    self.core_instance.MakeDnsServerSetAssignments(DNS_SERVER, u'set1')
-    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view', 1, u'set1')
-    self.core_instance.MakeNamedConfGlobalOption(u'set1', u'#options')
-
-    self.tree_exporter_instance.ExportAllBindTrees()
-
     output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
-    self.assertEqual(output.read(),
-                     'ERROR: Server flag "-s/--server" cannot be empty.\n')
+    self.assertEqual(output.read(), '')
     output.close()
 
   def testCheckErrorConfig(self):
@@ -316,15 +289,15 @@ class TestCheckConfig(unittest.TestCase):
         self.tree_exporter_instance.tar_file_name,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aaq 192.168.1.104')
-    output = os.popen('python %s --just-local --config-file %s' % (
+    output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     # Replacement below to accomodate for later bind versions
     self.assertEqual(output.read().replace(
         'zone sub.university.lcl/IN: not loaded due to errors.\n', ''),
-        'ERROR: temp_dir/%s/named/test_view/sub.university.lcl.db:16: '
+        'ERROR: root_config_dir/%s/named/test_view/sub.university.lcl.db:16: '
         'unknown RR type \'aaq\'\n'
         'zone sub.university.lcl/IN: loading from master '
-        'file temp_dir/%s/named/test_view/sub.university.lcl.db '
+        'file root_config_dir/%s/named/test_view/sub.university.lcl.db '
         'failed: unknown class/type\n' % (DNS_SERVER, DNS_SERVER))
     output.close()
 
@@ -336,11 +309,11 @@ class TestCheckConfig(unittest.TestCase):
         self.tree_exporter_instance.tar_file_name,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         ' 796 10800', ' 10800')
-    output = os.popen('python %s --just-local --config-file %s --verbose' % (
+    output = os.popen('python %s --config-file %s --verbose' % (
         EXEC, CONFIG_FILE))
     self.assertEqual(output.read(),
-        'Finished - temp_dir/%s/named.conf.a\n'
-        'Finished - temp_dir/%s/named/test_view/sub.university.lcl.db\n'
+        'Finished - root_config_dir/%s/named.conf.a\n'
+        'Finished - root_config_dir/%s/named/test_view/sub.university.lcl.db\n'
         '--------------------------------------------------------------------\n'
         'Checked 1 named.conf file(s) and 1 zone file(s)\n'
         '\n'
@@ -355,7 +328,7 @@ class TestCheckConfig(unittest.TestCase):
         self.tree_exporter_instance.tar_file_name,
         '%s/named.conf.a' % DNS_SERVER,
         'type master;', 'type bad_type;')
-    output = os.popen('python %s --just-local --config-file %s' % (
+    output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     self.assertTrue(re.search('[\']bad_type[\'] unexpected',output.read()))
     output.close()
@@ -369,7 +342,7 @@ class TestCheckConfig(unittest.TestCase):
         '%s/named.conf.a' % DNS_SERVER,
         'type master;',
         'type master;\nwrong;')
-    output = os.popen('python %s --just-local --config-file %s' % (
+    output = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     lines = output.read()
     self.assertTrue(re.search('unknown option \'wrong\'', lines))
@@ -433,8 +406,8 @@ class TestCheckConfig(unittest.TestCase):
     named_conf_handle.close()
     config_lib_instance.TarDnsTree(audit_log_id)
 
-    output = os.popen('python %s --config-file %s -s %s' % (
-        EXEC, CONFIG_FILE, DNS_SERVER))
+    output = os.popen('python %s --config-file %s' % (
+        EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), '')
     output.close()

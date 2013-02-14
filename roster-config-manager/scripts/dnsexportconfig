@@ -153,14 +153,6 @@ def main(args):
   parser.add_option('-f', '--force', action='store_true', dest='force',
                     help='(dnstreeexport)Export trees even if nothing has '
                          'changed in the database.', default=False)
-  parser.add_option('-d', '--directory', action='store', dest='directory',
-                    help='(dnscheckconfig)Backup directory to scan.', 
-                    metavar='<directory>', default=None)
-  parser.add_option('-o', '--output-directory', action='store',
-                    dest='output_directory',
-                    help='(dnscheckconfig)Directory to temporarily output '
-                         'files to. Must be same in named.conf.',
-                    metavar='<output-directory>', default='temp_dir')
   parser.add_option('--named-checkzone', action='store',
                     dest='named_checkzone',
                     help='(dnscheckconfig)Location of named_checkzone binary.',
@@ -169,11 +161,6 @@ def main(args):
                     dest='named_checkconf',
                     help='(dnscheckconfig)Location of named_checkconf binary.',
                     default='/usr/sbin/named-checkconf')
-  parser.add_option('--info-file', action='store', dest='info_file',
-                    help='(dnscheckconfig)Server info file location')
-  parser.add_option('--just-local', action='store_true', dest='just_local',
-                    help='(dnscheckconfig)Only check config locally.',
-                    default=False)
   parser.add_option('--ssh-id', action='store', dest='ssh_id',
                     help='(dnsconfigsync)SSH id file.', metavar='<ssh-id>',
                     default=None)
@@ -237,18 +224,6 @@ def main(args):
   fabric_api.env.warn_only = True
   
   try:
-    if( options.directory ):
-      if( os.path.exists(options.directory) and not options.force ):
-        print 'ERROR: Directory "%s" exists, use -f flag to overwrite.' % (
-            options.directory)
-        sys.exit(1)
-      elif( os.path.exists(options.directory) and options.force ):
-        shutil.rmtree(options.directory)
-    else:
-      server_config_file = ConfigParser.SafeConfigParser()
-      server_config_file.read(options.config_file)
-      options.directory = server_config_file.get('exporter',
-                                                 'backup_dir'.rstrip('/'))
     # Running dnstreexport
     dnstreeexport_array = [options.tree_export]
     dnstreeexport_array.extend(['-c', options.config_file])
@@ -268,18 +243,10 @@ def main(args):
     dnscheckconfig_array = [options.check_config]
     dnscheckconfig_array.extend(['-i', '%s' % options.id])
     dnscheckconfig_array.extend(['--config-file', options.config_file])
-    if( options.directory ):
-      dnscheckconfig_array.extend(['-d', options.directory])
-    if( options.output_directory ):
-      dnscheckconfig_array.extend(['-o', options.output_directory])
     if( options.named_checkzone ):
       dnscheckconfig_array.extend(['-z', options.named_checkzone])
     if( options.named_checkconf ):
       dnscheckconfig_array.extend(['-c', options.named_checkconf])
-    if( options.just_local ):
-      dnscheckconfig_array.extend(['--just-local', options.just_local])
-    if( options.info_file ):
-      dnscheckconfig_array.extend(['--info-file', options.info_file])
     if( not options.quiet ):
       dnscheckconfig_array.append('-v')
     check_config_arg_string = ' '.join(dnscheckconfig_array)
@@ -319,8 +286,7 @@ def main(args):
 
     # Running commands for each server
     for dns_server in all_dns_servers:
-      output, config_return = RunCommand('%s -s %s' % (
-          check_config_arg_string, dns_server), debug)
+      output, config_return = RunCommand(check_config_arg_string, debug)
       if( config_return != 0 ):
         error_messages.append('dnscheckconfig has failed on server\'%s\' '
                               'with the following error:'

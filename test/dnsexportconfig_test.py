@@ -156,9 +156,8 @@ class TestCheckConfig(unittest.TestCase):
       os.remove(self.lockfile)
 
   def testCheckConfig(self):
-    print 'dnstreeexport is about to spit an error, this is supposed to happen.'
     output = os.popen('python %s -f --config-file %s '
-    '--ssh-id %s --rndc-port %s --rndc-key %s --rndc-conf %s' % (
+    '--ssh-id %s --rndc-port %s --rndc-key %s --rndc-conf %s 2>/dev/null' % (
         EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY,
         RNDC_CONF))
     lines = output.read().split('\n')
@@ -222,7 +221,7 @@ class TestCheckConfig(unittest.TestCase):
     time.sleep(2)
    
     output = os.popen('python %s -f --config-file %s '
-    '--ssh-id %s --rndc-port %s --rndc-key %s --rndc-conf %s -p %s' % (
+    '--ssh-id %s --rndc-port %s --rndc-key %s --rndc-conf %s -p %s 2>/dev/null' % (
         EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY,
         RNDC_CONF, self.port))
     lines = output.read().split('\n')
@@ -230,9 +229,9 @@ class TestCheckConfig(unittest.TestCase):
 
     audit_log_id = 15 #Makes for easier fixing of the unittest later
     self.assertTrue('[localhost] local: dnstreeexport -c test_data/roster.conf --force' in lines)
-    self.assertTrue('[localhost] local: dnscheckconfig -i %s --config-file test_data/roster.conf -d test_data/backup_dir -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s localhost'  % audit_log_id in lines)
-    self.assertTrue('Finished - temp_dir/%s/named.conf.a' % TEST_DNS_SERVER in lines)
-    self.assertTrue('Finished - temp_dir/%s/named/test_view/sub.university.lcl.db' % TEST_DNS_SERVER in lines)
+    self.assertTrue('[localhost] local: dnscheckconfig -i %s --config-file test_data/roster.conf -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v'  % audit_log_id in lines)
+    self.assertTrue('Finished - root_config_dir/%s/named.conf.a' % TEST_DNS_SERVER in lines)
+    self.assertTrue('Finished - root_config_dir/%s/named/test_view/sub.university.lcl.db' % TEST_DNS_SERVER in lines)
     self.assertTrue('All checks successful' in lines)
     self.assertTrue('[localhost] local: dnsservercheck -c test_data/roster.conf -i %s -d %s' % (audit_log_id, TEST_DNS_SERVER) in lines)
     self.assertTrue('[localhost] local: dnsquerycheck -c test_data/roster.conf -i %s -n 5 -p %s -s %s' % (audit_log_id, self.port, TEST_DNS_SERVER) in lines)
@@ -246,7 +245,7 @@ class TestCheckConfig(unittest.TestCase):
     lines = output.read().split('\n')
     output.close()
 
-    self.assertTrue('[localhost] local: dnscheckconfig -i %s --config-file test_data/roster.conf -d test_data/backup_dir -o temp_dir -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s bad.server.local' % (audit_log_id + 3) in lines)
+    self.assertTrue('[localhost] local: dnscheckconfig -i %s --config-file test_data/roster.conf -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v' % (audit_log_id + 3) in lines)
 
     smtp_server = self.config_instance.config_file['exporter']['smtp_server']
     self.assertTrue('%s is an invalid smtp server.' % smtp_server in lines)
@@ -273,7 +272,7 @@ class TestCheckConfig(unittest.TestCase):
             EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
     out_str = output.read()
     output.close()
-    self.assertTrue("""<html><head></head><body><br/><h4>dnsservercheck failed on server 'bad.server.local' with the following error:</h4><p>ERROR: Could not connect to bad.server.local via SSH.</p></body></html>""" in out_str)
+    self.assertTrue("""<html><head></head><body><br/><h4>dnsservercheck failed on server 'bad.server.local' with the following error:</h4><p>ERROR: Could not connect to bad.server.local via SSH.</p><br/><h4>dnsquerycheck failed on server 'localhost' with the following error:</h4><p>Zone sub does not appear to be online.</p></body></html>""" in out_str)
     self.assertTrue("""ERROR: Could not connect to bad.server.local via SSH.""" in out_str)
 
     self.assertTrue("""dnsservercheck failed on server 'bad.server.local' with the following error:""" in out_str)
@@ -289,13 +288,13 @@ class TestCheckConfig(unittest.TestCase):
     self.assertTrue("""Content-Type: text/plain; charset="us-ascii"\n""" in out_str)
     self.assertTrue("""MIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\n""" in out_str)
     self.assertTrue("""dnscheckconfig has failed on server'%s' with the following error:\n\n""" % TEST_DNS_SERVER in out_str)
-    self.assertTrue("""Finished - temp_dir/%s/named.conf.a\n""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""Finished - root_config_dir/%s/named.conf.a\n""" % TEST_DNS_SERVER in out_str)
     self.assertTrue("""ERROR: zone sub.university.lcl/IN: NS 'ns.sub.university.lcl' has no address records (A or AAAA)\n""" in out_str)
     self.assertTrue("""zone sub.university.lcl/IN: not loaded due to errors.""" in out_str)
 
     self.assertTrue("""Content-Type: text/html; charset="us-ascii"\n""" in out_str)
     self.assertTrue("""<html><head></head><body><br/><h4>dnscheckconfig has failed on server'%s' with the following error:</h4>""" % TEST_DNS_SERVER in out_str)
-    self.assertTrue("""<p>Finished - temp_dir/%s/named.conf.a<br/>""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""<p>Finished - root_config_dir/%s/named.conf.a<br/>""" % TEST_DNS_SERVER in out_str)
     self.assertTrue("""ERROR: zone sub.university.lcl/IN: NS 'ns.sub.university.lcl' has no address records (A or AAAA)<br/>""" in out_str)
     self.assertTrue("""zone sub.university.lcl/IN: not loaded due to errors.</p></body></html>""" in out_str)
 
