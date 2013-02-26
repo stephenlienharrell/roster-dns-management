@@ -549,7 +549,7 @@ class BindTreeExport(object):
             view_name, zone, extension))
         zone_options = cooked_data['dns_server_sets'][dns_server_set]['views'][
             view_name]['zones'][zone]['zone_options'].replace('\n', '\n\t\t')
-        named_conf_lines.append('\t\t%s' % zone_options.rsplit('\n\t\t', 1)[0])
+        named_conf_lines.append('\t\t%s' % zone_options)
         named_conf_lines.append('\t};')
       named_conf_lines.append('};')
     return '\n'.join(named_conf_lines)

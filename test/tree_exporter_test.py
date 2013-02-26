@@ -226,7 +226,13 @@ class TestTreeExporter(unittest.TestCase):
     zone_view_assignments_dict['zone_view_assignments_zone_type'] = u'master'
     zone_view_assignments_dict['zone_origin'] = u'university.edu.'
     zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'allow-update { none; };\n')
+        u'allow-update { none; };\n'
+        'also-notify { 192.168.1.5;\n'
+        '192.168.1.6;\n'
+        '192.168.1.7;\n'
+        '192.168.1.8;\n'
+        '192.168.1.9;\n'
+        '192.168.1.10;\n};\n')
 
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = u'any'
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
@@ -244,6 +250,8 @@ class TestTreeExporter(unittest.TestCase):
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
     zone_view_assignments_dict['zone_origin'] = u'university2.edu.'
+    zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
+        u'allow-update { none; };\n')
     zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
         u'internal_dep')
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
@@ -281,6 +289,14 @@ class TestTreeExporter(unittest.TestCase):
     zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
         u'4.3.2.1.in-addr.arpa')
     zone_view_assignments_dict['zone_origin'] = u'4.3.2.1.in-addr.arpa.'
+    zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
+        u'allow-update { none; };\n'
+        'also-notify { 192.168.1.5;\n'
+        '192.168.1.6;\n'
+        '192.168.1.7;\n'
+        '192.168.1.8;\n'
+        '192.168.1.9;\n'
+        '192.168.1.10;\n};\n')
     db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
 
     zone_view_assignments_dict['zone_view_assignments_zone_type'] = u'slave'
@@ -1458,6 +1474,12 @@ class TestTreeExporter(unittest.TestCase):
          '\tzone "university.edu" {\n'
          '\t\ttype master;\n'
          '\t\tfile "external/university.edu.db";\n'
+         '\t\talso-notify { 192.168.1.10;\n'
+         '\t\t192.168.1.7;\n'
+         '\t\t192.168.1.6;\n'
+         '\t\t192.168.1.5;\n'
+         '\t\t192.168.1.9;\n'
+         '\t\t192.168.1.8; };\n'
          '\t\tallow-update { none; };\n'
          '\t};\n'
 	 '\tzone "otheruniversity.edu" {\n'
@@ -1468,6 +1490,12 @@ class TestTreeExporter(unittest.TestCase):
          '\tzone "4.3.2.1.in-addr.arpa" {\n'
          '\t\ttype master;\n'
          '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
+         '\t\talso-notify { 192.168.1.10;\n'
+         '\t\t192.168.1.7;\n'
+         '\t\t192.168.1.6;\n'
+         '\t\t192.168.1.5;\n'
+         '\t\t192.168.1.9;\n'
+         '\t\t192.168.1.8; };\n'
          '\t\tallow-update { none; };\n'
          '\t};\n'
          '};\n'
@@ -1484,6 +1512,12 @@ class TestTreeExporter(unittest.TestCase):
          '\tzone "university.edu" {\n'
          '\t\ttype master;\n'
          '\t\tfile "internal/university.edu.db";\n'
+         '\t\talso-notify { 192.168.1.10;\n'
+         '\t\t192.168.1.7;\n'
+         '\t\t192.168.1.6;\n'
+         '\t\t192.168.1.5;\n'
+         '\t\t192.168.1.9;\n'
+         '\t\t192.168.1.8; };\n'
          '\t\tallow-update { none; };\n'
          '\t};\n'
          '\tzone "168.192.in-addr.arpa" {\n'
@@ -1541,6 +1575,12 @@ class TestTreeExporter(unittest.TestCase):
          '\tzone "university.edu" {\n'
          '\t\ttype master;\n'
          '\t\tfile "external/university.edu.db";\n'
+         '\t\talso-notify { 192.168.1.10;\n'
+         '\t\t192.168.1.7;\n'
+         '\t\t192.168.1.6;\n'
+         '\t\t192.168.1.5;\n'
+         '\t\t192.168.1.9;\n'
+         '\t\t192.168.1.8; };\n'
          '\t\tallow-update { none; };\n'
          '\t};\n'
 	 '\tzone "otheruniversity.edu" {\n'
@@ -1551,6 +1591,12 @@ class TestTreeExporter(unittest.TestCase):
          '\tzone "4.3.2.1.in-addr.arpa" {\n'
          '\t\ttype master;\n'
          '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
+         '\t\talso-notify { 192.168.1.10;\n'
+         '\t\t192.168.1.7;\n'
+         '\t\t192.168.1.6;\n'
+         '\t\t192.168.1.5;\n'
+         '\t\t192.168.1.9;\n'
+         '\t\t192.168.1.8; };\n'
          '\t\tallow-update { none; };\n'
          '\t};\n'
          '};\n'
@@ -1567,6 +1613,12 @@ class TestTreeExporter(unittest.TestCase):
          '\tzone "university.edu" {\n'
          '\t\ttype master;\n'
          '\t\tfile "internal/university.edu.db";\n'
+         '\t\talso-notify { 192.168.1.10;\n'
+         '\t\t192.168.1.7;\n'
+         '\t\t192.168.1.6;\n'
+         '\t\t192.168.1.5;\n'
+         '\t\t192.168.1.9;\n'
+         '\t\t192.168.1.8; };\n'
          '\t\tallow-update { none; };\n'
          '\t};\n'
          '\tzone "168.192.in-addr.arpa" {\n'
@@ -1724,49 +1776,64 @@ class TestTreeExporter(unittest.TestCase):
          {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
          u'master', 'zone_view_assignments_zone_name': u'university.edu', 
           'zone_view_assignments_view_dependency': u'any', 'zone_options': 
-         u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}, 
+         u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\np4\nI01\n'
+         'sV192.168.1.7\np5\nI01\nsV192.168.1.6\np6\nI01\nsV192.168.1.5\np7\n'
+         'I01\nsV192.168.1.9\np8\nI01\nsV192.168.1.8\np9\nI01\n'
+         'ssVallow-update\np10\n(dp11\nVnone\np12\nI01\nss.'}, 
          {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
          u'master', 'zone_view_assignments_zone_name': u'university.edu', 
           'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
+          'zone_options': u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\n'
+          'p4\nI01\nsV192.168.1.7\np5\nI01\nsV192.168.1.6\np6\nI01\n'
+          'sV192.168.1.5\np7\nI01\nsV192.168.1.9\np8\nI01\nsV192.168.1.8\np9\n'
+          'I01\nssVallow-update\np10\n(dp11\nVnone\np12\nI01\nss.'},
          {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'university.edu', 
           'zone_view_assignments_view_dependency': u'external_dep', 
-          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
+          'zone_options': u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\np4\n'
+          'I01\nsV192.168.1.7\np5\nI01\nsV192.168.1.6\np6\nI01\nsV192.168.1.5\n'
+          'p7\nI01\nsV192.168.1.9\np8\nI01\nsV192.168.1.8\np9\nI01\n'
+          'ssVallow-update\np10\n(dp11\nVnone\np12\nI01\nss.'},
          {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
          u'master', 'zone_view_assignments_zone_name': u'university.edu', 
           'zone_view_assignments_view_dependency': u'private_dep', 'zone_options':
-         u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}, {'zone_origin':
+         u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\np4\nI01\nsV192.168.1.7\n'
+         'p5\nI01\nsV192.168.1.6\np6\nI01\nsV192.168.1.5\np7\nI01\nsV192.168.1.9\n'
+         'p8\nI01\nsV192.168.1.8\np9\nI01\nssVallow-update\np10\n(dp11\nVnone\n'
+         'p12\nI01\nss.'}, {'zone_origin':
          u'university2.edu.', 'zone_view_assignments_zone_type': u'master', 
           'zone_view_assignments_zone_name': u'int.university.edu', 
           'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
          {'zone_origin': u'university2.edu.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'int.university.edu',
           'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
+          'zone_options':  u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
          {'zone_origin': u'university3.edu.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'priv.university.edu',
           'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
          {'zone_origin': u'168.192.in-addr.arpa.', 
           'zone_view_assignments_zone_type': u'master', 
           'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
           'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'},
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
          {'zone_origin': u'168.192.in-addr.arpa.', 
           'zone_view_assignments_zone_type': u'master', 
           'zone_view_assignments_zone_name': u'168.192.in-addr.arpa', 
           'zone_view_assignments_view_dependency': u'external_dep', 
-          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}, 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
          {'zone_origin': u'168.192.in-addr.arpa.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
           'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options': u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}, 
+          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
          {'zone_origin': u'4.3.2.1.in-addr.arpa.', 'zone_view_assignments_zone_type':
          u'master', 'zone_view_assignments_zone_name': u'4.3.2.1.in-addr.arpa', 
           'zone_view_assignments_view_dependency': u'external_dep', 'zone_options': 
-         u'(dp1\n''Vallow-update\n''p2\n''(dp3\n''Vnone\n''p4\n''I01\n''ss.'}))
+         u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\np4\nI01\nsV192.168.1.7\n'
+         'p5\nI01\nsV192.168.1.6\np6\nI01\nsV192.168.1.5\np7\nI01\n'
+         'sV192.168.1.9\np8\nI01\nsV192.168.1.8\np9\nI01\nssVallow-update\n'
+         'p10\n(dp11\nVnone\np12\nI01\nss.'}))
 
     ## Testing the RawDump raw_data[1]
     self.assertEqual(raw_data[1]['zones']['rows'],
@@ -1901,7 +1968,9 @@ class TestTreeExporter(unittest.TestCase):
              'zone_name': u'university.edu',
              u'assignment_ip': u'1.2.3.6'}],
              'zone_origin': 'university.edu.',
-             'zone_options': u'allow-update { none; };'},
+             'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
+             '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
+             'allow-update { none; };'},
              u'4.3.2.1.in-addr.arpa': {'zone_type': u'master',
              'records': [{u'serial_number': 20091224,
              u'refresh_seconds': 5,
@@ -1924,7 +1993,9 @@ class TestTreeExporter(unittest.TestCase):
              'zone_name': u'4.3.2.1.in-addr.arpa',
              u'assignment_host': 'computer1'}],
              'zone_origin': '4.3.2.1.in-addr.arpa.',
-             'zone_options': u'allow-update { none; };'}},
+             'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
+             '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
+             'allow-update { none; };'}},
              'acls': [u'public']}}})
 
     self.assertEqual(cooked_data['dns_server_sets']['private_dns'],
@@ -1984,7 +2055,9 @@ class TestTreeExporter(unittest.TestCase):
              u'admin_email': u'admin@university.edu.',
              u'expiry_seconds': 5}],
              'zone_origin': 'university.edu.',
-             'zone_options': u'allow-update { none; };'}},
+             'zone_options': u'also-notify { 192.168.1.10;\n'
+             '192.168.1.7;\n192.168.1.6;\n192.168.1.5;\n'
+             '192.168.1.9;\n192.168.1.8; };\nallow-update { none; };'}},
              'acls': [u'secret']}}})
 
     self.assertEqual(cooked_data['dns_server_sets']['internal_dns'],
@@ -2065,7 +2138,9 @@ class TestTreeExporter(unittest.TestCase):
          'zone_name': u'university.edu',
          u'assignment_ip': u'192.168.1.2'}],
          'zone_origin': 'university.edu.',
-         'zone_options': u'allow-update { none; };'},
+         'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
+         '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
+         'allow-update { none; };'},
          u'168.192.in-addr.arpa': {'zone_type': u'master',
          'records': [{'target': '4',
          'ttl': 3600,
@@ -2088,7 +2163,7 @@ class TestTreeExporter(unittest.TestCase):
          u'admin_email': u'admin@university.edu.',
          u'expiry_seconds': 5}],
          'zone_origin': '168.192.in-addr.arpa.',
-         'zone_options': u'allow-update { none; };'}},
+         'zone_options': 'allow-update { none; };'}},
          'acls': [u'secret',
          u'public']},
          u'external': {
@@ -2157,7 +2232,9 @@ class TestTreeExporter(unittest.TestCase):
          'zone_name': u'university.edu',
          u'assignment_ip': u'1.2.3.6'}],
          'zone_origin': 'university.edu.',
-         'zone_options': u'allow-update { none; };'},
+         'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
+         '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
+         'allow-update { none; };'},
          u'4.3.2.1.in-addr.arpa': {'zone_type': u'master',
          'records': [{u'serial_number': 20091224,
          u'refresh_seconds': 5,
@@ -2180,7 +2257,9 @@ class TestTreeExporter(unittest.TestCase):
          'zone_name': u'4.3.2.1.in-addr.arpa',
          u'assignment_host': 'computer1'}],
          'zone_origin': '4.3.2.1.in-addr.arpa.',
-         'zone_options': u'allow-update { none; };'}},
+         'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
+         '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
+         'allow-update { none; };'}},
          'acls': [u'public']}}})
 
   def testTreeExporterListACLNamesByView(self):
@@ -2251,7 +2330,7 @@ class TestTreeExporter(unittest.TestCase):
             'max-cache-size 512M; };\n'
             'controls { inet * allow { control-hosts; } keys { rndc-key; }; };')
 
-  def testTreeExporterExpportAllBindTrees(self):
+  def testTreeExporterExportAllBindTrees(self):
     self.core_instance.SetMaintenanceFlag(1)
     self.assertRaises(tree_exporter.MaintenanceError,
         self.tree_exporter_instance.ExportAllBindTrees)
@@ -2298,6 +2377,8 @@ class TestTreeExporter(unittest.TestCase):
         '\t};\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n\t\tfile "external/university.edu.db";\n'
+        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "otheruniversity.edu" {\n'
@@ -2308,6 +2389,8 @@ class TestTreeExporter(unittest.TestCase):
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
         '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
+        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};' % NAMED_DIR)
@@ -2332,9 +2415,9 @@ class TestTreeExporter(unittest.TestCase):
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
         'options { directory "%s/named";\n'
+        'masterfile-format raw;\n'
         'recursion no;\n'
-        'max-cache-size 512M;\n'
-        'masterfile-format raw; };\n'
+        'max-cache-size 512M; };\n'
         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'acl secret {\n'
         '\t10.10/32;\n'
@@ -2356,6 +2439,8 @@ class TestTreeExporter(unittest.TestCase):
         '\t};\n'
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n\t\tfile "external/university.edu.aa";\n'
+        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "otheruniversity.edu" {\n'
@@ -2366,6 +2451,8 @@ class TestTreeExporter(unittest.TestCase):
         '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
         '\t\tfile "external/4.3.2.1.in-addr.arpa.aa";\n'
+        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '};' % NAMED_DIR)
@@ -2417,6 +2504,7 @@ class TestTreeExporter(unittest.TestCase):
       'print-time yes; }; };\n'
       'options { directory "%s/named";\n'
       'recursion no;\n'
+      'allow-query { any; };\n'
       'max-cache-size 512M; };\n'
       'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
       'acl secret {\n'
@@ -2440,6 +2528,8 @@ class TestTreeExporter(unittest.TestCase):
       '\tzone "university.edu" {\n'
       '\t\ttype master;\n'
       '\t\tfile "external/university.edu.db";\n'
+      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
       '\t\tallow-update { none; };\n'
       '\t};\n'
       '\tzone "otheruniversity.edu" {\n'
@@ -2450,6 +2540,8 @@ class TestTreeExporter(unittest.TestCase):
       '\tzone "4.3.2.1.in-addr.arpa" {\n'
       '\t\ttype master;\n'
       '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
+      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
       '\t\tallow-update { none; };\n'
       '\t};\n'
       '};\n'
@@ -2466,6 +2558,8 @@ class TestTreeExporter(unittest.TestCase):
       '\tzone "university.edu" {\n'
       '\t\ttype master;\n'
       '\t\tfile "internal/university.edu.db";\n'
+      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
       '\t\tallow-update { none; };\n'
       '\t};\n'
       '\tzone "168.192.in-addr.arpa" {\n'
@@ -2501,9 +2595,10 @@ class TestTreeExporter(unittest.TestCase):
       'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
       'print-time yes; }; };\n'
       'options { directory "%s/named";\n'
+      'masterfile-format raw;\n'
+      'allow-query { any; };\n'
       'recursion no;\n'
-      'max-cache-size 512M;\n'
-      'masterfile-format raw; };\n'
+      'max-cache-size 512M; };\n'
       'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
       'acl secret {\n'
       '\t10.10/32;\n'
@@ -2526,6 +2621,8 @@ class TestTreeExporter(unittest.TestCase):
       '\tzone "university.edu" {\n'
       '\t\ttype master;\n'
       '\t\tfile "external/university.edu.aa";\n'
+      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
       '\t\tallow-update { none; };\n'
       '\t};\n'
       '\tzone "otheruniversity.edu" {\n'
@@ -2536,6 +2633,8 @@ class TestTreeExporter(unittest.TestCase):
       '\tzone "4.3.2.1.in-addr.arpa" {\n'
       '\t\ttype master;\n'
       '\t\tfile "external/4.3.2.1.in-addr.arpa.aa";\n'
+      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
       '\t\tallow-update { none; };\n'
       '\t};\n'
       '};\n'
@@ -2552,6 +2651,8 @@ class TestTreeExporter(unittest.TestCase):
       '\tzone "university.edu" {\n'
       '\t\ttype master;\n'
       '\t\tfile "internal/university.edu.aa";\n'
+      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
       '\t\tallow-update { none; };\n'
       '\t};\n'
       '\tzone "168.192.in-addr.arpa" {\n'
@@ -2662,6 +2763,8 @@ class TestTreeExporter(unittest.TestCase):
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "private/university.edu.db";\n'
+        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "otheruniversity.edu" {\n'
@@ -2691,9 +2794,9 @@ class TestTreeExporter(unittest.TestCase):
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
         'options { directory "%s/named";\n'
+        'masterfile-format raw;\n'
         'recursion no;\n'
-        'max-cache-size 512M;\n'
-        'masterfile-format raw; };\n'
+        'max-cache-size 512M; };\n'
         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
         'acl secret {\n'
         '\t10.10/32;\n'
@@ -2716,6 +2819,8 @@ class TestTreeExporter(unittest.TestCase):
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "private/university.edu.aa";\n'
+        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
+        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
         '\tzone "otheruniversity.edu" {\n'
