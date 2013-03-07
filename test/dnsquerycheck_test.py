@@ -110,6 +110,8 @@ class TestQueryCheck(unittest.TestCase):
     while( self.rndc_port == self.port ):
       self.rndc_port = PickUnusedPort()
 
+    if( not os.path.exists(BINDDIR) ):
+      os.mkdir(BINDDIR)
     rndc_key = open(RNDC_KEY, 'w')
     rndc_key.write(RNDC_KEY_DATA)
     rndc_key.close()
@@ -320,7 +322,7 @@ class TestQueryCheck(unittest.TestCase):
 
     # Running dnsquerycheck with the view flag 
     command = os.popen(
-        'python %s -s %s -c %s -p %s -i 17 --view test_view1 ' % (
+        'python %s -s %s -c %s -p %s -i 17 --view test_view ' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
     output = command.read()
     command.close()
@@ -328,7 +330,7 @@ class TestQueryCheck(unittest.TestCase):
 
     # Running dnsquerycheck with on a view/zone pair
     command = os.popen(
-        'python %s -s %s -c %s -p %s -i 17 --view test_view1 '
+        'python %s -s %s -c %s -p %s -i 17 --view test_view '
         '--zone sub.university.lcl ' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
     output = command.read()
