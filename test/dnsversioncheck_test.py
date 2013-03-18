@@ -54,14 +54,22 @@ TEST_DNS_SERVER = u'localhost'
 TESTDIR = u'%s/unittest_dir/' % os.getcwd()
 BINDDIR = u'%s/test_data/named/' % os.getcwd()
 SSH_USER = unicode(getpass.getuser())
+DATA_FILE = 'test_data/test_data.sql'
 
 class TestBINDVersion(unittest.TestCase):
   def setUp(self):
     config_instance = roster_core.Config(CONFIG_FILE)
-    core_instance = roster_core.Core(CORE_USERNAME, config_instance)
+    db_instance = config_instance.GetDb()
+    db_instance.CreateRosterDatabase()
 
-    if( TEST_DNS_SERVER not in core_instance.ListDnsServers() ):
-      core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
+    data = open(DATA_FILE, 'r').read()
+    db_instance.StartTransaction()
+    db_instance.cursor.execute(data)
+    db_instance.EndTransaction()
+    db_instance.close()
+
+    core_instance = roster_core.Core(CORE_USERNAME, config_instance)
+    core_instance.MakeDnsServer(TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
 
   def testVersion(self):    
     named_command = subprocess.Popen(['service', 'named', 'status'], 
@@ -76,14 +84,15 @@ class TestBINDVersion(unittest.TestCase):
     command = os.popen('python %s --ssh-user-name %s --core-user-name '
                        '%s --config-file %s' % (
             EXEC, SSH_USER, CORE_USERNAME, CONFIG_FILE))
-    lines = command.read().split('\n')
+    command_output = command.read()
+    lines = command_output.split('\n')
+    command.close()
 
     self.assertTrue('Connecting to "%s"' % TEST_DNS_SERVER in lines)
     #Not making this BIND version specific. 
     self.assertTrue(re.search(
-        '%s is running BIND [0-9].[0-9].[0-9]' % TEST_DNS_SERVER, lines[3]))
+        '%s is running BIND [0-9].[0-9].[0-9]' % TEST_DNS_SERVER, command_output))
     self.assertTrue('All servers are running the same version of BIND' in lines)
-    command.close()
     
 if( __name__ == '__main__' ):
       unittest.main()

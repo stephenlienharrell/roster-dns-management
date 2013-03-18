@@ -48,6 +48,7 @@ import socket
 import threading
 import time
 import getpass
+import shutil
 
 import unittest
 from roster_core import audit_log
@@ -107,7 +108,6 @@ class TestDnsRecover(unittest.TestCase):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
 
     db_instance = self.config_instance.GetDb()
-
     db_instance.CreateRosterDatabase()
 
     data = open(DATA_FILE, 'r').read()
@@ -119,6 +119,9 @@ class TestDnsRecover(unittest.TestCase):
     self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
     self.tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
     self.db_instance = db_instance
+
+    if( os.path.exists(self.tree_exporter_instance.backup_dir) ):
+      shutil.rmtree(self.tree_exporter_instance.backup_dir)
 
   def testFullRecovery(self):
     self.core_instance.RemoveZone(u'cs.university.edu')

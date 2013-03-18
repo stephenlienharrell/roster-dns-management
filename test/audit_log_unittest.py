@@ -102,6 +102,9 @@ class TestAuditLog(unittest.TestCase):
           found = True
           break
     if( not found ):
+      #If you get here and the test fails, check to make sure that
+      #the permissions on the syslog file are such that anyone can
+      #read it.
       self.fail()
 
     unittest_string = u'unicode \xc6 unittest %s' % current_time

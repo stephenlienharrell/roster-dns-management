@@ -195,7 +195,7 @@ class TestCheckConfig(unittest.TestCase):
     shutil.copyfile('test_data/named.blank.conf', '%s/named.conf' % BINDDIR.rstrip('/'))
     named_file_contents = open('%s/named.conf' % BINDDIR.rstrip('/'), 'r').read()
     named_file_contents = named_file_contents.replace('RNDC_KEY', RNDC_KEY)
-    named_file_contents = named_file_contents.replace('NAMED_DIR', '%snamed' % BINDDIR)
+    named_file_contents = named_file_contents.replace('NAMED_DIR', BINDDIR)
     named_file_contents = named_file_contents.replace('NAMED_PID', '%snamed.pid' % BINDDIR)
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
     named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))

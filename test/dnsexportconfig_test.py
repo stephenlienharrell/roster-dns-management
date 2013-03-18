@@ -272,7 +272,7 @@ class TestCheckConfig(unittest.TestCase):
             EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
     out_str = output.read()
     output.close()
-    self.assertTrue("""<html><head></head><body><br/><h4>dnsservercheck failed on server 'bad.server.local' with the following error:</h4><p>ERROR: Could not connect to bad.server.local via SSH.</p><br/><h4>dnsquerycheck failed on server 'localhost' with the following error:</h4><p>Zone sub does not appear to be online.</p></body></html>""" in out_str)
+    self.assertTrue("""<html><head></head><body><br/><h4>dnsquerycheck failed on server 'localhost' with the following error:</h4><p>Zone sub does not appear to be online.</p><br/><h4>dnsservercheck failed on server 'bad.server.local' with the following error:</h4><p>ERROR: Could not connect to bad.server.local via SSH.</p></body></html>""" in out_str)
     self.assertTrue("""ERROR: Could not connect to bad.server.local via SSH.""" in out_str)
 
     self.assertTrue("""dnsservercheck failed on server 'bad.server.local' with the following error:""" in out_str)
