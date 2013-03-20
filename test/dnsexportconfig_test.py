@@ -230,8 +230,8 @@ class TestCheckConfig(unittest.TestCase):
     audit_log_id = 15 #Makes for easier fixing of the unittest later
     self.assertTrue('[localhost] local: dnstreeexport -c test_data/roster.conf --force' in lines)
     self.assertTrue('[localhost] local: dnscheckconfig -i %s --config-file test_data/roster.conf -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v'  % audit_log_id in lines)
-    self.assertTrue('Finished - root_config_dir/%s/named.conf.a' % TEST_DNS_SERVER in lines)
-    self.assertTrue('Finished - root_config_dir/%s/named/test_view/sub.university.lcl.db' % TEST_DNS_SERVER in lines)
+    self.assertTrue('Finished - %s/%s/named.conf.a' % (self.root_config_dir, TEST_DNS_SERVER) in lines)
+    self.assertTrue('Finished - %s/%s/named/test_view/sub.university.lcl.db' % (self.root_config_dir, TEST_DNS_SERVER) in lines)
     self.assertTrue('All checks successful' in lines)
     self.assertTrue('[localhost] local: dnsservercheck -c test_data/roster.conf -i %s -d %s' % (audit_log_id, TEST_DNS_SERVER) in lines)
     self.assertTrue('[localhost] local: dnsquerycheck -c test_data/roster.conf -i %s -n 5 -p %s -s %s' % (audit_log_id, self.port, TEST_DNS_SERVER) in lines)
@@ -272,10 +272,8 @@ class TestCheckConfig(unittest.TestCase):
             EXEC, CONFIG_FILE, SSH_ID, self.rndc_port, RNDC_KEY, RNDC_CONF))
     out_str = output.read()
     output.close()
-    self.assertTrue("""<html><head></head><body><br/><h4>dnsquerycheck failed on server 'localhost' with the following error:</h4><p>Zone sub does not appear to be online.</p><br/><h4>dnsservercheck failed on server 'bad.server.local' with the following error:</h4><p>ERROR: Could not connect to bad.server.local via SSH.</p></body></html>""" in out_str)
-    self.assertTrue("""ERROR: Could not connect to bad.server.local via SSH.""" in out_str)
-
-    self.assertTrue("""dnsservercheck failed on server 'bad.server.local' with the following error:""" in out_str)
+    self.assertTrue("<h4>dnsservercheck -c test_data/roster.conf -i 21 -d bad.server.local</h4>"
+                    "<p>Return Code: 1<br/><br/>ERROR: Could not connect to bad.server.local via SSH.</p><br/>" in out_str)
 
     # No ns record for zone (dnscheckconf)
     self.core_instance.RemoveDnsServer(u'bad.server.local')
@@ -287,16 +285,14 @@ class TestCheckConfig(unittest.TestCase):
     output.close()
     self.assertTrue("""Content-Type: text/plain; charset="us-ascii"\n""" in out_str)
     self.assertTrue("""MIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\n""" in out_str)
-    self.assertTrue("""dnscheckconfig has failed on server'%s' with the following error:\n\n""" % TEST_DNS_SERVER in out_str)
-    self.assertTrue("""Finished - root_config_dir/%s/named.conf.a\n""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""<h4>dnscheckconfig -i 24 --config-file test_data/roster.conf -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s %s </h4>""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""<p>Return Code: 1<br/><br/>Finished - test_data/bind_configs/%s/named.conf.a""" % TEST_DNS_SERVER in out_str)
     self.assertTrue("""ERROR: zone sub.university.lcl/IN: NS 'ns.sub.university.lcl' has no address records (A or AAAA)\n""" in out_str)
     self.assertTrue("""zone sub.university.lcl/IN: not loaded due to errors.""" in out_str)
 
-    self.assertTrue("""Content-Type: text/html; charset="us-ascii"\n""" in out_str)
-    self.assertTrue("""<html><head></head><body><br/><h4>dnscheckconfig has failed on server'%s' with the following error:</h4>""" % TEST_DNS_SERVER in out_str)
-    self.assertTrue("""<p>Finished - root_config_dir/%s/named.conf.a<br/>""" % TEST_DNS_SERVER in out_str)
-    self.assertTrue("""ERROR: zone sub.university.lcl/IN: NS 'ns.sub.university.lcl' has no address records (A or AAAA)<br/>""" in out_str)
-    self.assertTrue("""zone sub.university.lcl/IN: not loaded due to errors.</p></body></html>""" in out_str)
+    self.assertTrue("""dnscheckconfig -i 24 --config-file test_data/roster.conf -z /usr/sbin/named-checkzone -c /usr/sbin/named-checkconf -v -s %s""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""Finished - test_data/bind_configs/%s/named.conf.a""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""ERROR: zone sub.university.lcl/IN: NS 'ns.sub.university.lcl' has no address records (A or AAAA)""" in out_str)
 
     self.core_instance.MakeRecord(u'a', u'ns', u'sub.university.lcl', {u'assignment_ip': u'192.168.1.103'}, u'test_view')
 
@@ -313,7 +309,7 @@ class TestCheckConfig(unittest.TestCase):
     self.assertTrue("""the user %s does not have permission.""" % SSH_USER in out_str)
 
     self.assertTrue("""Content-Type: text/html; charset="us-ascii"\n""" in out_str)
-    self.assertTrue("""<html><head></head><body><br/><h4>dnsservercheck failed on server '%s' with the following error:</h4>""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""<br/><h4>dnsservercheck -c test_data/roster.conf -i 27 -d %s</h4>""" % TEST_DNS_SERVER in out_str)
     self.assertTrue("""The remote BIND directory /bad/directory/ does not exist or """ in out_str)
     self.assertTrue("""the user %s does not have permission.</p></body></html>""" % SSH_USER in out_str)
     self.core_instance.UpdateDnsServer(TEST_DNS_SERVER, TEST_DNS_SERVER, SSH_USER, BINDDIR, TESTDIR)
@@ -327,15 +323,15 @@ class TestCheckConfig(unittest.TestCase):
     output.close()
     self.assertTrue("""Content-Type: text/plain; charset="us-ascii"\n""" in out_str)
     self.assertTrue("""MIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\n""" in out_str)
-    self.assertTrue("""dnsconfigsync failed on server '%s' with the following error:\n\n""" % TEST_DNS_SERVER in out_str)
+    self.assertTrue("""dnsconfigsync -i 29 -c test_data/roster.conf --ssh-id test_data/roster_id_dsa --rndc-port %s --rndc-key %srndc.key --rndc-conf %srndc.conf -d %s""" % (self.rndc_port, BINDDIR, BINDDIR, TEST_DNS_SERVER) in out_str)
     self.assertTrue("""ERROR: Failed to reload """ in out_str)
     self.assertTrue(""" BIND server: rndc: connect failed: 127.0.0.1#""" in out_str)
     self.assertTrue(""": connection refused.""" in out_str)
 
     self.assertTrue("""Content-Type: text/html; charset="us-ascii"\n""" in out_str)
     self.assertTrue("""MIME-Version: 1.0\nContent-Transfer-Encoding: 7bit\n\n""" in out_str)
-    self.assertTrue("""<html><head></head><body><br/><h4>dnsconfigsync failed on server '%s' with the following error:</h4>""" % TEST_DNS_SERVER in out_str)
-    self.assertTrue("""<p>ERROR: Failed to reload """ in out_str)
+    self.assertTrue("""<br/><h4>dnsconfigsync -i 29 -c test_data/roster.conf --ssh-id test_data/roster_id_dsa --rndc-port %s --rndc-key %srndc.key --rndc-conf %srndc.conf -d %s</h4>""" % (self.rndc_port, BINDDIR, BINDDIR, TEST_DNS_SERVER) in out_str)
+    self.assertTrue("""<br/>ERROR: Failed to reload """ in out_str)
     self.assertTrue(""" BIND server: rndc: connect failed: 127.0.0.1#""" in out_str)
     self.assertTrue(""": connection refused.</p></body></html>""" in out_str)
 

@@ -88,7 +88,8 @@ def EmailError(error_messages, to_address, from_address, smtp_server, subject):
       print 'Failed to connect to %s.' % smtp_server
     if( smtp_handle is not None ):
       try:
-        smtp_handle.sendmail(from_address,[to_address],email_message.as_string())
+        smtp_handle.sendmail(from_address,[to_address],
+            email_message.as_string())
       except smtplib.SMTPRecipientsRefused:
         print '%s is an invalid email address.' % to_address
       smtp_handle.quit()
@@ -231,10 +232,14 @@ def main(args):
       dnstreeexport_array.append('--force')
     if( options.quiet ):
       dnstreeexport_array.append('--quiet')
-    output, tree_return = RunCommand(' '.join(dnstreeexport_array), debug)
+    treeexport_command = ' '.join(dnstreeexport_array)
+    output, tree_return = RunCommand(treeexport_command, debug)
 
-    if( tree_return != 0 ):
-      raise errors.ConfigError('dnstreeexport has failed with error\n%s' % output)
+    if( debug or tree_return != 0 ):
+      error_messages.append('%s\nReturn Code: %s\n'
+          '%s' % (' '.join(dnstreeexport_array), tree_return, output))
+      if( tree_return != 0 ):
+        raise errors.ConfigError
    
     if( options.id is None ):
       options.id, filename = config_lib_instance.FindNewestDnsTreeFilename()
@@ -287,36 +292,35 @@ def main(args):
     # Running commands for each server
     for dns_server in all_dns_servers:
       output, config_return = RunCommand(check_config_arg_string, debug)
-      if( config_return != 0 ):
-        error_messages.append('dnscheckconfig has failed on server\'%s\' '
-                              'with the following error:'
-                              '\n%s' % (dns_server, output))
-        continue
+      if( debug or config_return != 0 ):
+        error_messages.append('%s -s %s \nReturn Code: %s\n%s' % (
+            check_config_arg_string, dns_server, config_return, output))
+        if( config_return != 0 ):
+          continue
+
       output, check_return = RunCommand('%s -d %s' % (
           server_check_arg_string, dns_server), debug)
-      if( check_return != 0 ):
-        # Clean up the error messages
-        error_messages.append(
-            'dnsservercheck failed on server \'%s\' with the following error:\n'
-            '%s' % (
-            dns_server, output))
-        continue
+      if( debug or check_return != 0 ):
+        error_messages.append('%s -d %s\nReturn Code: %s\n%s' % (
+            server_check_arg_string, dns_server, check_return, output))
+        if( check_return != 0 ):
+          continue
+
       output, sync_return = RunCommand('%s -d %s' % (
           config_sync_arg_string, dns_server), debug)
-      if( sync_return != 0 ):
-        error_messages.append(
-            'dnsconfigsync failed on server \'%s\' with the following error:\n'
-            '%s' % (
-            dns_server, output))
-        continue
+      if( debug or sync_return != 0 ):
+        error_messages.append('%s -d %s\nReturn Code: %s\n%s' % (
+            config_sync_arg_string, dns_server, sync_return, output))
+        if( sync_return != 0 ):
+          continue
+        
       output, check_return = RunCommand('%s -s %s' % (
           query_check_arg_string, dns_server), debug)
-      if( check_return != 0 ):
-        error_messages.append(
-            'dnsquerycheck failed on server \'%s\' with the following error:'
-            '\n%s' % (
-            dns_server, output))
-        continue
+      if( debug or check_return != 0 ):
+        error_messages.append('%s -s %s\nReturn Code: %s\n%s' % (
+            query_check_arg_string, dns_server, check_return, output))
+        if( check_return != 0 ):
+          continue
 
   except Exception as error:
     error_messages.append(str(error))
