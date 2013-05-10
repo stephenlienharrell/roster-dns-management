@@ -59,6 +59,10 @@ def main(args):
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
+  parser.add_option('--export-config', action='store_true', dest='export_config',
+                    help='This flag is used when dnsservercheck is called from '
+                    'dnsexportconfig. This should not be used by any user.',
+                    metavar='<export_config>', default=False)
   parser.add_option('-d','--dns-server', action='store', dest='dns_server',
                     help='DNS Server to check.', default=None, 
                     metavar='<dns-server>')
@@ -89,10 +93,12 @@ def main(args):
       sys.exit(1)
 
   try:
-    config_lib_instance.UnTarDnsTree(options.audit_id)
+    if( not options.export_config ):
+      config_lib_instance.UnTarDnsTree(options.audit_id)
     config_lib_instance.CheckDnsServer(options.dns_server, 
                                        config_lib_instance.ToolList)
-    config_lib_instance.TarDnsTree(options.audit_id)
+    if( not options.export_config ):
+      config_lib_instance.TarDnsTree(options.audit_id)
   except errors.UserError as err:
     print 'ERROR: %s' % err
     sys.exit(1)

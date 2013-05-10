@@ -41,6 +41,8 @@ import shutil
 import os
 import ssh
 import tarfile
+import iscpy
+import re
 from fabric import api as fabric_api
 from fabric import exceptions as fabric_exceptions
 from fabric import state as fabric_state
@@ -52,19 +54,37 @@ import ConfigParser
 
 from roster_core import constants
 
-def PushFiles(dns_server, root_config_dir, config_lib_instance, 
-              rndc_exec='rndc', ssh_id_file=None):
+#BIND default
+DEFAULT_RNDC_PORT = 953
+
+def PushFiles(dns_server, config_lib_instance, rndc_exec='rndc', 
+    ssh_id_file=None, dns_server_rndc_port=None):
   """Pushes files to a remote directory over SSH, and refreshes rndc.
   Inputs:
     dns_server: name of the dns_server to push files to.
-
+    config_lib_instance: ConfigLib object
+    rndc_exec: string of path to rndc executable
+    ssh_id_file: string of path to SSH private key file
+    dns_server_rndc_port: int of port to connect rndc to
   Raises:
-    
+    ExporterNoFileError: Could not fnid a DNS tree in the root_config_dir
+    ServerCheckError:
+      DNS server does not exist
+      A server check has not been run on a DNS server
+      Failed to move compressed BIND tree to DNS server
+      Failed to untar compressed BIND tree on DNS server
+      A named.conf check failed on the DNS server
+      A zone did not pass named-checkzone
+      Failed to compile zone
+      Lost SSH connection to DNS server
+      Unable to connect via SSH to DNS server
+      Failed to reload DNS server via rndc reload
   """
+  root_config_dir = config_lib_instance.root_config_dir
   if( not os.path.exists(root_config_dir) or
       len(os.listdir(root_config_dir)) < 1 ):
-    raise ExporterNoFileError('Could not find a DNS tree in %s.' % 
-                              root_config_dir)
+    raise config_lib.ExporterNoFileError('Could not find a DNS tree in %s.' % 
+                                         root_config_dir)
   
   dns_server_directory = '%s/%s' % (root_config_dir, dns_server)
   if( not os.path.exists(dns_server_directory) ):
@@ -72,6 +92,39 @@ def PushFiles(dns_server, root_config_dir, config_lib_instance,
                                       dns_server)
   
   dns_server_info = config_lib_instance.GetDnsServerInfo(dns_server)
+  if( not dns_server_rndc_port ):
+    rndc_port_found = False
+    named_conf_string = open(
+        os.path.join(root_config_dir, dns_server, 'named.conf.a'), 'r').read()
+    named_conf_dict = iscpy.ParseISCString(named_conf_string)
+    if( 'controls' in named_conf_dict ):
+      named_conf_dict = named_conf_dict['controls']
+      for sub_dict in named_conf_dict:
+        for key in sub_dict:
+          if( 'inet' in key and 'port' in key ):
+            #Turns 'inet 192.168.what.ever port 1234 allow' into 
+            #['inet 192.168.what.ever ', ' 1234 allow']
+            port_split_list = key.split('port')
+
+            if len(port_split_list) > 1:
+              #Results in '1234 allow'
+              port_segment = port_split_list[1].strip(' ')
+
+              #Results in ' allow'
+              to_strip = ''.join(re.split('\A[0-9]{1,5}', port_segment))
+
+              #Results in '1234'
+              port_string = port_segment.strip(to_strip) 
+
+              if port_string.isdigit():
+                dns_server_rndc_port = int(port_string)
+                rndc_port_found = True
+
+    if( not rndc_port_found ):
+      print 'rndc port not found in named.conf. Using default of %s' % (
+          DEFAULT_RNDC_PORT)
+      dns_server_rndc_port = DEFAULT_RNDC_PORT
+
   dns_server_info['server_info']['bind_dir'] = dns_server_info['server_info'][
       'bind_dir'].rstrip('/')
   dns_server_info['server_info']['test_dir'] = dns_server_info['server_info'][
@@ -217,6 +270,9 @@ def PushFiles(dns_server, root_config_dir, config_lib_instance,
     fabric_api.run('rm -rf %s/* &' % 
                    dns_server_info['server_info']['test_dir'], pty=False)
 
+    rndc_exec = '%s -p %s' % (
+        rndc_exec, dns_server_rndc_port)
+
     # Reload BIND server
     result = fabric_api.run('%s reload' % rndc_exec)
     if( result.return_code != 0 ):
@@ -243,7 +299,11 @@ def main(args):
            '[-d <dest-directory>]\n' % sys.argv[0])
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
-
+  
+  parser.add_option('--export-config', action='store_true', dest='export_config',
+                    help='This flag is used when dnsconfigsync is called from '
+                    'dnsexportconfig. This should not be used by any user.',
+                    metavar='<export_config>', default=False)
   parser.add_option('-d', '--dns-server', action='store', dest='dns_server',
                     help='DNS Server Name', metavar='<dns-server>',
                     default=None)
@@ -257,16 +317,18 @@ def main(args):
                     help='SSH id file.', metavar='<ssh-id>',
                     default=None)
   parser.add_option('--rndc-exec', action='store', dest='rndc_exec',
-                    help='Rndc executable location.', metavar='<rndc-exec>',
+                    help='RNDC executable location.', metavar='<rndc-exec>',
                     default='rndc')
   parser.add_option('--rndc-key', action='store', dest='rndc_key',
-                    help='Rndc key file.', metavar='<rndc-key>',
-                    default=None)
-  parser.add_option('--rndc-port', action='store', dest='rndc_port',
-                    help='Rndc communication port.', metavar='<rndc-port>',
+                    help='RNDC key file.', metavar='<rndc-key>',
                     default=None)
   parser.add_option('--rndc-conf', action='store', dest='rndc_conf',
-                    help='Rndc conf file.', metavar='<rndc-conf>',
+                    help='RNDC conf file.', metavar='<rndc-conf>',
+                    default=None)
+  parser.add_option('--rndc-port', action='store', dest='rndc_port',
+                    help='RNDC communication port. If none provided, '
+                    'named.conf will be parsed to find one. If one can not '
+                    'be found, 953 will be used.', metavar='<rndc-port>',
                     default=None)
 
   (globals()["options"], args) = parser.parse_args(args)
@@ -281,9 +343,11 @@ def main(args):
 
   root_config_dir = os.path.abspath(os.path.expanduser(
       server_config_file.get('exporter', 'root_config_dir').rstrip('/')))
-  if( os.path.exists(root_config_dir) ):
-    shutil.rmtree(root_config_dir)
-  config_lib_instance.UnTarDnsTree(options.id)
+
+  if( not options.export_config ):
+    if( os.path.exists(root_config_dir) ):
+      shutil.rmtree(root_config_dir)
+    config_lib_instance.UnTarDnsTree(options.id)
 
   if( options.rndc_key ):
     if( options.rndc_key.startswith('./')
@@ -297,18 +361,17 @@ def main(args):
       options.rndc_conf = '%s/%s' % (os.getcwd(),options.rndc_conf.lstrip('./'))
     options.rndc_exec = '%s -c %s' % (
         options.rndc_exec, os.path.expanduser(options.rndc_conf))
-  if( options.rndc_port ):
-    options.rndc_exec = '%s -p %s' % (
-        options.rndc_exec, options.rndc_port)
 
   try:
-    PushFiles(options.dns_server, root_config_dir, config_lib_instance, 
-        rndc_exec=options.rndc_exec, ssh_id_file=options.ssh_id)
+    PushFiles(options.dns_server, config_lib_instance, 
+        rndc_exec=options.rndc_exec, ssh_id_file=options.ssh_id,
+        dns_server_rndc_port=options.rndc_port) 
   except config_lib.ConfigManagerError as err:
     print('ERROR: %s' % err.message)
     sys.exit(1)
 
-  shutil.rmtree(root_config_dir)
+  if( not options.export_config ):
+    shutil.rmtree(root_config_dir)
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -39,13 +39,15 @@ import ConfigParser
 import os
 import sys
 import shutil
+import subprocess
+import shlex
 import socket
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from fabric import api as fabric_api
+from multiprocessing import Pool
 from optparse import OptionParser
-from roster_config_manager import ConfigLib
+from roster_config_manager import config_lib
 from roster_core import config
 from roster_core import errors
 from roster_core import constants
@@ -94,23 +96,118 @@ def EmailError(error_messages, to_address, from_address, smtp_server, subject):
         print '%s is an invalid email address.' % to_address
       smtp_handle.quit()
 
-def RunCommand(command, debug=False):
-  """Runs a command and returns proper return code
+def RunCommandWithSingleArg(arg_dict):
+  """Calls RunCommand with arguments unpacked from arg_dict.
+
+  Inputs:
+    arg_dict: dictionary of arguments to pass to RunCommand.
+  Outputs:
+    dictionary containing output, return code, dns_server, and command
+  """
+  arg_string = arg_dict['arg_string']
+  dns_server = arg_dict['dns_server']
+  debug = arg_dict['debug']
+  command = '%s -d %s' % (arg_string, dns_server)
+
+  return_string, return_code = RunCommand(command, debug=False)
+
+  return {'output': return_string,
+          'return_code': return_code,
+          'dns_server': dns_server,
+          'command': command}
+
+def RunCommand(command, debug=False, print_command=False):
+  """Runs a command and returns proper return code.
 
   Inputs:
     command: string of command to run
   Outputs:
     tuple of program output and return code
   """
-  result = fabric_api.local(command, capture=True)
-  return_string = '%s\n%s' % (result.stderr, result.stdout)
-  return_code = result.return_code
+  if( print_command ):
+    print '[localhost] local: %s' % command
+  process_handle = subprocess.Popen(shlex.split(str(command)), 
+    stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+  stdout_output, stderr_output = process_handle.communicate()
+
+  return_string = '%s\n%s' % (stderr_output, stdout_output)
+  return_code = process_handle.returncode
+
   if( debug ):
     print return_string
   if( return_code is None ):
     return_code = 0
   return (return_string, return_code)
 
+def GenerateToolArgStrings(options):
+  """Generates the arg strings for dnstreeexport, dnscheckconfig,
+  dnsservercheck, dnsconfigsync, and dnsquerycheck.
+
+  Inputs:
+    options: OptionParser parse's args object. Created in main()
+
+  Outputs: 
+    list of each tool's arg string.
+  """
+  # Preparing dnstreexport
+  dnstreeexport_array = [options.tree_export]
+  dnstreeexport_array.extend(['-c', options.config_file])
+  if( options.force ):
+    dnstreeexport_array.append('--force')
+  if( options.quiet ):
+    dnstreeexport_array.append('--quiet')
+  dnstreeexport_arg_string = ' '.join(dnstreeexport_array)
+
+  # Preparing dnscheckconfig
+  dnscheckconfig_array = [options.check_config]
+  dnscheckconfig_array.extend(['-i', '%s' % options.id])
+  dnscheckconfig_array.extend(['--config-file', options.config_file])
+  if( options.named_checkzone ):
+    dnscheckconfig_array.extend(['-z', options.named_checkzone])
+  if( options.named_checkconf ):
+    dnscheckconfig_array.extend(['-c', options.named_checkconf])
+  if( not options.quiet ):
+    dnscheckconfig_array.append('-v')
+  dnscheckconfig_arg_string = ' '.join(dnscheckconfig_array)
+
+  # Preparing dnsservercheck
+  dnsservercheck_array = [options.server_check]
+  dnsservercheck_array.extend(['--export-config'])
+  dnsservercheck_array.extend(['-c', options.config_file])
+  dnsservercheck_array.extend(['-i', '%s' % options.id])
+  dnsservercheck_arg_string = ' '.join(dnsservercheck_array)
+
+  # Preparing dnsconfigsync
+  dnsconfigsync_array = [options.config_sync]
+  dnsconfigsync_array.extend(['--export-config'])
+  dnsconfigsync_array.extend(['-i', '%s' % options.id])
+  dnsconfigsync_array.extend(['-c', options.config_file])
+  if( options.ssh_id ):
+    dnsconfigsync_array.extend(['--ssh-id', options.ssh_id])
+  if( options.rndc_exec ):
+    dnsconfigsync_array.extend(['--rndc-exec', options.rndc_exec])
+  if( options.rndc_port ):
+    dnsconfigsync_array.extend(['--rndc-port', options.rndc_port])
+  if( options.rndc_key ):
+    dnsconfigsync_array.extend(['--rndc-key', options.rndc_key])
+  if( options.rndc_conf ):
+    dnsconfigsync_array.extend(['--rndc-conf', options.rndc_conf])
+  dnsconfigsync_arg_string = ' '.join(dnsconfigsync_array)
+
+  # Preparing dnsquerycheck
+  dnsquerycheck_array = [options.query_check]
+  dnsquerycheck_array.extend(['--export-config'])
+  dnsquerycheck_array.extend(['-c', options.config_file])
+  dnsquerycheck_array.extend(['-i', '%s' % options.id])
+  dnsquerycheck_array.extend(['-n', '%s' % options.number])
+  dnsquerycheck_array.extend(['-p', '%s' % options.port])
+  dnsquerycheck_arg_string = ' '.join(dnsquerycheck_array)
+
+  return [dnstreeexport_arg_string,
+          dnscheckconfig_arg_string,
+          dnsservercheck_arg_string,
+          dnsconfigsync_arg_string, 
+          dnsquerycheck_arg_string]
 
 def main(args):
   """Collects command line arguments. Exports configs.
@@ -175,8 +272,10 @@ def main(args):
                     help='(dnsconfigsync)Rndc conf file.',
                     metavar='<rndc-conf>', default=None)
   parser.add_option('--rndc-port', action='store', dest='rndc_port',
-                    help='(dnsconfigsync)Rndc communication port.', 
-                    metavar='<rndc-port>', default=None)
+                    help='RNDC communication port.  If none provided, '
+                    'named.conf will be parsed to find one.  If one can not '
+                    'be found, 953 will be used.', metavar='<rndc-port>',
+                    default=None)
   parser.add_option('-p','--port', action='store', dest='port',
                     help='(dnsquerycheck)Port to query DNS server on.',
                     metavar='<port>', default=53)
@@ -192,7 +291,7 @@ def main(args):
     print 'The --config_file flag is required.'
     sys.exit(1)
 
-  config_lib_instance = ConfigLib(options.config_file)
+  config_lib_instance = config_lib.ConfigLib(options.config_file)
 
   if( os.path.exists(config_lib_instance.root_config_dir) ):
     shutil.rmtree(config_lib_instance.root_config_dir)
@@ -214,113 +313,64 @@ def main(args):
     to_email = None
     from_email = None
   
-  fabric_api.output['status'] = False
-  fabric_api.output['stdout'] = False
-  fabric_api.output['stderr'] = False
-  fabric_api.output['user'] = False
-  fabric_api.output['aborts'] = False
-  fabric_api.output['debug'] = False
-  fabric_api.output['warnings'] = debug
-  fabric_api.output['running'] = debug
-  fabric_api.env.warn_only = True
+  tool_args = GenerateToolArgStrings(options)
   
   try:
-    # Running dnstreexport
-    dnstreeexport_array = [options.tree_export]
-    dnstreeexport_array.extend(['-c', options.config_file])
-    if( options.force ):
-      dnstreeexport_array.append('--force')
-    if( options.quiet ):
-      dnstreeexport_array.append('--quiet')
-    treeexport_command = ' '.join(dnstreeexport_array)
-    output, tree_return = RunCommand(treeexport_command, debug)
+    #Running dnstreeexport
+    output, tree_return = RunCommand(tool_args[0], debug, print_command=True)
 
-    if( debug or tree_return != 0 ):
+    if( debug and tree_return != 0 ):
       error_messages.append('%s\nReturn Code: %s\n'
-          '%s' % (' '.join(dnstreeexport_array), tree_return, output))
+          '%s' % (tool_args[0], tree_return, output))
       if( tree_return != 0 ):
         raise errors.ConfigError
    
     if( options.id is None ):
       options.id, filename = config_lib_instance.FindNewestDnsTreeFilename()
 
-    # Preparing dnscheckconfig
-    dnscheckconfig_array = [options.check_config]
-    dnscheckconfig_array.extend(['-i', '%s' % options.id])
-    dnscheckconfig_array.extend(['--config-file', options.config_file])
-    if( options.named_checkzone ):
-      dnscheckconfig_array.extend(['-z', options.named_checkzone])
-    if( options.named_checkconf ):
-      dnscheckconfig_array.extend(['-c', options.named_checkconf])
-    if( not options.quiet ):
-      dnscheckconfig_array.append('-v')
-    check_config_arg_string = ' '.join(dnscheckconfig_array)
-    
-    # Preparing dnsservercheck
-    dnsservercheck_array = [options.server_check]
-    dnsservercheck_array.extend(['-c', options.config_file])
-    dnsservercheck_array.extend(['-i', '%s' % options.id])
-    server_check_arg_string = ' '.join(dnsservercheck_array)
+    #Since we have now set options.id, we need to regenerate.
+    tool_args = GenerateToolArgStrings(options)
 
-    # Preparing dnsconfigsync
-    dnsconfigsync_array = [options.config_sync]
-    dnsconfigsync_array.extend(['-i', '%s' % options.id])
-    dnsconfigsync_array.extend(['-c', options.config_file])
-    if( options.ssh_id ):
-      dnsconfigsync_array.extend(['--ssh-id', options.ssh_id])
-    if( options.rndc_exec ):
-      dnsconfigsync_array.extend(['--rndc-exec', options.rndc_exec])
-    if( options.rndc_port ):
-      dnsconfigsync_array.extend(['--rndc-port', options.rndc_port])
-    if( options.rndc_key ):
-      dnsconfigsync_array.extend(['--rndc-key', options.rndc_key])
-    if( options.rndc_conf ):
-      dnsconfigsync_array.extend(['--rndc-conf', options.rndc_conf])
-    config_sync_arg_string = ' '.join(dnsconfigsync_array)
-
-    # Preparing dnsquerycheck
-    dnsquerycheck_array = [options.query_check]
-    dnsquerycheck_array.extend(['-c', options.config_file])
-    dnsquerycheck_array.extend(['-i', '%s' % options.id])
-    dnsquerycheck_array.extend(['-n', '%s' % options.number])
-    dnsquerycheck_array.extend(['-p', '%s' % options.port])
-    query_check_arg_string = ' '.join(dnsquerycheck_array)
-
+    #Running dnscheckconfig on all servers
+    output, config_return = RunCommand(tool_args[1], debug, print_command=True)
+    if( config_return != 0 ):
+      raise errors.ConfigError('%s\nReturn Code: %s\n%s' % (tool_args[1], 
+          config_return, output))
     config_lib_instance.UnTarDnsTree(options.id)
     all_dns_servers = config_lib_instance.FindAllDnsServers()
 
-    # Running commands for each server
-    for dns_server in all_dns_servers:
-      output, config_return = RunCommand(check_config_arg_string, debug)
-      if( debug or config_return != 0 ):
-        error_messages.append('%s -s %s \nReturn Code: %s\n%s' % (
-            check_config_arg_string, dns_server, config_return, output))
-        if( config_return != 0 ):
-          continue
+    #The first two tools we already ran (dnstreeexport and dnscheckconfig
+    tool_args = tool_args[2:]
 
-      output, check_return = RunCommand('%s -d %s' % (
-          server_check_arg_string, dns_server), debug)
-      if( debug or check_return != 0 ):
-        error_messages.append('%s -d %s\nReturn Code: %s\n%s' % (
-            server_check_arg_string, dns_server, check_return, output))
-        if( check_return != 0 ):
-          continue
+    for arg_string in tool_args:
+      tool_name = arg_string.split(' ')[0]
+      exporter_pool = Pool(processes=config_lib_instance.max_threads)
+      arg_lists = []
+      results = []
 
-      output, sync_return = RunCommand('%s -d %s' % (
-          config_sync_arg_string, dns_server), debug)
-      if( debug or sync_return != 0 ):
-        error_messages.append('%s -d %s\nReturn Code: %s\n%s' % (
-            config_sync_arg_string, dns_server, sync_return, output))
-        if( sync_return != 0 ):
-          continue
-        
-      output, check_return = RunCommand('%s -s %s' % (
-          query_check_arg_string, dns_server), debug)
-      if( debug or check_return != 0 ):
-        error_messages.append('%s -s %s\nReturn Code: %s\n%s' % (
-            query_check_arg_string, dns_server, check_return, output))
-        if( check_return != 0 ):
-          continue
+      for dns_server in all_dns_servers:
+        arg_lists.append({'arg_string': arg_string,
+                          'dns_server': dns_server,
+                          'debug': debug})
+
+      results = exporter_pool.map(RunCommandWithSingleArg, arg_lists)
+
+      for result in results:
+        output = result['output']
+        return_code = result['return_code']
+        dns_server = result['dns_server']
+        command = result['command']
+        if( debug ):
+          print '[localhost] local: %s' % command
+
+        if( return_code != 0 ):
+          error_messages.append(
+              '%s\nReturn Code: %s\n%s' % (
+                  command, return_code, output))
+
+          #Remove the failed dns_server. Otherwise, we'll continue to run
+          #the later tools on it. 
+          all_dns_servers.remove(dns_server)
 
   except Exception as error:
     error_messages.append(str(error))

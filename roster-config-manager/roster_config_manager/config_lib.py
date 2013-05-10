@@ -28,10 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""This module conains all of the logic to check dns servers.
-
-This should only be called by dnsservercheck.
-"""
+"""This module conains all of the logic to check dns servers."""
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
@@ -51,6 +48,7 @@ from fabric import state as fabric_state
 from fabric.exceptions import NetworkError as FabricNetworkError
 from roster_core import config
 from roster_core import errors
+
 
 roster_core.core.CheckCoreVersionMatches(__version__)
 
@@ -88,7 +86,7 @@ class ConfigLib(object):
   COMMANDS_CONVERT_DICT = {
     'check-dup-records': {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
     'check-mx':          {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
-    'check-mx-cname':   {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
+    'check-mx-cname':    {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
     'check-srv-cname':   {'fail': 'fail', 'warn': 'warn', 'ignore': 'ignore'},
     'check-wildcard':    {'yes': 'warn', 'no': 'ignore'},
 
@@ -128,6 +126,8 @@ class ConfigLib(object):
         'exporter', 'root_config_dir').rstrip('/')
     self.backup_dir = self.config_file.get(
         'exporter', 'backup_dir').rstrip('/')
+    self.max_threads = int(self.config_file.get(
+        'exporter', 'max_threads'))
   
   def UnTarDnsTree(self, audit_log_id=None):
     """Uncompresses the compressed Dns Tree to the 

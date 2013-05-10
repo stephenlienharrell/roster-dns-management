@@ -96,6 +96,7 @@ CONFIG_FILE_SCHEMA = {'database': {'server': 'str', 'login': 'str',
                                    'failure_notification_email': 'str',
                                    'system_email': 'str',
                                    'email_subject': 'str',
+                                   'max_threads': 'int',
                                    'exporter_debug': 'str'}}
 
 

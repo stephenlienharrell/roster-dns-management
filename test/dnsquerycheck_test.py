@@ -279,7 +279,7 @@ class TestQueryCheck(unittest.TestCase):
 
     # Running dnsquerycheck
     command = os.popen(
-        'python %s -s %s -c %s -p %s -i 17' % (
+        'python %s -d %s -c %s -p %s -i 17' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
     output = command.read()
     command.close()
@@ -289,7 +289,7 @@ class TestQueryCheck(unittest.TestCase):
         'Zone forward_zone does not appear to be online.\n')
 
     command = os.popen(
-        'python %s -s %s -p %s -f no_file' % (
+        'python %s -d %s -p %s -f no_file' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, self.port))
     output = command.read()
     command.close()
@@ -314,7 +314,7 @@ class TestQueryCheck(unittest.TestCase):
     
     # Running dnsquerycheck with audit log
     command = os.popen(
-        'python %s -s %s -c %s -p %s -i 17 ' % (
+        'python %s -d %s -c %s -p %s -i 17 ' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
     output = command.read()
     command.close()
@@ -322,7 +322,7 @@ class TestQueryCheck(unittest.TestCase):
 
     # Running dnsquerycheck with the view flag 
     command = os.popen(
-        'python %s -s %s -c %s -p %s -i 17 --view test_view ' % (
+        'python %s -d %s -c %s -p %s -i 17 --view test_view ' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
     output = command.read()
     command.close()
@@ -330,7 +330,7 @@ class TestQueryCheck(unittest.TestCase):
 
     # Running dnsquerycheck with on a view/zone pair
     command = os.popen(
-        'python %s -s %s -c %s -p %s -i 17 --view test_view '
+        'python %s -d %s -c %s -p %s -i 17 --view test_view '
         '--zone sub.university.lcl ' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
     output = command.read()
@@ -339,7 +339,7 @@ class TestQueryCheck(unittest.TestCase):
 
     # Running dnsquerycheck with file
     command = os.popen(
-        'python %s -s %s -c %s -p %s -f test_data/test_zone.db' % (
+        'python %s -d %s -c %s -p %s -f test_data/test_zone.db' % (
         QUERY_CHECK_EXEC, TEST_DNS_SERVER, CONFIG_FILE, self.port))
     output = command.read()
     command.close()

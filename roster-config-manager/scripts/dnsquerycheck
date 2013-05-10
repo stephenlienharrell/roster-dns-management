@@ -54,13 +54,17 @@ def main(args):
 
   parser = OptionParser(version='%%prog (Roster %s)' % __version__, usage=usage)
 
+  parser.add_option('--export-config', action='store_true', dest='export_config',
+                    help='This flag is used when dnsquerycheck is called from '
+                    'dnsexportconfig. This should not be used by any user.',
+                    metavar='<export_config>', default=False)
   parser.add_option('-c', '--config-file', action='store', dest='config_file',
                     help='Roster Server config file', metavar='<config_file>',
                     default=constants.SERVER_CONFIG_FILE_LOCATION)
   parser.add_option('-i', '--id', action='store', dest='id',
                     help='Audit log ID', metavar='<id>',
                     default=None)
-  parser.add_option('-s', '--server', action='store', dest='server',
+  parser.add_option('-d', '--dns-server', action='store', dest='server',
                     help='DNS server to query.', metavar='<server>',
                     default=None)
   parser.add_option('-p', '--port', action='store', dest='port',
@@ -84,7 +88,7 @@ def main(args):
   (globals()["options"], args) = parser.parse_args(args)
 
   if( options.server is None ):
-    print 'Must specify -s/--server flag.'
+    print 'Must specify -d/--dns-server flag.'
     sys.exit(1)
 
   if( (options.config_file is None or options.id is None) and 
@@ -96,7 +100,8 @@ def main(args):
   #If we're querying from id and config file
   if( not options.zone_file ):
     config_lib_instance = config_lib.ConfigLib(options.config_file)
-    config_lib_instance.UnTarDnsTree(options.id)
+    if( not options.export_config ):
+      config_lib_instance.UnTarDnsTree(options.id)
     server_dir = os.path.join(config_lib_instance.root_config_dir,
                               options.server)
 
@@ -126,7 +131,7 @@ def main(args):
         try:
           result = dns_query_lib.QueryFromZoneFile(zone_file, options.server,
               options.port, options.number, view_name=view_name)
-        except config_lib.QueryCheckError as e:
+        except (config_lib.QueryCheckError, config_lib.ConfigManagerError) as e:
           print 'ERROR: %s' % e.message
           sys.exit(1)
         if( not result ):
@@ -135,7 +140,7 @@ def main(args):
     try:
       result = dns_query_lib.QueryFromZoneFile(options.zone_file, options.server,
           options.port, options.number)
-    except config_lib.QueryCheckError as e:
+    except (config_lib.QueryCheckError, config_lib.ConfigManagerError) as e:
       print 'ERROR: %s' % e.message
       sys.exit(1)
     if( not result ):
@@ -145,6 +150,7 @@ def main(args):
     for zone in bad_zones:
       print 'Zone %s does not appear to be online.' % zone
     sys.exit(1)
+
 
 if( __name__ == "__main__" ):
   main(sys.argv[1:])

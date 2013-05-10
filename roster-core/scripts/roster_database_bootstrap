@@ -166,6 +166,9 @@ def main(args):
                     default=False)
   parser.add_option('--root-hint-file', action='store', dest='root_hint_file',
                     help='Location of root hint file.', default=None)
+  parser.add_option('--max-threads', action='store', dest='max_threads',
+                   help='Maximum number of threads to run in parallel during '
+                   'dnsexportconfig execution.', default='10')
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -289,6 +292,7 @@ def main(args):
         options.failure_email)
     config_parser.set('exporter', 'email_subject', options.failure_subject)
     config_parser.set('exporter', 'root_hint_file', options.root_hint_file)
+    config_parser.set('exporter', 'max_threads', options.max_threads)
     if( options.export_debug ):
       config_parser.set('exporter', 'exporter_debug', 'on')
     else:

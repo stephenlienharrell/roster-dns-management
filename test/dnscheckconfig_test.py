@@ -96,6 +96,7 @@ class TestCheckConfig(unittest.TestCase):
 
   def setUp(self):
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
+    self.config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
     self.root_config_dir = self.config_instance.config_file[
         'exporter']['root_config_dir'].lstrip('./').rstrip('/')
     self.backup_dir = self.config_instance.config_file[
@@ -219,13 +220,13 @@ class TestCheckConfig(unittest.TestCase):
     time.sleep(2) # Wait for disk to settle
     self.assertEqual(output.read(), 
         "ERROR: dns_rdata_fromtext: "
-        "root_config_dir/localhost/named/test_view/sub.university.lcl.db:7: "
+        "%s/localhost/named/test_view/sub.university.lcl.db:7: "
         "near '%s.lcl.': bad name (check-names)\n"
         "zone sub.university.lcl/IN: loading from master file "
-        "root_config_dir/localhost/named/test_view/sub.university.lcl.db "
+        "%s/localhost/named/test_view/sub.university.lcl.db "
         "failed: bad name (check-names)\n"
-        "zone sub.university.lcl/IN: not loaded due to errors.\n" % (
-            FAKE_SERVER))
+        "zone sub.university.lcl/IN: not loaded due to errors.\n" % (self.root_config_dir,
+            FAKE_SERVER, self.root_config_dir))
     output.close()
 
     self.core_instance.UpdateZone(u'sub.university.lcl', 
@@ -285,8 +286,11 @@ class TestCheckConfig(unittest.TestCase):
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
+    id, tar_file = self.config_lib_instance.FindNewestDnsTreeFilename()
+    tar_file = os.path.join(os.getcwd(), self.config_lib_instance.backup_dir, 
+        tar_file)
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aaq 192.168.1.104')
     output = os.popen('python %s --config-file %s' % (
@@ -294,38 +298,39 @@ class TestCheckConfig(unittest.TestCase):
     # Replacement below to accomodate for later bind versions
     self.assertEqual(output.read().replace(
         'zone sub.university.lcl/IN: not loaded due to errors.\n', ''),
-        'ERROR: root_config_dir/%s/named/test_view/sub.university.lcl.db:16: '
+        'ERROR: %s/%s/named/test_view/sub.university.lcl.db:16: '
         'unknown RR type \'aaq\'\n'
         'zone sub.university.lcl/IN: loading from master '
-        'file root_config_dir/%s/named/test_view/sub.university.lcl.db '
-        'failed: unknown class/type\n' % (DNS_SERVER, DNS_SERVER))
+        'file %s/%s/named/test_view/sub.university.lcl.db '
+        'failed: unknown class/type\n' % (self.root_config_dir, DNS_SERVER,
+            self.root_config_dir, DNS_SERVER))
     output.close()
 
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         'ns2 3600 in aaq 192.168.1.104', 'ns2 3600 in a 192.168.1.104')
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         ' 796 10800', ' 10800')
     output = os.popen('python %s --config-file %s --verbose' % (
         EXEC, CONFIG_FILE))
     self.assertEqual(output.read(),
-        'Finished - root_config_dir/%s/named.conf.a\n'
-        'Finished - root_config_dir/%s/named/test_view/sub.university.lcl.db\n'
+        'Finished - %s/%s/named.conf.a\n'
+        'Finished - %s/%s/named/test_view/sub.university.lcl.db\n'
         '--------------------------------------------------------------------\n'
         'Checked 1 named.conf file(s) and 1 zone file(s)\n'
         '\n'
-        'All checks successful\n' % (DNS_SERVER, DNS_SERVER))
+        'All checks successful\n' % (self.root_config_dir, DNS_SERVER, self.root_config_dir, DNS_SERVER))
     output.close()
 
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         ' 10800', ' 810 10800')
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named.conf.a' % DNS_SERVER,
         'type master;', 'type bad_type;')
     output = os.popen('python %s --config-file %s' % (
@@ -334,11 +339,11 @@ class TestCheckConfig(unittest.TestCase):
     output.close()
 
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named.conf.a' % DNS_SERVER, 
         'type bad_type;', 'type master;')
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named.conf.a' % DNS_SERVER,
         'type master;',
         'type master;\nwrong;')
@@ -349,12 +354,12 @@ class TestCheckConfig(unittest.TestCase):
     output.close()
 
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named.conf.a' % DNS_SERVER,
         'wrong;',
         '')
     self.TarReplaceString(
-        self.tree_exporter_instance.tar_file_name,
+        tar_file,
         '%s/named.conf.a' % DNS_SERVER,
         'options { directory "%s"; };' % NAMED_DIR,
         '\noptions\n{\ndirectory "another";\n};\noptions {\n print-time yes;};\n')

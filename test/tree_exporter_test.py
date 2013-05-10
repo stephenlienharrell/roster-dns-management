@@ -54,6 +54,7 @@ import getpass
 import roster_core
 import ConfigParser
 from roster_config_manager import tree_exporter
+from roster_config_manager import config_lib
 
 
 CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
@@ -69,6 +70,7 @@ class TestTreeExporter(unittest.TestCase):
   def setUp(self):
     self.maxDiff = None
     self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
+    self.config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
     self.root_config_dir = self.config_instance.config_file['exporter'][
         'root_config_dir']
     self.backup_dir = self.config_instance.config_file['exporter'][
@@ -1432,9 +1434,7 @@ class TestTreeExporter(unittest.TestCase):
                       self.tree_exporter_instance.ExportAllBindTrees)
     self.core_instance.SetMaintenanceFlag(0)
     self.tree_exporter_instance.ExportAllBindTrees()
-    tar = tarfile.open(self.tree_exporter_instance.tar_file_name)
-    tar.extractall()
-    tar.close()
+    self.config_lib_instance.UnTarDnsTree()
     n_conf = self.tree_exporter_instance.MakeNamedConf(self.data[0],
         self.cooked_data, u'internal_dns', 'db', 'remote_bind_dir')
    
@@ -2336,11 +2336,7 @@ class TestTreeExporter(unittest.TestCase):
         self.tree_exporter_instance.ExportAllBindTrees)
     self.core_instance.SetMaintenanceFlag(0)
     self.tree_exporter_instance.ExportAllBindTrees()
-    time.sleep(5)
-
-    tar_file = tarfile.open(self.tree_exporter_instance.tar_file_name)
-    tar_file.extractall(self.root_config_dir)
-    tar_file.close()
+    self.config_lib_instance.UnTarDnsTree()
 
     # Test ns1 named_conf
     expected_ns1_university_edu_named_conf_a_string = (
