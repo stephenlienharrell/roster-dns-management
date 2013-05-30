@@ -34,9 +34,10 @@
 from server import Server
 import general_ldap
 import auth_pam
+import auth_developer
 
 
-__all__ = ['Server', 'general_ldap', 'auth_pam']
+__all__ = ['Server', 'general_ldap', 'auth_pam', 'auth_developer']
 
 
 # vi: set ai aw sw=2:
