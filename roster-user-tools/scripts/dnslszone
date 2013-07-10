@@ -106,9 +106,10 @@ def main(args):
           u'zone_name': options.zone_name,
           u'cidr_block': options.cidr_block})['core_return']
 
+  print_list = []
   if( not options.no_header ):
-    print_list = [['zone_name', 'view_name', 'zone_type', 'zone_origin',
-                   'zone_options', 'cidr_block']]
+    print_list.append(['zone_name', 'view_name', 'zone_type', 'zone_origin',
+                       'zone_options', 'cidr_block'])
 
   if( command == 'reverse' ):
     if( not reverse_range_zone_assignments ):
