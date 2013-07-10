@@ -70,6 +70,14 @@ KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
 EXEC='../roster-user-tools/scripts/dnsupnamedglobals'
+TEST_FILE_CONTENTS = (
+   '#some comment\n'
+   'zone "example.com" IN {\n'
+   '    type master; /* another comment */\n'
+   '    file "example.com.zone"; #maor commentz\n'
+   '    allow-update { none; };\n'
+   '}; //final comment\n'
+   '\n')
 
 class options(object):
   password = u'test'
@@ -135,10 +143,7 @@ class TestDnsMkHost(unittest.TestCase):
                                      server_name=self.server_name)
     handle = open(TEST_FILE, 'w')
     try:
-      handle.writelines('zone "example.com" IN {\n'
-                        '    type master;\n'
-                        '    file "example.com.zone";\n'
-                        '    allow-update { none; };\n};\n\n')
+      handle.write(TEST_FILE_CONTENTS)
     finally:
       handle.close()
 
@@ -164,11 +169,7 @@ class TestDnsMkHost(unittest.TestCase):
       file_contents = handle.read()
     finally:
       handle.close()
-    self.assertEqual(file_contents, (
-        'zone "example.com" IN {\n'
-        '    type master;\n'
-        '    file "example.com.zone";\n'
-        '    allow-update { none; };\n};\n\n'))
+    self.assertEqual(file_contents, TEST_FILE_CONTENTS)
     timestamp_string = self.unittest_timestamp.strftime('%Y-%m-%dT%H:%M:%S')
     # Print the file list of set1 from the database
     output = os.popen('python %s list -d set1 -t "%s" --no-header '
