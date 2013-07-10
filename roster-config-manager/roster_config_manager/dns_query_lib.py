@@ -187,8 +187,15 @@ def DnsQuery(records, dns_server, dns_port, zone_origin):
             break
 
         elif( record_type == u'txt' ):
-          if( record_arguments[u'quoted_text'] == u'"%s"' % (
-                answer.strings[0]) ):
+          quoted_text = unicode(' '.join(
+            ['"%s"' % answer_string for answer_string in answer.strings]))
+          if( record_arguments[u'quoted_text'] == quoted_text ):
+            good_records.append(record)
+            break
+        elif( record_type == u'srv' ):
+          if( record_arguments['weight'] == answer.weight and
+              record_arguments['priority'] == answer.priority and 
+              record_arguments['assignment_host'] == unicode(answer.target) ):
             good_records.append(record)
             break
 
@@ -198,7 +205,7 @@ def DnsQuery(records, dns_server, dns_port, zone_origin):
     records.remove(record)
 
   bad_records = records
-  
+ 
   #This is purely for asthetic reasons. If you were to print bad_records,
   #you'd see a bunch of None's which doesn't help you. It just clutters
   #the screen.
