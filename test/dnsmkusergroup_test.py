@@ -144,6 +144,13 @@ class Testdnsmkusergroup(unittest.TestCase):
     self.assertEqual(output.read(),
         'ADDED USER_GROUP_ASSIGNMENT: username: new_user group: cs\n')
     output.close()
+    output = os.popen('python %s assignment -n new_user -g cs '
+                      '-s %s -u %s -p %s --config-file %s' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'CLIENT ERROR: User-Group assignment "new_user-cs" already exists\n')
+    output.close()
     self.assertEqual(self.core_instance.ListUsers(),
                      {u'shuey': 64, u'new_user': 128, u'jcollins': 32,
                       u'tree_export_user': 0, u'sharrell': 128})

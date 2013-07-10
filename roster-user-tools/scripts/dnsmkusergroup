@@ -153,6 +153,15 @@ def main(args):
     if( options.new_user not in users ):
       cli_common_lib.DnsError('Username does not exist.', 1)
 
+    user_group_assignments = roster_client_lib.RunFunction(
+        u'ListUserGroupAssignments', options.username, credfile=options.credfile,
+        credstring=options.credstring, server_name=options.server,
+        args=[options.new_user, options.group])['core_return']
+    if( options.new_user in user_group_assignments and 
+        options.group in user_group_assignments[options.new_user] ):
+      cli_common_lib.DnsError('User-Group assignment "%s-%s" already exists' % (
+          options.new_user, options.group), 1)
+
     roster_client_lib.RunFunction(
         u'MakeUserGroupAssignment', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server,
