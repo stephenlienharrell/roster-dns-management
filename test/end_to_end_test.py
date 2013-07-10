@@ -130,8 +130,6 @@ class TestComplete(unittest.TestCase):
     self.key = config.get('server','ssl_key_file')
     self.cert = config.get('server','ssl_cert_file')
     self.logfile = config.get('server','server_log_file')
-    self.ldap = config.get('fakeldap','server')
-    self.binddn = config.get('fakeldap','binddn')
     self.userconfig = './completeconfig.conf'
     self.toolsconfig = './completetoolsconfig.conf'
     self.testfile = '%s/testfile' % TESTDIR
@@ -205,12 +203,8 @@ class TestComplete(unittest.TestCase):
         command_string, shell=True,
         stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     ## The first number represents the auth_module chosen. This can change if
-    ## more modules are added later and appear before general_ldap.
-    bootstrapDB.communicate('1\nuid=%%%%s,ou=People,'
-        'dc=dc,dc=university,dc=edu\n'
-        '%s\nVERSION3\n%s\n' % (
-            self.cert,
-            self.ldap))
+    ## more modules are added later and appear before auth_developer.
+    bootstrapDB.communicate('1\n')
     if( not os.path.exists(
         '%s' % self.userconfig) ):
       self.fail('Config file was not created.')
@@ -254,14 +248,12 @@ class TestComplete(unittest.TestCase):
     output = named_proc.read()
     time.sleep(2)
 
-    ## Turn off the killswitch and add fakeldap to the config
+    ## Turn off the killswitch and add auth_developer to the config
     config = ConfigParser.ConfigParser()
     config.read(self.userconfig)
-    if( not config.has_section('fakeldap') ):
-      config.add_section('fakeldap')
-      config.set('fakeldap','binddn',self.binddn)
-      config.set('fakeldap','server',self.ldap)
-    config.set('credentials','authentication_method','fakeldap')
+    if( not config.has_section('auth_developer') ):
+      config.add_section('auth_developer')
+    config.set('credentials','authentication_method','auth_developer')
     config.set('server','lock_file', LOCKFILE)
     config.set('server','server_killswitch','off')
     config.set('server','port',self.port)
@@ -751,6 +743,20 @@ class TestComplete(unittest.TestCase):
         'ADDED ACL: acl: test_acl cidr_block: 168.192.1.0/24\n')
     command.close()
     ## User tool: dnsmkacl
+    ## dnsmkacl -a test_acl --cidr-block 127.0.0.1/32 --allow
+    command_string = (
+        'python ../roster-user-tools/scripts/dnsmkacl '
+        '-a test_acl --cidr-block 127.0.0.1/32 '
+        '-u %s -p %s '
+        '-s %s --config-file %s -c %s ' % (
+            USERNAME, PASSWORD, self.server_name,
+            self.toolsconfig, CREDFILE))
+    command = os.popen(command_string)
+    output = command.read()
+    self.assertEqual(output,
+        'ADDED ACL: acl: test_acl cidr_block: 127.0.0.1/32\n')
+    command.close()
+    ## User tool: dnsmkacl
     ## dnsmkacl -a test_acl2 --cidr-block 168.192.2.0/24 --allow
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkacl '
@@ -776,6 +782,7 @@ class TestComplete(unittest.TestCase):
         '--------------------\n'
         'test_acl2 168.192.2.0/24\n'
         'any       None\n'
+        'test_acl  127.0.0.1/32\n'
         'test_acl  168.192.1.0/24\n\n')
     command.close()
     ## User tool: dnsmkacl
@@ -801,6 +808,7 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'Name      CIDR Block\n'
         '--------------------\n'
+        'test_acl  127.0.0.1/32\n'
         'test_acl  168.192.1.0/24\n'
         'test_acl2 168.192.2.0/24\n'
         'test_acl3 168.192.3.0/24\n'
@@ -832,6 +840,7 @@ class TestComplete(unittest.TestCase):
         '--------------------\n'
         'test_acl2 168.192.2.0/24\n'
         'any       None\n'
+        'test_acl  127.0.0.1/32\n'
         'test_acl  168.192.1.0/24\n\n')
     command.close()
 
@@ -1311,7 +1320,6 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: test_view dns_server_set: set3 view_order: 1 view_options: None\n')
     command.close()
-
     ## User tool: dnsmkzone
     ## dnsmkzone forward -z test_zone -v test_view -t master --origin university.edu.
     command_string = (
@@ -1324,6 +1332,19 @@ class TestComplete(unittest.TestCase):
         'ADDED FORWARD ZONE: zone_name: test_zone zone_type: master '
         'zone_origin: university.edu. zone_options: None '
         'view_name: test_view\n')
+    ## User tool: dnsmkzone
+    ## dnsmkzone forward -z test_slave_zone -v test_view -t slave
+    command_string = (
+        'python ../roster-user-tools/scripts/dnsmkzone '
+        'forward -z test_slave_zone -v test_view -t slave --dont-make-any '
+        '--origin slave.university.edu. --options="masters { 192.168.0.1; };" '
+        '-u %s -p %s -s %s --config-file %s ' % (
+            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
+    command = os.popen(command_string)
+    self.assertEqual(command.read(),
+        'ADDED FORWARD ZONE: zone_name: test_slave_zone zone_type: '
+        'slave zone_origin: slave.university.edu. '
+        'zone_options: masters { 192.168.0.1; }; view_name: test_view\n')
     command.close()
     ## User tool: dnsmkzone
     ## dnsmkzone forward -z test_zone2 -v test_view2 -t master --origin 1.168.192.in-addr.arpa.
@@ -1431,20 +1452,22 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'zone_name  view_name  zone_type zone_origin             zone_options cidr_block\n'
-        '-------------------------------------------------------------------------------\n'
-        'test_zone  test_view  master    university.edu.                      -\n'
-        'test_zone  any        master    university.edu.                      -\n'
-        'test_zone3 test_view  master    2.168.192.in-addr.arpa.              192.168.2/24\n'
-        'test_zone3 any        master    2.168.192.in-addr.arpa.              192.168.2/24\n'
-        'test_zone2 test_view2 master    1.168.192.in-addr.arpa.              -\n'
-        'test_zone2 any        master    1.168.192.in-addr.arpa.              -\n'
-        'test_zone5 test_view  master    5.168.192.in-addr.arpa.              -\n'
-        'test_zone5 any        master    5.168.192.in-addr.arpa.              -\n'
-        'test_zone4 test_view2 master    3.168.192.in-addr.arpa.              192.168.3/24\n'
-        'test_zone4 any        master    3.168.192.in-addr.arpa.              192.168.3/24\n'
-        'test_zone6 test_view2 master    6.168.192.in-addr.arpa.              192.168.6/24\n'
-        'test_zone6 any        master    6.168.192.in-addr.arpa.              192.168.6/24\n\n')
+        "zone_name       view_name  zone_type zone_origin             zone_options                cidr_block\n"
+        "---------------------------------------------------------------------------------------------------\n"
+        "test_slave_zone test_view  slave     slave.university.edu.   'masters { 192.168.0.1; };' -\n"
+        "test_zone       test_view  master    university.edu.                                     -\n"
+        "test_zone       any        master    university.edu.                                     -\n"
+        "test_zone3      test_view  master    2.168.192.in-addr.arpa.                             192.168.2/24\n"
+        "test_zone3      any        master    2.168.192.in-addr.arpa.                             192.168.2/24\n"
+        "test_zone2      test_view2 master    1.168.192.in-addr.arpa.                             -\n"
+        "test_zone2      any        master    1.168.192.in-addr.arpa.                             -\n"
+        "test_zone5      test_view  master    5.168.192.in-addr.arpa.                             -\n"
+        "test_zone5      any        master    5.168.192.in-addr.arpa.                             -\n"
+        "test_zone4      test_view2 master    3.168.192.in-addr.arpa.                             192.168.3/24\n"
+        "test_zone4      any        master    3.168.192.in-addr.arpa.                             192.168.3/24\n"
+        "test_zone6      test_view2 master    6.168.192.in-addr.arpa.                             192.168.6/24\n"
+        "test_zone6      any        master    6.168.192.in-addr.arpa.                             192.168.6/24\n"
+        "\n")
     command.close()
     ## User tool: dnslszone
     ## dnslszone forward
@@ -1455,14 +1478,16 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'zone_name  view_name  zone_type zone_origin             zone_options cidr_block\n'
-        '-------------------------------------------------------------------------------\n'
-        'test_zone  test_view  master    university.edu.                      -\n'
-        'test_zone  any        master    university.edu.                      -\n'
-        'test_zone2 test_view2 master    1.168.192.in-addr.arpa.              -\n'
-        'test_zone2 any        master    1.168.192.in-addr.arpa.              -\n'
-        'test_zone5 test_view  master    5.168.192.in-addr.arpa.              -\n'
-        'test_zone5 any        master    5.168.192.in-addr.arpa.              -\n\n')
+        "zone_name       view_name  zone_type zone_origin             zone_options                cidr_block\n"
+        "---------------------------------------------------------------------------------------------------\n"
+        "test_slave_zone test_view  slave     slave.university.edu.   'masters { 192.168.0.1; };' -\n"
+        "test_zone       test_view  master    university.edu.                                     -\n"
+        "test_zone       any        master    university.edu.                                     -\n"
+        "test_zone2      test_view2 master    1.168.192.in-addr.arpa.                             -\n"
+        "test_zone2      any        master    1.168.192.in-addr.arpa.                             -\n"
+        "test_zone5      test_view  master    5.168.192.in-addr.arpa.                             -\n"
+        "test_zone5      any        master    5.168.192.in-addr.arpa.                             -\n"
+        "\n")
     command.close()
     ## User tool: dnslszone
     ## dnslszone all
@@ -1531,17 +1556,19 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'zone_name  view_name  zone_type zone_origin             zone_options cidr_block\n'
-        '-------------------------------------------------------------------------------\n'
-        'test_zone  test_view  master    university.edu.                      -\n'
-        'test_zone  any        master    university.edu.                      -\n'
-        'test_zone3 test_view  master    2.168.192.in-addr.arpa.              192.168.2/24\n'
-        'test_zone3 any        master    2.168.192.in-addr.arpa.              192.168.2/24\n'
-        'test_zone2 test_view2 master    1.168.192.in-addr.arpa.              -\n'
-        'test_zone2 any        master    1.168.192.in-addr.arpa.              -\n'
-        'test_zone5 any        master    5.168.192.in-addr.arpa.              -\n'
-        'test_zone4 test_view2 master    3.168.192.in-addr.arpa.              192.168.3/24\n'
-        'test_zone4 any        master    3.168.192.in-addr.arpa.              192.168.3/24\n\n')
+        "zone_name       view_name  zone_type zone_origin             zone_options                cidr_block\n"
+        "---------------------------------------------------------------------------------------------------\n"
+        "test_slave_zone test_view  slave     slave.university.edu.   'masters { 192.168.0.1; };' -\n"
+        "test_zone       test_view  master    university.edu.                                     -\n"
+        "test_zone       any        master    university.edu.                                     -\n"
+        "test_zone3      test_view  master    2.168.192.in-addr.arpa.                             192.168.2/24\n"
+        "test_zone3      any        master    2.168.192.in-addr.arpa.                             192.168.2/24\n"
+        "test_zone2      test_view2 master    1.168.192.in-addr.arpa.                             -\n"
+        "test_zone2      any        master    1.168.192.in-addr.arpa.                             -\n"
+        "test_zone5      any        master    5.168.192.in-addr.arpa.                             -\n"
+        "test_zone4      test_view2 master    3.168.192.in-addr.arpa.                             192.168.3/24\n"
+        "test_zone4      any        master    3.168.192.in-addr.arpa.                             192.168.3/24\n"
+        "\n")
     command.close()
     ## User tool: dnsrmzone
     ## dnsrmzone -z test_zone5 -v test_view
@@ -2491,16 +2518,16 @@ class TestComplete(unittest.TestCase):
         '    name_server: ns.university.edu.\n')
     command.close()
     ## User tool: dnsmkrecord
-    ## dnsmkrecord ns --name-server "3.168.192.in-addr.arpa." -t @ -z test_zone
+    ## dnsmkrecord ns --name-server "2.168.192.in-addr.arpa." -t @ -z test_zone
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkrecord '
-        'ns --name-server "3.168.192.in-addr.arpa." -t @ -z test_zone '
+        'ns --name-server "2.168.192.in-addr.arpa." -t @ -z test_zone '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED NS: @ zone_name: test_zone view_name: any ttl: 3600\n'
-        '    name_server: 3.168.192.in-addr.arpa.\n')
+        '    name_server: 2.168.192.in-addr.arpa.\n')
     command.close()
     ## User tool: dnsmkrecord
     ## dnsmkrecord ns --name-server "4.168.192.in-addr.arpa." -t @ -z test_zone
@@ -2527,10 +2554,10 @@ class TestComplete(unittest.TestCase):
         '    name_server: 4.168.192.in-addr.arpa.\n')
     command.close()
     ## User tool: dnsmkrecord
-    ## dnsmkrecord ns --name-server "3.168.192.in-addr.arpa." -t @ -v any -z test_zone
+    ## dnsmkrecord ns --name-server "2.168.192.in-addr.arpa." -t @ -v any -z test_zone
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkrecord '
-        'ns --name-server "3.168.192.in-addr.arpa." -t @ -z test_zone '
+        'ns --name-server "2.168.192.in-addr.arpa." -t @ -z test_zone '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
@@ -3102,6 +3129,17 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(output, '')
     command.close()
 
+    ## dnsquerycheck -i <audit-log-id> --config-file ./completeconfig.conf
+    command_string = (
+        'python ../roster-config-manager/scripts/dnsquerycheck '
+        ' -i %s -c %s -d %s -p %s -n 0' % (
+            tarfilename[0], self.userconfig, TEST_DNS_SERVER, self.named_port))
+    command = os.popen(command_string)
+    output = command.read()
+    command.close()
+    self.assertEqual(output,
+        '')
+
     ## dnsmkzone forward -z sub.university.edu -v test_view -t master --origin sub.university.edu.
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkzone '
@@ -3136,9 +3174,10 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         '')
     command.close()
-    os.rename('%s/full_database_dump-144.bz2' % (self.backup_dir),
+    id = 146
+    os.rename('%s/full_database_dump-%s.bz2' % (self.backup_dir, id),
                                 '%s/origdb.bz2' % self.backup_dir)
-    dbdump = glob.glob('%s/*-144.*' % self.backup_dir)
+    dbdump = glob.glob('%s/*-%s.*' % (self.backup_dir, id))
     for db in dbdump:
       if( os.path.exists(db) ):
         os.remove(db)
@@ -3146,18 +3185,18 @@ class TestComplete(unittest.TestCase):
     command_string = (
         'python ../roster-config-manager/scripts/dnsrecover '
         ' -i %s '
-        '-u %s --config-file %s ' % (144,
+        '-u %s --config-file %s ' % (id,
             USERNAME, self.userconfig))
     command = subprocess.Popen(shlex.split(command_string), 
         stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     output = command.communicate('y\n')
     time.sleep(1)
     self.assertEqual(output,
-       ('Loading database from backup with ID 141\n'
-        'Replaying action with id 142: MakeZone\n'
+       ('Loading database from backup with ID %d\n'
+        'Replaying action with id %d: MakeZone\n'
         'with arguments: [u\'sub.university.edu\', '
         'u\'master\', u\'sub.university.edu.\', u\'test_view\', None, True]\n'
-        'Replaying action with id 143: ProcessRecordsBatch\n'
+        'Replaying action with id %d: ProcessRecordsBatch\n'
         'with arguments: [[], [{u\'record_arguments\': '
         '{u\'refresh_seconds\': 10800L, u\'expiry_seconds\': '
         '3600000L, u\'name_server\': u\'ns.university.lcl.\', '
@@ -3244,7 +3283,8 @@ class TestComplete(unittest.TestCase):
         '%s\n'
         'Would you like to run dnstreeexport now? [y/n] \n'
         'Running dnstreeexport\n'
-        'dnstreeexport has completed successfully\n' % db_recovery.WARNING_STRING, None))
+        'dnstreeexport has completed successfully\n' % (id-3, id-2, id-1,
+            db_recovery.WARNING_STRING), None))
     time.sleep(1)
     ## dump reverted database
     origdb = bz2.BZ2File('%s/origdb.bz2' % self.backup_dir)
@@ -3255,7 +3295,7 @@ class TestComplete(unittest.TestCase):
     origdb.close()
     os.remove('%s/origdb.bz2' % self.backup_dir)
   
-    newdb = bz2.BZ2File('%s/full_database_dump-147.bz2' % self.backup_dir)
+    newdb = bz2.BZ2File('%s/full_database_dump-%s.bz2' % (self.backup_dir, id+3))
     newdump = newdb.read()
     newdump = re.sub(
         '[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}',
@@ -3265,7 +3305,7 @@ class TestComplete(unittest.TestCase):
     for line in newdump.split('\n'):
       if( line.startswith('INSERT INTO audit_log') ):
         number = int(line.split()[5].strip('(').strip(',').strip())
-        if( number < 144 ):
+        if( number < id ):
           newdump_list.append(line)
       else:
         newdump_list.append(line)

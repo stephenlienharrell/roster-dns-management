@@ -64,7 +64,6 @@ class TestRosterDatabaseBootstrap(unittest.TestCase):
     self.cfg_server = self.config_instance.config_file['server']
     self.cfg_database = self.config_instance.config_file['database']
     self.cfg_exporter = self.config_instance.config_file['exporter']
-    self.cfg_fakeldap = self.config_instance.config_file['fakeldap']
     self.db_instance = self.config_instance.GetDb()
     self.base_command = (
         'python %s -c %s/config.conf -u %s -U %s '

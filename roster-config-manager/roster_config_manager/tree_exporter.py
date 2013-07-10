@@ -46,7 +46,6 @@ import os
 import StringIO
 import shutil
 import tarfile
-import pprint
 
 from roster_core import punycode_lib
 from roster_core import audit_log
@@ -540,6 +539,18 @@ class BindTreeExport(object):
 
       for zone in cooked_data['dns_server_sets'][dns_server_set]['views'][
           view_name]['zones']:
+        records = cooked_data['dns_server_sets'][dns_server_set]['views'][
+          view_name]['zones'][zone]['records']
+        if( cooked_data['dns_server_sets'][dns_server_set]['views'][
+          view_name]['zones'][zone]['zone_type'] != 'slave' ):
+          #If there is no SOA record for this zone, a zone file won't be generated
+          #so we don't put a reference to a non-existent file in named.conf
+          for record in records:
+            if record['record_type'] == u'soa':
+              break
+          else:
+            continue
+
         named_conf_lines.append('\tzone "%s" {' % (
           cooked_data['dns_server_sets'][dns_server_set]['views'][view_name][
               'zones'][zone]['zone_origin'].rstrip('.')))
@@ -850,10 +861,10 @@ class BindTreeExport(object):
                 view_dependency_name = view_dependency[
                     'view_dependency_assignments_view_dependency']
                 zone_name = zone['zone_view_assignments_zone_name']
-                if( (view_dependency_name == zone[
+                if( view_dependency_name == zone[
                     'zone_view_assignments_view_dependency'] and
-                    (zone_name, view_dependency_name) in sorted_records) or
-                    zone['zone_view_assignments_zone_type'] == 'slave' ):
+                    ((zone_name, view_dependency_name) in sorted_records or
+                    zone['zone_view_assignments_zone_type'] == 'slave') ):
                   if( not zone_name in cooked_data['dns_server_sets'][
                         dns_server_set_name]['views'][view_name]['zones'] ):
                     cooked_data['dns_server_sets'][dns_server_set_name][
