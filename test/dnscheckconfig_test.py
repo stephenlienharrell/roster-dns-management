@@ -240,6 +240,105 @@ class TestCheckConfig(unittest.TestCase):
     self.assertEqual(output.read(), '')
     output.close()
 
+  def testCheckConfigParallelSpeedup(self):
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    self.core_instance.MakeACL(u'internal', u'127.0.0.1')
+    self.core_instance.MakeView(u'external')
+    self.core_instance.MakeDnsServer(u'localhost', SSH_USER, BIND_DIR, TEST_DIR)
+    self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSetAssignments(u'localhost', u'set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'external', 1, u'set1')
+    self.core_instance.MakeViewToACLAssignments(u'external', u'set1',
+                                                u'internal', 1)
+
+    #Global options
+    self.core_instance.MakeNamedConfGlobalOption(u'set1',
+        u'options { check-names master ignore; };\n')
+
+    #Test single zone check
+    self.core_instance.MakeZone(u'test_zone0', u'master',
+                                u'test_zone0.university.lcl.', view_name=u'external')
+    self.core_instance.MakeRecord(
+        u'soa', u'@', u'test_zone0',
+        {u'name_server': u'ns.university.lcl.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'external')
+
+    self.core_instance.MakeRecord(
+        u'ns', u'@', u'test_zone0',
+        {u'name_server': u'ns.university.lcl.'},
+        view_name=u'external')
+
+    for j in range(20):
+      self.core_instance.MakeRecord(u'a', u'machine%s' % j,
+                                    u'test_zone0',
+                                    {u'assignment_ip': u'10.10.10.0'},
+                                    view_name=u'external')
+
+    self.tree_exporter_instance.ExportAllBindTrees()
+    time.sleep(2) # Wait for disk to settle
+
+    #audit_log_id, filename = self.config_lib_instance.FindNewestDnsTreeFilename()
+    #self.config_lib_instance.UnTarDnsTree(audit_log_id)
+
+    single_start_time = time.time()
+    command = subprocess.Popen('python %s --config-file %s --verbose' % (
+        EXEC, CONFIG_FILE), shell=True, stdout=subprocess.PIPE)
+    #Wait for execution to finish
+    output = command.communicate()[0]
+
+    single_elapsed_time = time.time() - single_start_time
+
+    output_lines = output.split('\n')
+    self.assertTrue('Checked 1 named.conf file(s) and 1 zone file(s)' in
+                    output_lines)
+    self.assertTrue('All checks successful' in output_lines)
+
+    #Test multiple zones and measure speedup
+    #Create enough zones/records to see time difference in parallel execution
+    for i in range(1, 50):
+      self.core_instance.MakeZone(u'test_zone%s' % i, u'master',
+                                  u'test_zone%s.university.lcl.' % i,
+                                  view_name=u'external')
+      self.core_instance.MakeRecord(
+          u'soa', u'@', u'test_zone%s' % i,
+          {u'name_server': u'ns.university.edu.',
+           u'admin_email': u'admin.university.edu.',
+           u'serial_number': 1, u'refresh_seconds': 5,
+           u'retry_seconds': 5, u'expiry_seconds': 5,
+           u'minimum_seconds': 5}, view_name=u'external')
+
+      self.core_instance.MakeRecord(u'ns', u'@', u'test_zone%s' % i,
+                                    {u'name_server': u'ns.university.lcl.'},
+                                    view_name=u'external')
+
+      for j in range(20):
+        self.core_instance.MakeRecord(u'a', u'machine%s' % j,
+                                      u'test_zone%s' % i,
+                                      {u'assignment_ip': u'10.10.10.0'},
+                                      view_name=u'external')
+
+    self.tree_exporter_instance.ExportAllBindTrees()
+    time.sleep(2) # Wait for disk to settle
+
+    multi_start_time = time.time()
+    command = subprocess.Popen('python %s --config-file %s --verbose' % (
+        EXEC, CONFIG_FILE), shell=True, stdout=subprocess.PIPE)
+    #Wait for execution to finish
+    output = command.communicate()[0]
+    multi_elapsed_time = time.time() - multi_start_time
+
+    output_lines = output.split('\n')
+
+    # Assert speedup
+    self.assertTrue(multi_elapsed_time < single_elapsed_time * 25)
+
+    self.assertTrue('Checked 1 named.conf file(s) and 50 zone file(s)' in
+                    output_lines)
+    self.assertTrue('All checks successful' in output_lines)
+
   def testCheckServerInfo(self):
     self.assertEqual(self.core_instance.ListRecords(), [])
     output = os.popen('python %s -f test_data/test_zone.db '

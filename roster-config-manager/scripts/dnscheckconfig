@@ -46,6 +46,8 @@ import iscpy
 from fabric import api as fabric_api
 from fabric import state as fabric_state
 
+from multiprocessing import Pool
+
 from optparse import OptionParser
 
 from roster_config_manager import config_lib
@@ -89,6 +91,30 @@ def ChangeNamedDirectory(file_name, directory):
 
   finally:
     file_handle.close()
+
+def RunFabricNamedCheckTool(args):
+  """Runs a fabric_api.local() call for named-check(conf|zone)
+
+  Inputs:
+    args: dictionary of args to be used for returning result
+    from a parallel fabric named-check(conf|zone) call. ex:
+      {'filename': 'root_config_dir/localhost/named/named.conf.a',
+       'command': 'named-checkconf root_config_dir/localhost/named/named.conf.a'}
+      -- OR --
+      {'filename': 'root_config_dir/localhost/public/sub.abc.lcl.db',
+       'command':
+           'named-checkzone root_config_dir/localhost/public/sub.abc.lcl.db'}
+
+  Outputs:
+    dictionary of filename and named-check(conf|zone) output. ex:
+      {'filename': 'root_config_dir/university.edu/named.conf.a',
+       'output': ''}
+  """
+  filename = args['filename']
+  command = args['command']
+  fabric_output = fabric_api.local(command, capture=True)
+  return {'filename': filename,
+          'output': fabric_output}
 
 def main(args):
   """Collects command line arguments. Checks configs.
@@ -145,17 +171,28 @@ def main(args):
     fabric_state.output['running'] = False
     fabric_state.output['warnings'] = False
     fabric_api.env.warn_only = True
+
+    checkconf_pool = Pool(processes=config_lib_instance.max_threads)
+    parallel_checkconf_args_list = []
+
     named_files = glob.glob('%s/*/named.conf.a' % (
         config_lib_instance.root_config_dir))
     for current_file in named_files:
       ChangeNamedDirectory(current_file, config_lib_instance.root_config_dir)
-      checknamed_text = fabric_api.local('%s %s' % (
-          options.named_checkconf, current_file), capture=True)
-      if( checknamed_text == '' ):
+      command = '%s %s' % (options.named_checkconf, current_file)
+      parallel_checkconf_args_list.append({'filename': current_file,
+                                           'command': command})
+
+    checkconf_results = checkconf_pool.map(RunFabricNamedCheckTool,
+                                           parallel_checkconf_args_list)
+
+    for result in checkconf_results:
+      named_file_output = result['output']
+      if( named_file_output == '' ):
         if( options.verbose ):
-          print 'Finished - %s' % current_file
+          print 'Finished - %s' % result['filename']
       else:
-        print 'ERROR: %s' % checknamed_text
+        print 'ERROR: %s' % named_file_output
         sys.exit(1)
 
     #Turns ['temp_dir/localhost/named.conf.a'] into ['temp_dir/localhost']
@@ -176,6 +213,9 @@ def main(args):
       named_file_dict = iscpy.ParseISCString(named_file_string)
       global_options_dict = named_file_dict['options']
       zone_files = glob.glob('%s/*/*/*.db' % named_dir)
+
+      checkzone_pool = Pool(processes=config_lib_instance.max_threads)
+      parallel_checkzone_args_list = []
 
       for current_file in zone_files:
         #example - current_file = 
@@ -201,7 +241,7 @@ def main(args):
                 break
         else:
           print('Zone file %s is in the named directory %s, '
-               'but not in it\'s named.conf' % (current_file, named_dir))
+                'but not in it\'s named.conf' % (current_file, named_dir))
           sys.exit(1)
 
         file_handle = open(current_file, 'r')
@@ -219,18 +259,25 @@ def main(args):
 
         additional_args_string = config_lib_instance.GetNamedZoneToolArgs(
             current_server_name, view_name, current_zone_file)
-        checkzone_command = ('%s %s %s %s' % (
-            options.named_checkzone, additional_args_string, 
-            origin, current_file))
 
-        checkzone_text = fabric_api.local(checkzone_command, capture=True)
+        #Run the named_checkzone command concurrently
+        command = '%s %s %s %s' % (
+        options.named_checkzone, additional_args_string, origin, current_file)
 
-        if( checkzone_text.endswith('\nOK') ):
-          if( options.verbose ):
-            print 'Finished - %s' % current_file
-        else:
-          print 'ERROR: %s' % checkzone_text
-          sys.exit(1)
+        parallel_checkzone_args_list.append({'filename': current_file,
+                                             'command': command})
+
+    results = checkzone_pool.map(RunFabricNamedCheckTool,
+                                 parallel_checkzone_args_list)
+
+    for result in results:
+      checkzone_output = result['output']
+      if( checkzone_output.endswith('\nOK') ):
+        if( options.verbose ):
+          print 'Finished - %s' % result['filename']
+      else:
+        print 'ERROR: %s' % checkzone_output
+        sys.exit(1)
 
     if( options.verbose ):
       print '--------------------------------------------------------------------'
