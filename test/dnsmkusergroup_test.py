@@ -395,6 +395,22 @@ class Testdnsmkusergroup(unittest.TestCase):
         'USER ERROR: Invalid data type GroupPermission for '
         'group_forward_permissions_group_permission: x\n')
     output.close()
+    # check duplicate group permission assignment
+    output = os.popen('python %s forward -z test_zone -g testgroup '
+                      '--group-permission soa,ns,soa -s %s -u %s -p %s '
+                      '--config-file %s' % (EXEC, self.server_name, USERNAME,
+                                            PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(), 'CLIENT ERROR: Duplicate permission: soa\n')
+    output.close()
+
+    # also check duplicate reverse range group permission
+    output = os.popen('python %s reverse -b 192.168.0.1/24 -g testgroup '
+                      '--group-permission soa,ptr,soa -s %s -u %s -p %s '
+                      '--config-file %s' % (EXEC, self.server_name, USERNAME,
+                                            PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'CLIENT ERROR: Duplicate permission found: soa\n')
+    output.close()
 
 if( __name__ == '__main__' ):
       unittest.main()

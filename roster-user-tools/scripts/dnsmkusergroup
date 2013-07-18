@@ -119,11 +119,11 @@ def main(args):
         args=[options.new_user])['core_return']
 
   if( options.group_permission ):
-    group_permissions = roster_client_lib.RunFunction(
+    group_permission_list = roster_client_lib.RunFunction(
         u'ListGroupPermissions', options.username, credfile=options.credfile,
         credstring=options.credstring, server_name=options.server)[
             'core_return']
-    group_permissions_string = '|'.join(group_permissions)
+    group_permissions_string = '|'.join(group_permission_list)
 
   if( command == 'user' ):
     if( options.new_user in users ):
@@ -175,9 +175,12 @@ def main(args):
       cli_common_lib.DnsError('Group does not exist.', 1)
     group_permission_list = None
     if( options.group_permission ):
-      group_permission_list = []
-      for permission in options.group_permission.split(','):
-        group_permission_list.append(permission.strip())
+      group_permission_list = [
+          perm.strip().lower() for perm in options.group_permission.split(',')]
+      for permission in group_permission_list:
+        if( group_permission_list.count(permission) > 1 ):
+          cli_common_lib.DnsError('Duplicate permission found: %s' % permission,
+                                  1)
     roster_client_lib.RunFunction(u'MakeReverseRangePermission',
                                   options.username,
                                   credfile=options.credfile,
@@ -200,9 +203,11 @@ def main(args):
       cli_common_lib.DnsError('Group does not exist.', 1)
     group_permission_list = None
     if( options.group_permission ):
-      group_permission_list = []
-      for permission in options.group_permission.split(','):
-        group_permission_list.append(permission.strip())
+      group_permission_list = [
+          perm.strip().lower() for perm in options.group_permission.split(',')]
+      for permission in group_permission_list:
+        if( group_permission_list.count(permission) > 1 ):
+          cli_common_lib.DnsError('Duplicate permission: %s' % permission, 1)
     roster_client_lib.RunFunction(u'MakeForwardZonePermission',
                                   options.username,
                                   credfile=options.credfile,
