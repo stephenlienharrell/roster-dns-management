@@ -150,6 +150,7 @@ class Testdnsmkdnsserver(unittest.TestCase):
     self.core_instance.MakeDnsServer(u'dns1', u'user',
                                      u'/etc/bind/', u'/etc/bind/test/')
     self.core_instance.MakeDnsServerSet(u'set1')
+    self.core_instance.MakeDnsServerSet(u'set2')
     command = os.popen(
         'python %s assignment -e set1 -d dns1 -u %s -p %s --config-file %s '
         '-s %s' % (
@@ -157,6 +158,14 @@ class Testdnsmkdnsserver(unittest.TestCase):
     self.assertEqual(command.read(),
         'ADDED DNS SERVER SET ASSIGNMENT: dns_server: dns1 '
         'dns_server_set: set1\n')
+    command.close()
+    command = os.popen(
+        'python %s assignment -e set2 -d dns1 -u %s -p %s --config-file %s '
+        '-s %s' % (
+            EXEC, USERNAME, self.password, USER_CONFIG, self.server_name))
+    self.assertEqual(command.read(), 
+        'CLIENT ERROR: DNS Server "dns1" is already assigned to DNS Server Set '
+        '"set1"\n')
     command.close()
     self.assertEqual(self.core_instance.ListDnsServerSetAssignments(),
                      {'set1': [u'dns1']})

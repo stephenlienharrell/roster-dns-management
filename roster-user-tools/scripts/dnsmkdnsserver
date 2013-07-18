@@ -112,6 +112,15 @@ def main(args):
       cli_common_lib.DnsError(
           'DNS Server Set "%s" does not exist.' % options.dns_server_set, 1)
 
+    dns_server_set_assignments = roster_client_lib.RunFunction(
+            u'ListDnsServerSetAssignments', options.username,
+            credfile=options.credfile, credstring=options.credstring,
+            server_name=options.server,
+            kwargs={'dns_server_name': options.dns_server})['core_return']
+    if( dns_server_set_assignments != {} ):
+      cli_common_lib.DnsError(
+          'DNS Server "%s" is already assigned to DNS Server Set "%s"' % (
+            options.dns_server, dns_server_set_assignments.keys()[0]), 1)
 
     roster_client_lib.RunFunction(
         u'MakeDnsServerSetAssignments', options.username,

@@ -91,6 +91,19 @@ class TestCore(unittest.TestCase):
     self.assertTrue(self.core_instance.RemoveUser(u'psmith'))
     self.assertFalse(self.core_instance.ListUsers(user_name=u'psmith'))
 
+  def testMakeDuplicateDnsServerSetAssignmentError(self):
+    self.core_instance.MakeDnsServer(u'myserver_name', u'some_ssh_name', 
+        u'/some_bind_dir/', u'/some_test_dir/')
+    self.core_instance.MakeDnsServerSet(u'some_set1')
+    self.core_instance.MakeDnsServerSet(u'some_set2')
+
+    self.core_instance.MakeDnsServerSetAssignments(u'myserver_name', 
+        u'some_set1')
+    self.assertRaises(MySQLdb.IntegrityError, 
+        self.core_instance.MakeDnsServerSetAssignments, 
+        u'myserver_name', 
+        u'some_set2')
+
   def testCredentialMakeRemoveListUpdate(self):
     current_time = datetime.datetime.now().replace(microsecond=0)
     self.core_instance._MakeCredential(u'f47ac10b-58cc-4372-a567-0e02b2c3d479',
