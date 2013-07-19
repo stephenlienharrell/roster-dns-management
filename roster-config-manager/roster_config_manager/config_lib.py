@@ -136,6 +136,10 @@ class ConfigLib(object):
     Inputs:
       audit_log_id: id of the audit log of a compressed dns tree
 
+    Outputs:
+      audit_log_id: int - the same as the input, unless the input is None.
+      In which case, the most recent audit log will be returned.
+
     Raises:
       ExporterFileError Compressed files will not be extracted to /root/config.
     """
@@ -155,6 +159,7 @@ class ConfigLib(object):
       raise ExporterFileError('Could not extract the DNS tree %s/%s to %s.' % (
           self.backup_dir, filename, self.root_config_dir))
     tar_file.close()
+    return audit_log_id
 
   def TarDnsTree(self, audit_log_id):
     """Compresses the uncompressed Roster Tree in the root configuration

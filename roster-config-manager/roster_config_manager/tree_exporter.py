@@ -285,18 +285,16 @@ class BindTreeExport(object):
               zone_file_handle.close()
 
           # Write named conf files
-          named_conf_file = '%s/named.conf.a' % named_directory.rstrip('/')
-          named_conf_binary_file = '%s/named.conf.b' % (
-              named_directory.rstrip('/'))
+          named_conf_file = os.path.join(named_directory, 'named.conf.a')
+          named_conf_binary_file = os.path.join(named_directory, 'named.conf.b')
           named_conf_a_file_string = self.MakeNamedConf(data, cooked_data,
                                                         dns_server_set, 'db',
                                                         bind_dir)
           named_conf_b_file_string = self.MakeNamedConf(data, cooked_data,
                                                         dns_server_set, 'aa',
                                                         bind_dir, binary=True)
-          root_hint_file = '%s/named/named.ca' % named_directory.rstrip('/')
+          root_hint_file = os.path.join(named_directory, 'named/named.ca')
           root_hint_file_string = open(self.root_hint_file, 'r').read()
-
           root_hint_file_handle = open(root_hint_file, 'w')
           named_conf_binary_file_handle = open(named_conf_binary_file, 'w')
           named_conf_file_handle = open(named_conf_file, 'w')

@@ -43,6 +43,8 @@ import ssh
 import tarfile
 import iscpy
 import re
+import time
+import datetime
 from fabric import api as fabric_api
 from fabric import exceptions as fabric_exceptions
 from fabric import state as fabric_state
@@ -57,186 +59,361 @@ from roster_core import constants
 #BIND default
 DEFAULT_RNDC_PORT = 953
 
-def PushFiles(dns_server, config_lib_instance, rndc_exec='rndc', 
-    ssh_id_file=None, dns_server_rndc_port=None):
-  """Pushes files to a remote directory over SSH, and refreshes rndc.
-  Inputs:
-    dns_server: name of the dns_server to push files to.
-    config_lib_instance: ConfigLib object
-    rndc_exec: string of path to rndc executable
-    ssh_id_file: string of path to SSH private key file
-    dns_server_rndc_port: int of port to connect rndc to
-  Raises:
-    ExporterNoFileError: Could not fnid a DNS tree in the root_config_dir
-    ServerCheckError:
-      DNS server does not exist
-      A server check has not been run on a DNS server
-      Failed to move compressed BIND tree to DNS server
-      Failed to untar compressed BIND tree on DNS server
-      A named.conf check failed on the DNS server
-      A zone did not pass named-checkzone
-      Failed to compile zone
-      Lost SSH connection to DNS server
-      Unable to connect via SSH to DNS server
-      Failed to reload DNS server via rndc reload
-  """
-  root_config_dir = config_lib_instance.root_config_dir
-  if( not os.path.exists(root_config_dir) or
-      len(os.listdir(root_config_dir)) < 1 ):
-    raise config_lib.ExporterNoFileError('Could not find a DNS tree in %s.' % 
-                                         root_config_dir)
-  
-  dns_server_directory = '%s/%s' % (root_config_dir, dns_server)
-  if( not os.path.exists(dns_server_directory) ):
-    raise config_lib.ServerCheckError('DNS server %s does not exist. %s' % 
-                                      dns_server)
-  
-  dns_server_info = config_lib_instance.GetDnsServerInfo(dns_server)
-  if( not dns_server_rndc_port ):
-    rndc_port_found = False
-    named_conf_string = open(
-        os.path.join(root_config_dir, dns_server, 'named.conf.a'), 'r').read()
-    named_conf_dict = iscpy.ParseISCString(named_conf_string)
-    if( 'controls' in named_conf_dict ):
-      named_conf_dict = named_conf_dict['controls']
-      for sub_dict in named_conf_dict:
-        for key in sub_dict:
-          if( 'inet' in key and 'port' in key ):
-            #Turns 'inet 192.168.what.ever port 1234 allow' into 
-            #['inet 192.168.what.ever ', ' 1234 allow']
-            port_split_list = key.split('port')
+class ConfigSyncer:
+  def __init__(self, dns_server, config_lib_instance, rndc_exec='rndc', 
+               ssh_id_file=None, dns_server_rndc_port=None, id=None):
+    """
+    Inputs:
+      dns_server: name of the dns_server to push files to.
+      config_lib_instance: ConfigLib object
+      rndc_exec: string of path to rndc executable
+      ssh_id_file: string of path to SSH private key file
+      dns_server_rndc_port: int of port to connect rndc to
+      id: int of audit log id of files we're sending over
+    Raises:
+      ExporterNoFileError: Could not find a DNS tree in the root_config_dir
+      ServerCheckError:
+        DNS server does not exist
+        A server check has not been run on a DNS server
+    """
+    self.dns_server = dns_server
+    self.config_lib_instance = config_lib_instance
+    self.root_config_dir = config_lib_instance.root_config_dir
+    self.rndc_exec = rndc_exec
+    self.ssh_id_file = ssh_id_file
+    self.dns_server_rndc_port = dns_server_rndc_port
+    self.id = int(id)
 
-            if len(port_split_list) > 1:
-              #Results in '1234 allow'
-              port_segment = port_split_list[1].strip(' ')
+    if( not os.path.exists(self.root_config_dir) or
+        len(os.listdir(self.root_config_dir)) < 1 ):
+      raise config_lib.ExporterNoFileError('Could not find a DNS tree in %s.' % 
+                                           self.root_config_dir)
+    
+    self.dns_server_directory = '%s/%s' % (self.root_config_dir, self.dns_server)
+    if( not os.path.exists(self.dns_server_directory) ):
+      raise config_lib.ServerCheckError('DNS server %s does not exist. %s' % 
+                                        dns_server)
+    
+    self.dns_server_info = config_lib_instance.GetDnsServerInfo(dns_server)
+    self.bind_dir = self.dns_server_info['server_info']['bind_dir'].rstrip('/')
+    self.test_dir = self.dns_server_info['server_info']['test_dir'].rstrip('/')
+    self.ssh_host = '%s@%s:22' % (
+        self.dns_server_info['server_info']['server_user'],
+        self.dns_server_info['server_info']['server_name'])
+    self.checkzone = ('named-checkzone' in self.dns_server_info['tools'] and 
+                 self.dns_server_info['tools']['named-checkzone'])
+    self.checkconf = ('named-checkconf' in self.dns_server_info['tools'] and 
+                 self.dns_server_info['tools']['named-checkconf'])
+    self.compilezone = ('named-compilezone' in self.dns_server_info['tools'] and
+                   self.dns_server_info['tools']['named-compilezone'])
+    self.tar = ('tar' in self.dns_server_info['tools'] and 
+        self.dns_server_info['tools']['tar'])
 
-              #Results in ' allow'
-              to_strip = ''.join(re.split('\A[0-9]{1,5}', port_segment))
+    if( not self.dns_server_rndc_port ):
+      rndc_port_found = False
+      named_conf_string = open(os.path.join(
+        self.root_config_dir, dns_server, 'named.conf.a'), 'r').read()
+      named_conf_dict = iscpy.ParseISCString(named_conf_string)
+      if( 'controls' in named_conf_dict ):
+        named_conf_dict = named_conf_dict['controls']
+        for sub_dict in named_conf_dict:
+          for key in sub_dict:
+            if( 'inet' in key and 'port' in key ):
+              #Turns 'inet 192.168.what.ever port 1234 allow' into 
+              #['inet 192.168.what.ever ', ' 1234 allow']
+              port_split_list = key.split('port')
 
-              #Results in '1234'
-              port_string = port_segment.strip(to_strip) 
+              if len(port_split_list) > 1:
+                #Results in '1234 allow'
+                port_segment = port_split_list[1].strip(' ')
 
-              if port_string.isdigit():
-                dns_server_rndc_port = int(port_string)
-                rndc_port_found = True
+                #Results in ' allow'
+                to_strip = ''.join(re.split('\A[0-9]{1,5}', port_segment))
 
-    if( not rndc_port_found ):
-      print 'rndc port not found in named.conf. Using default of %s' % (
-          DEFAULT_RNDC_PORT)
-      dns_server_rndc_port = DEFAULT_RNDC_PORT
+                #Results in '1234'
+                port_string = port_segment.strip(to_strip) 
 
-  dns_server_info['server_info']['bind_dir'] = dns_server_info['server_info'][
-      'bind_dir'].rstrip('/')
-  dns_server_info['server_info']['test_dir'] = dns_server_info['server_info'][
-      'test_dir'].rstrip('/')
-  if( dns_server_info['server_info']['bind_version'].lower() == 
-      'undetermined' ):
-    raise config_lib.ServerCheckError('A server check has not been run on %s.' %
-                           dns_server)
-  ssh_host = '%s@%s:22' % (dns_server_info['server_info']['server_user'],
-                           dns_server_info['server_info']['server_name'])
-  
-  checkzone = ('named-checkzone' in dns_server_info['tools'] and 
-               dns_server_info['tools']['named-checkzone'])
-  checkconf = ('named-checkconf' in dns_server_info['tools'] and 
-               dns_server_info['tools']['named-checkconf'])
-  compilezone = ('named-compilezone' in dns_server_info['tools'] and 
-                 dns_server_info['tools']['named-compilezone'])
-  tar = ('tar' in dns_server_info['tools'] and dns_server_info['tools']['tar'])
-  try:
-    if( ssh_id_file is not None ):
-      fabric_api.env.key_filename = ssh_id_file
-    fabric_api.env.warn_only = True
-    for out in fabric_state.output:
-      fabric_state.output[out] = False
-    fabric_api.env.host_string = ssh_host
-    fabric_api.run('rm -rf %s/*' % dns_server_info['server_info']['test_dir'])
+                if port_string.isdigit():
+                  self.dns_server_rndc_port = int(port_string)
+                  rndc_port_found = True
 
-    # Prepare and push BIND tree to server
-    if( tar ):
-      config_lib_instance.TarDnsBindFiles(dns_server)
-      result = fabric_api.put('%s/%s.tar.bz2' % 
-          (dns_server_directory, dns_server),
-          '%s/%s.tar.bz2' % (dns_server_info['server_info']['test_dir'], 
-          dns_server))
+      if( not rndc_port_found ):
+        print 'rndc port not found in named.conf. Using default of %s' % (
+            DEFAULT_RNDC_PORT)
+        self.dns_server_rndc_port = DEFAULT_RNDC_PORT
+
+    if( self.dns_server_info['server_info']['bind_version'].lower() == 
+        'undetermined' ):
+      raise config_lib.ServerCheckError('A server check has not been run on %s.' %
+                             self.dns_server)
+
+  def run(self):
+    """Pushes files to a remote directory over SSH, and refreshes rndc.
+    Raises:
+      ServerCheckError:
+        Lost SSH connection to DNS server
+        Unable to connect via SSH to DNS server
+    """
+    try:
+      if( self.ssh_id_file is not None ):
+        fabric_api.env.key_filename = self.ssh_id_file
+      fabric_api.env.warn_only = True
+      for out in fabric_state.output:
+        fabric_state.output[out] = False
+      fabric_api.env.host_string = self.ssh_host
+      fabric_api.run('rm -rf %s/*' % self.test_dir)
+
+      retry_methods = [self.MoveFilesAndUnTar, self.ReplaceBindDir, 
+              self.ReloadBindServer]
+      for method in retry_methods:
+        tries = 0
+        success = False
+        while not success:
+          try:
+            tries += 1
+            method()
+            success = True
+          except (fabric_exceptions.NetworkError, ssh.SSHException, 
+              config_lib.ServerCheckError) as e:
+            if tries == options.tries:
+              raise e
+    except fabric_exceptions.NetworkError:
+      raise config_lib.ServerCheckError('Could not connect to %s via SSH.' % 
+          self.dns_server)
+    except ssh.SSHException:
+      raise config_lib.ServerCheckError('Lost connection to %s.' % 
+          self.dns_server)
+    finally:
+      fabric_network.disconnect_all()
+
+  def ReloadBindServer(self):
+    """Reloads BIND server via rndc reload
+    Raises:
+      ServerCheckError:
+        Failed to reload DNS server via rndc reload
+    """
+    rndc_exec = '%s -p %s reload' % (
+        self.rndc_exec, self.dns_server_rndc_port)
+
+    result = fabric_api.run(rndc_exec)
+    if( result.return_code != 0 ):
+      raise config_lib.ServerCheckError('Failed to reload %s BIND '
+          'server: %s.' % (self.dns_server, result))
+
+  def CreateSymlink(self, symlink, target, write_redirect_named_conf=False):
+    """Creates a symlink on the remote DNS server, with the option to
+    write the "dummy" redirect named.conf
+
+    Inputs:
+      symlink: string - path of the symlink to create
+      target: string - path of folder for symlink to point to
+      write_redirect_named_conf: boolean - write the redirect named.conf
+
+    Raises:
+      ServerCheckError:
+        Failed to create named.conf in the named directory
+        Failed to create symlink
+    """
+    if( write_redirect_named_conf ):
+      #symlink_named_conf is the "redirect" named.conf file. It simply includes
+      #the contents of the named.conf that is "inside" the symlink directory.
+      #After changing the symlink target, this file is now different, and thus
+      #we have "updated" the "real" named.conf without touching the
+      #named.conf that BIND looks at, which is the symlink_named_conf.
+      symlink_named_conf = os.path.join(symlink, 'named.conf')
+
+      #This comes out to be something like:
+      #include "/etc/bind/named/named.conf";
+      symlink_named_conf_string = 'include "%s";' % symlink_named_conf
+
+      #This comes out to (staying in sync with the above example):
+      #/etc/bind/named.conf
+      bind_dir_named_conf = os.path.join(self.bind_dir, 'named.conf')
+
+      echo_command = "echo '%s' > %s" % (symlink_named_conf_string, 
+          bind_dir_named_conf)
+
+      result = fabric_api.run(echo_command)
+      if( result.return_code != 0 ):
+        raise config_lib.ServerCheckError(
+            'Failed to create named.conf in directory %s on server %s' % (
+              self.bind_dir, self.dns_server))
+
+    result = fabric_api.run('ln -s %s %s' % (target, symlink))
+    if( result.return_code != 0 ):
+      raise config_lib.ServerCheckError(
+          'Failed to symlink %s to %s on server %s' % (target,
+            symlink, self.dns_server))
+
+  def ReplaceBindDir(self):
+    """Moves the contents of test_dir into bind_dir
+    Raises:
+      ServerCheckError:
+        BIND directory does not exist on remote DNS server
+        Failed to move BIND files from test_dir to bind_dir
+        Failed to remove bind_dir and create a symlink in its place
+        Failed to change symlink target 
+        Unknown symlink directory type
+    """
+
+    symlink_dir = os.path.join(self.bind_dir, 'named')
+    new_bind_dir_real = '%s_%s_%s' % (symlink_dir.rstrip('/'), self.id, 
+        datetime.datetime.now().strftime('%d_%m_%yT%H_%M_%S'))
+
+    #Making sure self.bind_dir exists 
+    result = fabric_api.run('file %s' % self.bind_dir)
+    if( result.stdout == "%s: cannot open `%s' (No such file or directory)" % (
+      self.bind_dir, self.bind_dir) ):
+      raise config_lib.ServerCheckError(
+          'BIND directory %s does not exist on server %s' % (self.bind_dir, 
+            self.dns_server))
+
+    #OK, it exists. Now let's move the test_dir there.
+    test_dir_named_dir = os.path.join(self.test_dir, 'named')
+    result = fabric_api.run('mv %s %s' % (test_dir_named_dir, new_bind_dir_real))
+    if( result.return_code != 0 ):
+      #check to see if it exists
+      raise config_lib.ServerCheckError(
+          'Failed moving %s to %s on server %s' % (test_dir_named_dir, 
+            new_bind_dir_real, self.dns_server))
+
+    result = fabric_api.run('file %s' % symlink_dir)
+    if( result.stdout == "%s: cannot open `%s' (No such file or directory)" % (
+      symlink_dir, symlink_dir) ):
+      self.CreateSymlink(symlink_dir, new_bind_dir_real, 
+          write_redirect_named_conf=True)
+
+    #The BIND directory is an actual directory, not a symlink
+    elif( result.stdout == '%s: directory' % symlink_dir ):
+      result = fabric_api.run('rm -rf %s' % symlink_dir )
+      if( result.return_code != 0 ):
+        raise config_lib.ServerCheckError(
+            'Failed to remove directory %s on server %s' % (symlink_dir, 
+             self.dn_server))
+      self.CreateSymlink(symlink_dir, new_bind_dir_real, 
+          write_redirect_named_conf=True)
+
+    #The BIND directory is a symlink
+    elif( 'symbolic link to' in result.stdout ):
+      #Turns "/some_dir/: symbolic link to `/some_other_dir'"
+      real_bind_dir = result.stdout.split('symbolic link to')[1].lstrip(' `')[:-1]
+      temp_symlink = '%s_link' % new_bind_dir_real.rstrip('/')
+
+      self.CreateSymlink(temp_symlink, new_bind_dir_real)
+
+      #This is key. This must (and does) run atomically.
+      result = fabric_api.run('mv -T %s %s' % (temp_symlink, symlink_dir))
+      if( result.return_code != 0 ):
+        raise config_lib.ServerCheckError(
+            'Failed to change %s symlink target from %s to %s on server %s' % (
+              self.bind_dir, real_bind_dir, new_bind_dir_real, self.dns_server))
+
+      result = fabric_api.run('rm -rf %s' % real_bind_dir)
+      if( result.return_code != 0 ):
+        print('WARNING: Failed to remove %s on server %s. This can be removed '
+              'manually. However, it will not affect BIND operation.' % (
+                  real_bind_dir, self.dns_server))
+    else:
+      raise config_lib.ServerCheckError('Unknown error in determing file type '
+                                        'of %s on server %s' % (symlink_dir, 
+                                            self.dns_server))
+
+  def MoveFilesAndUnTar(self):
+    """Moves files to remote server, untars, and runs checks
+    Raises:
+      ServerCheckError:
+        Failed to move compressed/uncompressed BIND tree to DNS server
+        Failed to untar compressed BIND tree on DNS server
+        A named.conf check failed on the DNS server
+        A zone did not pass named-checkzone
+        Failed to compile zone
+    """
+    if( self.tar ):
+      self.config_lib_instance.TarDnsBindFiles(self.dns_server)
+
+      tar_file_name = '%s.tar.bz2' % self.dns_server
+      local_tar_file_path = os.path.join(
+              self.dns_server_directory, tar_file_name)
+      remote_tar_file_path = os.path.join(self.test_dir, tar_file_name)
+
+      result = fabric_api.run('ls %s' % self.test_dir) 
+      if( result.return_code != 0 ):
+        result = fabric_api.run('mkdir %s' % self.test_dir)
+        if( result.return_code != 0 ):
+          raise config_lib.ServerCheckError('Failed to move compressed BIND tree'
+                                            ' to server %s' % self.dns_server)
+            
+      result = fabric_api.put(local_tar_file_path, remote_tar_file_path)
       if( not result.succeeded ):
         raise config_lib.ServerCheckError('Failed to move compressed BIND tree '
-                                          'to server %s.' % dns_server)
-      with fabric_api.cd(dns_server_info['server_info']['test_dir']):
-        result = fabric_api.run('tar -xf %s/%s.tar.bz2' % (dns_server_info[
-            'server_info']['test_dir'], dns_server))
-      os.remove('%s/%s/%s.tar.bz2' % (root_config_dir, dns_server, dns_server))
+                                          'to server %s.' % self.dns_server)
+      with fabric_api.cd(self.test_dir):
+        result = fabric_api.run('tar -xf %s' % remote_tar_file_path)
+      os.remove(os.path.join(
+          self.root_config_dir, self.dns_server, tar_file_name))
       if( result.return_code != 0 ):
         raise config_lib.ServerCheckError('Failed to untar compressed BIND '
-            'tree on server %s.' % dns_server)
-      result = fabric_api.run('ls %s' % 
-          dns_server_info['server_info']['test_dir'])
+            'tree on server %s.' % self.dns_server)
+      result = fabric_api.run('ls %s' % self.test_dir)
       if( 'named.conf.a' not in result ):
         raise config_lib.ServerCheckError('Failed to untar compressed BIND '
-            'tree on server %s.' % dns_server)
-      fabric_api.run('rm %s/%s.tar.bz2' % (dns_server_info['server_info'][
-          'test_dir'], dns_server))
+            'tree on server %s.' % self.dns_server)
+      fabric_api.run('rm %s' % remote_tar_file_path)
     else:
-      result = fabric_api.put('%s/*' % dns_server_directory, 
-          dns_server_info['server_info']['test_dir'])
+      result = fabric_api.put('%s/*' % self.dns_server_directory, self.test_dir)
       if( not result.succeeded ):
         raise config_lib.ServerCheckError('Failed in moving BIND tree files '
-            'to server %s.' % dns_server)
-    fabric_api.run('rm %s/%s.info' % (dns_server_info['server_info'][
-        'test_dir'], dns_server))
+            'to server %s.' % self.dns_server)
 
-    # Check and prepare named.conf file
-    result = fabric_api.run('ls %s/named' % dns_server_info[
-        'server_info']['bind_dir'])
-    if( result.return_code!=0 ):
-      fabric_api.run('mkdir %s/named' % dns_server_info['server_info'][
-          'bind_dir'])
+    dns_server_info_file = '%s.info' % self.dns_server
+    fabric_api.run('rm %s' % os.path.join(self.test_dir, dns_server_info_file))
+
+    remote_named_dir = os.path.join(self.bind_dir, 'named')
+    result = fabric_api.run('ls %s' % remote_named_dir)
+    if( result.return_code != 0 ):
+      fabric_api.run('mkdir %s' % remote_named_dir)
 
     conf_keep = ''
     conf_remove = ''
-    if( checkconf and compilezone ):
-      result = fabric_api.run('named-checkconf %s/named.conf.b' % 
-          dns_server_info['server_info']['test_dir'])
+    if( self.checkconf and self.compilezone ):
+      result = fabric_api.run('named-checkconf %s/named.conf.b' % self.test_dir)
       if( result.return_code != 0 ):
         raise config_lib.ServerCheckError('Binary named.conf check failed '
-            'on %s.' % dns_server)
-    elif( checkconf ):
-      result = fabric_api.run('named-checkconf %s/named.conf.a' % 
-          dns_server_info['server_info']['test_dir'])
+            'on %s.' % self.dns_server)
+    elif( self.checkconf ):
+      result = fabric_api.run('named-checkconf %s/named.conf.a' % self.test_dir)
       if( result.return_code != 0 ):
         raise config_lib.ServerCheckError('Named.conf check failed on %s.' % 
-            dns_server)
+            self.dns_server)
     
-    if( compilezone ):
-      conf_keep = '%s/named.conf.b' % dns_server_info['server_info']['test_dir']
-      conf_remove = '%s/named.conf.a' % dns_server_info['server_info'][
-          'test_dir']
+    if( self.compilezone ):
+      conf_keep = os.path.join(self.test_dir, 'named.conf.b')
+      conf_remove = os.path.join(self.test_dir, 'named.conf.a')
     else:
-      conf_keep = '%s/named.conf.a' % dns_server_info['server_info']['test_dir']
-      conf_remove = '%s/named.conf.b' % dns_server_info['server_info'][
-          'test_dir']
+      conf_keep = os.path.join(self.test_dir, 'named.conf.a')
+      conf_remove = os.path.join(self.test_dir, 'named.conf.b')
     fabric_api.run('rm %s' % conf_remove)
-    fabric_api.run('mv %s %s/named.conf' % (conf_keep, 
-        dns_server_info['server_info']['test_dir']))
+    #Moves the named.conf into the named folder
+    fabric_api.run('mv %s %s' % (conf_keep, 
+        os.path.join(self.test_dir, 'named', 'named.conf')))
 
     # Check and compile zone files
-    if( checkzone or compilezone ):
-      zone_dict = config_lib_instance.GetZoneList(dns_server)
+    if( self.checkzone or self.compilezone ):
+      zone_dict = self.config_lib_instance.GetZoneList(self.dns_server)
       for view in zone_dict:
-        view_dir = '%s/named/%s' % (
-            dns_server_info['server_info']['test_dir'], view)
+        view_dir = os.path.join(self.test_dir, 'named', view)
         for zone_origin in zone_dict[view]:
-          zone_file_name = '%s/%s' % (view_dir, zone_dict[view][zone_origin])
-          zone_tool_arguments = config_lib_instance.GetNamedZoneToolArgs(\
-              dns_server, view, zone_dict[view][zone_origin])
-          if( checkzone ):
+          zone_file_name = os.path.join(view_dir, zone_dict[view][zone_origin])
+          zone_tool_arguments = self.config_lib_instance.GetNamedZoneToolArgs(
+              self.dns_server, view, zone_dict[view][zone_origin])
+          if( self.checkzone ):
             result = fabric_api.run('named-checkzone %s %s %s' % (
                 zone_tool_arguments, zone_origin, zone_file_name))
             if( result.return_code != 0 ):
               raise config_lib.ServerCheckError('Zone %s did not pass the '
                                                 'check.' % zone_origin)
 
-          if( compilezone ):
+          if( self.compilezone ):
             zone_binary_file_name = '%s.aa' % zone_file_name.rstrip('.db')
             result = fabric_api.run('named-compilezone -F raw %s -o %s %s %s' % (
                 zone_tool_arguments, zone_binary_file_name, zone_origin,
@@ -246,45 +423,12 @@ def PushFiles(dns_server, config_lib_instance, rndc_exec='rndc',
               raise config_lib.ServerCheckError('Failed to compile zone %s.' % 
                                      zone_origin)
             
-            if( checkzone ):
+            if( self.checkzone ):
               result = fabric_api.run('named-checkzone -f raw %s %s %s' % (
                   zone_tool_arguments, zone_origin, zone_binary_file_name))
               if( result.return_code != 0 ):
                 raise config_lib.ServerCheckError('Zone check on binary zone '
                     '%s failed.' % zone_origin)
-
-    # Move files in BIND tree to BIND directory
-    result = fabric_api.run('cp %s/named.conf %s/named.conf' % (
-        dns_server_info['server_info']['test_dir'], 
-        dns_server_info['server_info']['bind_dir']))
-    if( result.return_code != 0 ):
-      raise config_lib.ServerCheckError('Failed to move files from '
-          'test directory to bind directory on server %s.' % dns_server)
-    try:
-      result = fabric_api.run('cp -rf %s/named/* %s/named/ &' % (
-          dns_server_info['server_info']['test_dir'], 
-          dns_server_info['server_info']['bind_dir']), pty=False)
-    except ssh.SSHException:
-      raise config_lib.ServerCheckError('Lost SSH connection to %s while '
-          'moving files from test directory to BIND directory.' % dns_server)
-    fabric_api.run('rm -rf %s/* &' % 
-                   dns_server_info['server_info']['test_dir'], pty=False)
-
-    rndc_exec = '%s -p %s' % (
-        rndc_exec, dns_server_rndc_port)
-
-    # Reload BIND server
-    result = fabric_api.run('%s reload' % rndc_exec)
-    if( result.return_code != 0 ):
-        raise config_lib.ServerCheckError('Failed to reload %s BIND '
-            'server: %s.' % (dns_server, result))
-  except fabric_exceptions.NetworkError:
-    raise config_lib.ServerCheckError('Could not connect to %s via SSH.' % 
-                                      dns_server)
-  except ssh.SSHException:
-    raise config_lib.ServerCheckError('Lost connection to %s.' % dns_server)
-  finally:
-    fabric_network.disconnect_all()
 
 def main(args):
   """Collects command line arguments. Exports tree.
@@ -330,6 +474,10 @@ def main(args):
                     'named.conf will be parsed to find one. If one can not '
                     'be found, 953 will be used.', metavar='<rndc-port>',
                     default=None)
+  parser.add_option('--ssh-failure-retries', action='store', dest='tries',
+                    help='Number of times to retry config syncing should '
+                    'an SSH error (e.g. timeout) occur. Defaults to 3.',
+                    default=3)
 
   (globals()["options"], args) = parser.parse_args(args)
 
@@ -347,7 +495,7 @@ def main(args):
   if( not options.export_config ):
     if( os.path.exists(root_config_dir) ):
       shutil.rmtree(root_config_dir)
-    config_lib_instance.UnTarDnsTree(options.id)
+    options.id = config_lib_instance.UnTarDnsTree(options.id)
 
   if( options.rndc_key ):
     if( options.rndc_key.startswith('./')
@@ -363,9 +511,9 @@ def main(args):
         options.rndc_exec, os.path.expanduser(options.rndc_conf))
 
   try:
-    PushFiles(options.dns_server, config_lib_instance, 
+    ConfigSyncer(options.dns_server, config_lib_instance, 
         rndc_exec=options.rndc_exec, ssh_id_file=options.ssh_id,
-        dns_server_rndc_port=options.rndc_port) 
+        dns_server_rndc_port=options.rndc_port, id=options.id).run()
   except config_lib.ConfigManagerError as err:
     print('ERROR: %s' % err.message)
     sys.exit(1)
