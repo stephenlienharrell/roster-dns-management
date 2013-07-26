@@ -98,6 +98,7 @@ class DaemonThread(threading.Thread):
     self.port = port
     self.daemon_instance = None
 
+
   def run(self):
     self.daemon_instance = roster_server.Server(self.config_instance, KEYFILE,
                                                 CERTFILE)
@@ -214,6 +215,16 @@ class TestRosterClientLib(unittest.TestCase):
     self.assertFalse(cred_stat.st_mode & stat.S_IRWXG or
                      cred_stat.st_mode & stat.S_IRWXO)
  
+  def testNotStarted(self):
+    if( os.path.exists('/var/lock/rosterd') ):
+      os.remove('/var/lock/rosterd')
+    time.sleep(1)
+    command = os.popen('python %s all' % (
+      '../roster-user-tools/scripts/dnslszone'))
+    self.assertEqual(command.read(),
+      'ERROR: Roster not started.\n')
+    command.close()
+
 
 if( __name__ == '__main__' ):
       unittest.main()

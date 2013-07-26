@@ -43,6 +43,7 @@ import sys
 import xmlrpclib
 import cli_common_lib
 import getpass
+import socket
 
 
 class InvalidCredentials(Exception):
@@ -251,9 +252,14 @@ def CheckServerVersionMatch(server_name):
     server_name: string name of server to check
   """
   server = xmlrpclib.ServerProxy(server_name, allow_none=True)
-  server_version =  server.GetVersion()
+  try:
+    server_version =  server.GetVersion()
+  except socket.error:
+    print 'ERROR: Roster not started.'
+    sys.exit(1)
   if( server_version != __version__ ):
     print ('user_tools version %s mismatch with server version %s' % (
-               __version__, server_version))
+             __version__, server_version))
     sys.exit(1)
+
     
