@@ -154,7 +154,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'assignment_host':
                                    u'machine5.university.edu.'},
                                    view_name=u'any')
-    command = os.popen('python %s cname -v any -z test_zone '
+    command = os.popen('python %s -v any -z test_zone '
                        '--hostname %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, u'machine1.university.edu.', USERNAME,
                            self.password, USER_CONFIG, self.server_name))
@@ -189,7 +189,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'assignment_host':
                                    u'machine5.university.edu.'},
                                   view_name=u'test_view')
-    command = os.popen('python %s cname -v test_view -z test_zone '
+    command = os.popen('python %s -v test_view -z test_zone '
                        '--hostname %s -u %s -p %s --config-file %s -s %s' % (
                            EXEC, u'machine1.university.edu.', USERNAME,
                            self.password, USER_CONFIG, self.server_name))
@@ -227,7 +227,7 @@ class TestDnslsRecord(unittest.TestCase):
                                   {u'assignment_host':
                                    u'machine4.university.edu.'},
                                   view_name=u'test_view')
-    command = os.popen('python %s cname -v test_view -z test_zone '
+    command = os.popen('python %s -v test_view -z test_zone '
                        '--hostname %s -u %s -p %s --config-file %s -s %s -r' % (
                            EXEC, u'machine1.university.edu.', USERNAME,
                            self.password, USER_CONFIG, self.server_name))

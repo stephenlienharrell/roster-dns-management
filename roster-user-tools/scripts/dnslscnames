@@ -54,13 +54,13 @@ def Main(args):
   Inputs:
     args: list of arguments from the command line
   """
-  command = None
+  command = 'cname' 
   if( args and not args[0].startswith('-') ):
     command = args.pop(0)
   usage = ('\n'
            '\n'
            'To list all CNAMEs for a specified hostname:\n'
-           '\t%s cname --hostname <hostname> -v <view-name> '
+           '\t%s --hostname <hostname> -v <view-name> '
            '-z <zone-name> [-r]\n'
            '\n' % tuple(sys.argv[0] for x in range(1)))
   args_instance = Args(command, ['cname'], args, usage)
