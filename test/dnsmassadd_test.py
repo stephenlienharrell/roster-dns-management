@@ -282,25 +282,15 @@ class TestDnsMassAdd(unittest.TestCase):
                      stdout=PIPE, stdin=PIPE, stderr=STDOUT)
 
     ## Check output of replaced hosts
-    self.assertEqual(command.communicate(input='n')[0], 
-        'Commit flag not specified. Would you like to commit?\n'
-        'Respond y or n: HOSTS TO BE REMOVED: \n'
-        '# type target    zone             view\n'
-        '--------------------------------------\n'
-        '0 ptr  5         reverse_zone     test_view\n'
-        '1 a    host3     forward_zone     test_view\n'
-        '2 a    www.host3 forward_zone     test_view\n'
-        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
-        'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone              view\n'
-        '-----------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone      test_view\n'
-        '1 ptr  5                                         reverse_zone      test_view\n'
-        '2 aaaa computer2                                 forward_zone      test_view\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n'
-        '4 aaaa computer3                                 forward_zone      test_view\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n\n\n'
-        'Commit flag not specified. Changes will not be made to the database.\n')
+    self.assertEqual(command.communicate(input='n')[0],
+      'Host: host2.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+      'Host: host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+      'Host: www.host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+      'Host: host2.university2.edu with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be REMOVED\n'
+      'Host: computer1.university.edu. with ip address 192.168.1.5 will be ADDED\n'
+      'Host: computer2.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be ADDED\n'
+      'Host: computer3.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ac will be ADDED\n'
+      'Do you want to commit these changes? (y/N): No changes made.\n') 
 
     ## Ensure nothing got changed
     self.assertEqual(
@@ -355,24 +345,16 @@ class TestDnsMassAdd(unittest.TestCase):
 
     ## Check output of replaced hosts
     self.assertEqual(command.communicate(input='y')[0],
-        'Commit flag not specified. Would you like to commit?\n'
-        'Respond y or n: HOSTS TO BE REMOVED: \n'
-        '# type target    zone             view\n'
-        '--------------------------------------\n'
-        '0 ptr  5         reverse_zone     test_view\n'
-        '1 a    host3     forward_zone     test_view\n'
-        '2 a    www.host3 forward_zone     test_view\n'
-        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
-        'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone              view\n'
-        '-----------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone      test_view\n'
-        '1 ptr  5                                         reverse_zone      test_view\n'
-        '2 aaaa computer2                                 forward_zone      test_view\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n'
-        '4 aaaa computer3                                 forward_zone      test_view\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n\n')
-    
+        'Host: host2.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: www.host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host2.university2.edu with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be REMOVED\n'
+        'Host: computer1.university.edu. with ip address 192.168.1.5 will be ADDED\n'
+        'Host: computer2.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be ADDED\n'
+        'Host: computer3.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ac will be ADDED\n'
+        'Do you want to commit these changes? (y/N): '
+        'Records Committed.\n')
+   
     ## Check output of replaced hosts
     self.assertEqual(
         self.core_instance.ListRecords(view_name=u'test_view'), 
@@ -487,26 +469,15 @@ class TestDnsMassAdd(unittest.TestCase):
                          self.server_name, USERNAME, PASSWORD, USER_CONFIG)))
 
     ## Check output of replaced hosts
-    self.assertEqual(command.read(), (
-        'Commit flag not specified. Changes will not be made to the database.\n\n'
-        'HOSTS TO BE REMOVED: \n'
-        '# type target    zone             view\n'
-        '--------------------------------------\n'
-        '0 ptr  5         reverse_zone     test_view\n'
-        '1 a    host3     forward_zone     test_view\n'
-        '2 a    www.host3 forward_zone     test_view\n'
-        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
-        'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone              view\n'
-        '-----------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone      test_view\n'
-        '1 ptr  5                                         reverse_zone      test_view\n'
-        '2 aaaa computer2                                 forward_zone      test_view\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n'
-        '4 aaaa computer3                                 forward_zone      test_view\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n\n\n'
-        'Commit flag not specified. Changes will not be made to the database.\n'))
-
+    self.assertEqual(command.read(), (   
+        'Host: host2.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: www.host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host2.university2.edu with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be REMOVED\n'
+        'Host: computer1.university.edu. with ip address 192.168.1.5 will be ADDED\n'
+        'Host: computer2.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be ADDED\n'
+        'Host: computer3.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ac will be ADDED\n'
+        'No changes made.\n'))
     command.close()
 
     ## Ensure nothing got changed
@@ -529,7 +500,7 @@ class TestDnsMassAdd(unittest.TestCase):
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
              'view_name': u'test_view', 'last_user': u'sharrell',
              'zone_name': u'foward_zone_ipv6',
-             u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
+            u'admin_email': u'admin.university.edu.', u'expiry_seconds': 5},
              {u'serial_number': 2, u'refresh_seconds': 5, 'target': u'@',
              u'name_server': u'ns1.university.edu.', u'retry_seconds': 5,
              'ttl': 3600, u'minimum_seconds': 5, 'record_type': u'soa',
@@ -560,22 +531,14 @@ class TestDnsMassAdd(unittest.TestCase):
                          self.server_name, USERNAME, PASSWORD, USER_CONFIG)))
     
     self.assertEqual(command.read(), (
-        'HOSTS TO BE REMOVED: \n'
-        '# type target    zone             view'
-        '\n--------------------------------------\n'
-        '0 ptr  5         reverse_zone     test_view\n'
-        '1 a    host3     forward_zone     test_view\n'
-        '2 a    www.host3 forward_zone     test_view\n'
-        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
-        'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone              view\n'
-        '-----------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone      test_view\n'
-        '1 ptr  5                                         reverse_zone      test_view\n'
-        '2 aaaa computer2                                 forward_zone      test_view\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n'
-        '4 aaaa computer3                                 forward_zone      test_view\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 test_view\n\n'))
+        'Host: host2.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: www.host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host2.university2.edu with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be REMOVED\n'
+        'Host: computer1.university.edu. with ip address 192.168.1.5 will be ADDED\n'
+        'Host: computer2.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be ADDED\n'
+        'Host: computer3.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ac will be ADDED\n'
+        'Records Committed.\n'))
     command.close()
     
     ## Check output of replaced hosts
@@ -620,7 +583,7 @@ class TestDnsMassAdd(unittest.TestCase):
            'record_type': u'ptr', 'view_name': u'test_view', 'last_user':
           u'sharrell', 'zone_name': u'reverse_zone_ipv6', u'assignment_host':
           u'computer2.university.edu.'}, {'target': u'computer3', 'ttl': 3600, 
-           'record_type': u'aaaa', 'view_name': u'test_view', 'last_user': 
+          'record_type': u'aaaa', 'view_name': u'test_view', 'last_user': 
           u'sharrell', 'zone_name': u'forward_zone', u'assignment_ip': 
           u'4321:0000:0001:0002:0003:0004:0567:89ac'}, 
           {'target': u'c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1', 'ttl': 3600, 
@@ -714,25 +677,14 @@ class TestDnsMassAdd(unittest.TestCase):
 
     ## Check output of replaced hosts
     self.assertEqual(command.read(), (
-        'Commit flag not specified. Changes will not be made to the database.\n\n'
-        'HOSTS TO BE REMOVED: \n'
-        '# type target    zone             view\n'
-        '--------------------------------------\n'
-        '0 ptr  5         reverse_zone     test_view\n'
-        '1 a    host3     forward_zone     test_view\n'
-        '2 a    www.host3 forward_zone     test_view\n'
-        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
-        'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone              view\n'
-        '-----------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone      any\n'
-        '1 ptr  5                                         reverse_zone      any\n'
-        '2 aaaa computer2                                 forward_zone      any\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 any\n'
-        '4 aaaa computer3                                 forward_zone      any\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 any\n\n\n'
-        'Commit flag not specified. Changes will not be made to the database.\n'))
-
+        'Host: host2.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: www.host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host2.university2.edu with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be REMOVED\n'
+        'Host: computer1.university.edu. with ip address 192.168.1.5 will be ADDED\n'
+        'Host: computer2.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be ADDED\n'
+        'Host: computer3.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ac will be ADDED\n'
+        'No changes made.\n')) 
     command.close()
 
     ## Ensure nothing got changed
@@ -746,22 +698,14 @@ class TestDnsMassAdd(unittest.TestCase):
                          self.server_name, USERNAME, PASSWORD, USER_CONFIG)))
     
     self.assertEqual(command.read(), 
-        'HOSTS TO BE REMOVED: \n'
-        '# type target    zone             view\n'
-        '--------------------------------------\n'
-        '0 ptr  5         reverse_zone     test_view\n'
-        '1 a    host3     forward_zone     test_view\n'
-        '2 a    www.host3 forward_zone     test_view\n'
-        '3 aaaa host2     foward_zone_ipv6 test_view\n\n\n'
-        'HOSTS TO BE ADDED: \n'
-        '# type target                                    zone              view\n'
-        '-----------------------------------------------------------------------\n'
-        '0 a    computer1                                 forward_zone      any\n'
-        '1 ptr  5                                         reverse_zone      any\n'
-        '2 aaaa computer2                                 forward_zone      any\n'
-        '3 ptr  b.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 any\n'
-        '4 aaaa computer3                                 forward_zone      any\n'
-        '5 ptr  c.a.9.8.7.6.5.0.4.0.0.0.3.0.0.0.2.0.0.0.1 reverse_zone_ipv6 any\n\n')
+        'Host: host2.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: www.host3.university.edu with ip address 192.168.1.5 will be REMOVED\n'
+        'Host: host2.university2.edu with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be REMOVED\n'
+        'Host: computer1.university.edu. with ip address 192.168.1.5 will be ADDED\n'
+        'Host: computer2.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ab will be ADDED\n'
+        'Host: computer3.university.edu. with ip address 4321:0000:0001:0002:0003:0004:0567:89ac will be ADDED\n'
+        'Records Committed.\n')
     command.close()
     
     ## Check output of replaced hosts

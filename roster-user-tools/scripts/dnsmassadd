@@ -29,7 +29,7 @@ def main(args):
   usage = ('\n'
           '\n'
           'To add a list of hosts from a file:\n'
-          '\t%s massadd -f <file-name> -v <view-name> -z <zone-name>\n'
+          '\t%s -f <file-name> -v <view-name> -z <zone-name>\n'
           '\nFile example:\n'
           '192.168.1.5 computer1\n'
           '192.168.1.8 host3\n'
@@ -140,60 +140,45 @@ def main(args):
       for record_ip in records[view]:
         for record in iter(records[view][record_ip]):
           records_to_remove.append(record)
-  if( not options.commit ):
-    if( options.no_commit ):
-      print('Commit flag not specified. '
-            'Changes will not be made to the database.\n')
-    else:
-      print('Commit flag not specified. '
-            'Would you like to commit?')
-      user_input = ''
-      while( user_input.lower() not in ['y', 'n'] ):
-        user_input = raw_input('Respond y or n: ')
-      if( user_input == 'y' ):
-        options.commit = True
 
-  print("HOSTS TO BE REMOVED: ")
-  zone_list = ['zone']
-  print_list = [['#', 'type', 'target', 'zone', 'view']]
-  count = 0
-  for record in records_to_remove:
-    record_list = []
-    record_list.append(count)
-    count += 1
-    record_list.append(record['record_type'])
-    record_list.append(record['record_target'])
-    record_list.append(record['record_zone_name'])
-    record_list.append(record['view_name'])
-    print_list.append(record_list)
-  print cli_common_lib.PrintColumns(
-      print_list=print_list, first_line_header=True)
+  for record in records_to_remove:    
+    print 'Host: %s with ip address %s will be REMOVED'% (
+          record['host'], record['record_args_dict']['assignment_ip'])
 
-  print("\nHOSTS TO BE ADDED: ")
-  zone_list = ['zone']
-  print_list = [['#', 'type', 'target', 'zone', 'view']]
   count = 0
+  print_list = []
   for record in records_to_add:
-    record_list = []
-    record_list.append(count)
     count += 1
-    record_list.append(record['record_type'])
-    record_list.append(record['record_target'])
-    record_list.append(record['record_zone_name'])
-    record_list.append(options.view_name)
-    print_list.append(record_list)
-  print cli_common_lib.PrintColumns(
-      print_list=print_list, first_line_header=True)
+    if ( record['record_zone_name'] == 'forward_zone' ):
+      print_list.append(record['record_arguments']['assignment_ip'])
+    else:
+      print_list.append(record['record_arguments']['assignment_host'])
+      print 'Host: %s with ip address %s will be ADDED'% (
+          print_list [count - 1], print_list [count - 2])
     
-  if options.commit:
+  while( not options.commit and not options.no_commit ):
+    yes_no = raw_input('Do you want to commit these changes? (y/N): ')
+    if( yes_no.lower() not in ['y', 'yes', 'n', 'no', ''] ):
+      continue
+    if( yes_no.lower() in ['n', 'no', ''] ):
+      options.no_commit = True
+    if( yes_no.lower() in ['y', 'yes'] ):
+      options.commit = True
+    if( options.no_commit ):
+      print 'No changes made.'
+      sys.exit(0)
+
+ 
+  if( options.commit ):
     roster_client_lib.RunFunction(
         "ProcessRecordsBatch", options.username, credfile=options.credfile,
         server_name=options.server,
         kwargs={'delete_records': records_to_remove,
             'add_records': records_to_add})
-  else:
-    print('\nCommit flag not specified. '
-        'Changes will not be made to the database.')
+    print 'Records Committed.'
+
+  if( options.no_commit ):
+    print 'No changes made.'
 
 if __name__ == "__main__":
   main(sys.argv[1:])
