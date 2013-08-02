@@ -262,7 +262,7 @@ class ConfigSyncer:
 
     #Making sure self.bind_dir exists 
     result = fabric_api.run('file %s' % self.bind_dir)
-    if( result.stdout == "%s: cannot open `%s' (No such file or directory)" % (
+    if( result.stdout == "%s: ERROR: cannot open `%s' (No such file or directory)" % (
       self.bind_dir, self.bind_dir) ):
       raise config_lib.ServerCheckError(
           'BIND directory %s does not exist on server %s' % (self.bind_dir, 
@@ -414,7 +414,9 @@ class ConfigSyncer:
                                                 'check.' % zone_origin)
 
           if( self.compilezone ):
-            zone_binary_file_name = '%s.aa' % zone_file_name.rstrip('.db')
+            zone_binary_file_name = '%s.aa' % zone_file_name
+            if( zone_file_name.endswith('.db') ):
+              zone_binary_file_name = '%s.aa' % zone_file_name[:-3]
             result = fabric_api.run('named-compilezone -F raw %s -o %s %s %s' % (
                 zone_tool_arguments, zone_binary_file_name, zone_origin,
                 zone_file_name))

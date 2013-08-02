@@ -396,5 +396,31 @@ class TestCheckConfig(unittest.TestCase):
     self.assertTrue(os.path.exists('%s/named/named.ca' % BINDDIR))
     self.assertTrue(os.path.exists('%s/named/named.conf' % BINDDIR))
 
+    # Tests that zones with name ending with 'd' or 'b' are not improperly named
+    self.core_instance.MakeZone(u'zoned', u'master', u'zoned.lcl.', view_name=u'test_view')
+    output = os.popen('python %s -f test_data/test_zone.db '
+                      '--view test_view -u %s --config-file %s '
+                      '-z zoned' % ( 
+                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
+    self.assertEqual(output.read(),
+                     'Loading in test_data/test_zone.db\n'
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
+    output.close()
+
+    self.tree_exporter_instance.ExportAllBindTrees()
+    self.audit_id += 3
+    self.config_lib_instance.UnTarDnsTree(self.audit_id)
+    self.config_lib_instance.WriteDnsServerInfo(dns_server_info)
+    self.config_lib_instance.TarDnsTree(self.audit_id)
+
+    command = os.popen(self.command_string)
+    lines = command.read().split('\n')
+    command.close()
+    self.assertEqual(lines, [''])
+    zone_files = os.listdir('%s/named/test_view/' % BINDDIR.rstrip('/'))
+    self.assertTrue('zone.aa' not in zone_files)
+    self.assertTrue('zoned.aa' in zone_files)
+
 if( __name__ == '__main__' ):
       unittest.main()
