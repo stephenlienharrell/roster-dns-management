@@ -600,9 +600,9 @@ class ConfigLib(object):
             raise ExporterListFileError('Can not list files in %s/%s/%s.' %
                 (self.root_config_dir, dns_server, server_file))
           for view in named_files:
+            self.__AddToTarFile__('%s/%s' % (server_file, view),
+                '%s/%s' % (self.root_config_dir, dns_server), dns_tar_file)
             if( view == 'named.ca' ):
-              self.__AddToTarFile__('%s/%s' % (server_file, view),
-                  '%s/%s' % (self.root_config_dir, dns_server), dns_tar_file)
               continue
             try:
               view_files = os.listdir('%s/%s/%s/%s' % (self.root_config_dir,

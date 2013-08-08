@@ -137,8 +137,23 @@ class TestConfigLib(unittest.TestCase):
     tree_exporter_instance.ExportAllBindTrees()
     config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
     config_lib_instance.UnTarDnsTree()
+    #Make sure we exported the empty 'external' folder
     self.assertTrue(os.path.exists(os.path.join(self.root_config_dir, 
         'server1/named/external')))
+
+    config_lib_instance.TarDnsBindFiles(u'server1')
+
+    try:
+      untarred_path = os.path.join(self.root_config_dir, 'server1_untarred')
+      tar_file = tarfile.open(
+          os.path.join(self.root_config_dir, 'server1', 'server1.tar.bz2'), 
+          'r:bz2')
+      tar_file.extractall(path=untarred_path)
+      #Make sure we tarred the empty 'external' folder
+      self.assertTrue(os.path.exists(os.path.join(untarred_path, 
+          'named/external')))
+    finally:
+      tar_file.close()
 
   def testFindDnsTreeFilename(self):
     config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
