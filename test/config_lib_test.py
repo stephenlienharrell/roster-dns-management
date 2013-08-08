@@ -118,6 +118,28 @@ class TestConfigLib(unittest.TestCase):
     if( os.path.exists('test_data/config_test_dir') ):
       shutil.rmtree('test_data/config_test_dir')
 
+  #Testing the exporting of a slave zone with no records to make sure
+  #that config_lib tars an empty folder.
+  def testTarringSlaveZone(self):
+    for zone in self.core_instance.ListZones():
+      self.core_instance.RemoveZone(zone)
+    self.core_instance.MakeDnsServer(u'server1', u'some_user', u'/bind/dir/',
+        u'/test/dir/')
+    self.core_instance.MakeDnsServerSet(u'server_set1')
+    self.core_instance.MakeDnsServerSetAssignments(u'server1', u'server_set1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'external', 1, u'server_set1')
+
+    self.core_instance.MakeZone(u'test_zone', u'slave', u'test_zone.', 
+        view_name=u'external', make_any=False)
+    self.core_instance.MakeNamedConfGlobalOption(u'server_set1', u'recursion no;')
+
+    tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
+    tree_exporter_instance.ExportAllBindTrees()
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    config_lib_instance.UnTarDnsTree()
+    self.assertTrue(os.path.exists(os.path.join(self.root_config_dir, 
+        'server1/named/external')))
+
   def testFindDnsTreeFilename(self):
     config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
     tree_exporter_instance = tree_exporter.BindTreeExport(CONFIG_FILE)
