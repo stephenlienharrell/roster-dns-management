@@ -122,8 +122,7 @@ class User(object):
       self.db_instance.StartTransaction()
     try:
       maintenance_mode = self.db_instance.CheckMaintenanceFlag()
-      if( record_data and record_data.has_key('zone_name') and
-          not self.zone_origin_cache.has_key(record_data['zone_name']) ):
+      if( record_data and record_data.has_key('zone_name') ):
         if( record_data['zone_name'] ):
           pulled_origin = self.db_instance.GetZoneOrigins(
               record_data['zone_name'], record_data['view_name'])
@@ -133,8 +132,13 @@ class User(object):
             self.zone_origin_cache[record_data['zone_name']] = pulled_origin[
                 record_data['zone_name']]
           else:
-            raise errors.UnexpectedDataError(
-                'Specified zone or view does not exist.')
+            view_name = record_data['view_name']
+            if( view_name.endswith('_dep') ):
+              view_name = view_name[:-4] #Strip off '_dep'
+
+            raise errors.UnexpectedDataError('Specified zone-view assignment '
+                'does not exist for zone %s view %s' % (
+                    record_data['zone_name'], view_name))
     finally:
       if( not current_transaction ):
         self.db_instance.EndTransaction()

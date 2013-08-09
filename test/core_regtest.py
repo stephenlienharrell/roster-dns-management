@@ -381,6 +381,41 @@ class TestCore(unittest.TestCase):
     self.assertEqual(self.core_instance.ListDnsServerSetViewAssignments(),
         {u'set_name': [(u'test_view', 2, u'recursion yes;')]})
 
+  #This tests what happens a user attempts to create a record in a zone-view
+  #combo that does not exist.
+  def testZoneViewAssignmentsError(self):
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeView(u'troll_view')
+    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
+        view_name=u'test_view')
+
+    #The reason why we try this twice, (first here, and after we create an SOA)
+    #is because earlier in our testing, we encountered different errors
+    #depending on whether or not a record was present in the zone. To make sure
+    #that doesn't happen again, we assertRaises twice.
+    self.assertRaises(errors.UnexpectedDataError, self.core_instance.MakeRecord,
+        u'a', u'www2', u'test_zone', {u'assignment_ip': u'192.168.0.2'}, 
+        view_name=u'troll_view')
+
+    soa_dict =  self.core_instance.GetEmptyRecordArgsDict(u'soa')
+
+    #This stuff doesn't matter really for the test, 
+    #just has to pass the Roster checks.
+    soa_dict['refresh_seconds'] = 1
+    soa_dict['expiry_seconds'] = 2
+    soa_dict['minimum_seconds'] = 3
+    soa_dict['retry_seconds'] = 4
+    soa_dict['serial_number'] = 5
+    soa_dict['name_server'] = '.'
+    soa_dict['admin_email'] = '.'
+
+    self.core_instance.MakeRecord(u'soa', u'@', u'test_zone', soa_dict, 
+        view_name=u'test_view')
+
+    self.assertRaises(errors.UnexpectedDataError, self.core_instance.MakeRecord,
+        u'a', u'www2', u'test_zone', {u'assignment_ip': u'192.168.0.2'}, 
+        view_name=u'troll_view')
+
   def testViewAssignmentsMakeRemoveList(self):
     self.assertFalse(self.core_instance.ListViewAssignments())
     self.core_instance.MakeView(u'test_view')
@@ -647,7 +682,6 @@ class TestCore(unittest.TestCase):
                         'group_permission': [u'a', u'aaaa', u'cname']}]})
 
   def testReverseRangePermissionsListMakeRemove(self):
-    self.maxDiff = None
     self.assertEqual(self.core_instance.ListReverseRangePermissions(),
                      {u'bio': [
                          {'cidr_block': u'192.168.0.0/24',
@@ -809,10 +843,10 @@ class TestCore(unittest.TestCase):
                                    u'computer6.university.edu.'},
                                   ttl=10)
     self.assertRaises(errors.InvalidInputError, self.core_instance.UpdateRecord,
-                      u'cname', 'c6', 'university.edu',
+                      u'cname', 'c6', u'university.edu',
                       {u'assignment_host': None}, update_target=u'computer5')
     self.assertRaises(errors.InvalidInputError, self.core_instance.UpdateRecord,
-                      u'cname', 'c6', 'university.edu',
+                      u'cname', 'c6', u'university.edu',
                       {u'assignment_host': None}, update_target=u'computer5.')
     self.assertRaises(errors.InvalidInputError, self.core_instance.MakeRecord,
                       u'a', u'computer5.net.', u'university.edu',
@@ -881,7 +915,7 @@ class TestCore(unittest.TestCase):
         {u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'},
         view_name=u'test_view')
     self.assertRaises(errors.InvalidInputError, self.core_instance.UpdateRecord,
-        u'aaaa', u'host1', 'ipv6_zone',
+        u'aaaa', u'host1', u'ipv6_zone',
         {u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ac'},
         search_view_name=u'test_view', update_record_args_dict={
             u'assignment_ip': u'4321:0000:0001:0002:0003:0004:0567:89ab'})
@@ -892,11 +926,11 @@ class TestCore(unittest.TestCase):
                       u'a', u'c.6', u'university.edu',
                       {u'assignment_ip': u'10.0.1.1'}, ttl=10)
     self.assertRaises(errors.InvalidInputError, self.core_instance.UpdateRecord,
-                      u'cname', 'c6', 'university.edu',
+                      u'cname', 'c6', u'university.edu',
                       {u'assignment_host': None},
                       update_target=u'university_edu')
     self.assertRaises(errors.InvalidInputError, self.core_instance.UpdateRecord,
-                      u'a', 'computer5', 'university.edu',
+                      u'a', 'computer5', u'university.edu',
                       {u'assignment_ip': u'192.168.0.55'},
                       update_target=u'c.6')
     self.assertRaises(

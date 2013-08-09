@@ -348,7 +348,9 @@ class TestXMLServerClient(unittest.TestCase):
         server_name=self.server_name)
     out = sys.stdout.flush()
     sys.stdout = oldstdout
-    self.assertEqual(out, "USER ERROR: Specified zone or view does not exist.\n")
+    self.assertEqual(out,
+        'USER ERROR: Specified zone-view assignment does not exist for '
+        'zone bad_zone_bad view any\n')
 
     sys.stdout = StdOutStream()
     self.assertRaises(SystemExit, roster_client_lib.RunFunction,
@@ -359,7 +361,9 @@ class TestXMLServerClient(unittest.TestCase):
         server_name=self.server_name)
     out = sys.stdout.flush()
     sys.stdout = oldstdout
-    self.assertEqual(out, "USER ERROR: Specified zone or view does not exist.\n")
+    self.assertEqual(out, 
+        'USER ERROR: Specified zone-view assignment does not exist for '
+        'zone new_zone view bad_view\n')
 
   def testMultipleThreadedConnectionsWithDifferentUsers(self):
     data_exporter = tree_exporter.BindTreeExport(CONFIG_FILE)

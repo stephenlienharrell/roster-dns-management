@@ -2670,12 +2670,17 @@ class Core(object):
         zone_view_assignments = self.db_instance.ListRow('zone_view_assignments',
             zone_view_assignments_dict)
 
-        if( len(zone_view_assignments) > 1 ):
+        #This check isn't *strictly* needed because user.py Authorize() will 
+        #catch it. However, we thought it good to keep in for the future.
+        if( len(zone_view_assignments) == 0 ):
+          raise errors.RecordError('Zone %s not found in view %s.' % (
+            zone_name, view_name))
+        elif( len(zone_view_assignments) > 1 ):
           raise errors.RecordError('Multiple zone-view assignments for '
                                    'zone %s and view %s' % (zone_name, view_name))
+        else:
+          zone_view_assignment = zone_view_assignments[0]
 
-        zone_view_assignment = self.db_instance.ListRow('zone_view_assignments',
-            zone_view_assignments_dict)[0]
         zone_type = zone_view_assignment['zone_view_assignments_zone_type']
         if( zone_type != u'master' ):
           raise errors.InvalidInputError('Cannot create records in %s zone %s' % (

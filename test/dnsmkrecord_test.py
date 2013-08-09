@@ -282,6 +282,48 @@ class TestDnsMkRecord(unittest.TestCase):
                        u'assignment_ip':
                            u'fe80:0000:0000:0000:0200:f8ff:fe21:67cf'}])
 
+  #This tests what happens a user attempts to create a record in a zone-view
+  #combo that does not exist.
+  def testZoneViewAssignmentsError(self):
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeView(u'troll_view')
+    self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
+        view_name=u'test_view')
+
+    #The reason why we try this twice, (first here, and after we create an SOA)
+    #is because earlier in our testing, we encountered different errors
+    #depending on whether or not a record was present in the zone. To make sure
+    #that doesn't happen again, we look for the same error twice.
+    command = os.popen('python %s '
+                       'hinfo --hardware Pear --os ipear '
+                       '-q -t machine1 -v troll_view -z test_zone -u '
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 
+        'USER ERROR: Specified zone-view assignment does not exist for zone '
+        'test_zone view troll_view\n')
+    command.close()
+
+    self.core_instance.MakeRecord(
+        u'soa', u'soa1', u'test_zone',
+        {u'name_server': u'ns1.university.edu.',
+         u'admin_email': u'admin.university.edu.',
+         u'serial_number': 1, u'refresh_seconds': 5,
+         u'retry_seconds': 5, u'expiry_seconds': 5,
+         u'minimum_seconds': 5}, view_name=u'test_view')
+
+    command = os.popen('python %s '
+                       'hinfo --hardware Pear --os ipear '
+                       '-q -t machine1 -v troll_view -z test_zone -u '
+                       '%s -p %s --config-file %s -s %s' % (
+                           EXEC, USERNAME, self.password, USER_CONFIG,
+                           self.server_name))
+    self.assertEqual(command.read(), 
+        'USER ERROR: Specified zone-view assignment does not exist for zone '
+        'test_zone view troll_view\n')
+    command.close()
+
   def testHINFOZoneMakeRemoveListUpdate(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'test_zone', u'master', u'test_zone.',
