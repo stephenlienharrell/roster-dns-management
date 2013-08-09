@@ -198,6 +198,7 @@ def main(args):
     #Turns ['temp_dir/localhost/named.conf.a'] into ['temp_dir/localhost']
     named_dirs = [os.path.dirname(fname) for fname in named_files]
 
+    parallel_checkzone_args_list = []
     #Check zones, one named_dir at a time
     for named_dir in named_dirs:
 
@@ -215,7 +216,6 @@ def main(args):
       zone_files = glob.glob('%s/*/*/*.db' % named_dir)
 
       checkzone_pool = Pool(processes=config_lib_instance.max_threads)
-      parallel_checkzone_args_list = []
 
       for current_file in zone_files:
         #example - current_file = 

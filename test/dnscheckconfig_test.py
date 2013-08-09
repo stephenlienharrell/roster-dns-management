@@ -152,15 +152,15 @@ class TestCheckConfig(unittest.TestCase):
 
   def testCheckConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
-    output = os.popen('python %s -f test_data/test_zone.db '
+    command = os.popen('python %s -f test_data/test_zone.db '
                       '--view test_view -u %s --config-file %s '
                       '-z sub.university.lcl' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
+    self.assertEqual(command.read(),
                      'Loading in test_data/test_zone.db\n'
                      '17 records loaded from zone test_data/test_zone.db\n'
                      '17 total records added\n')
-    output.close()
+    command.close()
 
     self.core_instance.MakeDnsServer(DNS_SERVER, SSH_USER, BIND_DIR, TEST_DIR)
     self.core_instance.MakeDnsServerSet(u'set1')
@@ -170,27 +170,27 @@ class TestCheckConfig(unittest.TestCase):
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = subprocess.Popen(('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
+    command = subprocess.Popen(('/usr/sbin/rndc-confgen -a -c %s -r %s' % (
         KEY_FILE, EXEC)).split(), stderr=subprocess.PIPE).stderr
-    self.assertEqual(output.read(), 'wrote key file "%s"\n' % KEY_FILE)
-    output.close()
-    output = os.popen('python %s -i 12 --config-file %s' % (
+    self.assertEqual(command.read(), 'wrote key file "%s"\n' % KEY_FILE)
+    command.close()
+    command = os.popen('python %s -i 12 --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
-    self.assertEqual(output.read(), '')
-    output.close()
+    self.assertEqual(command.read(), '')
+    command.close()
 
   def testNamedCheckZoneWithNamedConfArgs(self):
     self.assertEqual(self.core_instance.ListRecords(), [])
-    output = os.popen('python %s -f test_data/test_zone.db '
+    command = os.popen('python %s -f test_data/test_zone.db '
                       '--view test_view -u %s --config-file %s '
                       '-z sub.university.lcl' % (
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
+    self.assertEqual(command.read(),
                      'Loading in test_data/test_zone.db\n'
                      '17 records loaded from zone test_data/test_zone.db\n'
                      '17 total records added\n')
-    output.close()
+    command.close()
 
     self.core_instance.MakeDnsServer(u'localhost', SSH_USER, BIND_DIR, TEST_DIR)
     self.core_instance.MakeDnsServerSet(u'set1')
@@ -215,10 +215,10 @@ class TestCheckConfig(unittest.TestCase):
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = os.popen('python %s --config-file %s' % (
+    command = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
-    self.assertEqual(output.read(), 
+    self.assertEqual(command.read(), 
         "ERROR: dns_rdata_fromtext: "
         "%s/localhost/named/test_view/sub.university.lcl.db:7: "
         "near '%s.lcl.': bad name (check-names)\n"
@@ -227,18 +227,18 @@ class TestCheckConfig(unittest.TestCase):
         "failed: bad name (check-names)\n"
         "zone sub.university.lcl/IN: not loaded due to errors.\n" % (self.root_config_dir,
             FAKE_SERVER, self.root_config_dir))
-    output.close()
+    command.close()
 
     self.core_instance.UpdateZone(u'sub.university.lcl', 
         update_zone_options=u'check-names ignore;\n')
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = os.popen('python %s --config-file %s' % (
+    command = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
-    self.assertEqual(output.read(), '')
-    output.close()
+    self.assertEqual(command.read(), '')
+    command.close()
 
   def testCheckConfigParallelSpeedup(self):
     self.assertEqual(self.core_instance.ListRecords(), [])
@@ -287,14 +287,14 @@ class TestCheckConfig(unittest.TestCase):
     command = subprocess.Popen('python %s --config-file %s --verbose' % (
         EXEC, CONFIG_FILE), shell=True, stdout=subprocess.PIPE)
     #Wait for execution to finish
-    output = command.communicate()[0]
+    command = command.communicate()[0]
 
     single_elapsed_time = time.time() - single_start_time
 
-    output_lines = output.split('\n')
+    command_lines = command.split('\n')
     self.assertTrue('Checked 1 named.conf file(s) and 1 zone file(s)' in
-                    output_lines)
-    self.assertTrue('All checks successful' in output_lines)
+                    command_lines)
+    self.assertTrue('All checks successful' in command_lines)
 
     #Test multiple zones and measure speedup
     #Create enough zones/records to see time difference in parallel execution
@@ -327,29 +327,29 @@ class TestCheckConfig(unittest.TestCase):
     command = subprocess.Popen('python %s --config-file %s --verbose' % (
         EXEC, CONFIG_FILE), shell=True, stdout=subprocess.PIPE)
     #Wait for execution to finish
-    output = command.communicate()[0]
+    command = command.communicate()[0]
     multi_elapsed_time = time.time() - multi_start_time
 
-    output_lines = output.split('\n')
+    command_lines = command.split('\n')
 
     # Assert speedup
     self.assertTrue(multi_elapsed_time < single_elapsed_time * 25)
 
     self.assertTrue('Checked 1 named.conf file(s) and 50 zone file(s)' in
-                    output_lines)
-    self.assertTrue('All checks successful' in output_lines)
+                    command_lines)
+    self.assertTrue('All checks successful' in command_lines)
 
   def testCheckServerInfo(self):
     self.assertEqual(self.core_instance.ListRecords(), [])
-    output = os.popen('python %s -f test_data/test_zone.db '
+    command = os.popen('python %s -f test_data/test_zone.db '
                       '--view test_view -u %s --config-file %s '
                       '-z sub.university.lcl' % (
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
+    self.assertEqual(command.read(),
                      'Loading in test_data/test_zone.db\n'
                      '17 records loaded from zone test_data/test_zone.db\n'
                      '17 total records added\n')
-    output.close()
+    command.close()
 
     self.core_instance.MakeDnsServer(u'localhost', SSH_USER, BIND_DIR, TEST_DIR)
     self.core_instance.MakeDnsServerSet(u'set1')
@@ -359,23 +359,23 @@ class TestCheckConfig(unittest.TestCase):
 
     self.tree_exporter_instance.ExportAllBindTrees()
 
-    output = os.popen('python %s --config-file %s' % (
+    command = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
-    self.assertEqual(output.read(), '')
-    output.close()
+    self.assertEqual(command.read(), '')
+    command.close()
 
   def testCheckErrorConfig(self):
     self.assertEqual(self.core_instance.ListRecords(), []) 
-    output = os.popen('python %s -f test_data/test_zone.db '
+    command = os.popen('python %s -f test_data/test_zone.db '
                       '--view test_view -u %s --config-file %s '
                       '-z sub.university.lcl' % ( 
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
+    self.assertEqual(command.read(),
                      'Loading in test_data/test_zone.db\n'
                      '17 records loaded from zone test_data/test_zone.db\n'
                      '17 total records added\n')
-    output.close()
+    command.close()
 
     self.core_instance.MakeDnsServer(DNS_SERVER, SSH_USER, BIND_DIR, TEST_DIR)
     self.core_instance.MakeDnsServerSet(u'set1')
@@ -392,10 +392,10 @@ class TestCheckConfig(unittest.TestCase):
         tar_file,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         'ns2 3600 in a 192.168.1.104', 'ns2 3600 in aaq 192.168.1.104')
-    output = os.popen('python %s --config-file %s' % (
+    command = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     # Replacement below to accomodate for later bind versions
-    self.assertEqual(output.read().replace(
+    self.assertEqual(command.read().replace(
         'zone sub.university.lcl/IN: not loaded due to errors.\n', ''),
         'ERROR: %s/%s/named/test_view/sub.university.lcl.db:16: '
         'unknown RR type \'aaq\'\n'
@@ -403,7 +403,7 @@ class TestCheckConfig(unittest.TestCase):
         'file %s/%s/named/test_view/sub.university.lcl.db '
         'failed: unknown class/type\n' % (self.root_config_dir, DNS_SERVER,
             self.root_config_dir, DNS_SERVER))
-    output.close()
+    command.close()
 
     self.TarReplaceString(
         tar_file,
@@ -413,16 +413,16 @@ class TestCheckConfig(unittest.TestCase):
         tar_file,
         '%s/named/test_view/sub.university.lcl.db' % DNS_SERVER,
         ' 796 10800', ' 10800')
-    output = os.popen('python %s --config-file %s --verbose' % (
+    command = os.popen('python %s --config-file %s --verbose' % (
         EXEC, CONFIG_FILE))
-    self.assertEqual(output.read(),
+    self.assertEqual(command.read(),
         'Finished - %s/%s/named.conf.a\n'
         'Finished - %s/%s/named/test_view/sub.university.lcl.db\n'
         '--------------------------------------------------------------------\n'
         'Checked 1 named.conf file(s) and 1 zone file(s)\n'
         '\n'
         'All checks successful\n' % (self.root_config_dir, DNS_SERVER, self.root_config_dir, DNS_SERVER))
-    output.close()
+    command.close()
 
     self.TarReplaceString(
         tar_file,
@@ -432,10 +432,10 @@ class TestCheckConfig(unittest.TestCase):
         tar_file,
         '%s/named.conf.a' % DNS_SERVER,
         'type master;', 'type bad_type;')
-    output = os.popen('python %s --config-file %s' % (
+    command = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    self.assertTrue(re.search('[\']bad_type[\'] unexpected',output.read()))
-    output.close()
+    self.assertTrue(re.search('[\']bad_type[\'] unexpected',command.read()))
+    command.close()
 
     self.TarReplaceString(
         tar_file,
@@ -446,11 +446,11 @@ class TestCheckConfig(unittest.TestCase):
         '%s/named.conf.a' % DNS_SERVER,
         'type master;',
         'type master;\nwrong;')
-    output = os.popen('python %s --config-file %s' % (
+    command = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    lines = output.read()
+    lines = command.read()
     self.assertTrue(re.search('unknown option \'wrong\'', lines))
-    output.close()
+    command.close()
 
     self.TarReplaceString(
         tar_file,
@@ -462,24 +462,115 @@ class TestCheckConfig(unittest.TestCase):
         '%s/named.conf.a' % DNS_SERVER,
         'options { directory "%s"; };' % NAMED_DIR,
         '\noptions\n{\ndirectory "another";\n};\noptions {\n print-time yes;};\n')
-    output = os.popen('python %s --config-file %s' % (
+    command = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
-    lines = output.read()
+    lines = command.read()
     ##ISCPY now combines directives defined twice
     ##self.assertTrue(re.search('\'options\' redefined near \'options\'',lines))
-    output.close()
+    command.close()
 
-  def testChangeNamedDirectory(self):
+  def testMultipleDnsServers(self):
+    for zone in self.core_instance.ListZones():
+      self.core_instance.RemoveZone(zone)
+
+    self.core_instance.MakeDnsServer(u'server_1', SSH_USER, BIND_DIR, TEST_DIR)
+    self.core_instance.MakeDnsServer(u'server_2', SSH_USER, BIND_DIR, TEST_DIR)
+    self.core_instance.MakeDnsServerSet(u'set_1')
+    self.core_instance.MakeDnsServerSet(u'set_2')
+    self.core_instance.MakeDnsServerSetAssignments(u'server_1', u'set_1')
+    self.core_instance.MakeDnsServerSetAssignments(u'server_2', u'set_2')
+    self.core_instance.MakeView(u'test_view1')
+    self.core_instance.MakeView(u'test_view2')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view1', 1, u'set_1')
+    self.core_instance.MakeDnsServerSetViewAssignments(u'test_view2', 1, u'set_2')
+    self.core_instance.MakeNamedConfGlobalOption(u'set_1', u'#options')
+    self.core_instance.MakeNamedConfGlobalOption(u'set_2', u'#options')
+
+    self.core_instance.MakeZone(u'test_zone1', u'master', u'test_zone1.', 
+        view_name=u'test_view1')
+    self.core_instance.MakeZone(u'test_zone2', u'master', u'test_zone2.', 
+        view_name=u'test_view2')
     self.assertEqual(self.core_instance.ListRecords(), [])
-    output = os.popen('python %s -f test_data/test_zone.db '
-                      '--view test_view -u %s --config-file %s '
-                      '-z sub.university.lcl' % (
+    command = os.popen('python %s -f test_data/test_zone.db '
+                      '--view test_view1 -u %s --config-file %s '
+                      '-z test_zone1' % (
                           ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
-    self.assertEqual(output.read(),
+    self.assertEqual(command.read(),
                      'Loading in test_data/test_zone.db\n'
                      '17 records loaded from zone test_data/test_zone.db\n'
                      '17 total records added\n')
-    output.close()
+    command.close()
+    command = os.popen('python %s -f test_data/test_zone.db '
+                      '--view test_view2 -u %s --config-file %s '
+                      '-z test_zone2' % (
+                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
+    self.assertEqual(command.read(),
+                     'Loading in test_data/test_zone.db\n'
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
+    command.close()
+    self.tree_exporter_instance.ExportAllBindTrees()
+
+    config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
+    audit_log_id, filename = config_lib_instance.FindNewestDnsTreeFilename()
+
+    command = os.popen('python %s --config-file %s' % (
+        EXEC, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
+    self.assertEqual(command.read(), '')
+    command.close()
+
+    self.TarReplaceString(os.path.join('test_data/backup_dir', filename), u'server_1/named.conf.a', 'type master;', 'type bad1;')
+
+    command = os.popen('python %s --config-file %s' % (
+        EXEC, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
+    self.assertEqual(command.read(), "ERROR: root_config_dir/server_1/named.conf.a:12: 'bad1' unexpected\n")
+    command.close()
+
+    self.TarReplaceString(os.path.join('test_data/backup_dir', filename), u'server_1/named.conf.a', 'type bad1;', 'type master;')
+    self.TarReplaceString(os.path.join('test_data/backup_dir', filename), u'server_2/named.conf.a', 'type master;', 'type bad2;')
+
+    command = os.popen('python %s --config-file %s' % (
+        EXEC, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
+    self.assertEqual(command.read(), "ERROR: root_config_dir/server_2/named.conf.a:12: 'bad2' unexpected\n")
+    command.close()
+
+    self.TarReplaceString(os.path.join('test_data/backup_dir', filename), u'server_2/named.conf.a', 'type bad2;', 'type master;')
+
+    self.TarReplaceString(os.path.join('test_data/backup_dir', filename), u'server_1/named/test_view1/test_zone1.db', 'cname', 'bname')
+    self.TarReplaceString(os.path.join('test_data/backup_dir', filename), u'server_2/named/test_view2/test_zone2.db', 'cname', 'bname')
+
+    command = os.popen('python %s --config-file %s' % (
+        EXEC, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
+    output = command.read()
+    command.close()
+    self.assertTrue("root_config_dir/server_1/named/test_view1/test_zone1.db:18: unknown RR type 'bname'" in output)
+    self.assertTrue('zone test_zone1/IN: not loaded due to errors.' in output)
+
+    self.TarReplaceString(os.path.join('test_data/backup_dir', filename), u'server_1/named/test_view1/test_zone1.db', 'bname', 'cname')
+
+    command = os.popen('python %s --config-file %s' % (
+        EXEC, CONFIG_FILE))
+    time.sleep(2) # Wait for disk to settle
+    output = command.read()
+    self.assertTrue("root_config_dir/server_2/named/test_view2/test_zone2.db:18: unknown RR type 'bname'" in output)
+    self.assertTrue('zone test_zone2/IN: not loaded due to errors.' in output)
+    command.close()
+
+  def testChangeNamedDirectory(self):
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    command = os.popen('python %s -f test_data/test_zone.db '
+                      '--view test_view -u %s --config-file %s '
+                      '-z sub.university.lcl' % (
+                          ZONE_IMPORTER_EXEC, USERNAME, CONFIG_FILE))
+    self.assertEqual(command.read(),
+                     'Loading in test_data/test_zone.db\n'
+                     '17 records loaded from zone test_data/test_zone.db\n'
+                     '17 total records added\n')
+    command.close()
 
     self.core_instance.MakeDnsServer(DNS_SERVER, SSH_USER, BIND_DIR, TEST_DIR)
     self.core_instance.MakeDnsServerSet(u'set1')
@@ -510,11 +601,11 @@ class TestCheckConfig(unittest.TestCase):
     named_conf_handle.close()
     config_lib_instance.TarDnsTree(audit_log_id)
 
-    output = os.popen('python %s --config-file %s' % (
+    command = os.popen('python %s --config-file %s' % (
         EXEC, CONFIG_FILE))
     time.sleep(2) # Wait for disk to settle
-    self.assertEqual(output.read(), '')
-    output.close()
+    self.assertEqual(command.read(), '')
+    command.close()
 
 if( __name__ == '__main__' ):
       unittest.main()
