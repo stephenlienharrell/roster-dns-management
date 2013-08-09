@@ -47,6 +47,7 @@ import socket
 
 import dns.query
 from dns.exception import DNSException
+from optparse import OptionParser
 
 def ZoneAXFR(domain, name_server, port):
   print "\n----------------------------------------"
@@ -68,10 +69,23 @@ def ZoneAXFR(domain, name_server, port):
   return zone
 
 def main(args):
+ 
+  """Collects command line arguments.
+     Compares two similar zones on two nameservers.
+     Inputs:
+     args: list of arguments from the command line	
+  """
+  usage = ('\n'	
+           '\n'
+           'To compare two zone files:\n'
+           '\t%s <domain> <nameserver_1>[:port] <nameserver_2>[:port]\n'
+            % sys.argv[0])
+  parser = OptionParser(version='%%prog (Roster %s)'
+           %__version__, usage = usage)
+	
+  (globals()['options'], args) = parser.parse_args(args)
+
   if (len(sys.argv) != 4):
-    print("To compare two zone files:")
-    print("Usage:%s <domain> <nameserver_1>[:port] <nameserver_2>[:port]" % (
-        sys.argv[0]))
     sys.exit(1)
 
   domain = sys.argv[1]
