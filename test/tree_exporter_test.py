@@ -39,1194 +39,23 @@ __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
 __version__ = '#TRUNK#'
 
-
-import codecs
-import iscpy
-import os
-import shutil
-import sys
 import tarfile
-import time
 import unittest
-import datetime
-import glob
-import getpass
-import roster_core
-import ConfigParser
+import os
+
+import tree_exporter_test_lib
 from roster_config_manager import tree_exporter
 from roster_config_manager import config_lib
 
-
-CONFIG_FILE = 'test_data/roster.conf' # Example in test_data
-SCHEMA_FILE = '../roster-core/data/database_schema.sql'
-DATA_FILE = 'test_data/test_data.sql'
-TESTDIR = u'%s/unittest_dir/' % os.getcwd()
-NAMED_DIR = os.path.join(os.getcwd(), 'test_data/named')
-BINDDIR = u'%s/test_data/named/' % os.getcwd()
-SSH_USER = unicode(getpass.getuser())
-
-class TestTreeExporter(unittest.TestCase):
-
+class TestTreeExporter(tree_exporter_test_lib.TreeExportTestCase):
   def setUp(self):
-    self.maxDiff = None
-    self.config_instance = roster_core.Config(file_name=CONFIG_FILE)
-    self.config_lib_instance = config_lib.ConfigLib(CONFIG_FILE)
-    self.root_config_dir = self.config_instance.config_file['exporter'][
-        'root_config_dir']
-    self.backup_dir = self.config_instance.config_file['exporter'][
-        'backup_dir']
-
-    self.tree_exporter_instance = tree_exporter.BindTreeExport(
-        CONFIG_FILE)
-
-    db_instance = self.config_instance.GetDb()
-
-    db_instance.CreateRosterDatabase()
-
-    data = open(DATA_FILE, 'r').read()
-    db_instance.StartTransaction()
-    db_instance.cursor.execute(data)
-    db_instance.EndTransaction()
-    db_instance.close()
-    self.db_instance = db_instance
-
-    self.core_instance = roster_core.Core(u'sharrell', self.config_instance)
-
-    db_instance.StartTransaction()
-
-    # Make server sets
-    dns_server_sets_dict = {}
-
-    dns_server_sets_dict['dns_server_set_name'] = u'internal_dns'
-    db_instance.MakeRow('dns_server_sets', dns_server_sets_dict)
-
-    dns_server_sets_dict['dns_server_set_name'] = u'external_dns'
-    db_instance.MakeRow('dns_server_sets', dns_server_sets_dict)
-
-    dns_server_sets_dict['dns_server_set_name'] = u'private_dns'
-    db_instance.MakeRow('dns_server_sets', dns_server_sets_dict)
-
-    # Make Views
-    views_dict = {}
-    views_dict['view_name'] = u'internal'
-    db_instance.MakeRow('views', views_dict)
-
-    views_dict['view_name'] = u'external'
-    db_instance.MakeRow('views', views_dict)
-
-    views_dict['view_name'] = u'private'
-    db_instance.MakeRow('views', views_dict)
-
-    # Make View Dependencies
-    view_dependencies_dict = {}
-
-    view_dependencies_dict['view_dependency'] = u'internal_dep'
-    db_instance.MakeRow('view_dependencies', view_dependencies_dict)
-
-    view_dependencies_dict['view_dependency'] = u'external_dep'
-    db_instance.MakeRow('view_dependencies', view_dependencies_dict)
-
-    view_dependencies_dict['view_dependency'] = u'private_dep'
-    db_instance.MakeRow('view_dependencies', view_dependencies_dict)
-
-    # Make View Dependency Assignments
-    view_dependency_assignments_dict = {}
-
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_name'] = u'internal'
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_dependency'] = u'any'
-    db_instance.MakeRow('view_dependency_assignments',
-                        view_dependency_assignments_dict)
-
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_name'] = u'external'
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_dependency'] = u'any'
-    db_instance.MakeRow('view_dependency_assignments',
-                        view_dependency_assignments_dict)
-
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_name'] = u'private'
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_dependency'] = u'any'
-    db_instance.MakeRow('view_dependency_assignments',
-                        view_dependency_assignments_dict)
-
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_name'] = u'internal'
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_dependency'] = u'internal_dep'
-    db_instance.MakeRow('view_dependency_assignments',
-                        view_dependency_assignments_dict)
-
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_name'] = u'external'
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_dependency'] = u'external_dep'
-    db_instance.MakeRow('view_dependency_assignments',
-                        view_dependency_assignments_dict)
-
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_name'] = u'private'
-    view_dependency_assignments_dict[
-        'view_dependency_assignments_view_dependency'] = u'private_dep'
-    db_instance.MakeRow('view_dependency_assignments',
-                        view_dependency_assignments_dict)
-
-
-
-    # Make slave zones
-    zones_dict = {}
-    zones_dict['zone_name'] = u'otheruniversity.edu'
-    db_instance.MakeRow('zones', zones_dict)
-
-    # Make zone/view assignments
-    zone_view_assignments_dict = {}
-  
-
-    # Make Zones
-    zone_view_assignments_dict = {}
-    zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'otheruniversity.edu')
-    zone_view_assignments_dict['zone_view_assignments_zone_type'] = u'slave'
-    zone_view_assignments_dict['zone_origin'] = u'otheruniversity.edu.'
-    zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'masters { 192.168.0.1; };\n')
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = u'any'
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'internal_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'external_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-
-    zones_dict['zone_name'] = u'university.edu'
-    db_instance.MakeRow('zones', zones_dict)
-
-    zones_dict['zone_name'] = u'int.university.edu'
-    db_instance.MakeRow('zones', zones_dict)
-
-    zones_dict['zone_name'] = u'priv.university.edu'
-    db_instance.MakeRow('zones', zones_dict)
-
-    zones_dict['zone_name'] = u'168.192.in-addr.arpa'
-    db_instance.MakeRow('zones', zones_dict)
-
-    zones_dict['zone_name'] = u'4.3.2.1.in-addr.arpa'
-    db_instance.MakeRow('zones', zones_dict)
-
-    # Make Zone/View assignments
-    zone_view_assignments_dict = {}
-
-    zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'university.edu')
-    zone_view_assignments_dict['zone_view_assignments_zone_type'] = u'master'
-    zone_view_assignments_dict['zone_origin'] = u'university.edu.'
-    zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'allow-update { none; };\n'
-        'also-notify { 192.168.1.5;\n'
-        '192.168.1.6;\n'
-        '192.168.1.7;\n'
-        '192.168.1.8;\n'
-        '192.168.1.9;\n'
-        '192.168.1.10;\n};\n')
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = u'any'
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'internal_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'external_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'private_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_origin'] = u'university2.edu.'
-    zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'allow-update { none; };\n')
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'internal_dep')
-    zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'int.university.edu')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'private_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_origin'] = u'university3.edu.'
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'private_dep')
-    zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'priv.university.edu')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'internal_dep')
-    zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'168.192.in-addr.arpa')
-    zone_view_assignments_dict['zone_origin'] = u'168.192.in-addr.arpa.'
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'external_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'private_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'external_dep')
-    zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'4.3.2.1.in-addr.arpa')
-    zone_view_assignments_dict['zone_origin'] = u'4.3.2.1.in-addr.arpa.'
-    zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'allow-update { none; };\n'
-        'also-notify { 192.168.1.5;\n'
-        '192.168.1.6;\n'
-        '192.168.1.7;\n'
-        '192.168.1.8;\n'
-        '192.168.1.9;\n'
-        '192.168.1.10;\n};\n')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    zone_view_assignments_dict['zone_view_assignments_zone_type'] = u'slave'
-    zone_view_assignments_dict['zone_view_assignments_zone_name'] = (
-        u'bio.university.edu')
-    zone_view_assignments_dict['zone_origin'] = u'university.edu.'
-    zone_view_assignments_dict['zone_options'] = iscpy.Serialize(
-        u'allow-transfer { any; };\n')
-
-    zone_view_assignments_dict['zone_origin'] = u'university4.edu.'
-    zone_view_assignments_dict['zone_view_assignments_view_dependency'] = (
-        u'external_dep')
-    db_instance.MakeRow('zone_view_assignments', zone_view_assignments_dict)
-
-    # Make DNS Servers
-    dns_servers_dict = db_instance.GetEmptyRowDict('dns_servers')
-    dns_servers_dict['dns_server_name'] = u'dns1.university.edu'
-    dns_servers_dict['dns_server_remote_bind_directory'] = BINDDIR
-    dns_servers_dict['dns_server_remote_test_directory'] = TESTDIR
-    dns_servers_dict['dns_server_ssh_username'] = SSH_USER
-    db_instance.MakeRow('dns_servers', dns_servers_dict)
-
-    dns_servers_dict['dns_server_name'] = u'dns2.university.edu'
-    db_instance.MakeRow('dns_servers', dns_servers_dict)
-
-    dns_servers_dict['dns_server_name'] = u'dns3.university.edu'
-    db_instance.MakeRow('dns_servers', dns_servers_dict)
-
-    dns_servers_dict['dns_server_name'] = u'dns4.university.edu'
-    db_instance.MakeRow('dns_servers', dns_servers_dict)
-
-    dns_servers_dict['dns_server_name'] = u'ns1.university.edu'
-    db_instance.MakeRow('dns_servers', dns_servers_dict)
-
-    dns_servers_dict['dns_server_name'] = u'ns1.int.university.edu'
-    db_instance.MakeRow('dns_servers', dns_servers_dict)
-
-    # Make Dns Server Set Assignments
-    dns_server_set_assignments_dict = {}
-
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_name'] = u'ns1.university.edu'
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_set_name'] = (
-            u'external_dns')
-    db_instance.MakeRow('dns_server_set_assignments',
-                        dns_server_set_assignments_dict)
-
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_name'] = (
-            u'ns1.int.university.edu')
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_set_name'] = (
-            u'internal_dns')
-    db_instance.MakeRow('dns_server_set_assignments',
-                        dns_server_set_assignments_dict)
-
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_name'] = (
-            u'ns1.int.university.edu')
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_set_name'] = (
-            u'private_dns')
-    db_instance.MakeRow('dns_server_set_assignments',
-                        dns_server_set_assignments_dict)
-
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_name'] = u'dns1.university.edu'
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_set_name'] = (
-            u'internal_dns')
-    db_instance.MakeRow('dns_server_set_assignments',
-                        dns_server_set_assignments_dict)
-
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_name'] = u'dns2.university.edu'
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_set_name'] = (
-            u'external_dns')
-    db_instance.MakeRow('dns_server_set_assignments',
-                        dns_server_set_assignments_dict)
-
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_name'] = u'dns3.university.edu'
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_set_name'] = (
-            u'external_dns')
-    db_instance.MakeRow('dns_server_set_assignments',
-                        dns_server_set_assignments_dict)
-
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_name'] = u'dns4.university.edu'
-    dns_server_set_assignments_dict[
-        'dns_server_set_assignments_dns_server_set_name'] = (
-            u'private_dns')
-    db_instance.MakeRow('dns_server_set_assignments',
-                        dns_server_set_assignments_dict)
-
-    # Make DNS Server Set View assignments
-    dns_server_set_view_assignments_dict = {}
-
-    dns_server_set_view_assignments_dict[
-        'dns_server_set_view_assignments_dns_server_set_name'] = (
-            u'internal_dns')
-    dns_server_set_view_assignments_dict[
-        'dns_server_set_view_assignments_view_name'] = u'internal'
-    dns_server_set_view_assignments_dict['view_order'] = 2
-    dns_server_set_view_assignments_dict['view_options'] = iscpy.Serialize(
-        'recursion no;')
-    db_instance.MakeRow('dns_server_set_view_assignments',
-                        dns_server_set_view_assignments_dict)
-
-    dns_server_set_view_assignments_dict[
-        'dns_server_set_view_assignments_dns_server_set_name'] = (
-            u'internal_dns')
-    dns_server_set_view_assignments_dict[
-        'dns_server_set_view_assignments_view_name'] = u'external'
-    dns_server_set_view_assignments_dict['view_order'] = 1
-    db_instance.MakeRow('dns_server_set_view_assignments',
-                        dns_server_set_view_assignments_dict)
-
-    dns_server_set_view_assignments_dict[
-        'dns_server_set_view_assignments_dns_server_set_name'] = (
-            u'external_dns')
-    dns_server_set_view_assignments_dict[
-        'dns_server_set_view_assignments_view_name'] = u'external'
-    dns_server_set_view_assignments_dict['view_order'] = 1
-    db_instance.MakeRow('dns_server_set_view_assignments',
-                        dns_server_set_view_assignments_dict)
-
-    dns_server_set_view_assignments_dict[
-        'dns_server_set_view_assignments_dns_server_set_name'] = (
-            u'private_dns')
-    dns_server_set_view_assignments_dict[
-        'dns_server_set_view_assignments_view_name'] = u'private'
-    dns_server_set_view_assignments_dict['view_order'] = 3
-    db_instance.MakeRow('dns_server_set_view_assignments',
-                        dns_server_set_view_assignments_dict)
-
-    # Make Records
-
-    # Make mail server 1 'mx' record for 'any' view
-    records_dict = {}
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'mx'
-    records_dict['record_target'] = u'@'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'any'
-    records_dict['record_last_user'] = u'sharrell'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 1
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'mx'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'priority'
-    record_arguments_record_assignments_dict['argument_value'] = u'1'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 1
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'mx'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'mail_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'mail1.university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make 'soa' record for 'internal' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'soa'
-    records_dict['record_target'] = u'168.192.in-addr.arpa.'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'168.192.in-addr.arpa'
-    records_dict['record_view_dependency'] = u'internal_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 2
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'name_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'ns1.university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 2
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'admin_email'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'admin@university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 2
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
-    record_arguments_record_assignments_dict['argument_value'] = u'20091223'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 2
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'refresh_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 2
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'retry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 2
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'expiry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 2
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'minimum_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make computer 1 'a' record for 'internal' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'a'
-    records_dict['record_target'] = u'computer1'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'internal_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 3
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'a'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'192.168.1.1')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make computer 2 'a' record for 'internal' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'a'
-    records_dict['record_target'] = u'computer2'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'internal_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 4
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'a'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'192.168.1.2')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make 'soa' record for 'external' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'soa'
-    records_dict['record_target'] = u'4.3.2.1.in-addr.arpa.'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'4.3.2.1.in-addr.arpa'
-    records_dict['record_view_dependency'] = u'external_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 5
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'name_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'ns1.university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 5
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'admin_email'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'admin@university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 5
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
-    record_arguments_record_assignments_dict['argument_value'] = u'20091224'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 5
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'refresh_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 5
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'retry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 5
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'expiry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 5
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'minimum_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make computer 1 'a' record for 'external' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'a'
-    records_dict['record_target'] = u'computer1'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'external_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 6
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'a'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'1.2.3.5')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make computer 3 'a' record for 'external' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'a'
-    records_dict['record_target'] = u'computer3'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'external_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 7
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'a'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'1.2.3.6')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make mail server 2 'mx' record for 'any' view
-    records_dict = {}
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'mx'
-    records_dict['record_target'] = u'@'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'any'
-    records_dict['record_last_user'] = u'sharrell'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 8
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'mx'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'priority'
-    record_arguments_record_assignments_dict['argument_value'] = u'1'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 8
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'mx'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'mail_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'mail2.university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make name server 1 'ns' record for 'any' view
-    records_dict = {}
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'ns'
-    records_dict['record_target'] = u'@'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'any'
-    records_dict['record_last_user'] = u'sharrell'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 9
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'ns'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'name_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'ns1.university.edu')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make name server 2 'ns' record for 'any' view
-    records_dict = {}
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'ns'
-    records_dict['record_target'] = u'@'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'any'
-    records_dict['record_last_user'] = u'sharrell'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 10
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'ns'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'name_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'ns2.university.edu')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make computer 4 'a' record for 'internal' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'a'
-    records_dict['record_target'] = u'computer4'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'internal_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 11
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'a'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'assignment_ip'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'192.168.1.4')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make 'soa' record for 'internal' view / 'university.edu' zone
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'soa'
-    records_dict['record_target'] = u'university.edu.'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'internal_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 12
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'name_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'ns1.university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 12
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'admin_email'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'admin@university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 12
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
-    record_arguments_record_assignments_dict['argument_value'] = u'20091225'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 12
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'refresh_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 12
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'retry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 12
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'expiry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 12
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'minimum_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make 'soa' record for 'external' view / 'university.edu' zone
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'soa'
-    records_dict['record_target'] = u'university.edu.'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'external_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 13
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'name_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'ns1.university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 13
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'admin_email'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'admin@university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 13
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
-    record_arguments_record_assignments_dict['argument_value'] = u'20091227'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 13
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'refresh_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 13
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'retry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 13
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'expiry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 13
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'minimum_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make 'soa' record for 'private' view / 'university.edu' zone
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'soa'
-    records_dict['record_target'] = u'university.edu.'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'university.edu'
-    records_dict['record_view_dependency'] = u'private_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 14
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'name_server'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'ns1.university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 14
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'admin_email'
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'admin@university.edu.')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 14
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = u'serial_number'
-    record_arguments_record_assignments_dict['argument_value'] = u'20091225'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 14
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'refresh_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 14
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'retry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 14
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'expiry_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 14
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'soa'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'minimum_seconds')
-    record_arguments_record_assignments_dict['argument_value'] = u'5'
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make computer 1 'ptr' record for 'external' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'ptr'
-    file = codecs.open('test_data/snowman',encoding='utf-8',mode='r')
-    records_dict['record_target'] = file.read().replace('\n','')
-    file.close()
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'4.3.2.1.in-addr.arpa'
-    records_dict['record_view_dependency'] = u'external_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 15
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'ptr'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'assignment_host')
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'computer1')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    # Make computer 4 'ptr' record for 'internal' view
-    records_dict['records_id'] = None
-    records_dict['record_type'] = u'ptr'
-    records_dict['record_target'] = u'4'
-    records_dict['record_ttl'] = 3600
-    records_dict['record_zone_name'] = u'168.192.in-addr.arpa'
-    records_dict['record_view_dependency'] = u'internal_dep'
-    db_instance.MakeRow('records', records_dict)
-    record_arguments_record_assignments_dict = {}
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_record_id'] = 16
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_type'] = u'ptr'
-    record_arguments_record_assignments_dict[
-        'record_arguments_records_assignments_argument_name'] = (
-            u'assignment_host')
-    record_arguments_record_assignments_dict['argument_value'] = (
-        u'computer4')
-    db_instance.MakeRow('record_arguments_records_assignments',
-                        record_arguments_record_assignments_dict)
-
-    ## Make ACLs
-    acls_dict = {}
-    acls_dict['acl_name'] = u'public'
-    db_instance.MakeRow('acls', acls_dict)
-    acls_dict['acl_name'] = u'secret'
-    db_instance.MakeRow('acls', acls_dict)
-    acl_ranges_dict = {}
-    acl_ranges_dict['acl_ranges_acl_name'] = u'public'
-    acl_ranges_dict['acl_range_cidr_block'] = u'192.168.1.4/30'
-    db_instance.MakeRow('acl_ranges', acl_ranges_dict)
-    acl_ranges_dict['acl_range_cidr_block'] = u'10.10/32'
-    db_instance.MakeRow('acl_ranges', acl_ranges_dict)
-    acl_ranges_dict['acl_ranges_acl_name'] = u'secret'
-    acl_ranges_dict['acl_range_cidr_block'] = u'10.10/32'
-    db_instance.MakeRow('acl_ranges', acl_ranges_dict)
-
-    ## Make view ACL assignments
-    view_acl_assignments_dict = {}
-    view_acl_assignments_dict['view_acl_assignments_view_name'] = u'internal'
-    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
-        u'internal_dns')
-    view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'secret'
-    view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 0
-    db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
-    view_acl_assignments_dict['view_acl_assignments_view_name'] = u'internal'
-    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
-        u'internal_dns')
-    view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'public'
-    view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 0
-    db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
-    view_acl_assignments_dict['view_acl_assignments_view_name'] = u'external'
-    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
-        u'internal_dns')
-    view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'public'
-    view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 1
-    db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
-    view_acl_assignments_dict['view_acl_assignments_view_name'] = u'external'
-    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
-        u'external_dns')
-    view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'public'
-    view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 1
-    db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
-    view_acl_assignments_dict['view_acl_assignments_view_name'] = u'private'
-    view_acl_assignments_dict['view_acl_assignments_dns_server_set_name'] = (
-        u'private_dns')
-    view_acl_assignments_dict['view_acl_assignments_acl_name'] = u'secret'
-    view_acl_assignments_dict['view_acl_assignments_range_allowed'] = 1
-    db_instance.MakeRow('view_acl_assignments', view_acl_assignments_dict)
-
-    ## Make named conf global option
-    named_conf_global_options_dict = {}
-    named_conf_global_options_dict['global_options'] = iscpy.Serialize(u'null')
-    named_conf_global_options_dict['options_created'] = datetime.datetime(
-        2009, 7, 4, 13, 37, 0)
-    named_conf_global_options_dict[
-        'named_conf_global_options_dns_server_set_name'] = (
-            u'internal_dns')
-    named_conf_global_options_dict['named_conf_global_options_id'] = 1
-    db_instance.MakeRow('named_conf_global_options',
-                        named_conf_global_options_dict)
-
-    named_conf_global_options_dict['global_options'] = iscpy.Serialize(
-        u'options {\n''\tdirectory "/var/domain";\n''\trecursion no;\n'
-        '\tmax-cache-size 512M;\n''\tallow-query { any; };\n''};\n''\n''logging {\n''\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n''\t};\n''\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n''\t\tseverity info;\n''\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n''};\n''\n''controls {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n''};\n''\n'
-        'include "/etc/rndc.key";\n')
-    named_conf_global_options_dict['options_created'] = datetime.datetime(
-        2010, 3, 11, 13, 37, 0)
-    named_conf_global_options_dict[
-        'named_conf_global_options_dns_server_set_name'] = (
-            u'internal_dns')
-    named_conf_global_options_dict['named_conf_global_options_id'] = 2
-    db_instance.MakeRow('named_conf_global_options',
-                        named_conf_global_options_dict)
-
-    named_conf_global_options_dict['global_options'] = iscpy.Serialize(
-        u'options {\n''\tdirectory "/var/domain";\n''\trecursion no;\n'
-        '\tmax-cache-size 512M;\n''};\n''\n''logging {\n''\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n''\t};\n''\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n''\t\tseverity info;\n''\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n''};\n''\n''controls {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n''};\n''\n'
-        'include "/etc/rndc.key";\n')
-    named_conf_global_options_dict['options_created'] = datetime.datetime(
-        2010, 3, 11, 13, 37, 0)
-    named_conf_global_options_dict[
-        'named_conf_global_options_dns_server_set_name'] = (
-            u'external_dns')
-    named_conf_global_options_dict['named_conf_global_options_id'] = 3
-    db_instance.MakeRow('named_conf_global_options',
-                        named_conf_global_options_dict)
-
-    named_conf_global_options_dict['global_options'] = iscpy.Serialize(
-        u'options {\n''\tdirectory "/var/domain";\n''\trecursion no;\n'
-        '\tmax-cache-size 512M;\n''};\n''\n''logging {\n''\tchannel "security" {\n'
-        '\t\tfile "/var/log/named-security.log" versions 10 size 10m;\n'
-        '\t\tprint-time yes;\n''\t};\n''\tchannel "query_logging" {\n'
-        '\t\tsyslog local5;\n''\t\tseverity info;\n''\t};\n'
-        '\tcategory "client" { "null"; };\n'
-        '\tcategory "update-security" { "security"; };\n'
-        '\tcategory "queries" { "query_logging"; };\n''};\n''\n''controls {\n'
-        '\tinet * allow { control-hosts; } keys {rndc-key; };\n''};\n''\n'
-        'include "/etc/rndc.key";\n')
-    named_conf_global_options_dict['options_created'] = datetime.datetime(
-        2010, 3, 11, 13, 37, 0)
-    named_conf_global_options_dict[
-        'named_conf_global_options_dns_server_set_name'] = (
-            u'private_dns')
-    named_conf_global_options_dict['named_conf_global_options_id'] = 4
-    db_instance.MakeRow('named_conf_global_options',
-                        named_conf_global_options_dict)
-
-    # COMMIT
-    db_instance.EndTransaction()
-
-    self.core_instance.RemoveZone(u'bio.university.edu')
-    self.core_instance.RemoveZone(u'eas.university.edu')
-    self.core_instance.RemoveZone(u'cs.university.edu')
-
-    # get data
+    super(TestTreeExporter, self).setUp()
+    self.tree_exporter_instance = tree_exporter.BindTreeExport(tree_exporter_test_lib.CONFIG_FILE)
+    self.config_lib_instance = config_lib.ConfigLib(tree_exporter_test_lib.CONFIG_FILE)
     self.tree_exporter_instance.db_instance.StartTransaction()
     self.data = self.tree_exporter_instance.GetRawData()
     self.tree_exporter_instance.db_instance.EndTransaction()
     self.cooked_data = self.tree_exporter_instance.CookData(self.data[0])
-
-  def tearDown(self):
-    if( os.path.exists(self.root_config_dir) ):
-      shutil.rmtree(self.root_config_dir)
-    if( os.path.exists(self.backup_dir) ):
-      shutil.rmtree(self.backup_dir)
-    for i in range(4):
-      os.system('rm -rf dns%s.university.edu' % (i + 1))
-    os.system('rm -rf ns1.*')
 
   def testTreeExporterListRecordArgumentDefinitions(self):
     search_record_arguments_dict = self.db_instance.GetEmptyRowDict(
@@ -1265,7 +94,6 @@ class TestTreeExporter(unittest.TestCase):
                  {'argument_name': u'mail_server', 'argument_order': 1}]})
 
   def testTreeExporterSortRecords(self):
-
     records_dict = self.db_instance.GetEmptyRowDict('records')
     record_args_assignment_dict = self.db_instance.GetEmptyRowDict(
         'record_arguments_records_assignments')
@@ -1278,128 +106,156 @@ class TestTreeExporter(unittest.TestCase):
       self.db_instance.EndTransaction()
 
     self.assertEqual(self.tree_exporter_instance.SortRecords(records),
-                     {(u'university.edu', u'external_dep'):
-                          {13: {u'serial_number': 20091227,
-                                u'refresh_seconds': 5,
-                                'target': u'university.edu.',
-                                u'name_server': u'ns1.university.edu.',
-                                u'retry_seconds': 5, 'ttl': 3600,
-                                u'minimum_seconds': 5, 'record_type': u'soa',
-                                'view_name': u'external',
-                                'last_user': u'sharrell',
-                                'zone_name': u'university.edu',
-                                u'admin_email': u'admin@university.edu.',
-                                u'expiry_seconds': 5},
-                           6: {'target': u'computer1', 'ttl': 3600,
-                               'record_type': u'a', 'view_name': u'external',
-                               'last_user': u'sharrell',
-                               'zone_name': u'university.edu',
-                               u'assignment_ip': u'1.2.3.5'},
-                           7: {'target': u'computer3', 'ttl': 3600,
-                               'record_type': u'a', 'view_name': u'external',
-                               'last_user': u'sharrell',
-                               'zone_name': u'university.edu',
-                               u'assignment_ip': u'1.2.3.6'}},
-                      (u'4.3.2.1.in-addr.arpa', u'external_dep'):
-                          {5: {u'serial_number': 20091224,
-                               u'refresh_seconds': 5,
-                               'target': u'4.3.2.1.in-addr.arpa.',
-                               u'name_server': u'ns1.university.edu.',
-                               u'retry_seconds': 5, 'ttl': 3600,
-                               u'minimum_seconds': 5, 'record_type': u'soa',
-                               'view_name': u'external',
-                               'last_user': u'sharrell',
-                               'zone_name': u'4.3.2.1.in-addr.arpa',
-                               u'admin_email': u'admin@university.edu.',
-                               u'expiry_seconds': 5},
-                           15: {'target': u'\u2603\u2190\u2191.sn', 'ttl': 3600,
-                                'record_type': u'ptr',
-                                'view_name': u'external',
-                                'last_user': u'sharrell',
-                                'zone_name': u'4.3.2.1.in-addr.arpa',
-                                u'assignment_host': u'computer1'}},
-                      (u'168.192.in-addr.arpa', u'internal_dep'):
-                          {16: {'target': u'4', 'ttl': 3600,
-                                'record_type': u'ptr',
-                                'view_name': u'internal',
-                                'last_user': u'sharrell',
-                                'zone_name': u'168.192.in-addr.arpa',
-                                u'assignment_host': u'computer4'},
-                           2: {u'serial_number': 20091223,
-                               u'refresh_seconds': 5,
-                               'target': u'168.192.in-addr.arpa.',
-                               u'name_server': u'ns1.university.edu.',
-                               u'retry_seconds': 5, 'ttl': 3600,
-                               u'minimum_seconds': 5,
-                               'record_type': u'soa',
-                               'view_name': u'internal',
-                               'last_user': u'sharrell',
-                               'zone_name': u'168.192.in-addr.arpa',
-                               u'admin_email': u'admin@university.edu.',
-                               u'expiry_seconds': 5}},
-                      (u'university.edu', u'private_dep'):
-                          {14: {u'serial_number': 20091225,
-                                u'refresh_seconds': 5,
-                                'target': u'university.edu.',
-                                u'name_server': u'ns1.university.edu.',
-                                u'retry_seconds': 5, 'ttl': 3600,
-                                u'minimum_seconds': 5, 'record_type': u'soa',
-                                'view_name': u'private',
-                                'last_user': u'sharrell',
-                                'zone_name': u'university.edu',
-                                u'admin_email': u'admin@university.edu.',
-                                u'expiry_seconds': 5}},
-                      (u'university.edu', u'internal_dep'):
-                          {11: {'target': u'computer4', 'ttl': 3600,
-                                'record_type': u'a', 'view_name': u'internal',
-                                'last_user': u'sharrell',
-                                'zone_name': u'university.edu',
-                                u'assignment_ip': u'192.168.1.4'},
-                           12: {u'serial_number': 20091225,
-                                u'refresh_seconds': 5,
-                                'target': u'university.edu.',
-                                u'name_server': u'ns1.university.edu.',
-                                u'retry_seconds': 5, 'ttl': 3600,
-                                u'minimum_seconds': 5, 'record_type': u'soa',
-                                'view_name': u'internal',
-                                'last_user': u'sharrell',
-                                'zone_name': u'university.edu',
-                                u'admin_email': u'admin@university.edu.',
-                                u'expiry_seconds': 5},
-                           3: {'target': u'computer1', 'ttl': 3600,
-                               'record_type': u'a',
-                               'view_name': u'internal',
-                               'last_user': u'sharrell',
-                               'zone_name': u'university.edu',
-                               u'assignment_ip': u'192.168.1.1'},
-                           4: {'target': u'computer2', 'ttl': 3600,
-                               'record_type': u'a', 'view_name': u'internal',
-                               'last_user': u'sharrell',
-                               'zone_name': u'university.edu',
-                               u'assignment_ip': u'192.168.1.2'}},
-                      (u'university.edu', u'any'):
-                          {8: {'target': u'@', 'ttl': 3600, u'priority': 1,
-                               'record_type': u'mx', 'view_name': u'any',
-                               'last_user': u'sharrell',
-                               'zone_name': u'university.edu',
-                               u'mail_server': u'mail2.university.edu.'},
-                           1: {'target': u'@', 'ttl': 3600, u'priority': 1,
-                               'record_type': u'mx', 'view_name': u'any',
-                               'last_user': u'sharrell',
-                               'zone_name': u'university.edu',
-                               u'mail_server': u'mail1.university.edu.'},
-                           10: {'target': u'@',
-                                u'name_server': u'ns2.university.edu',
-                                'ttl': 3600, 'record_type': u'ns',
-                                'view_name': u'any',
-                                'last_user': u'sharrell',
-                                'zone_name': u'university.edu'},
-                           9: {'target': u'@',
-                               u'name_server': u'ns1.university.edu',
-                               'ttl': 3600, 'record_type': u'ns',
-                               'view_name': u'any',
-                               'last_user': u'sharrell',
-                               'zone_name': u'university.edu'}}})
+        {(u'university.edu', u'external_dep'): 
+          {8: {'target': u'computer1',
+            'ttl': 3600,
+            'record_type': u'a',
+            'view_name': u'external',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'assignment_ip': u'1.2.3.5'},
+       11: {'target': u'computer3',
+            'ttl': 3600,
+            'record_type': u'a',
+            'view_name': u'external',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'assignment_ip': u'1.2.3.6'},
+       5: {u'serial_number': 20091234,
+           u'refresh_seconds': 5,
+            'target': u'@',
+           u'name_server': u'ns1.university.edu.',
+           u'retry_seconds': 5,
+            'ttl': 3600,
+           u'minimum_seconds': 5,
+            'record_type': u'soa',
+            'view_name': u'external',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'admin_email': u'admin@university.edu.',
+           u'expiry_seconds': 5}},
+     (u'4.3.2.in-addr', u'external_dep'): 
+      {2: {u'serial_number': 20091226,
+           u'refresh_seconds': 5,
+            'target': u'@',
+           u'name_server': u'ns1.university.edu.',
+           u'retry_seconds': 5,
+            'ttl': 3600,
+           u'minimum_seconds': 5,
+            'record_type': u'soa',
+             'view_name': u'external',
+            'last_user': u'sharrell',
+            'zone_name': u'4.3.2.in-addr',
+           u'admin_email': u'admin@university.edu.',
+           u'expiry_seconds': 5},
+       15: {'target': u'1',
+            'ttl': 3600,
+            'record_type': u'ptr',
+            'view_name': u'external',
+            'last_user': u'sharrell',
+            'zone_name': u'4.3.2.in-addr',
+           u'assignment_host': u'computer1.university.edu.'}},
+     (u'168.192.in-addr', u'internal_dep'): 
+      {16: {'target': u'4',
+            'ttl': 3600,
+            'record_type': u'ptr',
+            'view_name': u'internal',
+            'last_user': u'sharrell',
+            'zone_name': u'168.192.in-addr',
+           u'assignment_host': u'computer4.university.edu.'},
+       1: {u'serial_number': 20091225,
+           u'refresh_seconds': 5,
+            'target': u'@',
+           u'name_server': u'ns1.university.edu.',
+           u'retry_seconds': 5,
+            'ttl': 3600,
+           u'minimum_seconds': 5,
+            'record_type': u'soa',
+            'view_name': u'internal',
+            'last_user': u'sharrell',
+            'zone_name': u'168.192.in-addr',
+           u'admin_email': u'admin@university.edu.',
+           u'expiry_seconds': 5}},
+     (u'university.edu', u'private_dep'): 
+      {4: {u'serial_number': 20091227,
+           u'refresh_seconds': 5,
+            'target': u'@',
+           u'name_server': u'ns1.university.edu.',
+           u'retry_seconds': 5,
+            'ttl': 3600,
+           u'minimum_seconds': 5,
+            'record_type': u'soa',
+            'view_name': u'private',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'admin_email': u'admin@university.edu.',
+           u'expiry_seconds': 5}},
+     (u'university.edu', u'internal_dep'): 
+       {9: {'target': u'computer1',
+            'ttl': 3600,
+            'record_type': u'a',
+            'view_name': u'internal',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'assignment_ip': u'192.168.1.1'},
+       10: {'target': u'computer2',
+            'ttl': 3600,
+            'record_type': u'a',
+            'view_name': u'internal',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'assignment_ip': u'192.168.1.2'},
+       3: {u'serial_number': 20091229,
+           u'refresh_seconds': 5,
+            'target': u'@',
+           u'name_server': u'ns1.university.edu.',
+           u'retry_seconds': 5,
+            'ttl': 3600,
+           u'minimum_seconds': 5,
+            'record_type': u'soa',
+            'view_name': u'internal',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'admin_email': u'admin@university.edu.',
+           u'expiry_seconds': 5},
+       12: {'target': u'computer4',
+            'ttl': 3600,
+            'record_type': u'a',
+            'view_name': u'internal',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'assignment_ip': u'192.168.1.4'}},
+    (u'university.edu', u'any'): 
+      {14: {'target': u'@',
+           u'name_server': u'ns2.university.edu.',
+            'ttl': 3600,
+            'record_type': u'ns',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu'},
+       13: {'target': u'@',
+           u'name_server': u'ns1.university.edu.',
+            'ttl': 3600,
+            'record_type': u'ns',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu'},
+        6: {'target': u'@',
+            'ttl': 3600,
+           u'priority': 1,
+            'record_type': u'mx',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'mail_server': u'mail1.university.edu.'},
+        7: {'target': u'@',
+            'ttl': 3600,
+           u'priority': 1,
+            'record_type': u'mx',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'mail_server': u'mail2.university.edu.'}}})
 
   def testTreeExporterExportAllBindTreesError(self):
     zone_view_assignments_dict = self.db_instance.GetEmptyRowDict(
@@ -1440,97 +296,34 @@ class TestTreeExporter(unittest.TestCase):
    
     expected_n_conf = (
         u'#This named.conf file is autogenerated. DO NOT EDIT\n'
-         'include "/etc/rndc.key";\n'
-         'logging { category "update-security" { "security"; };\n'
-         'category "queries" { "query_logging"; };\n'
-         'channel "query_logging" { syslog local5;\n'
-         'severity info; };\n'
-         'category "client" { "null"; };\n'
-         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-         'print-time yes; }; };\n'
-         'options { directory "remote_bind_dir/named";\n'
-         'recursion no;\n'
-         'allow-query { any; };\n'
-         'max-cache-size 512M; };\n'
-         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-         'acl secret {\n'
-         '\t10.10/32;\n'
-         '};\n'
-         '\n'
-         'acl public {\n'
-         '\t192.168.1.4/30;\n'
-         '\t10.10/32;\n'
-         '};\n'
-         '\n'
-         'view "external" {\n'
-         '\tmatch-clients { \n'
-         '\t\tpublic;\n'
-         '\t };\n'
-         '\trecursion no;\n'
-         '\tzone "." {\n'
-         '\t\ttype hint;\n'
-         '\t\tfile "named.ca";\n'
-         '\t};\n'
-         '\tzone "university.edu" {\n'
-         '\t\ttype master;\n'
-         '\t\tfile "external/university.edu.db";\n'
-         '\t\talso-notify { 192.168.1.10;\n'
-         '\t\t192.168.1.7;\n'
-         '\t\t192.168.1.6;\n'
-         '\t\t192.168.1.5;\n'
-         '\t\t192.168.1.9;\n'
-         '\t\t192.168.1.8; };\n'
-         '\t\tallow-update { none; };\n'
-         '\t};\n'
-	 '\tzone "otheruniversity.edu" {\n'
-         '\t\ttype slave;\n'
-         '\t\tfile "external/otheruniversity.edu.db";\n'
-         '\t\tmasters { 192.168.0.1; };\n'
-	 '\t};\n'
-         '\tzone "4.3.2.1.in-addr.arpa" {\n'
-         '\t\ttype master;\n'
-         '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
-         '\t\talso-notify { 192.168.1.10;\n'
-         '\t\t192.168.1.7;\n'
-         '\t\t192.168.1.6;\n'
-         '\t\t192.168.1.5;\n'
-         '\t\t192.168.1.9;\n'
-         '\t\t192.168.1.8; };\n'
-         '\t\tallow-update { none; };\n'
-         '\t};\n'
-         '};\n'
-         'view "internal" {\n'
-         '\tmatch-clients { \n'
-         '\t\t!public;\n'
-         '\t\t!secret;\n'
-         '\t };\n'
-         '\trecursion no;\n'
-         '\tzone "." {\n'
-         '\t\ttype hint;\n'
-         '\t\tfile "named.ca";\n'
-         '\t};\n'
-         '\tzone "university.edu" {\n'
-         '\t\ttype master;\n'
-         '\t\tfile "internal/university.edu.db";\n'
-         '\t\talso-notify { 192.168.1.10;\n'
-         '\t\t192.168.1.7;\n'
-         '\t\t192.168.1.6;\n'
-         '\t\t192.168.1.5;\n'
-         '\t\t192.168.1.9;\n'
-         '\t\t192.168.1.8; };\n'
-         '\t\tallow-update { none; };\n'
-         '\t};\n'
-         '\tzone "168.192.in-addr.arpa" {\n'
-         '\t\ttype master;\n'
-         '\t\tfile "internal/168.192.in-addr.arpa.db";\n'
-         '\t\tallow-update { none; };\n'
-         '\t};\n'
-	 '\tzone "otheruniversity.edu" {\n'
-         '\t\ttype slave;\n'
-         '\t\tfile "internal/otheruniversity.edu.db";\n'
-         '\t\tmasters { 192.168.0.1; };\n'
-	 '\t};\n'
-         '};')
+        'include "/etc/rndc.key";\n'
+        'logging { category "update-security" { "security"; };\n'
+        'category "queries" { "query_logging"; };\n'
+        'channel "query_logging" { syslog local5;\n'
+        'severity info; };\n'
+        'category "client" { "null"; };\n'
+        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
+        'print-time yes; }; };\n'
+        'options { directory "remote_bind_dir/named";\n'
+        'recursion no;\n'
+        'max-cache-size 512M; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
+        'acl secret {\n'
+        '\t''10.10/32;\n'
+        '};\n'
+        '\n'
+        'acl public {\n'
+        '\t'
+        '192.168.1.4/30;\n'
+        '\t10.10/32;\n'
+        '};\n'
+        '\n'
+        'view "external" {\n'
+        '\tmatch-clients { \n'
+        '\t\tpublic;\n'
+        '\t };\n'
+        '\trecursion no;\n\tzone "." {\n\t\ttype hint;\n\t\tfile "named.ca";\n\t};\n\tzone "university.edu" {\n\t\ttype master;\n\t\tfile "external/university.edu.db";\n\t\tallow-update { none; };\n\t};\n\tzone "4.3.2.in-addr.arpa" {\n\t\ttype master;\n\t\tfile "external/4.3.2.in-addr.db";\n\t\tallow-update { none; };\n\t};\n};\nview "internal" {\n\tmatch-clients { \n\t\t!public;\n\t\tsecret;\n\t };\n\trecursion no;\n\tzone "." {\n\t\ttype hint;\n\t\tfile "named.ca";\n\t};\n\tzone "university.edu" {\n\t\ttype master;\n\t\tfile "internal/university.edu.db";\n\t\tallow-update { none; };\n\t};\n\tzone "168.192.in-addr.arpa" {\n\t\ttype master;\n\t\tfile "internal/168.192.in-addr.db";\n\t\tallow-update { none; };\n\t};\n};')
+
 
     self.assertEqual(n_conf, expected_n_conf)
 
@@ -1540,99 +333,69 @@ class TestTreeExporter(unittest.TestCase):
 
     expected_binary_n_conf = (
         u'#This named.conf file is autogenerated. DO NOT EDIT\n'
-         'include "/etc/rndc.key";\n'
-         'logging { category "update-security" { "security"; };\n'
-         'category "queries" { "query_logging"; };\n'
-         'channel "query_logging" { syslog local5;\n'
-         'severity info; };\n'
-         'category "client" { "null"; };\n'
-         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-         'print-time yes; }; };\n'
-         'options { directory "remote_bind_dir/named";\n'
-         'masterfile-format raw;\n'
-         'allow-query { any; };\n'
-         'recursion no;\n'
-         'max-cache-size 512M; };\n'
-         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-         'acl secret {\n'
-         '\t10.10/32;\n'
-         '};\n'
-         '\n'
-         'acl public {\n'
-         '\t192.168.1.4/30;\n'
-         '\t10.10/32;\n'
-         '};\n'
-         '\n'
-         'view "external" {\n'
-         '\tmatch-clients { \n'
-         '\t\tpublic;\n'
-         '\t };\n'
-         '\trecursion no;\n'
-         '\tzone "." {\n'
-         '\t\ttype hint;\n'
-         '\t\tfile "named.ca";\n'
-         '\t};\n'
-         '\tzone "university.edu" {\n'
-         '\t\ttype master;\n'
-         '\t\tfile "external/university.edu.db";\n'
-         '\t\talso-notify { 192.168.1.10;\n'
-         '\t\t192.168.1.7;\n'
-         '\t\t192.168.1.6;\n'
-         '\t\t192.168.1.5;\n'
-         '\t\t192.168.1.9;\n'
-         '\t\t192.168.1.8; };\n'
-         '\t\tallow-update { none; };\n'
-         '\t};\n'
-	 '\tzone "otheruniversity.edu" {\n'
-         '\t\ttype slave;\n'
-         '\t\tfile "external/otheruniversity.edu.db";\n'
-         '\t\tmasters { 192.168.0.1; };\n'
-	 '\t};\n'
-         '\tzone "4.3.2.1.in-addr.arpa" {\n'
-         '\t\ttype master;\n'
-         '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
-         '\t\talso-notify { 192.168.1.10;\n'
-         '\t\t192.168.1.7;\n'
-         '\t\t192.168.1.6;\n'
-         '\t\t192.168.1.5;\n'
-         '\t\t192.168.1.9;\n'
-         '\t\t192.168.1.8; };\n'
-         '\t\tallow-update { none; };\n'
-         '\t};\n'
-         '};\n'
-         'view "internal" {\n'
-         '\tmatch-clients { \n'
-         '\t\t!public;\n'
-         '\t\t!secret;\n'
-         '\t };\n'
-         '\trecursion no;\n'
-         '\tzone "." {\n'
-         '\t\ttype hint;\n'
-         '\t\tfile "named.ca";\n'
-         '\t};\n'
-         '\tzone "university.edu" {\n'
-         '\t\ttype master;\n'
-         '\t\tfile "internal/university.edu.db";\n'
-         '\t\talso-notify { 192.168.1.10;\n'
-         '\t\t192.168.1.7;\n'
-         '\t\t192.168.1.6;\n'
-         '\t\t192.168.1.5;\n'
-         '\t\t192.168.1.9;\n'
-         '\t\t192.168.1.8; };\n'
-         '\t\tallow-update { none; };\n'
-         '\t};\n'
-         '\tzone "168.192.in-addr.arpa" {\n'
-         '\t\ttype master;\n'
-         '\t\tfile "internal/168.192.in-addr.arpa.db";\n'
-         '\t\tallow-update { none; };\n'
-         '\t};\n'
-	 '\tzone "otheruniversity.edu" {\n'
-         '\t\ttype slave;\n'
-         '\t\tfile "internal/otheruniversity.edu.db";\n'
-         '\t\tmasters { 192.168.0.1; };\n'
-	 '\t};\n'
-         '};')
-
+        'include "/etc/rndc.key";\n'
+        'logging { category "update-security" { "security"; };\n'
+        'category "queries" { "query_logging"; };\n'
+        'channel "query_logging" { syslog local5;\n'
+        'severity info; };\n'
+        'category "client" { "null"; };\n'
+        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
+        'print-time yes; }; };\n'
+        'options { directory "remote_bind_dir/named";\n'
+        'masterfile-format raw;\n'
+        'recursion no;\n'
+        'max-cache-size 512M; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
+        'acl secret {\n'
+        '\t10.10/32;\n'
+        '};\n'
+        '\n'
+        'acl public {\n'
+        '\t192.168.1.4/30;\n'
+        '\t10.10/32;\n'
+        '};\n'
+        '\n'
+        'view "external" {\n'
+        '\tmatch-clients { \n'
+        '\t\tpublic;\n'
+        '\t };\n'
+        '\trecursion no;\n'
+        '\tzone "." {\n'
+        '\t\ttype hint;\n'
+        '\t\tfile "named.ca";\n'
+        '\t};\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "external/university.edu.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "4.3.2.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "external/4.3.2.in-addr.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};\n'
+        'view "internal" {\n'
+        '\tmatch-clients { \n'
+        '\t\t!public;\n'
+        '\t\tsecret;\n'
+        '\t };\n'
+        '\trecursion no;\n'
+        '\tzone "." {\n'
+        '\t\ttype hint;\n'
+        '\t\tfile "named.ca";\n'
+        '\t};\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "internal/university.edu.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "168.192.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "internal/168.192.in-addr.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};')
     self.assertEqual(binary_n_conf, expected_binary_n_conf)
 
     for fname in ['audit_log_replay_dump-1.bz2', 'full_database_dump-1.bz2',
@@ -1712,31 +475,23 @@ class TestTreeExporter(unittest.TestCase):
          {'dns_server_set_name':u'internal_dns'},
          {'dns_server_set_name':u'private_dns'}))
 
-    test_assignments = [{'view_acl_assignments_view_name': u'external',
-                         'view_acl_assignments_dns_server_set_name':
-                             u'internal_dns',
-                         'view_acl_assignments_acl_name': u'public',
-                         'view_acl_assignments_range_allowed': 1},
-                        {'view_acl_assignments_view_name': u'external',
-                         'view_acl_assignments_dns_server_set_name':
-                             u'external_dns',
-                         'view_acl_assignments_acl_name': u'public',
-                         'view_acl_assignments_range_allowed': 1},
-                        {'view_acl_assignments_view_name': u'internal',
-                         'view_acl_assignments_dns_server_set_name':
-                             u'internal_dns',
-                         'view_acl_assignments_acl_name': u'public',
-                         'view_acl_assignments_range_allowed': 0},
-                        {'view_acl_assignments_view_name': u'internal',
-                         'view_acl_assignments_dns_server_set_name':
-                             u'internal_dns',
-                         'view_acl_assignments_acl_name': u'secret',
-                         'view_acl_assignments_range_allowed': 0},
-                        {'view_acl_assignments_view_name': u'private',
-                         'view_acl_assignments_dns_server_set_name':
-                             u'private_dns',
-                         'view_acl_assignments_acl_name': u'secret',
-                         'view_acl_assignments_range_allowed': 1}]
+    test_assignments = [{'view_acl_assignments_range_allowed': 1, 
+                        'view_acl_assignments_view_name': u'internal', 
+                        'view_acl_assignments_dns_server_set_name': u'internal_dns', 
+                        'view_acl_assignments_acl_name': u'secret'}, 
+                       {'view_acl_assignments_range_allowed': 0, 
+                        'view_acl_assignments_view_name':
+                        u'internal', 'view_acl_assignments_dns_server_set_name': u'internal_dns',
+                        'view_acl_assignments_acl_name': u'public'},
+                       {'view_acl_assignments_range_allowed': 1,
+                        'view_acl_assignments_view_name': u'external',
+                        'view_acl_assignments_dns_server_set_name': u'internal_dns',
+                        'view_acl_assignments_acl_name': u'public'},
+                       {'view_acl_assignments_range_allowed': 0,
+                        'view_acl_assignments_view_name': u'private',
+                        'view_acl_assignments_dns_server_set_name': u'private_dns',
+                        'view_acl_assignments_acl_name': u'secret'}]
+
     self.assertTrue(len(raw_data[0]['view_acl_assignments']) ==
                     len(test_assignments))
 
@@ -1758,91 +513,54 @@ class TestTreeExporter(unittest.TestCase):
           'view_dependency_assignments_view_name':u'private'}))
 
     self.assertEqual(raw_data[0]['zone_view_assignments'],
-        ({'zone_options': u'(dp1\nVmasters\np2\n(dp3\nV192.168.0.1\np4\nI01\nss.',
-          'zone_origin': u'otheruniversity.edu.',
-          'zone_view_assignments_view_dependency': u'any',
-          'zone_view_assignments_zone_name': u'otheruniversity.edu',
-          'zone_view_assignments_zone_type': u'slave'},
-         {'zone_options': u'(dp1\nVmasters\np2\n(dp3\nV192.168.0.1\np4\nI01\nss.',
-          'zone_origin': u'otheruniversity.edu.',
-          'zone_view_assignments_view_dependency': u'internal_dep',
-          'zone_view_assignments_zone_name': u'otheruniversity.edu',
-          'zone_view_assignments_zone_type': u'slave'},
-         {'zone_options': u'(dp1\nVmasters\np2\n(dp3\nV192.168.0.1\np4\nI01\nss.',
-          'zone_origin': u'otheruniversity.edu.',
-          'zone_view_assignments_view_dependency': u'external_dep',
-          'zone_view_assignments_zone_name': u'otheruniversity.edu',
-          'zone_view_assignments_zone_type': u'slave'},
-         {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
-         u'master', 'zone_view_assignments_zone_name': u'university.edu', 
-          'zone_view_assignments_view_dependency': u'any', 'zone_options': 
-         u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\np4\nI01\n'
-         'sV192.168.1.7\np5\nI01\nsV192.168.1.6\np6\nI01\nsV192.168.1.5\np7\n'
-         'I01\nsV192.168.1.9\np8\nI01\nsV192.168.1.8\np9\nI01\n'
-         'ssVallow-update\np10\n(dp11\nVnone\np12\nI01\nss.'}, 
-         {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
-         u'master', 'zone_view_assignments_zone_name': u'university.edu', 
-          'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\n'
-          'p4\nI01\nsV192.168.1.7\np5\nI01\nsV192.168.1.6\np6\nI01\n'
-          'sV192.168.1.5\np7\nI01\nsV192.168.1.9\np8\nI01\nsV192.168.1.8\np9\n'
-          'I01\nssVallow-update\np10\n(dp11\nVnone\np12\nI01\nss.'},
-         {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type':
-         u'master', 'zone_view_assignments_zone_name': u'university.edu', 
-          'zone_view_assignments_view_dependency': u'external_dep', 
-          'zone_options': u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\np4\n'
-          'I01\nsV192.168.1.7\np5\nI01\nsV192.168.1.6\np6\nI01\nsV192.168.1.5\n'
-          'p7\nI01\nsV192.168.1.9\np8\nI01\nsV192.168.1.8\np9\nI01\n'
-          'ssVallow-update\np10\n(dp11\nVnone\np12\nI01\nss.'},
-         {'zone_origin': u'university.edu.', 'zone_view_assignments_zone_type': 
-         u'master', 'zone_view_assignments_zone_name': u'university.edu', 
-          'zone_view_assignments_view_dependency': u'private_dep', 'zone_options':
-         u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\np4\nI01\nsV192.168.1.7\n'
-         'p5\nI01\nsV192.168.1.6\np6\nI01\nsV192.168.1.5\np7\nI01\nsV192.168.1.9\n'
-         'p8\nI01\nsV192.168.1.8\np9\nI01\nssVallow-update\np10\n(dp11\nVnone\n'
-         'p12\nI01\nss.'}, {'zone_origin':
-         u'university2.edu.', 'zone_view_assignments_zone_type': u'master', 
-          'zone_view_assignments_zone_name': u'int.university.edu', 
-          'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university2.edu.', 'zone_view_assignments_zone_type':
-         u'master', 'zone_view_assignments_zone_name': u'int.university.edu',
-          'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options':  u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'university3.edu.', 'zone_view_assignments_zone_type':
-         u'master', 'zone_view_assignments_zone_name': u'priv.university.edu',
-          'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'168.192.in-addr.arpa.', 
-          'zone_view_assignments_zone_type': u'master', 
-          'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
-          'zone_view_assignments_view_dependency': u'internal_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
-         {'zone_origin': u'168.192.in-addr.arpa.', 
-          'zone_view_assignments_zone_type': u'master', 
-          'zone_view_assignments_zone_name': u'168.192.in-addr.arpa', 
-          'zone_view_assignments_view_dependency': u'external_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
-         {'zone_origin': u'168.192.in-addr.arpa.', 'zone_view_assignments_zone_type':
-         u'master', 'zone_view_assignments_zone_name': u'168.192.in-addr.arpa',
-          'zone_view_assignments_view_dependency': u'private_dep', 
-          'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}, 
-         {'zone_origin': u'4.3.2.1.in-addr.arpa.', 'zone_view_assignments_zone_type':
-         u'master', 'zone_view_assignments_zone_name': u'4.3.2.1.in-addr.arpa', 
-          'zone_view_assignments_view_dependency': u'external_dep', 'zone_options': 
-         u'(dp1\nValso-notify\np2\n(dp3\nV192.168.1.10\np4\nI01\nsV192.168.1.7\n'
-         'p5\nI01\nsV192.168.1.6\np6\nI01\nsV192.168.1.5\np7\nI01\n'
-         'sV192.168.1.9\np8\nI01\nsV192.168.1.8\np9\nI01\nssVallow-update\n'
-         'p10\n(dp11\nVnone\np12\nI01\nss.'}))
+         ({'zone_origin': u'university.edu.',
+           'zone_view_assignments_zone_type': u'master',
+           'zone_view_assignments_zone_name': u'university.edu',
+           'zone_view_assignments_view_dependency': u'internal_dep',
+           'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          {'zone_origin': u'university.edu.',
+           'zone_view_assignments_zone_type': u'master',
+           'zone_view_assignments_zone_name': u'university.edu',
+           'zone_view_assignments_view_dependency': u'any',
+           'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          {'zone_origin': u'university.edu.',
+           'zone_view_assignments_zone_type': u'master',
+           'zone_view_assignments_zone_name': u'university.edu',
+           'zone_view_assignments_view_dependency': u'external_dep',
+           'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          {'zone_origin': u'university.edu.',
+           'zone_view_assignments_zone_type': u'master',
+           'zone_view_assignments_zone_name': u'university.edu',
+           'zone_view_assignments_view_dependency': u'private_dep',
+           'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          {'zone_origin': u'university2.edu.',
+           'zone_view_assignments_zone_type': u'master',
+           'zone_view_assignments_zone_name': u'int.university.edu',
+           'zone_view_assignments_view_dependency': u'internal_dep',
+           'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          {'zone_origin': u'university3.edu.',
+           'zone_view_assignments_zone_type': u'master',
+           'zone_view_assignments_zone_name': u'priv.university.edu',
+           'zone_view_assignments_view_dependency': u'private_dep',
+           'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          {'zone_origin': u'168.192.in-addr.arpa.',
+           'zone_view_assignments_zone_type': u'master',
+           'zone_view_assignments_zone_name': u'168.192.in-addr',
+           'zone_view_assignments_view_dependency': u'internal_dep',
+           'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'},
+          {'zone_origin': u'4.3.2.in-addr.arpa.',
+           'zone_view_assignments_zone_type': u'master',
+           'zone_view_assignments_zone_name': u'4.3.2.in-addr',
+           'zone_view_assignments_view_dependency': u'external_dep',
+           'zone_options': u'(dp1\nVallow-update\np2\n(dp3\nVnone\np4\nI01\nss.'}))
 
     ## Testing the RawDump raw_data[1]
     self.assertEqual(raw_data[1]['zones']['rows'],
-            [{'zone_name': u"'168.192.in-addr.arpa'", 'zones_id': u'8'},
-             {'zone_name': u"'4.3.2.1.in-addr.arpa'", 'zones_id': u'9'},
-             {'zone_name': u"'int.university.edu'", 'zones_id': u'6'},
-             {'zone_name': u"'otheruniversity.edu'", 'zones_id': u'4'},
-             {'zone_name': u"'priv.university.edu'", 'zones_id': u'7'},
-             {'zone_name': u"'university.edu'", 'zones_id': u'5'}])
+         [{'zone_name': u"'168.192.in-addr'", 'zones_id': u'7'},
+          {'zone_name': u"'4.3.2.in-addr'", 'zones_id': u'8'},
+          {'zone_name': u"'int.university.edu'", 'zones_id': u'5'},
+          {'zone_name': u"'priv.university.edu'", 'zones_id': u'6'},
+          {'zone_name': u"'university.edu'", 'zones_id': u'4'}])
 
     self.assertEqual(raw_data[1]['reserved_words']['columns'],
         [u'reserved_word_id', u'reserved_word'])
@@ -1871,24 +589,24 @@ class TestTreeExporter(unittest.TestCase):
           'users_id': '4'}])
 
     self.assertEqual(raw_data[1]['view_dependency_assignments']['rows'],
-        [{'view_dependency_assignments_id': '2',
-          'view_dependency_assignments_view_dependency': "'any'",
-          'view_dependency_assignments_view_name': "'external'"},
-         {'view_dependency_assignments_id': '5',
-          'view_dependency_assignments_view_dependency': "'external_dep'",
-          'view_dependency_assignments_view_name': "'external'"},
-         {'view_dependency_assignments_id': '1',
-          'view_dependency_assignments_view_dependency': "'any'",
-          'view_dependency_assignments_view_name': "'internal'"},
-         {'view_dependency_assignments_id': '4',
-          'view_dependency_assignments_view_dependency': "'internal_dep'",
-          'view_dependency_assignments_view_name': "'internal'"},
-         {'view_dependency_assignments_id': '3',
-          'view_dependency_assignments_view_dependency': "'any'",
-          'view_dependency_assignments_view_name': "'private'"},
-         {'view_dependency_assignments_id': '6',
-          'view_dependency_assignments_view_dependency': "'private_dep'",
-          'view_dependency_assignments_view_name': "'private'"}])
+        [{'view_dependency_assignments_view_dependency': u"'any'",
+          'view_dependency_assignments_id': u'4',
+          'view_dependency_assignments_view_name': u"'external'"},
+         {'view_dependency_assignments_view_dependency': u"'external_dep'",
+          'view_dependency_assignments_id': u'3',
+          'view_dependency_assignments_view_name': u"'external'"},
+         {'view_dependency_assignments_view_dependency': u"'any'",
+          'view_dependency_assignments_id': u'2',
+          'view_dependency_assignments_view_name': u"'internal'"},
+         {'view_dependency_assignments_view_dependency': u"'internal_dep'",
+          'view_dependency_assignments_id': u'1',
+          'view_dependency_assignments_view_name': u"'internal'"},
+         {'view_dependency_assignments_view_dependency': u"'any'",
+          'view_dependency_assignments_id': u'6',
+          'view_dependency_assignments_view_name': u"'private'"},
+         {'view_dependency_assignments_view_dependency': u"'private_dep'",
+          'view_dependency_assignments_id': u'5',
+          'view_dependency_assignments_view_name': u"'private'"}])
 
   def testTreeExporterCookData(self):
     self.tree_exporter_instance.db_instance.StartTransaction()
@@ -1897,370 +615,327 @@ class TestTreeExporter(unittest.TestCase):
     cooked_data = self.tree_exporter_instance.CookData(raw_data[0])
 
     self.assertEqual(cooked_data['dns_server_sets']['external_dns'],
-            {'dns_servers': [u'dns2.university.edu',
-             u'dns3.university.edu',
-             u'ns1.university.edu'],
-             u'view_order': {1: u'external'},
-             'views': {u'external': {
-               'view_options': u'recursion no;',
-               'zones': { u'otheruniversity.edu':
-              {'records': [],
-              'zone_options': u'masters { 192.168.0.1; };',
-              'zone_origin': 'otheruniversity.edu.',
-              'zone_type': u'slave'},
-             u'university.edu': {
-             'zone_type': u'master',
-             'records': [{'target': '@',
-             'ttl': 3600,
-             u'priority': 1,
-             'record_type': u'mx',
-             'view_name': u'any',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu',
-             u'mail_server': u'mail2.university.edu.'},
-             {'target': '@',
-             'ttl': 3600,
-             u'priority': 1,
-             'record_type': u'mx',
-             'view_name': u'any',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu',
-             u'mail_server': u'mail1.university.edu.'},
-             {'target': '@',
-             u'name_server': u'ns2.university.edu',
-             'ttl': 3600,
-             'record_type': u'ns',
-             'view_name': u'any',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu'},
-             {'target': '@',
-             u'name_server': u'ns1.university.edu',
-             'ttl': 3600,
-             'record_type': u'ns',
-             'view_name': u'any',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu'},
-             {u'serial_number': 20091227,
-             u'refresh_seconds': 5,
-             'target': 'university.edu.',
-             u'name_server': u'ns1.university.edu.',
-             u'retry_seconds': 5,
-             'ttl': 3600,
-             u'minimum_seconds': 5,
-             'record_type': u'soa',
-             'view_name': u'external',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu',
-             u'admin_email': u'admin@university.edu.',
-             u'expiry_seconds': 5},
-             {'target': 'computer1',
-             'ttl': 3600,
-             'record_type': u'a',
-             'view_name': u'external',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu',
-             u'assignment_ip': u'1.2.3.5'},
-             {'target': 'computer3',
-             'ttl': 3600,
-             'record_type': u'a',
-             'view_name': u'external',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu',
-             u'assignment_ip': u'1.2.3.6'}],
-             'zone_origin': 'university.edu.',
-             'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
-             '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
-             'allow-update { none; };'},
-             u'4.3.2.1.in-addr.arpa': {'zone_type': u'master',
-             'records': [{u'serial_number': 20091224,
-             u'refresh_seconds': 5,
-             'target': '4.3.2.1.in-addr.arpa.',
-             u'name_server': u'ns1.university.edu.',
-             u'retry_seconds': 5,
-             'ttl': 3600,
-             u'minimum_seconds': 5,
-             'record_type': u'soa',
-             'view_name': u'external',
-             'last_user': u'sharrell',
-             'zone_name': u'4.3.2.1.in-addr.arpa',
-             u'admin_email': u'admin@university.edu.',
-             u'expiry_seconds': 5},
-             {'target': 'xn--35gc625a.sn',
-             'ttl': 3600,
-             'record_type': u'ptr',
-             'view_name': u'external',
-             'last_user': u'sharrell',
-             'zone_name': u'4.3.2.1.in-addr.arpa',
-             u'assignment_host': 'computer1'}],
-             'zone_origin': '4.3.2.1.in-addr.arpa.',
-             'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
-             '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
-             'allow-update { none; };'}},
-             'acls': [u'public']}}})
+         {'dns_servers': [u'ns1.university.edu', u'dns2.university.edu', u'dns3.university.edu'],
+          'view_order': {1: u'external'},
+          'views': {u'external': {'view_options': u'recursion no;',
+          'zones': {u'university.edu': {'zone_type': u'master',
+          'records': [{'target': '@',
+                      u'name_server': u'ns2.university.edu.',
+                       'ttl': 3600,
+                       'record_type': u'ns',
+                       'view_name': u'any',
+                       'last_user': u'sharrell',
+                       'zone_name': u'university.edu'},
+                      {'target': '@',
+                       u'name_server': u'ns1.university.edu.',
+                       'ttl': 3600,
+                       'record_type': u'ns',
+                       'view_name': u'any',
+                       'last_user': u'sharrell',
+                       'zone_name': u'university.edu'},
+                      {'target': '@',
+                       'ttl': 3600,
+                      u'priority': 1,
+                       'record_type': u'mx',
+                       'view_name': u'any',
+                       'last_user': u'sharrell',
+                       'zone_name': u'university.edu',
+                      u'mail_server': u'mail1.university.edu.'},
+                      {'target': '@',
+                       'ttl': 3600,
+                      u'priority': 1,
+                       'record_type': u'mx',
+                       'view_name': u'any',
+                       'last_user': u'sharrell',
+                       'zone_name': u'university.edu',
+                      u'mail_server': u'mail2.university.edu.'},
+                      {'target': 'computer1',
+                       'ttl': 3600,
+                       'record_type': u'a',
+                       'view_name': u'external',
+                       'last_user': u'sharrell',
+                       'zone_name': u'university.edu',
+                      u'assignment_ip': u'1.2.3.5'},
+                      {'target': 'computer3',
+                       'ttl': 3600,
+                       'record_type': u'a',
+                       'view_name': u'external',
+                       'last_user': u'sharrell',
+                       'zone_name': u'university.edu',
+                      u'assignment_ip': u'1.2.3.6'},
+                     {u'serial_number': 20091234,
+                      u'refresh_seconds': 5,
+                       'target': '@',
+                      u'name_server': u'ns1.university.edu.',
+                      u'retry_seconds': 5,
+                       'ttl': 3600,
+                      u'minimum_seconds': 5,
+                       'record_type': u'soa',
+                       'view_name': u'external',
+                       'last_user': u'sharrell',
+                       'zone_name': u'university.edu',
+                      u'admin_email': u'admin@university.edu.',
+                      u'expiry_seconds': 5}],
+          'zone_origin': 'university.edu.',
+          'zone_options': u'allow-update { none; };'},
+
+         u'4.3.2.in-addr': {'zone_type': u'master',
+                     'records': [{u'serial_number': 20091226,
+                      u'refresh_seconds': 5,
+                       'target': '@',
+                      u'name_server': u'ns1.university.edu.',
+                      u'retry_seconds': 5,
+                       'ttl': 3600,
+                      u'minimum_seconds': 5,
+                       'record_type': u'soa',
+                       'view_name': u'external',
+                       'last_user': u'sharrell',
+                       'zone_name': u'4.3.2.in-addr',
+                      u'admin_email': u'admin@university.edu.',
+                      u'expiry_seconds': 5},
+                      {'target': '1',
+                       'ttl': 3600,
+                       'record_type': u'ptr',
+                       'view_name': u'external',
+                       'last_user': u'sharrell',
+                       'zone_name': u'4.3.2.in-addr',
+                      u'assignment_host': 'computer1.university.edu.'}],
+                        'zone_origin': '4.3.2.in-addr.arpa.', 
+                        'zone_options': u'allow-update { none; };'}}, 
+         'acls': [u'public']}}})
 
     self.assertEqual(cooked_data['dns_server_sets']['private_dns'],
-            {'dns_servers': [u'dns4.university.edu',
-             u'ns1.int.university.edu'],
-             u'view_order': {3: u'private'},
-             'views': {u'private': {
-               'view_options': u'recursion no;',
-               'zones': {
-             u'otheruniversity.edu': {'records': [],
-             'zone_options': u'masters { 192.168.0.1; };',
-             'zone_origin': 'otheruniversity.edu.',
-             'zone_type': u'slave'},  
-             u'university.edu': {
-             'zone_type': u'master',
-             'records': [{'target': '@',
-             'ttl': 3600,
-             u'priority': 1,
-             'record_type': u'mx',
-             'view_name': u'any',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu',
-             u'mail_server': u'mail2.university.edu.'},
-             {'target': '@',
-             'ttl': 3600,
-             u'priority': 1,
-             'record_type': u'mx',
-             'view_name': u'any',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu',
-             u'mail_server': u'mail1.university.edu.'},
-             {'target': '@',
-             u'name_server': u'ns2.university.edu',
-             'ttl': 3600,
-             'record_type': u'ns',
-             'view_name': u'any',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu'},
-             {'target': '@',
-             u'name_server': u'ns1.university.edu',
-             'ttl': 3600,
-             'record_type': u'ns',
-             'view_name': u'any',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu'},
-             {u'serial_number': 20091225,
-             u'refresh_seconds': 5,
-             'target': 'university.edu.',
-             u'name_server': u'ns1.university.edu.',
-             u'retry_seconds': 5,
-             'ttl': 3600,
-             u'minimum_seconds': 5,
-             'record_type': u'soa',
-             'view_name': u'private',
-             'last_user': u'sharrell',
-             'zone_name': u'university.edu',
-             u'admin_email': u'admin@university.edu.',
-             u'expiry_seconds': 5}],
-             'zone_origin': 'university.edu.',
-             'zone_options': u'also-notify { 192.168.1.10;\n'
-             '192.168.1.7;\n192.168.1.6;\n192.168.1.5;\n'
-             '192.168.1.9;\n192.168.1.8; };\nallow-update { none; };'}},
-             'acls': [u'secret']}}})
+        {'dns_servers': [u'dns4.university.edu'],
+          'view_order': {1: u'private'},
+          'views': {u'private': {'view_options': u'recursion no;',
+          'zones': {u'university.edu': {'zone_type': u'master',
+          'records': [{'target': '@',
+           u'name_server': u'ns2.university.edu.',
+            'ttl': 3600,
+            'record_type': u'ns',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu'},
+           {'target': '@',
+           u'name_server': u'ns1.university.edu.',
+            'ttl': 3600,
+            'record_type': u'ns',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu'},
+           {'target': '@',
+            'ttl': 3600,
+           u'priority': 1,
+            'record_type': u'mx',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'mail_server': u'mail1.university.edu.'},
+           {'target': '@',
+            'ttl': 3600,
+           u'priority': 1,
+            'record_type': u'mx',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'mail_server': u'mail2.university.edu.'},
+          {u'serial_number': 20091227,
+           u'refresh_seconds': 5,
+            'target': '@',
+           u'name_server': u'ns1.university.edu.',
+           u'retry_seconds': 5,
+            'ttl': 3600,
+           u'minimum_seconds': 5,
+            'record_type': u'soa',
+            'view_name': u'private',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu',
+           u'admin_email': u'admin@university.edu.',
+           u'expiry_seconds': 5}],
+            'zone_origin': 'university.edu.',
+            'zone_options': u'allow-update { none; };'}},
+            'acls': [u'secret']}}})
 
     self.assertEqual(cooked_data['dns_server_sets']['internal_dns'],
-        {'dns_servers': [u'dns1.university.edu',
-        u'ns1.int.university.edu'],
-         'view_order': {1: u'external', 2: u'internal'},
-         'views': {u'internal': {
-           'view_options': u'recursion no;',
-           'zones': {
-         u'otheruniversity.edu': {'records': [],
-         'zone_options': u'masters { 192.168.0.1; };',
-         'zone_origin': 'otheruniversity.edu.',
-         'zone_type': u'slave'},
-         u'university.edu': {
-         'zone_type': u'master',
-         'records': [{'target': '@',
-         'ttl': 3600,
-         u'priority': 1,
-         'record_type': u'mx',
-         'view_name': u'any',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'mail_server': u'mail2.university.edu.'},
-         {'target': '@',
-         'ttl': 3600,
-         u'priority': 1,
-         'record_type': u'mx',
-         'view_name': u'any',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'mail_server': u'mail1.university.edu.'},
-         {'target': '@',
-         u'name_server': u'ns2.university.edu',
-         'ttl': 3600,
-         'record_type': u'ns',
-         'view_name': u'any',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu'},
-         {'target': '@',
-         u'name_server': u'ns1.university.edu',
-         'ttl': 3600,
-         'record_type': u'ns',
-         'view_name': u'any',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu'},
-         {'target': 'computer4',
-         'ttl': 3600,
-         'record_type': u'a',
-         'view_name': u'internal',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'assignment_ip': u'192.168.1.4'},
-         {u'serial_number': 20091225,
-         u'refresh_seconds': 5,
-         'target': 'university.edu.',
-         u'name_server': u'ns1.university.edu.',
-         u'retry_seconds': 5,
-         'ttl': 3600,
-         u'minimum_seconds': 5,
-         'record_type': u'soa',
-         'view_name': u'internal',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'admin_email': u'admin@university.edu.',
-         u'expiry_seconds': 5},
-         {'target': 'computer1',
-         'ttl': 3600,
-         'record_type': u'a',
-         'view_name': u'internal',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'assignment_ip': u'192.168.1.1'},
-         {'target': 'computer2',
-         'ttl': 3600,
-         'record_type': u'a',
-         'view_name': u'internal',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'assignment_ip': u'192.168.1.2'}],
-         'zone_origin': 'university.edu.',
-         'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
-         '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
-         'allow-update { none; };'},
-         u'168.192.in-addr.arpa': {'zone_type': u'master',
-         'records': [{'target': '4',
-         'ttl': 3600,
-         'record_type': u'ptr',
-         'view_name': u'internal',
-         'last_user': u'sharrell',
-         'zone_name': u'168.192.in-addr.arpa',
-         u'assignment_host': 'computer4'},
-         {u'serial_number': 20091223,
-         u'refresh_seconds': 5,
-         'target': '168.192.in-addr.arpa.',
-         u'name_server': u'ns1.university.edu.',
-         u'retry_seconds': 5,
-         'ttl': 3600,
-         u'minimum_seconds': 5,
-         'record_type': u'soa',
-         'view_name': u'internal',
-         'last_user': u'sharrell',
-         'zone_name': u'168.192.in-addr.arpa',
-         u'admin_email': u'admin@university.edu.',
-         u'expiry_seconds': 5}],
-         'zone_origin': '168.192.in-addr.arpa.',
-         'zone_options': 'allow-update { none; };'}},
-         'acls': [u'secret',
-         u'public']},
-         u'external': {
-           'view_options': u'recursion no;',
-           'zones': {
-         u'otheruniversity.edu': {'records': [],
-         'zone_options': u'masters { 192.168.0.1; };',
-         'zone_origin': 'otheruniversity.edu.',
-         'zone_type': u'slave'},
-         u'university.edu': {'zone_type': u'master',
-         'records': [{'target': '@',
-         'ttl': 3600,
-         u'priority': 1,
-         'record_type': u'mx',
-         'view_name': u'any',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'mail_server': u'mail2.university.edu.'},
-         {'target': '@',
-         'ttl': 3600,
-         u'priority': 1,
-         'record_type': u'mx',
-         'view_name': u'any',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'mail_server': u'mail1.university.edu.'},
-         {'target': '@',
-         u'name_server': u'ns2.university.edu',
-         'ttl': 3600,
-         'record_type': u'ns',
-         'view_name': u'any',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu'},
-         {'target': '@',
-         u'name_server': u'ns1.university.edu',
-         'ttl': 3600,
-         'record_type': u'ns',
-         'view_name': u'any',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu'},
-         {u'serial_number': 20091227,
-         u'refresh_seconds': 5,
-         'target': 'university.edu.',
-         u'name_server': u'ns1.university.edu.',
-         u'retry_seconds': 5,
-         'ttl': 3600,
-         u'minimum_seconds': 5,
-         'record_type': u'soa',
-         'view_name': u'external',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'admin_email': u'admin@university.edu.',
-         u'expiry_seconds': 5},
-         {'target': 'computer1',
-         'ttl': 3600,
-         'record_type': u'a',
-         'view_name': u'external',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'assignment_ip': u'1.2.3.5'},
-         {'target': 'computer3',
-         'ttl': 3600,
-         'record_type': u'a',
-         'view_name': u'external',
-         'last_user': u'sharrell',
-         'zone_name': u'university.edu',
-         u'assignment_ip': u'1.2.3.6'}],
-         'zone_origin': 'university.edu.',
-         'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
-         '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
-         'allow-update { none; };'},
-         u'4.3.2.1.in-addr.arpa': {'zone_type': u'master',
-         'records': [{u'serial_number': 20091224,
-         u'refresh_seconds': 5,
-         'target': '4.3.2.1.in-addr.arpa.',
-         u'name_server': u'ns1.university.edu.',
-         u'retry_seconds': 5,
-         'ttl': 3600,
-         u'minimum_seconds': 5,
-         'record_type': u'soa',
-         'view_name': u'external',
-         'last_user': u'sharrell',
-         'zone_name': u'4.3.2.1.in-addr.arpa',
-         u'admin_email': u'admin@university.edu.',
-         u'expiry_seconds': 5},
-         {'target': 'xn--35gc625a.sn',
-         'ttl': 3600,
-         'record_type': u'ptr',
-         'view_name': u'external',
-         'last_user': u'sharrell',
-         'zone_name': u'4.3.2.1.in-addr.arpa',
-         u'assignment_host': 'computer1'}],
-         'zone_origin': '4.3.2.1.in-addr.arpa.',
-         'zone_options': u'also-notify { 192.168.1.10;\n192.168.1.7;\n'
-         '192.168.1.6;\n192.168.1.5;\n192.168.1.9;\n192.168.1.8; };\n'
-         'allow-update { none; };'}},
-         'acls': [u'public']}}})
+         {'dns_servers': [u'ns1.int.university.edu', u'dns1.university.edu'],
+           'view_order': {1: u'external', 2: u'internal'},
+           'views': {u'internal': {'view_options': u'recursion no;',
+             'zones': {u'university.edu': {'zone_type': u'master',
+               'records': [{'target': '@',
+                 u'name_server': u'ns2.university.edu.',
+                 'ttl': 3600,
+                 'record_type': u'ns',
+                 'view_name': u'any',
+                 'last_user': u'sharrell',
+                 'zone_name': u'university.edu'},
+                 {'target': '@',
+                   u'name_server': u'ns1.university.edu.',
+                   'ttl': 3600,
+                   'record_type': u'ns',
+                   'view_name': u'any',
+                   'last_user': u'sharrell',
+                   'zone_name': u'university.edu'},
+                 {'target': '@',
+                   'ttl': 3600,
+                   u'priority': 1,
+                   'record_type': u'mx',
+                   'view_name': u'any',
+                   'last_user': u'sharrell',
+                   'zone_name': u'university.edu',
+                   u'mail_server': u'mail1.university.edu.'},
+                 {'target': '@',
+                   'ttl': 3600,
+                   u'priority': 1,
+                   'record_type': u'mx',
+                   'view_name': u'any',
+                   'last_user': u'sharrell',
+                   'zone_name': u'university.edu',
+                   u'mail_server': u'mail2.university.edu.'},
+                 {'target': 'computer1',
+                   'ttl': 3600,
+                   'record_type': u'a',
+                   'view_name': u'internal',
+                   'last_user': u'sharrell',
+                   'zone_name': u'university.edu',
+                   u'assignment_ip': u'192.168.1.1'},
+                 {'target': 'computer2',
+                   'ttl': 3600,
+                   'record_type': u'a',
+                   'view_name': u'internal',
+                   'last_user': u'sharrell',
+                   'zone_name': u'university.edu',
+                   u'assignment_ip': u'192.168.1.2'},
+                 {u'serial_number': 20091229,
+                   u'refresh_seconds': 5,
+                   'target': '@',
+                   u'name_server': u'ns1.university.edu.',
+                   u'retry_seconds': 5,
+                   'ttl': 3600,
+                   u'minimum_seconds': 5,
+                   'record_type': u'soa',
+                   'view_name': u'internal',
+                   'last_user': u'sharrell',
+                   'zone_name': u'university.edu',
+                   u'admin_email': u'admin@university.edu.',
+                   u'expiry_seconds': 5},
+                 {'target': 'computer4',
+                     'ttl': 3600,
+                     'record_type': u'a',
+                     'view_name': u'internal',
+                     'last_user': u'sharrell',
+                     'zone_name': u'university.edu',
+                     u'assignment_ip': u'192.168.1.4'}],
+           'zone_origin': 'university.edu.',
+           'zone_options': u'allow-update { none; };'},
+      u'168.192.in-addr': {'zone_type': u'master',
+          'records': [{'target': '4',
+            'ttl': 3600,
+            'record_type': u'ptr',
+            'view_name': u'internal',
+            'last_user': u'sharrell',
+            'zone_name': u'168.192.in-addr',
+            u'assignment_host': 'computer4.university.edu.'},
+            {u'serial_number': 20091225,
+              u'refresh_seconds': 5,
+              'target': '@',
+              u'name_server': u'ns1.university.edu.',
+              u'retry_seconds': 5,
+              'ttl': 3600,
+              u'minimum_seconds': 5,
+              'record_type': u'soa',
+              'view_name': u'internal',
+              'last_user': u'sharrell',
+              'zone_name': u'168.192.in-addr',
+              u'admin_email': u'admin@university.edu.',
+              u'expiry_seconds': 5}],
+            'zone_origin': '168.192.in-addr.arpa.',
+            'zone_options': u'allow-update { none; };'}},
+      'acls': [u'secret', u'public']},
+    u'external': {'view_options': u'recursion no;',
+        'zones': {u'university.edu': {'zone_type': u'master',
+          'records': [{'target': '@',
+            u'name_server': u'ns2.university.edu.',
+            'ttl': 3600,
+            'record_type': u'ns',
+            'view_name': u'any',
+            'last_user': u'sharrell',
+            'zone_name': u'university.edu'},
+            {'target': '@',
+              u'name_server': u'ns1.university.edu.',
+              'ttl': 3600,
+              'record_type': u'ns',
+              'view_name': u'any',
+              'last_user': u'sharrell',
+              'zone_name': u'university.edu'},
+            {'target': '@',
+              'ttl': 3600,
+              u'priority': 1,
+              'record_type': u'mx',
+              'view_name': u'any',
+              'last_user': u'sharrell',
+              'zone_name': u'university.edu',
+              u'mail_server': u'mail1.university.edu.'},
+            {'target': '@',
+              'ttl': 3600,
+              u'priority': 1,
+              'record_type': u'mx',
+              'view_name': u'any',
+              'last_user': u'sharrell',
+              'zone_name': u'university.edu',
+              u'mail_server': u'mail2.university.edu.'},
+            {'target': 'computer1',
+              'ttl': 3600,
+              'record_type': u'a',
+              'view_name': u'external',
+              'last_user': u'sharrell',
+              'zone_name': u'university.edu',
+              u'assignment_ip': u'1.2.3.5'},
+            {'target': 'computer3',
+              'ttl': 3600,
+              'record_type': u'a',
+              'view_name': u'external',
+              'last_user': u'sharrell',
+              'zone_name': u'university.edu',
+              u'assignment_ip': u'1.2.3.6'},
+            {u'serial_number': 20091234,
+              u'refresh_seconds': 5,
+              'target': '@',
+              u'name_server': u'ns1.university.edu.',
+              u'retry_seconds': 5,
+              'ttl': 3600,
+              u'minimum_seconds': 5,
+              'record_type': u'soa',
+              'view_name': u'external',
+              'last_user': u'sharrell',
+              'zone_name': u'university.edu',
+              u'admin_email': u'admin@university.edu.',
+              u'expiry_seconds': 5}],
+            'zone_origin': 'university.edu.',
+          'zone_options': u'allow-update { none; };'},
+    u'4.3.2.in-addr': {'zone_type': u'master',
+        'records': [{u'serial_number': 20091226,
+          u'refresh_seconds': 5,
+          'target': '@',
+          u'name_server': u'ns1.university.edu.',
+          u'retry_seconds': 5,
+          'ttl': 3600,
+          u'minimum_seconds': 5,
+          'record_type': u'soa',
+          'view_name': u'external',
+          'last_user': u'sharrell',
+          'zone_name': u'4.3.2.in-addr',
+          u'admin_email': u'admin@university.edu.',
+          u'expiry_seconds': 5},
+          {'target': '1',
+            'ttl': 3600,
+            'record_type': u'ptr',
+            'view_name': u'external',
+            'last_user': u'sharrell',
+            'zone_name': u'4.3.2.in-addr',
+            u'assignment_host': 'computer1.university.edu.'}],
+          'zone_origin': '4.3.2.in-addr.arpa.',
+          'zone_options': u'allow-update { none; };'}},
+    'acls': [u'public']}}})
 
   def testTreeExporterListACLNamesByView(self):
     acl_names_private = self.tree_exporter_instance.ListACLNamesByView(
@@ -2282,19 +957,18 @@ class TestTreeExporter(unittest.TestCase):
             self.data[0], u'internal_dns'))
     self.assertEqual(
         global_options_internal, (
-            u'include "/etc/rndc.key";\n'
-            'logging { category "update-security" { "security"; };\n'
-            'category "queries" { "query_logging"; };\n'
-            'channel "query_logging" { syslog local5;\n'
-            'severity info; };\n'
-            'category "client" { "null"; };\n'
-            'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-            'print-time yes; }; };\n'
-            'options { directory "/var/domain";\n'
-            'recursion no;\n'
-            'allow-query { any; };\n'
-            'max-cache-size 512M; };\n'
-            'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
+          'include "/etc/rndc.key";\n'
+          'logging { category "update-security" { "security"; };\n'
+          'category "queries" { "query_logging"; };\n'
+          'channel "query_logging" { syslog local5;\n'
+          'severity info; };\n'
+          'category "client" { "null"; };\n'
+          'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
+          'print-time yes; }; };\n'
+          'options { directory "test_data/named/named";\n'
+          'recursion no;\n'
+          'max-cache-size 512M; };\n'
+          'controls { inet * allow { control-hosts; } keys { rndc-key; }; };'))
     global_options_external = (
         self.tree_exporter_instance.ListLatestNamedConfGlobalOptions(
             self.data[0], u'external_dns'))
@@ -2308,7 +982,7 @@ class TestTreeExporter(unittest.TestCase):
             'category "client" { "null"; };\n'
             'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
             'print-time yes; }; };\n'
-            'options { directory "/var/domain";\n'
+            'options { directory "test_data/named/named";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
             'controls { inet * allow { control-hosts; } keys { rndc-key; }; };')
@@ -2325,7 +999,7 @@ class TestTreeExporter(unittest.TestCase):
             'category "client" { "null"; };\n'
             'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
             'print-time yes; }; };\n'
-            'options { directory "/var/domain";\n'
+            'options { directory "test_data/named/named";\n'
             'recursion no;\n'
             'max-cache-size 512M; };\n'
             'controls { inet * allow { control-hosts; } keys { rndc-key; }; };')
@@ -2349,7 +1023,7 @@ class TestTreeExporter(unittest.TestCase):
         'category "client" { "null"; };\n'
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
-        'options { directory "%s/named";\n'
+        'options { directory "%s";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
@@ -2359,12 +1033,12 @@ class TestTreeExporter(unittest.TestCase):
         '\n'
         'acl public {\n'
         '\t192.168.1.4/30;\n'
-        '\t10.10/32;\n'\
+        '\t10.10/32;\n'
         '};\n'
         '\n'
         'view "external" {\n'
         '\tmatch-clients { \n'
-        '\t\tpublic;\n'
+        '\t\t\n'
         '\t };\n'
         '\trecursion no;\n'
         '\tzone "." {\n'
@@ -2372,24 +1046,16 @@ class TestTreeExporter(unittest.TestCase):
         '\t\tfile "named.ca";\n'
         '\t};\n'
         '\tzone "university.edu" {\n'
-        '\t\ttype master;\n\t\tfile "external/university.edu.db";\n'
-        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '\tzone "otheruniversity.edu" {\n'
-        '\t\ttype slave;\n'
-        '\t\tfile "external/otheruniversity.edu.db";\n'
-        '\t\tmasters { 192.168.0.1; };\n'
-        '\t};\n'
-        '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
-        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
+        '\t\tfile "external/university.edu.db";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '};' % NAMED_DIR)
+        '\tzone "4.3.2.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "external/4.3.2.in-addr.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};' % tree_exporter_test_lib.NAMED_DIR)
 
     # Test named_conf_a
     handle = open('%s/ns1.university.edu/named.conf.a' %
@@ -2410,7 +1076,7 @@ class TestTreeExporter(unittest.TestCase):
         'category "client" { "null"; };\n'
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
-        'options { directory "%s/named";\n'
+        'options { directory "%s";\n'
         'masterfile-format raw;\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
@@ -2421,7 +1087,87 @@ class TestTreeExporter(unittest.TestCase):
         '\n'
         'acl public {\n'
         '\t192.168.1.4/30;\n'
-        '\t10.10/32;\n'\
+        '\t10.10/32;\n'
+        '};\n'
+        '\n'
+        'view "external" {\n'
+        '\tmatch-clients { \n'
+        '\t\t\n'
+        '\t };\n'
+        '\trecursion no;\n'
+        '\tzone "." {\n'
+        '\t\ttype hint;\n'
+        '\t\tfile "named.ca";\n'
+        '\t};\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "external/university.edu.aa";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "4.3.2.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "external/4.3.2.in-addr.aa";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};' % tree_exporter_test_lib.NAMED_DIR)
+
+    # Test named_conf_b
+    handle = open('%s/ns1.university.edu/named.conf.b' %
+        self.root_config_dir, 'r')
+    binary_ns1_university_edu_named_conf_b_string = handle.read()
+    handle.close()
+    self.assertEqual(binary_ns1_university_edu_named_conf_b_string,
+                     expected_binary_ns1_university_edu_named_conf_b_string)
+
+    handle = open(
+        '%s/ns1.university.edu/named/external/4.3.2.in-addr.db' %
+        self.root_config_dir, 'r')
+    self.assertEqual(handle.read(),
+                     '; This zone file is autogenerated. DO NOT EDIT.\n'
+                     '$ORIGIN 4.3.2.in-addr.arpa.\n'
+                     '@ 3600 in soa ns1.university.edu. '
+                     'admin@university.edu. 20091226 5 5 5 5\n'
+                     '1 3600 in ptr computer1.university.edu.\n')
+    handle.close()
+    handle = open(
+        '%s/ns1.university.edu/named/external/university.edu.db' %
+        self.root_config_dir, 'r')
+    output = handle.read()
+    handle.close()
+    self.assertEqual(output,
+        '; This zone file is autogenerated. DO NOT EDIT.\n'
+        '$ORIGIN university.edu.\n'
+        '@ 3600 in soa ns1.university.edu. '
+        'admin@university.edu. 20091234 5 5 5 5\n'
+        '@ 3600 in ns ns1.university.edu.\n'
+        '@ 3600 in ns ns2.university.edu.\n'
+        '@ 3600 in mx 1 mail1.university.edu.\n'
+        '@ 3600 in mx 1 mail2.university.edu.\n'
+        'computer1 3600 in a 1.2.3.5\n'
+        'computer3 3600 in a 1.2.3.6\n')
+
+    # Test dns1 named_conf
+    expected_dns1_university_edu_named_conf_a_string = (
+        '#This named.conf file is autogenerated. DO NOT EDIT\n'
+        'include "/etc/rndc.key";\n'
+        'logging { category "update-security" { "security"; };\n'
+        'category "queries" { "query_logging"; };\n'
+        'channel "query_logging" { syslog local5;\n'
+        'severity info; };\n'
+        'category "client" { "null"; };\n'
+        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
+        'print-time yes; }; };\n'
+        'options { directory "%s";\n'
+        'recursion no;\n'
+        'max-cache-size 512M; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
+        'acl secret {\n'
+        '\t10.10/32;\n'
+        '};\n'
+        '\n'
+        'acl public {\n'
+        '\t192.168.1.4/30;\n'
+        '\t10.10/32;\n'
         '};\n'
         '\n'
         'view "external" {\n'
@@ -2434,141 +1180,37 @@ class TestTreeExporter(unittest.TestCase):
         '\t\tfile "named.ca";\n'
         '\t};\n'
         '\tzone "university.edu" {\n'
-        '\t\ttype master;\n\t\tfile "external/university.edu.aa";\n'
-        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
-        '\t\tallow-update { none; };\n'
-        '\t};\n'
-        '\tzone "otheruniversity.edu" {\n'
-        '\t\ttype slave;\n'
-        '\t\tfile "external/otheruniversity.edu.aa";\n'
-        '\t\tmasters { 192.168.0.1; };\n'
-        '\t};\n'
-        '\tzone "4.3.2.1.in-addr.arpa" {\n'
         '\t\ttype master;\n'
-        '\t\tfile "external/4.3.2.1.in-addr.arpa.aa";\n'
-        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
+        '\t\tfile "external/university.edu.db";\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '};' % NAMED_DIR)
-
-    # Test named_conf_b
-    handle = open('%s/ns1.university.edu/named.conf.b' %
-        self.root_config_dir, 'r')
-    binary_ns1_university_edu_named_conf_b_string = handle.read()
-    handle.close()
-    self.assertEqual(binary_ns1_university_edu_named_conf_b_string,
-                     expected_binary_ns1_university_edu_named_conf_b_string)
-
-    handle = open(
-        '%s/ns1.university.edu/named/external/4.3.2.1.in-addr.arpa.db' %
-        self.root_config_dir, 'r')
-    self.assertEqual(handle.read(),
-                     '; This zone file is autogenerated. DO NOT EDIT.\n'
-                     '$ORIGIN 4.3.2.1.in-addr.arpa.\n'
-                     '4.3.2.1.in-addr.arpa. 3600 in soa ns1.university.edu. '
-                     'admin@university.edu. 20091224 5 5 5 5\n'
-                     'xn--35gc625a.sn 3600 in ptr computer1\n')
-    handle.close()
-    handle = open(
-        '%s/ns1.university.edu/named/external/university.edu.db' %
-        self.root_config_dir, 'r')
-    self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN university.edu.\n'
-        'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091227 5 5 5 5\n'
-        '@ 3600 in ns ns1.university.edu\n'
-        '@ 3600 in ns ns2.university.edu\n'
-        '@ 3600 in mx 1 mail2.university.edu.\n'
-        '@ 3600 in mx 1 mail1.university.edu.\n'
-        'computer1 3600 in a 1.2.3.5\n'
-        'computer3 3600 in a 1.2.3.6\n')
-    handle.close()
-
-    # Test dns1 named_conf
-    expected_dns1_university_edu_named_conf_a_string = (
-      '#This named.conf file is autogenerated. DO NOT EDIT\n'
-      'include "/etc/rndc.key";\n'
-      'logging { category "update-security" { "security"; };\n'
-      'category "queries" { "query_logging"; };\n'
-      'channel "query_logging" { syslog local5;\n'
-      'severity info; };\n'
-      'category "client" { "null"; };\n'
-      'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-      'print-time yes; }; };\n'
-      'options { directory "%s/named";\n'
-      'recursion no;\n'
-      'allow-query { any; };\n'
-      'max-cache-size 512M; };\n'
-      'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-      'acl secret {\n'
-      '\t10.10/32;\n'
-      '};\n'
-      '\n'
-      'acl public {\n'
-      '\t192.168.1.4/30;\n'
-      '\t10.10/32;\n'
-      '};\n'
-      '\n'
-      'view "external" {\n'
-      '\tmatch-clients { \n'
-      '\t\tpublic;\n'
-      '\t };\n'
-      '\trecursion no;\n'
-      '\tzone "." {\n'
-      '\t\ttype hint;\n'
-      '\t\tfile "named.ca";\n'
-      '\t};\n'
-      '\tzone "university.edu" {\n'
-      '\t\ttype master;\n'
-      '\t\tfile "external/university.edu.db";\n'
-      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
-      '\t\tallow-update { none; };\n'
-      '\t};\n'
-      '\tzone "otheruniversity.edu" {\n'
-      '\t\ttype slave;\n'
-      '\t\tfile "external/otheruniversity.edu.db";\n'
-      '\t\tmasters { 192.168.0.1; };\n'
-      '\t};\n'
-      '\tzone "4.3.2.1.in-addr.arpa" {\n'
-      '\t\ttype master;\n'
-      '\t\tfile "external/4.3.2.1.in-addr.arpa.db";\n'
-      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
-      '\t\tallow-update { none; };\n'
-      '\t};\n'
-      '};\n'
-      'view "internal" {\n'
-      '\tmatch-clients { \n'
-      '\t\t!public;\n'
-      '\t\t!secret;\n'
-      '\t };\n'
-      '\trecursion no;\n'
-      '\tzone "." {\n'
-      '\t\ttype hint;\n'
-      '\t\tfile "named.ca";\n'
-      '\t};\n'
-      '\tzone "university.edu" {\n'
-      '\t\ttype master;\n'
-      '\t\tfile "internal/university.edu.db";\n'
-      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
-      '\t\tallow-update { none; };\n'
-      '\t};\n'
-      '\tzone "168.192.in-addr.arpa" {\n'
-      '\t\ttype master;\n'
-      '\t\tfile "internal/168.192.in-addr.arpa.db";\n'
-      '\t\tallow-update { none; };\n'
-      '\t};\n'
-      '\tzone "otheruniversity.edu" {\n'
-      '\t\ttype slave;\n'
-      '\t\tfile "internal/otheruniversity.edu.db";\n'
-      '\t\tmasters { 192.168.0.1; };\n'
-      '\t};\n'
-      '};' % NAMED_DIR.rstrip('/'))
+        '\tzone "4.3.2.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "external/4.3.2.in-addr.db";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};\n'
+        'view "internal" {\n'
+        '\tmatch-clients { \n'
+        '\t\t!public;\n'
+        '\t\tsecret;\n'
+        '\t };\n'
+        '\trecursion no;\n'
+        '\tzone "." {\n'
+        '\t\ttype hint;\n'
+    '\t\tfile "named.ca";\n'
+    '\t};\n'
+    '\tzone "university.edu" {\n'
+    '\t\ttype master;\n'
+    '\t\tfile "internal/university.edu.db";\n'
+    '\t\tallow-update { none; };\n'
+    '\t};\n'
+    '\tzone "168.192.in-addr.arpa" {\n'
+    '\t\ttype master;\n'
+    '\t\tfile "internal/168.192.in-addr.db";\n'
+    '\t\tallow-update { none; };\n'
+    '\t};\n'
+    '};' % tree_exporter_test_lib.NAMED_DIR)
 
 
     # Test named_conf_a
@@ -2581,87 +1223,70 @@ class TestTreeExporter(unittest.TestCase):
 
     # Test dns1 binary named_conf
     expected_binary_dns1_university_edu_named_conf_b_string = (
-      '#This named.conf file is autogenerated. DO NOT EDIT\n'
-      'include "/etc/rndc.key";\n'
-      'logging { category "update-security" { "security"; };\n'
-      'category "queries" { "query_logging"; };\n'
-      'channel "query_logging" { syslog local5;\n'
-      'severity info; };\n'
-      'category "client" { "null"; };\n'
-      'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
-      'print-time yes; }; };\n'
-      'options { directory "%s/named";\n'
-      'masterfile-format raw;\n'
-      'allow-query { any; };\n'
-      'recursion no;\n'
-      'max-cache-size 512M; };\n'
-      'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
-      'acl secret {\n'
-      '\t10.10/32;\n'
-      '};\n'
-      '\n'
-      'acl public {\n'
-      '\t192.168.1.4/30;\n'
-      '\t10.10/32;\n'
-      '};\n'
-      '\n'
-      'view "external" {\n'
-      '\tmatch-clients { \n'
-      '\t\tpublic;\n'
-      '\t };\n'
-      '\trecursion no;\n'
-      '\tzone "." {\n'
-      '\t\ttype hint;\n'
-      '\t\tfile "named.ca";\n'
-      '\t};\n'
-      '\tzone "university.edu" {\n'
-      '\t\ttype master;\n'
-      '\t\tfile "external/university.edu.aa";\n'
-      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
-      '\t\tallow-update { none; };\n'
-      '\t};\n'
-      '\tzone "otheruniversity.edu" {\n'
-      '\t\ttype slave;\n'
-      '\t\tfile "external/otheruniversity.edu.aa";\n'
-      '\t\tmasters { 192.168.0.1; };\n'
-      '\t};\n'
-      '\tzone "4.3.2.1.in-addr.arpa" {\n'
-      '\t\ttype master;\n'
-      '\t\tfile "external/4.3.2.1.in-addr.arpa.aa";\n'
-      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
-      '\t\tallow-update { none; };\n'
-      '\t};\n'
-      '};\n'
-      'view "internal" {\n'
-      '\tmatch-clients { \n'
-      '\t\t!public;\n'
-      '\t\t!secret;\n'
-      '\t };\n'
-      '\trecursion no;\n'
-      '\tzone "." {\n'
-      '\t\ttype hint;\n'
-      '\t\tfile "named.ca";\n'
-      '\t};\n'
-      '\tzone "university.edu" {\n'
-      '\t\ttype master;\n'
-      '\t\tfile "internal/university.edu.aa";\n'
-      '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-      '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
-      '\t\tallow-update { none; };\n'
-      '\t};\n'
-      '\tzone "168.192.in-addr.arpa" {\n'
-      '\t\ttype master;\n'
-      '\t\tfile "internal/168.192.in-addr.arpa.aa";\n'
-      '\t\tallow-update { none; };\n'
-      '\t};\n'
-      '\tzone "otheruniversity.edu" {\n'
-      '\t\ttype slave;\n'
-      '\t\tfile "internal/otheruniversity.edu.aa";\n'
-      '\t\tmasters { 192.168.0.1; };\n'
-      '\t};\n'
-      '};' % NAMED_DIR.rstrip('/'))
+        '#This named.conf file is autogenerated. DO NOT EDIT\n'
+        'include "/etc/rndc.key";\n'
+        'logging { category "update-security" { "security"; };\n'
+        'category "queries" { "query_logging"; };\n'
+        'channel "query_logging" { syslog local5;\n'
+        'severity info; };\n'
+        'category "client" { "null"; };\n'
+        'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
+        'print-time yes; }; };\n'
+        'options { directory "%s";\n'
+        'masterfile-format raw;\n'
+        'recursion no;\n'
+        'max-cache-size 512M; };\n'
+        'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
+        'acl secret {\n'
+        '\t10.10/32;\n'
+        '};\n'
+        '\n'
+        'acl public {\n'
+        '\t192.168.1.4/30;\n'
+        '\t10.10/32;\n'
+        '};\n'
+        '\n'
+        'view "external" {\n'
+        '\tmatch-clients { \n'
+        '\t\tpublic;\n'
+        '\t };\n'
+        '\trecursion no;\n'
+        '\tzone "." {\n'
+        '\t\ttype hint;\n'
+        '\t\tfile "named.ca";\n'
+        '\t};\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "external/university.edu.aa";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "4.3.2.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "external/4.3.2.in-addr.aa";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};\n'
+        'view "internal" {\n'
+        '\tmatch-clients { \n'
+        '\t\t!public;\n'
+        '\t\tsecret;\n'
+        '\t };\n'
+        '\trecursion no;\n'
+        '\tzone "." {\n'
+        '\t\ttype hint;\n'
+        '\t\tfile "named.ca";\n'
+        '\t};\n'
+        '\tzone "university.edu" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "internal/university.edu.aa";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '\tzone "168.192.in-addr.arpa" {\n'
+        '\t\ttype master;\n'
+        '\t\tfile "internal/168.192.in-addr.aa";\n'
+        '\t\tallow-update { none; };\n'
+        '\t};\n'
+        '};' % tree_exporter_test_lib.NAMED_DIR)
 
     # Test named_conf_b
     handle = open(
@@ -2672,56 +1297,63 @@ class TestTreeExporter(unittest.TestCase):
                      expected_binary_dns1_university_edu_named_conf_b_string)
 
     handle = open(
-        '%s/ns1.int.university.edu/named/external/4.3.2.1.in-addr.arpa.db' %
+        '%s/ns1.int.university.edu/named/external/4.3.2.in-addr.db' %
         self.root_config_dir, 'r')
-    self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN 4.3.2.1.in-addr.arpa.\n'
-        '4.3.2.1.in-addr.arpa. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091224 5 5 5 5\n'
-        'xn--35gc625a.sn 3600 in ptr computer1\n')
+    output = handle.read()
     handle.close()
+    self.assertEqual(output,
+        '; This zone file is autogenerated. DO NOT EDIT.\n'
+        '$ORIGIN 4.3.2.in-addr.arpa.\n'
+        '@ 3600 in soa ns1.university.edu. '
+        'admin@university.edu. 20091226 5 5 5 5\n'
+        '1 3600 in ptr computer1.university.edu.\n')
+
     handle = open(
         '%s/dns1.university.edu/named/external/university.edu.db' %
         self.root_config_dir, 'r')
-    self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
+    output = handle.read()
+    handle.close()
+    self.assertEqual(output,
+        '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN university.edu.\n'
-        'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091227 5 5 5 5\n'
-        '@ 3600 in ns ns1.university.edu\n'
-        '@ 3600 in ns ns2.university.edu\n'
-        '@ 3600 in mx 1 mail2.university.edu.\n'
+        '@ 3600 in soa ns1.university.edu. '
+        'admin@university.edu. 20091234 5 5 5 5\n'
+        '@ 3600 in ns ns1.university.edu.\n'
+        '@ 3600 in ns ns2.university.edu.\n'
         '@ 3600 in mx 1 mail1.university.edu.\n'
+        '@ 3600 in mx 1 mail2.university.edu.\n'
         'computer1 3600 in a 1.2.3.5\n'
         'computer3 3600 in a 1.2.3.6\n')
-    handle.close()
+
     handle = open(
-        '%s/dns1.university.edu/named/internal/168.192.in-addr.arpa.db' %
+        '%s/dns1.university.edu/named/internal/168.192.in-addr.db' %
         self.root_config_dir, 'r')
-    self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN 168.192.in-addr.arpa.\n'
-        '168.192.in-addr.arpa. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091223 5 5 5 5\n'
-        '4 3600 in ptr computer4\n')
+    output = handle.read()
     handle.close()
+    self.assertEqual(output,
+        '; This zone file is autogenerated. DO NOT EDIT.\n'
+        '$ORIGIN 168.192.in-addr.arpa.\n'
+        '@ 3600 in soa ns1.university.edu. '
+        'admin@university.edu. 20091225 5 5 5 5\n'
+        '4 3600 in ptr computer4.university.edu.\n')
+    
     handle = open(
         '%s/dns1.university.edu/named/internal/university.edu.db' %
         self.root_config_dir, 'r')
-    self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
+    output = handle.read()
+    handle.close()
+    self.assertEqual(output,
+        '; This zone file is autogenerated. DO NOT EDIT.\n'
         '$ORIGIN university.edu.\n'
-        'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091225 5 5 5 5\n'
-        '@ 3600 in ns ns1.university.edu\n'
-        '@ 3600 in ns ns2.university.edu\n'
-        '@ 3600 in mx 1 mail2.university.edu.\n'
+        '@ 3600 in soa ns1.university.edu. '
+        'admin@university.edu. 20091229 5 5 5 5\n'
+        '@ 3600 in ns ns1.university.edu.\n'
+        '@ 3600 in ns ns2.university.edu.\n'
         '@ 3600 in mx 1 mail1.university.edu.\n'
+        '@ 3600 in mx 1 mail2.university.edu.\n'
         'computer1 3600 in a 192.168.1.1\n'
         'computer2 3600 in a 192.168.1.2\n'
         'computer4 3600 in a 192.168.1.4\n')
-    handle.close()
 
     # Test dns4 named_conf
     expected_dns4_university_edu_named_conf_a_string = (
@@ -2734,7 +1366,7 @@ class TestTreeExporter(unittest.TestCase):
         'category "client" { "null"; };\n'
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
-        'options { directory "%s/named";\n'
+        'options { directory "%s";\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
         'controls { inet * allow { control-hosts; } keys { rndc-key; }; };\n'
@@ -2749,7 +1381,7 @@ class TestTreeExporter(unittest.TestCase):
         '\n'
         'view "private" {\n'
         '\tmatch-clients { \n'
-        '\t\tsecret;\n'
+        '\t\t!secret;\n'
         '\t };\n'
         '\trecursion no;\n'
         '\tzone "." {\n'
@@ -2759,16 +1391,10 @@ class TestTreeExporter(unittest.TestCase):
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "private/university.edu.db";\n'
-        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '\tzone "otheruniversity.edu" {\n'
-        '\t\ttype slave;\n'
-        '\t\tfile "private/otheruniversity.edu.db";\n'
-        '\t\tmasters { 192.168.0.1; };\n'
-        '\t};\n'
-        '};' % NAMED_DIR.rstrip('/'))
+        '};' % tree_exporter_test_lib.NAMED_DIR)
+
 
     # Test named_conf_a
     handle = open(
@@ -2789,7 +1415,7 @@ class TestTreeExporter(unittest.TestCase):
         'category "client" { "null"; };\n'
         'channel "security" { file "/var/log/named-security.log" versions 10 size 10m;\n'
         'print-time yes; }; };\n'
-        'options { directory "%s/named";\n'
+        'options { directory "%s";\n'
         'masterfile-format raw;\n'
         'recursion no;\n'
         'max-cache-size 512M; };\n'
@@ -2805,7 +1431,7 @@ class TestTreeExporter(unittest.TestCase):
         '\n'
         'view "private" {\n'
         '\tmatch-clients { \n'
-        '\t\tsecret;\n'
+        '\t\t!secret;\n'
         '\t };\n'
         '\trecursion no;\n'
         '\tzone "." {\n'
@@ -2815,16 +1441,9 @@ class TestTreeExporter(unittest.TestCase):
         '\tzone "university.edu" {\n'
         '\t\ttype master;\n'
         '\t\tfile "private/university.edu.aa";\n'
-        '\t\talso-notify { 192.168.1.10;\n\t\t192.168.1.7;\n'
-        '\t\t192.168.1.6;\n\t\t192.168.1.5;\n\t\t192.168.1.9;\n\t\t192.168.1.8; };\n'
         '\t\tallow-update { none; };\n'
         '\t};\n'
-        '\tzone "otheruniversity.edu" {\n'
-        '\t\ttype slave;\n'
-        '\t\tfile "private/otheruniversity.edu.aa";\n'
-        '\t\tmasters { 192.168.0.1; };\n'
-        '\t};\n'
-        '};' % NAMED_DIR.rstrip('/'))
+        '};' % tree_exporter_test_lib.NAMED_DIR)
 
     # Test named_conf_b
     handle = open(
@@ -2837,16 +1456,17 @@ class TestTreeExporter(unittest.TestCase):
     handle = open(
         '%s/dns4.university.edu/named/private/university.edu.db' %
         self.root_config_dir, 'r')
-    self.assertEqual(
-        handle.read(), '; This zone file is autogenerated. DO NOT EDIT.\n'
-        '$ORIGIN university.edu.\n'
-        'university.edu. 3600 in soa ns1.university.edu. '
-        'admin@university.edu. 20091225 5 5 5 5\n'
-        '@ 3600 in ns ns1.university.edu\n'
-        '@ 3600 in ns ns2.university.edu\n'
-        '@ 3600 in mx 1 mail2.university.edu.\n'
-        '@ 3600 in mx 1 mail1.university.edu.\n')
+    output = handle.read()
     handle.close()
+    self.assertEqual(output,
+        '; This zone file is autogenerated. DO NOT EDIT.\n'
+        '$ORIGIN university.edu.\n'
+        '@ 3600 in soa ns1.university.edu. '
+        'admin@university.edu. 20091227 5 5 5 5\n'
+        '@ 3600 in ns ns1.university.edu.\n'
+        '@ 3600 in ns ns2.university.edu.\n'
+        '@ 3600 in mx 1 mail1.university.edu.\n'
+        '@ 3600 in mx 1 mail2.university.edu.\n')
 
   def testTreeExporterAddToTarFile(self):
     tar_string = (  ## The string was arbitrarily chosen.
