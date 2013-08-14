@@ -430,6 +430,10 @@ class BindTreeExport(object):
     if( newest_config is not None ):
       deserialized_config = iscpy.Deserialize(newest_config)
       if( binary ):
+        if( len(deserialized_config) == 0 ):
+          return (u'options {\n'
+                  u'masterfile-format raw;\n'
+                  u'};')
         deserialized_part = deserialized_config.partition('options {')
         new_options = '\nmasterfile-format raw; '
         deserialized_config = '%s%s%s%s' % (
