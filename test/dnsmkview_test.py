@@ -63,6 +63,7 @@ KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
 EXEC='../roster-user-tools/scripts/dnsmkview'
+VIEW_OPTIONS_FILE = os.path.join(os.getcwd(), 'view_options.txt')
 
 class options(object):
   password = u'test'
@@ -124,6 +125,8 @@ class Testdnsmkview(unittest.TestCase):
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
+    if( os.path.exists(VIEW_OPTIONS_FILE) ):
+      os.remove(VIEW_OPTIONS_FILE)
 
   def testMakeView(self):
     self.core_instance.MakeACL(u'acl1', u'192.168.1.0/24')
@@ -220,6 +223,19 @@ class Testdnsmkview(unittest.TestCase):
                      'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
                      'test_view dns_server_set: set1 view_order: 2 '
                      'view_options: None\n')
+    command.close()
+    self.core_instance.MakeDnsServerSet(u'set3')
+    open(VIEW_OPTIONS_FILE, 'w').write('recursion no;\n')
+    command = os.popen('python %s dns_server_set -v test_view -r 1 -e set3 '
+                       '--file-name=%s '
+                       '-c %s -u %s -p %s '
+                       '--config-file %s -s %s' % (
+                           EXEC, VIEW_OPTIONS_FILE, CREDFILE, USERNAME, 
+                           self.password, USER_CONFIG, self.server_name))
+    self.assertEqual(command.read(),
+                     'ADDED DNS SERVER SET VIEW ASSIGNMENT: view_name: '
+                     'test_view dns_server_set: set3 view_order: 1 '
+                     'view_options: recursion no;\n')
     command.close()
 
   def testErrors(self):

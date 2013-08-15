@@ -83,6 +83,15 @@ def main(args):
   if( options.origin and not options.origin.endswith('.') ):
     cli_common_lib.DnsError('Zone origin must terminate with "."', 1)
 
+  if( options.options and options.file_name ):
+    cli_common_lib.DnsError('Cannot supply both the -o/--options and '
+                            'the -f/--file flag.', 1)
+
+  if( options.file_name ):
+    file_handle = open(options.file_name, 'r')
+    options.options = file_handle.read().strip('\n')
+    file_handle.close()
+
   views = roster_client_lib.RunFunction(
       u'ListViews', options.username, credfile=options.credfile,
       credstring=options.credstring, kwargs={u'view_name': options.view_name},

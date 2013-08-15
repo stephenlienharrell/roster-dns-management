@@ -84,6 +84,11 @@ def main(args):
   except cli_common_lib.ArgumentError, error:
     cli_common_lib.DnsError(str(error), 1)
 
+  if( options.file_name ):
+    file_handle = open(options.file_name, 'r')
+    options.options = file_handle.read().strip('\n')
+    file_handle.close()
+
   views = roster_client_lib.RunFunction(
       u'ListViews', options.username, credfile=options.credfile,
       credstring=options.credstring, server_name=options.server,

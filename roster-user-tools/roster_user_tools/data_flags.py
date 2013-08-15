@@ -230,11 +230,19 @@ class Zone(core_flags.CoreFlags):
     # List and Make
     if( self.action != 'Remove' ):
       self.parser.add_option('-o', '--options', action='store', dest='options',
-                             help='String of extra zone/view options, '
-                                  'standard bind view clause syntax.',
-                             metavar='<view-options>', default=None)
+                             help='String containing extra zone options, '
+                                  'standard BIND zone clause syntax.',
+                             metavar='<zone-options>', default=None)
       self.AddFlagRule('options', command='forward', required=False)
       self.AddFlagRule('options', command='reverse', required=False)
+
+      self.parser.add_option('-f', '--file', action='store', dest='file_name',
+                             help='Text file containing extra zone options, '
+                                   'standard BIND zone clause syntax.',
+                             metavar='<file-name>', default=None)
+      self.AddFlagRule('file_name', command='forward', required=False)
+      self.AddFlagRule('file_name', command='reverse', required=False)
+
       self.parser.add_option('--origin', action='store', dest='origin',
                               help='String of zone origin.', metavar='<origin>',
                               default=None)
@@ -295,10 +303,17 @@ class View(core_flags.CoreFlags):
                            dest='view_subset', default=None,
                            help='String of view dependency.')
     self.AddFlagRule('view_subset', required=not_list, command='view_subset')
-    self.parser.add_option('-o', '--options', action='store', dest='options',
-                           help='View options.', metavar='<options>',
-                           default=None)
-    self.AddFlagRule('options', required=False, command='dns_server_set')
+    if( self.action != 'Remove' ):
+      self.parser.add_option('-o', '--options', action='store', dest='options',
+                             help='String containing extra view options, '
+                                  'standard BIND view clause syntax.',
+                             metavar='<options>', default=None)
+      self.AddFlagRule('options', required=False, command='dns_server_set')
+      self.parser.add_option('-f', '--file-name', action='store', dest='file_name',
+                             help='Text file containing extra view options, '
+                                  'standard BIND view clause syntax.',
+                             metavar='<file-name>', default=None)
+      self.AddFlagRule('file_name', required=False, command='dns_server_set')
     self.parser.add_option('-e', '--dns-server-set', action='store',
                            dest='dns_server_set', default=None,
                            help='String of dns server set name.')

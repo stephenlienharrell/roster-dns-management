@@ -136,7 +136,7 @@ class Testdnsmkview(unittest.TestCase):
                            EXEC, CREDFILE, USERNAME, self.password, USER_CONFIG,
                            self.server_name))
     self.assertEqual(command.read(),
-        'REMOVED VIEW view_name: view_name: test_view options None\n')
+        'REMOVED VIEW view_name: view_name: test_view\n')
     command.close()
     self.assertEqual(self.core_instance.ListViewToACLAssignments(), [])
 

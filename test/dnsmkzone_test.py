@@ -63,6 +63,7 @@ KEYFILE=('test_data/dnsmgmt.key.pem')
 CERTFILE=('test_data/dnsmgmt.cert.pem')
 CREDFILE='%s/.dnscred' % os.getcwd()
 EXEC='../roster-user-tools/scripts/dnsmkzone'
+ZONE_OPTIONS_FILE = 'zone_options.txt'
 
 class options(object):
   password = u'test'
@@ -127,6 +128,8 @@ class TestDnsMkZone(unittest.TestCase):
   def tearDown(self):
     if( os.path.exists(CREDFILE) ):
       os.remove(CREDFILE)
+    if( os.path.exists(ZONE_OPTIONS_FILE) ):
+      os.remove(ZONE_OPTIONS_FILE)
 
   def testNoReverseRangeZoneAssignmentForMakeSlaveZone(self):
     self.core_instance.MakeView(u'test_view')
@@ -233,13 +236,14 @@ class TestDnsMkZone(unittest.TestCase):
                  'zone_origin': u'dept.univiersity.edu.'}}})
     output = os.popen('python %s forward -z test_zone2 -v test_view --origin '
                       'dept2.univiersity.edu. --type master --dont-make-any '
+                      '--options="recursion no;\n" '
                       '-s %s -u %s -p %s --config-file %s' % (
                           EXEC, self.server_name, USERNAME,
                           PASSWORD, USER_CONFIG))
     self.assertEqual(output.read(),
-                     'ADDED FORWARD ZONE: zone_name: test_zone2 zone_type: '
-                     'master zone_origin: dept2.univiersity.edu. '
-                     'zone_options: None view_name: test_view\n')
+        'ADDED FORWARD ZONE: zone_name: test_zone2 zone_type: master '
+        'zone_origin: dept2.univiersity.edu. zone_options: recursion no;\n '
+        'view_name: test_view\n')
     output.close()
     self.assertEqual(self.core_instance.ListZones(),
         {u'test_zone':
@@ -248,8 +252,33 @@ class TestDnsMkZone(unittest.TestCase):
                  'zone_origin': u'dept.univiersity.edu.'}},
          u'test_zone2':
              {u'test_view':
-                 {'zone_type': u'master', 'zone_options': '',
+                 {'zone_type': u'master', 'zone_options': u'recursion no;',
                   'zone_origin': u'dept2.univiersity.edu.'}}})
+
+    open(ZONE_OPTIONS_FILE, 'w').write('recursion no;\n')
+    output = os.popen('python %s forward -z test_zone3 -v test_view --origin '
+                      'dept3.univiersity.edu. --type master --dont-make-any '
+                      '--file=%s -s %s -u %s -p %s --config-file %s' % (
+                          EXEC, ZONE_OPTIONS_FILE, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+                     'ADDED FORWARD ZONE: zone_name: test_zone3 zone_type: '
+                     'master zone_origin: dept3.univiersity.edu. '
+                     'zone_options: recursion no; view_name: test_view\n')
+    output.close()
+    self.assertEqual(self.core_instance.ListZones(),
+        {u'test_zone':
+            {u'test_view':
+                {'zone_type': u'master', 'zone_options': '',
+                 'zone_origin': u'dept.univiersity.edu.'}},
+         u'test_zone2':
+             {u'test_view':
+                 {'zone_type': u'master', 'zone_options': u'recursion no;',
+                  'zone_origin': u'dept2.univiersity.edu.'}},
+         u'test_zone3':
+             {u'test_view':
+                 {'zone_type': u'master', 'zone_options': u'recursion no;',
+                  'zone_origin': u'dept3.univiersity.edu.'}}})
 
   def testMakeZoneWithViewAny(self):
     self.core_instance.MakeView(u'any')

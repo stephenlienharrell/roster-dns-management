@@ -98,8 +98,7 @@ def main(args):
         args=[options.view_name])
 
     if( not options.quiet ):
-      print 'REMOVED VIEW view_name: view_name: %s options %s' % (
-          options.view_name, options.options)
+      print 'REMOVED VIEW view_name: view_name: %s' % options.view_name
 
   elif( command == 'dns_server_set' ):
     if( options.view_name not in views ):
