@@ -137,20 +137,58 @@ def main(args):
                    options.zone_name, options.cidr_block))
 
   elif( command == 'forward' ):
-    roster_client_lib.RunFunction(
-        u'MakeZone', options.username, credfile=options.credfile,
-        credstring=options.credstring,
-        args=[options.zone_name, options.type, options.origin],
-        kwargs={u'view_name': options.view_name,
-                u'zone_options': options.options,
-                u'make_any': options.dont_make_any},
-        server_name=options.server)
-    if( not options.quiet ):
-      print ('ADDED FORWARD ZONE: zone_name: %s zone_type: %s '
-             'zone_origin: %s zone_options: %s view_name: %s' % (
-                 options.zone_name, options.type,
-                 options.origin, options.options,
-                 options.view_name))
+    if( options.bootstrap_zone ):
+      zone_bootstrap_dict = {'name_server': options.bootstrap_nameserver,
+                             'admin_email': options.bootstrap_admin_email}
+      soa_dict, ns_dict = roster_client_lib.RunFunction(
+          u'BootstrapZone', options.username, credfile=options.credfile,
+          credstring=options.credstring,
+          args=[options.zone_name, options.type, options.origin, 
+                options.view_name, zone_bootstrap_dict],
+          kwargs={u'zone_options': options.options,
+                  u'make_any': options.dont_make_any},
+          server_name=options.server)['core_return']
+
+      soa_serial_number = roster_client_lib.RunFunction(
+          u'ListRecords', options.username, credfile=options.credfile,
+          credstring=options.credstring,
+          kwargs={'record_type': u'soa', 
+                  'target': u'@',
+                  'zone_name': options.zone_name, 
+                  'view_name': options.view_name},
+          server_name=options.server)['core_return'][0]['serial_number']
+      if( not options.quiet ):
+        print ('ADDED FORWARD ZONE: zone_name: %s zone_type: %s '
+               'zone_origin: %s zone_options: %s view_name: %s' % (
+                   options.zone_name, options.type,
+                   options.origin, options.options,
+                   options.view_name))
+        print ('ADDED SOA: @ zone_name: %s view_name: %s ttl: %s '
+               'refresh_seconds: %s expiry_seconds: %s name_server: %s '
+               'minimum_seconds: %s retry_seconds: %s serial_number: %s '
+               'admin_email: %s') % (options.zone_name, options.view_name,
+                   soa_dict['ttl'], soa_dict['refresh_seconds'], 
+                   soa_dict['expiry_seconds'], soa_dict['name_server'],
+                   soa_dict['minimum_seconds'], soa_dict['retry_seconds'],
+                   soa_serial_number, soa_dict['admin_email'])
+        print ('ADDED NS: @ zone_name: %s view_name: %s ttl: %s '
+               'name_server: %s') % (options.zone_name, options.view_name,
+                   ns_dict['ttl'], ns_dict['name_server'])
+    else:
+      roster_client_lib.RunFunction(
+          u'MakeZone', options.username, credfile=options.credfile,
+          credstring=options.credstring,
+          args=[options.zone_name, options.type, options.origin],
+          kwargs={u'view_name': options.view_name,
+                  u'zone_options': options.options,
+                  u'make_any': options.dont_make_any},
+          server_name=options.server)
+      if( not options.quiet ):
+        print ('ADDED FORWARD ZONE: zone_name: %s zone_type: %s '
+               'zone_origin: %s zone_options: %s view_name: %s' % (
+                   options.zone_name, options.type,
+                   options.origin, options.options,
+                   options.view_name))
   else:
     cli_common_lib.DnsError(
         'Command %s exists, but codepath doesn\'t.' % command, 1)

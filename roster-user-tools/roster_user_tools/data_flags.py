@@ -260,7 +260,26 @@ class Zone(core_flags.CoreFlags):
                                   'specify view name.',
                              default=True)
       self.SetAllFlagRule('dont_make_any', required=False)
-
+      self.parser.add_option('--bootstrap-zone', action='store_true',
+                             dest='bootstrap_zone',
+                             help='Auto-generates SOA and NS records '
+                             'for the zone being created.', default=False)
+      self.SetAllFlagRule('bootstrap_zone', required=False)
+      self.parser.add_option('--bootstrap-admin-email', action='store',
+                             dest='bootstrap_admin_email', 
+                             metavar='<admin-email>',
+                             help='The admin email address to use in creation '
+                             'of the bootstrapped SOA record. If none is '
+                             'provided, one will be auto-generated.', 
+                             default=None)
+      self.SetAllFlagRule('bootstrap_admin_email', required=False)
+      self.parser.add_option('--bootstrap-nameserver', action='store',
+                             dest='bootstrap_nameserver', metavar='<name-sever>',
+                             help='The name server to use in creation of '
+                             'the bootstrapped NS and SOA record. If none is '
+                             'provided, one will be auto-generated.', 
+                             default=None)
+      self.SetAllFlagRule('bootstrap_nameserver', required=False)
 
 class View(core_flags.CoreFlags):
   """Command line view flags"""

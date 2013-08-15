@@ -166,6 +166,24 @@ def main(args):
                     default=False)
   parser.add_option('--root-hint-file', action='store', dest='root_hint_file',
                     help='Location of root hint file.', default=None)
+  parser.add_option('--zone-default-refresh-seconds', action='store', 
+                    dest='refresh_seconds', default=3600,
+                    help='Refresh seconds to use during zone bootstrapping.')
+  parser.add_option('--zone-default-expiry-seconds', action='store', 
+                    dest='expiry_seconds', default=1814400,
+                    help='Expiry seconds to use during zone bootstrapping.')
+  parser.add_option('--zone-default-minimum-seconds', action='store', 
+                    dest='minimum_seconds', default=86400,
+                    help='Minimum seconds to use during zone bootstrapping.')
+  parser.add_option('--zone-default-retry-seconds', action='store', 
+                    dest='retry_seconds', default=600,
+                    help='Retry seconds to use during zone bootstrapping.')
+  parser.add_option('--zone-default-nameserver-ttl', action='store',
+                    dest='ns_ttl', default=3600,
+                    help='Nameserver TTL to use during zone bootstrapping.')
+  parser.add_option('--zone-default-soa-ttl', action='store',
+                    dest='soa_ttl', default=3600,
+                    help='SOA TTL to use during zone bootstrapping.')
   parser.add_option('--max-threads', action='store', dest='max_threads',
                    help='Maximum number of threads to run in parallel during '
                    'dnsexportconfig execution.', default='10')
@@ -297,6 +315,14 @@ def main(args):
       config_parser.set('exporter', 'exporter_debug', 'on')
     else:
       config_parser.set('exporter', 'exporter_debug', 'off')
+
+    config_parser.add_section('zone_defaults')
+    config_parser.set('zone_defaults', 'refresh_seconds', str(options.refresh_seconds))
+    config_parser.set('zone_defaults', 'retry_seconds', str(options.retry_seconds))
+    config_parser.set('zone_defaults', 'minimum_seconds', str(options.minimum_seconds))
+    config_parser.set('zone_defaults', 'expiry_seconds', str(options.expiry_seconds))
+    config_parser.set('zone_defaults', 'ns_ttl', str(options.ns_ttl))
+    config_parser.set('zone_defaults', 'soa_ttl', str(options.soa_ttl))
 
     config_parser.add_section('server')
     config_parser.set('server', 'port', options.port)

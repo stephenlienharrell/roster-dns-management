@@ -970,6 +970,85 @@ class TestCore(unittest.TestCase):
         u'test_duplicate', u'university.edu', {u'assignment_ip': u'192.168.1.126'},
         view_name=u'test_view', ttl=400)
 
+  def testBootstrapZone(self):
+    for zone in self.core_instance.ListZones():
+      self.core_instance.RemoveZone(zone)
+
+    self.assertEqual(self.core_instance.ListZones(), {})
+    self.assertEqual(self.core_instance.ListRecords(), [])
+    self.core_instance.MakeView(u'test_view')
+
+    self.core_instance.BootstrapZone(u'zone1', u'master', u'zone1_origin.', 
+        view_name=u'test_view', zone_bootstrap_dict={}, make_any=False)
+    self.core_instance.BootstrapZone(u'zone2', u'master', u'zone2_origin.', 
+        view_name=u'test_view', zone_bootstrap_dict={'admin_email': u'some_bro.'}, 
+        make_any=False)
+    self.core_instance.BootstrapZone(u'zone3', u'master', u'zone3_origin.', 
+        view_name=u'test_view', zone_bootstrap_dict={'name_server': u'some_name_server.'}, 
+        make_any=False)
+    self.core_instance.BootstrapZone(u'zone4', u'master', u'zone4_origin.', 
+        view_name=u'test_view', zone_bootstrap_dict={
+          'admin_email': u'some_admin.', 'name_server': u'some_other_name_server.'}, 
+        make_any=False)
+
+    #Nothing interesting should happen here.
+    self.assertEqual(self.core_instance.ListZones(), 
+        {u'zone3': 
+          {u'test_view': {'zone_type': u'master', 'zone_options': u'', 
+                          'zone_origin': u'zone3_origin.'}},
+         u'zone2': 
+          {u'test_view': {'zone_type': u'master', 'zone_options': u'', 
+                          'zone_origin': u'zone2_origin.'}},
+         u'zone1': 
+          {u'test_view': {'zone_type': u'master', 'zone_options': u'', 
+                          'zone_origin': u'zone1_origin.'}}, 
+         u'zone4': 
+          {u'test_view': {'zone_type': u'master', 'zone_options': u'',
+                          'zone_origin': u'zone4_origin.'}}})
+
+    #Here is the magic...
+    self.assertEqual(sorted(self.core_instance.ListRecords(u'ns')),
+        sorted([{'target': u'@', u'name_server': u'some_other_name_server.', 
+                 'ttl': 3600, 'record_type': u'ns', 'view_name': u'test_view',
+                 'last_user': u'sharrell', 'zone_name': u'zone4'}, 
+                {'target': u'@', u'name_server': u'ns.zone1_origin.',
+                 'ttl': 3600, 'record_type': u'ns', 'view_name': u'test_view',
+                 'last_user': u'sharrell', 'zone_name': u'zone1'}, 
+                {'target': u'@', u'name_server': u'ns.zone2_origin.',
+                 'ttl': 3600, 'record_type': u'ns', 'view_name': u'test_view',
+                 'last_user': u'sharrell', 'zone_name': u'zone2'}, 
+                {'target': u'@', u'name_server': u'some_name_server.',
+                 'ttl': 3600, 'record_type': u'ns', 'view_name': u'test_view',
+                 'last_user': u'sharrell', 'zone_name': u'zone3'}]))
+    self.assertEqual(sorted(self.core_instance.ListRecords(u'soa')),
+        sorted([{u'serial_number': 3, u'refresh_seconds': 3600, 'target': u'@',
+                 u'name_server': u'ns.zone1_origin.', u'retry_seconds': 600, 
+                  'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa',
+                  'view_name': u'test_view', 'last_user': u'sharrell',
+                  'zone_name': u'zone1', u'admin_email': u'admin.zone1_origin.',
+                 u'expiry_seconds': 1814400}, 
+
+                {u'serial_number': 3, u'refresh_seconds': 3600, 'target': u'@',
+                 u'name_server': u'ns.zone2_origin.', u'retry_seconds': 600,
+                  'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa',
+                  'view_name': u'test_view', 'last_user': u'sharrell',
+                  'zone_name': u'zone2', u'admin_email': u'some_bro.',
+                 u'expiry_seconds': 1814400}, 
+
+                {u'serial_number': 3, u'refresh_seconds': 3600, 'target': u'@',
+                 u'name_server': u'some_name_server.', u'retry_seconds': 600, 
+                  'ttl': 3600, u'minimum_seconds': 86400, 'record_type': u'soa',
+                  'view_name': u'test_view', 'last_user': u'sharrell',
+                  'zone_name': u'zone3', u'admin_email': u'admin.zone3_origin.',
+                 u'expiry_seconds': 1814400}, 
+
+                {u'serial_number': 3, u'refresh_seconds': 3600, 'target': u'@', 
+                 u'name_server': u'some_other_name_server.', 
+                 u'retry_seconds': 600, 'ttl': 3600, u'minimum_seconds': 86400,
+                  'record_type': u'soa', 'view_name': u'test_view',
+                  'last_user': u'sharrell', 'zone_name': u'zone4',
+                 u'admin_email': u'some_admin.', u'expiry_seconds': 1814400}]))
+
   def testSOA(self):
     self.core_instance.MakeView(u'test_view')
     self.core_instance.MakeZone(u'university.edu', u'master',

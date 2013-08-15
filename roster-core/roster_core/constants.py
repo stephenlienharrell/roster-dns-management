@@ -97,8 +97,13 @@ CONFIG_FILE_SCHEMA = {'database': {'server': 'str', 'login': 'str',
                                    'system_email': 'str',
                                    'email_subject': 'str',
                                    'max_threads': 'int',
-                                   'exporter_debug': 'str'}}
-
+                                   'exporter_debug': 'str'},
+                      'zone_defaults': {'refresh_seconds': 'int',
+                                                   'expiry_seconds': 'int',
+                                                   'minimum_seconds': 'int',
+                                                   'retry_seconds': 'int',
+                                                   'ns_ttl': 'int',
+                                                   'soa_ttl': 'int'}} 
 
 # The SUPPORTED_METHODS hash contains a hash for every supported method.
 # 'check' indicates whether the target zone/IP range should be checked.
@@ -122,6 +127,10 @@ SUPPORTED_METHODS = {
     'MakeRecord':   {'check': True,
                      'write': True,
                      'access_level': ACCESS_LEVELS['user']},
+
+    'BootstrapZone':{'check': True,
+                     'write': True,
+                     'access_level': ACCESS_LEVELS['dns_admin']},
 
     'RemoveRecord': {'check': True,
                      'write': True,

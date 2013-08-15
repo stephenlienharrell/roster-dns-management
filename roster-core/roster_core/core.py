@@ -75,6 +75,7 @@ class Core(object):
     self.user_instance = user.User(user_name, self.db_instance,
                                    self.log_instance)
     self.parent_server_instance = parent_server_instance
+    self.config_instance = config_instance
 
   def MakeUser(self, user_name, access_level):
     """Create a user.
@@ -3149,6 +3150,76 @@ class Core(object):
     for zone_type in zone_types:
       type_list.append(zone_type['zone_type'])
     return type_list
+
+  def BootstrapZone(self, zone_name, zone_type, zone_origin, view_name, 
+      zone_bootstrap_dict, zone_options=None, make_any=True):
+    """Generates SOA and NS records for a zone.
+
+       Inputs:
+         zone_bootstrap_dict: dictionary containing between 0 and 2 keys 
+                              'admin_email' and 'name_server' if either 
+                              of those keys are omitted, then their corresponding
+                              values are 'generated' by this method.
+        zone_name: string of zone name
+        zone_type: string of zone type
+        zone_origin: string of zone origin. ex dept.univiersity.edu.
+        zone_options: string of zone_options(defaults to empty string)
+                      valid zone options can be found here:
+                        http://www.bind9.net/manual/bind/9.3.2/Bv9ARM.ch06.html#zone_statement_grammar
+        view_name: string of view name(defaults to 'any')
+                   see docstring of MakeViewAssignments as to why 'any' is default
+        make_any: regardless of view name, make any as well(default to True)
+    """
+    if( view_name == u'any' ):
+      raise errors.InvalidInputError('Cannot bootstrap a zone in the "any" view.')
+
+    if( 'admin_email' in zone_bootstrap_dict and 
+        zone_bootstrap_dict['admin_email'] is not None ):
+      admin_email = zone_bootstrap_dict['admin_email']
+    else:
+      admin_email = u'admin.%s' % zone_origin
+    if( 'name_server' in zone_bootstrap_dict and
+        zone_bootstrap_dict['name_server'] is not None ):
+      name_server = zone_bootstrap_dict['name_server']
+    else:
+      name_server = u'ns.%s' % zone_origin
+
+    ns_record_args_dict = self.GetEmptyRecordArgsDict(u'ns')
+    soa_record_args_dict = self.GetEmptyRecordArgsDict(u'soa')
+
+    ns_record_args_dict['name_server'] = name_server
+    soa_record_args_dict['name_server'] = name_server
+    soa_record_args_dict['admin_email'] = admin_email
+
+    soa_record_args_dict['refresh_seconds'] = (
+        self.config_instance.config_file[
+          'zone_defaults']['refresh_seconds'])
+    soa_record_args_dict['expiry_seconds'] = (
+        self.config_instance.config_file[
+          'zone_defaults']['expiry_seconds'])
+    soa_record_args_dict['minimum_seconds'] = (
+        self.config_instance.config_file[
+          'zone_defaults']['minimum_seconds'])
+    soa_record_args_dict['retry_seconds'] = (
+        self.config_instance.config_file[
+          'zone_defaults']['retry_seconds'])
+    soa_record_args_dict['serial_number'] = 1 
+    ns_ttl = int(self.config_instance.config_file['zone_defaults'][
+        'ns_ttl'])
+    soa_ttl = int(self.config_instance.config_file['zone_defaults'][
+        'soa_ttl'])
+
+    self.MakeZone(zone_name, zone_type, zone_origin,
+      view_name=view_name, zone_options=zone_options, make_any=make_any)
+    self.MakeRecord(u'soa', u'@', zone_name, soa_record_args_dict,
+        view_name=view_name, ttl=soa_ttl)
+    self.MakeRecord(u'ns', u'@', zone_name, ns_record_args_dict, 
+        view_name=view_name, ttl=ns_ttl)
+
+    soa_record_args_dict['ttl'] = soa_ttl
+    ns_record_args_dict['ttl'] = ns_ttl
+
+    return soa_record_args_dict, ns_record_args_dict
 
   def MakeZoneType(self, zone_type):
     """Makes a new zone type.

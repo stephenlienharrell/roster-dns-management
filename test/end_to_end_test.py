@@ -184,18 +184,23 @@ class TestComplete(unittest.TestCase):
     ## --ssl-key <key-file> --root-config-dir <root_dir>
     ## --backup-dir <backup-dir> -i <init-file> --server-log-file <log-file>
     ## --run-as <uuid> --force --root-hint-file test_data/named.ca
+    ## --zone-default-retry-seconds=30 --zone-default-refresh-seconds=30
+    ## --zone-default-minimum-seconds=30 --zone-default-expiry-seconds=30
+    ## --zone-default-nameserver-ttl=1234
     command_string = (
         'python ../roster-core/scripts/roster_database_bootstrap '
         '-c %s -u %s -U %s -p %s '
         '-d %s -n %s '
         '--ssl-cert %s --ssl-key %s '
         '--root-config-dir %s --backup-dir %s -i %s/init --server-log-file %s '
-        '--run-as %s --force --root-hint-file test_data/named.ca' % (
+        '--run-as %s --force --root-hint-file test_data/named.ca '
+        '--zone-default-retry-seconds=30 --zone-default-refresh-seconds=30 '
+        '--zone-default-minimum-seconds=30 --zone-default-expiry-seconds=30'% (
             self.userconfig, self.login, USERNAME, self.password,
             self.database, self.server,
             self.cert, self.key,
-            self.root_config_dir, self.backup_dir,
-            #self.backup_dir,
+            self.root_config_dir,
+            self.backup_dir,
             TESTDIR,
             self.logfile,
             os.getuid()))
@@ -1322,16 +1327,25 @@ class TestComplete(unittest.TestCase):
     command.close()
     ## User tool: dnsmkzone
     ## dnsmkzone forward -z test_zone -v test_view -t master --origin university.edu.
+    ## --bootstrap-zone --bootstrap-admin-email=university.edu.
+    ## --bootstrap-nameserver=ns.university.edu.
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkzone '
         'forward -z test_zone -v test_view -t master --origin university.edu. '
-        '-u %s -p %s -s %s --config-file %s ' % (
+        '--bootstrap-zone --bootstrap-admin-email=university.edu. '
+        '--bootstrap-nameserver=ns.university.edu. '
+        '-u %s -p %s -s %s --config-file %s' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
         'ADDED FORWARD ZONE: zone_name: test_zone zone_type: master '
-        'zone_origin: university.edu. zone_options: None '
-        'view_name: test_view\n')
+        'zone_origin: university.edu. zone_options: None view_name: test_view\n'
+        'ADDED SOA: @ zone_name: test_zone view_name: test_view ttl: 3600 '
+        'refresh_seconds: 30 expiry_seconds: 30 '
+        'name_server: ns.university.edu. minimum_seconds: 30 '
+        'retry_seconds: 30 serial_number: 3 admin_email: university.edu.\n'
+        'ADDED NS: @ zone_name: test_zone view_name: test_view ttl: 3600 '
+        'name_server: ns.university.edu.\n')
     ## User tool: dnsmkzone
     ## dnsmkzone forward -z test_slave_zone -v test_view -t slave
     command_string = (
@@ -1346,6 +1360,19 @@ class TestComplete(unittest.TestCase):
         'slave zone_origin: slave.university.edu. '
         'zone_options: masters { 192.168.0.1; }; view_name: test_view\n')
     command.close()
+    ## User tool: dnsrmrecord
+    ## dnsrmrecord ns --name-server ns.university.edu. -z test_zone -t @ -v test_view
+    command_string = (
+        'python ../roster-user-tools/scripts/dnsrmrecord '
+        'ns --name-server ns.university.edu. -z test_zone -t @ -v test_view '
+        '-u %s -p %s -s %s --config-file %s' % (
+            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
+    command = os.popen(command_string)
+    output = command.read()
+    command.close()
+    self.assertEqual(output,
+        'REMOVED NS: @ zone_name: test_zone view_name: test_view ttl: 3600\n'
+        '    name_server: ns.university.edu.\n')
     ## User tool: dnsmkzone
     ## dnsmkzone forward -z test_zone2 -v test_view2 -t master --origin 1.168.192.in-addr.arpa.
     command_string = (
@@ -1939,28 +1966,6 @@ class TestComplete(unittest.TestCase):
     self.assertTrue('sharrell  ' in output[3])
     for i in output:
       self.assertFalse('test_user' in i)
-    command.close()
-
-    ## User tool: dnsmkrecord
-    ## dnsmkrecord soa --admin-email="university.edu." --name-server="ns.university.edu."
-    ## --serial-number=123456 --refresh-seconds=30 --retry-seconds=30
-    ## --minimum-seconds=30 --expiry-seconds=30 -t @ -v test_view -z test_zone
-    command_string = (
-        'python ../roster-user-tools/scripts/dnsmkrecord '
-        'soa --admin-email="university.edu." '
-        '--name-server="ns.university.edu." '
-        '--serial-number=111 --refresh-seconds=30 '
-        '--retry-seconds=30 --minimum-seconds=30 '
-        '--expiry-seconds=30 '
-        '-t @ -v test_view -z test_zone '
-        '-u %s -p %s -s %s --config-file %s ' % (
-            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
-    command = os.popen(command_string)
-    self.assertEqual(command.read(),
-        'ADDED SOA: @ zone_name: test_zone view_name: test_view ttl: 3600\n    '
-        'refresh_seconds: 30 expiry_seconds: 30 name_server: ns.university.edu. '
-        'minimum_seconds: 30 retry_seconds: 30 serial_number: 111 '
-        'admin_email: university.edu.\n')
     command.close()
     ## User tool: dnsmkrecord
     ## dnsmkrecord soa --admin-email="university.edu." --name-server="ns.university.edu."

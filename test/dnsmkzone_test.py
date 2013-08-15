@@ -157,6 +157,62 @@ class TestDnsMkZone(unittest.TestCase):
         'zone_options: None view_name: test_view\n')
     output.close()
 
+  def testMakeZoneWithBootstrap(self):
+    self.core_instance.MakeView(u'test_view')
+    output = os.popen('python %s forward -v test_view -z test_zone1 --origin '
+                      'dept1.univiersity.edu. --type master --dont-make-any '
+                      '-s %s -u %s -p %s --config-file %s --bootstrap-zone' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ADDED FORWARD ZONE: zone_name: test_zone1 zone_type: master '
+        'zone_origin: dept1.univiersity.edu. zone_options: None '
+        'view_name: test_view\n'
+        'ADDED SOA: @ zone_name: test_zone1 view_name: test_view ttl: 3600 '
+        'refresh_seconds: 3600 expiry_seconds: 1814400 '
+        'name_server: ns.dept1.univiersity.edu. minimum_seconds: 86400 '
+        'retry_seconds: 600 serial_number: 3 '
+        'admin_email: admin.dept1.univiersity.edu.\n'
+        'ADDED NS: @ zone_name: test_zone1 view_name: test_view ttl: 3600 '
+        'name_server: ns.dept1.univiersity.edu.\n')
+    output.close()
+    output = os.popen('python %s forward -v test_view -z test_zone2 --origin '
+                      'dept2.univiersity.edu. --type master --dont-make-any '
+                      '-s %s -u %s -p %s --config-file %s --bootstrap-zone '
+                      '--bootstrap-nameserver=broserver.' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ADDED FORWARD ZONE: zone_name: test_zone2 zone_type: master '
+        'zone_origin: dept2.univiersity.edu. zone_options: None '
+        'view_name: test_view\n'
+        'ADDED SOA: @ zone_name: test_zone2 view_name: test_view ttl: 3600 '
+        'refresh_seconds: 3600 expiry_seconds: 1814400 '
+        'name_server: broserver. minimum_seconds: 86400 '
+        'retry_seconds: 600 serial_number: 3 '
+        'admin_email: admin.dept2.univiersity.edu.\n'
+        'ADDED NS: @ zone_name: test_zone2 view_name: test_view ttl: 3600 '
+        'name_server: broserver.\n')
+    output.close()
+    output = os.popen('python %s forward -v test_view -z test_zone3 --origin '
+                      'dept3.univiersity.edu. --type master --dont-make-any '
+                      '-s %s -u %s -p %s --config-file %s --bootstrap-zone '
+                      '--bootstrap-admin-email=bromail.' % (
+                          EXEC, self.server_name, USERNAME,
+                          PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ADDED FORWARD ZONE: zone_name: test_zone3 zone_type: master '
+        'zone_origin: dept3.univiersity.edu. zone_options: None '
+        'view_name: test_view\n'
+        'ADDED SOA: @ zone_name: test_zone3 view_name: test_view ttl: 3600 '
+        'refresh_seconds: 3600 expiry_seconds: 1814400 '
+        'name_server: ns.dept3.univiersity.edu. minimum_seconds: 86400 '
+        'retry_seconds: 600 serial_number: 3 '
+        'admin_email: bromail.\n'
+        'ADDED NS: @ zone_name: test_zone3 view_name: test_view ttl: 3600 '
+        'name_server: ns.dept3.univiersity.edu.\n')
+    output.close()
+
   def testMakeZoneWithView(self):
     self.core_instance.MakeView(u'test_view')
     output = os.popen('python %s forward -v test_view -z test_zone --origin '
