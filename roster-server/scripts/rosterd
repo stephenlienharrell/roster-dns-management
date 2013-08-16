@@ -100,7 +100,7 @@ def main(args):
                     help='Print debug messages, with <n> indicating level.',
                     default=0)
   parser.add_option('--config-file', dest='config_file', metavar='<file>',
-                    help='Use <file> as a config file, rather than default',
+                    help='Use <file> as a config file, rather than default.',
                     default=roster_core.SERVER_CONFIG_FILE_LOCATION)
   parser.add_option('-H', '--host', dest='host', metavar='<host>',
                     help='Hostname of server to be created.',
@@ -109,7 +109,7 @@ def main(args):
                     help='Port of server to be created.',
                     default=None)
   parser.add_option('--unit-test', dest='unit_test',
-                    help='Run as unit-test..',
+                    help='Run as unit-test.',
                     default=False, action='store_true')
   parser.add_option('-s', '--stop', dest='stop', action='store_true',
                     help='Stops rosterd. Will remove lockfile even if '
