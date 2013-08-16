@@ -290,8 +290,9 @@ CREATE TABLE `zone_view_assignments` (
   PRIMARY KEY (`zone_view_assignments_id`),
   UNIQUE KEY `unique_zone_name_zone_dependency` 
     (`zone_view_assignments_zone_name`,`zone_view_assignments_view_dependency`),
-  UNIQUE KEY `unique_zone_origin_view_dependency` 
-    (`zone_view_assignments_view_dependency`,`zone_origin`),
+  UNIQUE KEY `unique_zone_origin_zone_type_view_dependency` 
+    (`zone_view_assignments_view_dependency`,`zone_origin`, 
+     `zone_view_assignments_zone_type`),
   INDEX `zone_name` (`zone_view_assignments_zone_name`,
                    `zone_view_assignments_view_dependency`),
   INDEX `view_dependency_3` (`zone_view_assignments_view_dependency`),

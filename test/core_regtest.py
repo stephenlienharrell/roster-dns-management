@@ -631,6 +631,22 @@ class TestCore(unittest.TestCase):
         self.core_instance.UpdateGroupReversePermission, 
         u'192.168.0.0/24', u'no_group', [u'ptr', u'cname'])
 
+  def testMakeZoneZoneOriginZoneTypeViewDependencyError(self):
+    self.core_instance.MakeView(u'test_view')
+    self.core_instance.MakeZone(u'test_zone1', u'master', u'test_zone.')
+    self.core_instance.MakeZone(u'test_zone2', u'slave', u'test_zone.')
+    self.assertRaises(MySQLdb.IntegrityError,
+      self.core_instance.MakeZone, u'test_zone3', u'master', u'test_zone.')
+
+    #Raises since the above zones were made in the any view.
+    self.assertRaises(MySQLdb.IntegrityError,
+      self.core_instance.MakeZone, u'test_zone4', u'master', u'test_zone.', 
+          view_name=u'test_view')
+
+    #This should work fine, though.
+    self.core_instance.MakeZone(u'test_zone4', u'master', u'test_zone.', 
+        view_name=u'test_view', make_any=False)
+
   def testReverseRangeZoneAssignmentMakeRemoveListUpdateRemove(self):
     self.core_instance.MakeZone(u'10.in-addr.arpa', u'master',
                                 u'10.in-addr.arpa.')

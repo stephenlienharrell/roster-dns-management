@@ -350,6 +350,33 @@ class TestDnsMkZone(unittest.TestCase):
                      'zone_name: reverse_zone cidr_block: 192.168/27 \n')
     output.close()
 
+  def testMakeMultipleZonesWithSameZoneOriginError(self):
+    self.core_instance.MakeView(u'test_view')
+    output = os.popen('python %s forward -z test_zone1 -v test_view --origin '
+                      'dept.university.edu. --type master '
+                      '-s %s -u %s -p %s --config-file %s' % (EXEC,
+                          self.server_name, USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ADDED FORWARD ZONE: zone_name: test_zone1 zone_type: master '
+        'zone_origin: dept.university.edu. zone_options: None view_name: test_view\n')
+    output.close()
+    output = os.popen('python %s forward -z test_zone2 -v test_view --origin '
+                      'dept.university.edu. --type master '
+                      '-s %s -u %s -p %s --config-file %s' % (EXEC,
+                          self.server_name, USERNAME, PASSWORD, USER_CONFIG))
+    output_string = output.read()
+    output.close()
+    self.assertTrue('UNKNOWN ERROR(IntegrityError)' in output_string)
+    self.assertTrue('Duplicate entry' in output_string)
+    output = os.popen('python %s forward -z test_zone3 -v test_view --origin '
+                      'dept.university.edu. --type slave '
+                      '-s %s -u %s -p %s --config-file %s' % (EXEC,
+                          self.server_name, USERNAME, PASSWORD, USER_CONFIG))
+    self.assertEqual(output.read(),
+        'ADDED FORWARD ZONE: zone_name: test_zone3 zone_type: slave '
+        'zone_origin: dept.university.edu. zone_options: None view_name: test_view\n')
+    output.close()
+
   def testErrors(self):
     output = os.popen('python %s forward -v test_view -z test_zone --origin '
                       'dept.univiersity.edu. --type master '
