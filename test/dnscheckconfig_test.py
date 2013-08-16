@@ -73,8 +73,9 @@ class TestCheckConfig(unittest.TestCase):
     tar_contents = {}
     exported_file = tarfile.open(tar_file_name, 'r:bz2')
     for current_member in exported_file.getmembers():
-      tar_contents[current_member.name] = exported_file.extractfile(
-          current_member.name).read()
+      if( current_member.isfile() ):
+        tar_contents[current_member.name] = exported_file.extractfile(
+            current_member.name).read()
     tarred_file_handle = exported_file.extractfile(member)
     tarred_file = tarred_file_handle.read()
     tarred_file_handle.close()

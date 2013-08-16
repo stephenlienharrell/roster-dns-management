@@ -176,7 +176,7 @@ class TestRosterClientLib(unittest.TestCase):
     self.assertRaises(
         SystemExit, roster_client_lib.RunFunction,
         u'ListZones', USERNAME, CREDFILE,
-        server_name=self.server_name, password='wrong')
+        server_name=self.server_name, password='fakepass')
 
     invalid_credfile = '/fake/credfile'
     self.assertEqual(sys.stdout.flush(),
@@ -184,7 +184,7 @@ class TestRosterClientLib(unittest.TestCase):
     self.assertRaises(
         SystemExit, roster_client_lib.RunFunction,
         u'ListZones', USERNAME, CREDFILE,
-        server_name=self.server_name, password='wrong')
+        server_name=self.server_name, password='fakepass')
     self.assertEqual(sys.stdout.flush(),
                      'ERROR: Incorrect username/password.\n')
     sys.stdout = oldstdout
@@ -216,11 +216,12 @@ class TestRosterClientLib(unittest.TestCase):
                      cred_stat.st_mode & stat.S_IRWXO)
  
   def testNotStarted(self):
-    if( os.path.exists('/var/lock/rosterd') ):
-      os.remove('/var/lock/rosterd')
+    lock_file = self.config_instance.config_file['server']['lock_file']
+    if( os.path.exists(lock_file) ):
+      os.remove(lock_file)
     time.sleep(1)
-    command = os.popen('python %s all' % (
-      '../roster-user-tools/scripts/dnslszone'))
+    command = os.popen('python %s all -s https://%s:0' % (
+      '../roster-user-tools/scripts/dnslszone', HOST))
     self.assertEqual(command.read(),
       'ERROR: Roster not started.\n')
     command.close()

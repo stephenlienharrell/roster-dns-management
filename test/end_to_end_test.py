@@ -67,15 +67,15 @@ HOST = u'localhost'
 CREDFILE = '%s/.dnscred' % os.getcwd()
 USERNAME = 'shuey'
 PASSWORD = 'testpass'
-TESTDIR = u'%s/unittest_dir/' % os.getcwd()
+TESTDIR = u'%s/test_data/unittest_dir/' % os.getcwd()
 BINDDIR = u'%s/test_data/bind_dir/' % os.getcwd() 
-NAMED_DIR = u'%s/test_data/bind_dir/named/' % os.getcwd()
+NAMED_DIR = unicode(os.path.join(BINDDIR, 'named'))
 #bind binary files
 CHECKZONE_EXEC = '/usr/sbin/named-checkzone'
 CHECKCONF_EXEC = '/usr/sbin/named-checkconf'
-#SSH
 SSH_ID = 'test_data/roster_id_dsa'
 SSH_USER = unicode(getpass.getuser())
+
 TEST_DNS_SERVER = u'localhost' # change this to real bind servers
 TEST_DNS_SERVER2 = u'testns2'
 SESSION_KEYFILE = 'test_data/session.key'
@@ -169,12 +169,8 @@ class TestComplete(unittest.TestCase):
     ## kill rosterd deamon threads
     if( os.path.exists(LOCKFILE) ):
       os.remove(LOCKFILE)
-    if( os.path.exists('%s/named' % BINDDIR) ):
-      shutil.rmtree('%s/named' % BINDDIR)
-    if( os.path.exists('%s/named.conf' % BINDDIR) ):
-      os.remove('%s/named.conf' % BINDDIR)
-    if( os.path.exists('./temp_dir') ):
-      shutil.rmtree('./temp_dir')
+    if( os.path.exists(BINDDIR) ):
+      shutil.rmtree(BINDDIR)
 
   def testEndToEnd(self):
     ## Bootstraps
@@ -236,17 +232,16 @@ class TestComplete(unittest.TestCase):
       self.fail('User tools config file was not created.')
 
     # Copy blank named.conf to start named with
-    shutil.copyfile('test_data/named.blank.conf', '%snamed.conf' % BINDDIR)
-    named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
+    shutil.copyfile('test_data/named.blank.conf', os.path.join(BINDDIR, 'named.conf'))
+    named_file_contents = open(os.path.join(BINDDIR, 'named.conf'), 'r').read()
     named_file_contents = named_file_contents.replace('RNDC_KEY', '%s/test_data/rndc.key' % os.getcwd())
-    named_file_contents = named_file_contents.replace('NAMED_DIR', '%s/test_data/named' % os.getcwd())
+    named_file_contents = named_file_contents.replace('NAMED_DIR', os.path.join(BINDDIR, 'named'))
     named_file_contents = named_file_contents.replace('NAMED_PID', '%s/test_data/named.pid' % os.getcwd())
     named_file_contents = named_file_contents.replace('RNDC_PORT', str(self.rndc_port))
     named_file_contents = named_file_contents.replace('SESSION_KEYFILE', '%s/%s' % (os.getcwd(), str(SESSION_KEYFILE)))
-    named_file_handle = open('%s/named.conf' % BINDDIR, 'w')
+    named_file_handle = open(os.path.join(BINDDIR, 'named.conf'), 'w')
     named_file_handle.write(named_file_contents)
     named_file_handle.close()
-    named_file_contents = open('%s/named.conf' % BINDDIR, 'r').read()
     # Start named
     named_proc = os.popen('/usr/sbin/named -p %s -u %s -c %s/named.conf' % ( 
         self.named_port, SSH_USER, BINDDIR))
@@ -378,7 +373,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED DNS SERVER SET ASSIGNMENT: dns_server: %s dns_server_set: set2\n' % TEST_DNS_SERVER)
+        'CLIENT ERROR: DNS Server "%s" is already assigned to DNS Server Set "set1"\n' % TEST_DNS_SERVER)
     command.close()
     ## User tool: dnsmkdnsserver
     ## dnsmkdnsserver dns_server_set -e set4
@@ -392,7 +387,7 @@ class TestComplete(unittest.TestCase):
         'ADDED DNS SERVER SET: set4\n')
     command.close()
     ## User tool: dnsmkdnsserver
-    ## dnsmkdnsserver assignment -d dns2 -e set4
+    ## dnsmkdnsserver assignment -d dns1 -e set4
     command_string = (
         'python ../roster-user-tools/scripts/dnsmkdnsserver '
         'assignment -d %s -e set4 '
@@ -401,7 +396,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'ADDED DNS SERVER SET ASSIGNMENT: dns_server: %s dns_server_set: set4\n' % TEST_DNS_SERVER2)
+        'CLIENT ERROR: DNS Server "%s" is already assigned to DNS Server Set "set3"\n' % TEST_DNS_SERVER2)
     command.close()
     ## User tool: dnsmkdnsserver
     ## dnsmkdnsserver dns_server -d dns3
@@ -473,18 +468,6 @@ class TestComplete(unittest.TestCase):
     self.assertTrue(TESTDIR in output)
     command.close()
     ## User tool: dnsrmdnsserver
-    ## dnsrmdnsserver assignment -d dns2 -e set4
-    command_string = (
-        'python ../roster-user-tools/scripts/dnsrmdnsserver '
-        'assignment -d %s -e set4 '
-        '-u %s -p %s -s %s --config-file %s ' % (
-            TEST_DNS_SERVER2,
-            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
-    command = os.popen(command_string)
-    self.assertEqual(command.read(),
-        'REMOVED DNS SERVER SET ASSIGNMENT: dns_server_set: set4 dns_server: %s\n' % TEST_DNS_SERVER2)
-    command.close()
-    ## User tool: dnsrmdnsserver
     ## dnsrmdnsserver dns_server -d dns3
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmdnsserver '
@@ -507,7 +490,7 @@ class TestComplete(unittest.TestCase):
         'REMOVED DNS SERVER SET: set4\n')
     command.close()
     ## User tool: dnsrmdnsserver
-    ## dnsrmdnsserver dns_server_set -e set4
+    ## dnsrmdnsserver dns_server_set -e set5
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmdnsserver '
         'dns_server_set -e set5 '
@@ -586,25 +569,10 @@ class TestComplete(unittest.TestCase):
         'set  dns_servers\n'
         '----------------\n'
         'set1 %s\n'
-        'set2 %s\n'
         'set3 %s\n\n' % (
-          TEST_DNS_SERVER, TEST_DNS_SERVER, TEST_DNS_SERVER2))
+          TEST_DNS_SERVER, TEST_DNS_SERVER2))
     command.close()
 
-    ## User tool: dnsauditlog
-    ## dnslsauditlog --success 0
-    command_string = (
-        'python ../roster-user-tools/scripts/dnslsauditlog '
-        '--success 0 '
-        '-u %s -p %s -s %s --config-file %s ' % (
-            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
-    command = os.popen(command_string)
-    output = command.read()
-    output = re.sub("\s+"," ",output)
-    output = output.split(' ')
-    self.assertEqual(output[10:16],
-        ['shuey', '0', "{'dns_server_name':", "u'%s'," % TEST_DNS_SERVER2, "'dns_server_set_name':", "u'set4'}"])
-    command.close()
     ## User tool: dnsauditlog
     ## dnslsauditlog --success 1
     command_string = (
@@ -1112,7 +1080,7 @@ class TestComplete(unittest.TestCase):
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
     command = os.popen(command_string)
     self.assertEqual(command.read(),
-        'REMOVED VIEW view_name: view_name: test_view3 options None\n')
+        'REMOVED VIEW view_name: view_name: test_view3\n')
     command.close()
     ## User tool: dnslsview
     ## dnslsview view
@@ -2814,19 +2782,6 @@ class TestComplete(unittest.TestCase):
     ## dnsrmdnsserver dns_server_set -e set2
     command_string = (
         'python ../roster-user-tools/scripts/dnsrmdnsserver '
-        'assignment -d %s -e set2 '
-        '-u %s -p %s -s %s --config-file %s ' % (
-            TEST_DNS_SERVER,
-            USERNAME, PASSWORD, self.server_name, self.toolsconfig))
-    command = os.popen(command_string)
-    self.assertEqual(command.read(),
-        'REMOVED DNS SERVER SET ASSIGNMENT: dns_server_set: set2 dns_server: %s\n' % (
-          TEST_DNS_SERVER))
-    command.close()
-    ## User tool: dnsrmdnsserver
-    ## dnsrmdnsserver dns_server_set -e set2
-    command_string = (
-        'python ../roster-user-tools/scripts/dnsrmdnsserver '
         'dns_server_set -e set2 '
         '-u %s -p %s -s %s --config-file %s ' % (
             USERNAME, PASSWORD, self.server_name, self.toolsconfig))
@@ -3179,9 +3134,9 @@ class TestComplete(unittest.TestCase):
     self.assertEqual(command.read(),
         '')
     command.close()
-    id = 146
+    id = 144
     os.rename('%s/full_database_dump-%s.bz2' % (self.backup_dir, id),
-                                '%s/origdb.bz2' % self.backup_dir)
+              '%s/origdb.bz2' % self.backup_dir)
     dbdump = glob.glob('%s/*-%s.*' % (self.backup_dir, id))
     for db in dbdump:
       if( os.path.exists(db) ):

@@ -161,7 +161,7 @@ class ConfigSyncer:
       for out in fabric_state.output:
         fabric_state.output[out] = False
       fabric_api.env.host_string = self.ssh_host
-      fabric_api.run('rm -rf %s/*' % self.test_dir)
+      fabric_api.run('rm -rf %s' % os.path.join(self.test_dir, '*'))
 
       retry_methods = [self.MoveFilesAndUnTar, self.ReplaceBindDir, 
               self.ReloadBindServer]
@@ -262,7 +262,7 @@ class ConfigSyncer:
 
     #Making sure self.bind_dir exists 
     result = fabric_api.run('file %s' % self.bind_dir)
-    if( result.stdout == "%s: ERROR: cannot open `%s' (No such file or directory)" % (
+    if( result.stdout == "%s: cannot open `%s' (No such file or directory)" % (
       self.bind_dir, self.bind_dir) ):
       raise config_lib.ServerCheckError(
           'BIND directory %s does not exist on server %s' % (self.bind_dir, 

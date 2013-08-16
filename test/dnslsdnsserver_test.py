@@ -133,7 +133,6 @@ class TestDnslsdnsserver(unittest.TestCase):
     self.core_instance.MakeDnsServerSet(u'set1')
     self.core_instance.MakeDnsServerSet(u'set2')
     self.core_instance.MakeDnsServerSetAssignments(u'dns1', u'set1')
-    self.core_instance.MakeDnsServerSetAssignments(u'dns2', u'set1')
     self.core_instance.MakeDnsServerSetAssignments(u'dns2', u'set2')
     command = os.popen('python %s assignment -u %s '
                        '-p %s --config-file %s -s %s' % (
@@ -141,7 +140,7 @@ class TestDnslsdnsserver(unittest.TestCase):
                            self.server_name))
     self.assertEqual(command.read(), 'set  dns_servers\n'
                                      '----------------\n'
-                                     'set1 dns1,dns2\n'
+                                     'set1 dns1\n'
                                      'set2 dns2\n\n')
     command.close()
     command = os.popen('python %s assignment -e set2 -u %s '
@@ -158,7 +157,6 @@ class TestDnslsdnsserver(unittest.TestCase):
                            self.server_name))
     self.assertEqual(command.read(), 'set  dns_servers\n'
                                      '----------------\n'
-                                     'set1 dns2\n'
                                      'set2 dns2\n\n')
     command.close()
     command = os.popen('python %s assignment -u %s -d dns1 '

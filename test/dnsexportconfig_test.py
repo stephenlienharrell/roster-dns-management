@@ -106,6 +106,11 @@ class TestCheckConfig(unittest.TestCase):
     while( self.rndc_port == self.port ):
       self.rndc_port = PickUnusedPort()
 
+    if( not os.path.exists(BINDDIR) ):
+      os.mkdir(BINDDIR)
+    if( not os.path.exists(TESTDIR) ):
+      os.mkdir(TESTDIR)
+
     rndc_key = open(RNDC_KEY, 'w')
     rndc_key.write(RNDC_KEY_DATA)
     rndc_key.close()
@@ -161,10 +166,8 @@ class TestCheckConfig(unittest.TestCase):
       shutil.rmtree(self.backup_dir)
     if( os.path.exists(self.root_config_dir) ):
       shutil.rmtree(self.root_config_dir)
-    if( os.path.exists('%s/named' % BINDDIR.rstrip('/')) ):
-      shutil.rmtree('%s/named' % BINDDIR.rstrip('/'))
-    if( os.path.exists('%s/named.conf' % BINDDIR.rstrip('/')) ):
-      os.remove('%s/named.conf' % BINDDIR.rstrip('/'))
+    if( os.path.exists(BINDDIR) ):
+      shutil.rmtree(BINDDIR)
     if( os.path.exists(self.lockfile) ):
       os.remove(self.lockfile)
     if( os.path.exists('/etc/resolv.conf.unittest_backup') ):
@@ -216,7 +219,7 @@ class TestCheckConfig(unittest.TestCase):
     os.system('sudo mv /etc/resolv.conf /etc/resolv.conf.unittest_backup')
     os.system("""sudo sh -c "echo 'search %s\nnameserver 127.0.0.1\n' > /etc/resolv.conf"\n""" % zone_name)
 
-    num_test_machines = 30 
+    num_test_machines = 30
     ports = []
     test_dns_servers = []
 
