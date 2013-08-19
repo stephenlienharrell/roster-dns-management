@@ -1,5 +1,7 @@
 Current Release
 
+2013-08-19 release-0.18
+
 2012-08-02 release-0.17
 - Added autogenerating developer documentation when creating a release
 - Fixed a bug where the zone importer atempts to increment an non-existant SOA serial
