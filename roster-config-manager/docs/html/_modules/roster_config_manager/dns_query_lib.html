@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>roster_config_manager.dns_query_lib &mdash; Roster Config Manager v0.18 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     'v0.18',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Roster Config Manager v0.18 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.18 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for roster_config_manager.dns_query_lib</h1><div class="highlight"><pre>
+<span class="c">#! /usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Copyright (c) 2009, Purdue University</span>
+<span class="c"># All rights reserved.</span>
+<span class="c">#</span>
+<span class="c"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c">#</span>
+<span class="c"># Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer.</span>
+<span class="c">#</span>
+<span class="c"># Redistributions in binary form must reproduce the above copyright notice, this</span>
+<span class="c"># list of conditions and the following disclaimer in the documentation and/or</span>
+<span class="c"># other materials provided with the distribution.</span>
+<span class="c">#</span>
+<span class="c"># Neither the name of the Purdue University nor the names of its contributors</span>
+<span class="c"># may be used to endorse or promote products derived from this software without</span>
+<span class="c"># specific prior written permission.</span>
+<span class="c">#</span>
+<span class="c"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot;This module contains all the logic for querying a DNS server.</span>
+<span class="sd">It is used by dnsquerycheck.&quot;&quot;&quot;</span>
+
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s">&#39;Copyright (C) 2009, Purdue University&#39;</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s">&#39;BSD&#39;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;#TRUNK#&#39;</span>
+
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">dns.zone</span>
+<span class="kn">import</span> <span class="nn">dns.query</span>
+
+<span class="kn">import</span> <span class="nn">roster_core</span>
+<span class="kn">from</span> <span class="nn">roster_config_manager</span> <span class="kn">import</span> <span class="n">config_lib</span>
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">roster_core</span> <span class="kn">import</span> <span class="n">helpers_lib</span>
+
+<span class="n">roster_core</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">CheckCoreVersionMatches</span><span class="p">(</span><span class="n">__version__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DnsQuery"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.dns_query_lib.DnsQuery">[docs]</a><span class="k">def</span> <span class="nf">DnsQuery</span><span class="p">(</span><span class="n">records</span><span class="p">,</span> <span class="n">dns_server</span><span class="p">,</span> <span class="n">dns_port</span><span class="p">,</span> <span class="n">zone_origin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Queries a DNS server for all the records contained within the</span>
+<span class="sd">  supplied list of records.</span>
+<span class="sd"> </span>
+<span class="sd">  Input:</span>
+<span class="sd">    records: list of record dictionaries.</span>
+<span class="sd">    dns_server: string of IP Address or hostname of DNS server.</span>
+<span class="sd">    dns_port: int of port to query DNS server on.</span>
+<span class="sd">    zone_origin: string of zone origin.</span>
+<span class="sd"> </span>
+<span class="sd">    Output:</span>
+<span class="sd">      (good_records, bad_records): a tuple of 2 lists,</span>
+<span class="sd">      the first being all the records that were able to </span>
+<span class="sd">      be verified, the second being all the records unable</span>
+<span class="sd">      to be verified.</span>
+
+<span class="sd">      example: ([u&#39;0.168.192.in-addr.arpa. 86400 IN NS ns2.university.lcl.&#39;,</span>
+<span class="sd">                 u&#39;1.0.168.192.in-addr.arpa. 86400 IN PTR router.university.lcl.&#39;,</span>
+<span class="sd">                 u&#39;11.0.168.192.in-addr.arpa. 86400 IN PTR desktop-1.university.lcl.&#39;,</span>
+<span class="sd">                 u&#39;12.0.168.192.in-addr.arpa. 86400 IN PTR desktop-2.university.lcl.&#39;],</span>
+
+<span class="sd">                [u&#39;13.0.168.192.in-addr.arpa. 86400 IN PTR desktop-3.university.lcl.&#39;])</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">          errors.UnexpectedDataError: No zone origin supplied.</span>
+<span class="sd">          errors.UnexpectedDataError: Invalid record type.</span>
+<span class="sd">          errors.UnexpectedDataError: Invalid record class.&quot;&quot;&quot;</span>
+
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">dns_server</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostbyname</span><span class="p">(</span><span class="n">dns_server</span><span class="p">)</span>
+  <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">gaierror</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">config_lib</span><span class="o">.</span><span class="n">ConfigManagerError</span><span class="p">(</span><span class="s">&#39;ERROR: Could not find address &#39;</span>
+        <span class="s">&#39;associated with </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">dns_server</span><span class="p">)</span>
+
+  <span class="n">good_records</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="n">record_types</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">u&#39;a&#39;</span><span class="p">:</span>     <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">A</span><span class="p">,</span>
+    <span class="s">u&#39;aaaa&#39;</span><span class="p">:</span>  <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">AAAA</span><span class="p">,</span>
+    <span class="s">u&#39;cname&#39;</span><span class="p">:</span> <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">CNAME</span><span class="p">,</span>
+    <span class="s">u&#39;soa&#39;</span><span class="p">:</span>   <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">SOA</span><span class="p">,</span>
+    <span class="s">u&#39;mx&#39;</span><span class="p">:</span>    <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">MX</span><span class="p">,</span>
+    <span class="s">u&#39;ns&#39;</span><span class="p">:</span>    <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">NS</span><span class="p">,</span>
+    <span class="s">u&#39;ptr&#39;</span><span class="p">:</span>   <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">PTR</span><span class="p">,</span>
+    <span class="s">u&#39;txt&#39;</span><span class="p">:</span>   <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">TXT</span><span class="p">,</span>
+    <span class="s">u&#39;hinfo&#39;</span><span class="p">:</span> <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">HINFO</span><span class="p">,</span>
+    <span class="s">u&#39;srv&#39;</span><span class="p">:</span>   <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">SRV</span>
+  <span class="p">}</span>
+
+  <span class="c">#Main loop, going through the zone records, querying the DNS server for them</span>
+  <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">records</span><span class="p">:</span>
+    <span class="n">server_responses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">record_type</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_type&#39;</span><span class="p">]</span>
+    <span class="n">rdtype</span> <span class="o">=</span> <span class="n">record_types</span><span class="p">[</span><span class="n">record_type</span><span class="p">]</span>
+    <span class="n">record_arguments</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_arguments&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span><span class="p">(</span> <span class="s">&#39;record_target&#39;</span> <span class="ow">in</span> <span class="n">record</span> <span class="p">):</span>
+      <span class="n">record_target</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;record_target&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">record_target</span> <span class="o">=</span> <span class="n">record</span><span class="p">[</span><span class="s">&#39;target&#39;</span><span class="p">]</span>
+
+    <span class="c">#Setting query </span>
+    <span class="k">if</span><span class="p">(</span> <span class="n">record_target</span> <span class="o">==</span> <span class="s">&#39;@&#39;</span> <span class="p">):</span>
+      <span class="n">query</span> <span class="o">=</span> <span class="n">zone_origin</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">query</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">record_target</span><span class="p">,</span> <span class="n">zone_origin</span><span class="p">)</span>
+ 
+    <span class="n">message</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">make_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">rdtype</span><span class="o">=</span><span class="n">rdtype</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">response</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">udp</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">dns_server</span><span class="p">,</span> 
+          <span class="n">port</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">dns_port</span><span class="p">),</span> <span class="n">one_rr_per_rrset</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">dns</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="n">Timeout</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">config_lib</span><span class="o">.</span><span class="n">QueryCheckError</span><span class="p">(</span><span class="s">&#39;Querying DNS server timed out.&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">dns</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="n">SyntaxError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">config_lib</span><span class="o">.</span><span class="n">QueryCheckError</span><span class="p">(</span><span class="s">&#39;Invalid DNS server address.&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">dns</span><span class="o">.</span><span class="n">exception</span><span class="o">.</span><span class="n">DNSException</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">config_lib</span><span class="o">.</span><span class="n">QueryCheckError</span><span class="p">(</span><span class="s">&#39;Unknown error during DNS query &#39;</span>
+                                       <span class="s">&#39;process.&#39;</span><span class="p">)</span>
+
+    <span class="n">answers</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">answer</span>
+
+    <span class="c">#checking that record type and target match</span>
+    <span class="k">for</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">answers</span><span class="p">:</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">rdtype</span><span class="p">)</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">rdtype</span><span class="p">)</span> <span class="ow">and</span> 
+          <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="p">):</span>
+        <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">continue</span>
+
+    <span class="k">for</span> <span class="n">answer_set</span> <span class="ow">in</span> <span class="n">answers</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">answer</span> <span class="ow">in</span> <span class="n">answer_set</span><span class="p">:</span>
+        <span class="k">if</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;soa&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;refresh_seconds&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">refresh</span> <span class="ow">and</span> 
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;expiry_seconds&#39;</span><span class="p">]</span>  <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">expire</span>  <span class="ow">and</span>
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;minimum_seconds&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">minimum</span> <span class="ow">and</span>
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;retry_seconds&#39;</span><span class="p">]</span>   <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">retry</span>   <span class="ow">and</span>
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;name_server&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">mname</span><span class="p">)</span> <span class="ow">and</span> 
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;admin_email&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">rname</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;a&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;assignment_ip&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">address</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;aaaa&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;assignment_ip&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">ExpandIPV6</span><span class="p">(</span>
+                <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">address</span><span class="p">))</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;cname&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;assignment_host&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;ptr&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;assignment_host&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;mx&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;priority&#39;</span><span class="p">]</span>    <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">preference</span> <span class="ow">and</span>
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;mail_server&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">exchange</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;ns&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;name_server&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;hinfo&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;hardware&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">cpu</span><span class="p">)</span> <span class="ow">and</span>
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;os&#39;</span><span class="p">]</span>       <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">os</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;txt&#39;</span> <span class="p">):</span>
+          <span class="n">quoted_text</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">[</span><span class="s">&#39;&quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="n">answer_string</span> <span class="k">for</span> <span class="n">answer_string</span> <span class="ow">in</span> <span class="n">answer</span><span class="o">.</span><span class="n">strings</span><span class="p">]))</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">u&#39;quoted_text&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">quoted_text</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+        <span class="k">elif</span><span class="p">(</span> <span class="n">record_type</span> <span class="o">==</span> <span class="s">u&#39;srv&#39;</span> <span class="p">):</span>
+          <span class="k">if</span><span class="p">(</span> <span class="n">record_arguments</span><span class="p">[</span><span class="s">&#39;weight&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">weight</span> <span class="ow">and</span>
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">&#39;priority&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">answer</span><span class="o">.</span><span class="n">priority</span> <span class="ow">and</span> 
+              <span class="n">record_arguments</span><span class="p">[</span><span class="s">&#39;assignment_host&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">target</span><span class="p">)</span> <span class="p">):</span>
+            <span class="n">good_records</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="k">break</span>
+
+  <span class="c">#Takes all the records that never made it into good_records, and declares</span>
+  <span class="c">#them as bad_records.</span>
+  <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">good_records</span><span class="p">:</span>
+    <span class="n">records</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+  <span class="n">bad_records</span> <span class="o">=</span> <span class="n">records</span>
+ 
+  <span class="c">#This is purely for asthetic reasons. If you were to print bad_records,</span>
+  <span class="c">#you&#39;d see a bunch of None&#39;s which doesn&#39;t help you. It just clutters</span>
+  <span class="c">#the screen.</span>
+  <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">bad_records</span><span class="p">:</span>
+    <span class="k">if</span><span class="p">(</span> <span class="s">u&#39;record_zone_name&#39;</span> <span class="ow">in</span> <span class="n">record</span> <span class="p">):</span>
+      <span class="k">if</span><span class="p">(</span> <span class="n">record</span><span class="p">[</span><span class="s">u&#39;record_zone_name&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="p">):</span>
+        <span class="k">del</span> <span class="n">record</span><span class="p">[</span><span class="s">u&#39;record_zone_name&#39;</span><span class="p">]</span>
+
+  <span class="k">return</span> <span class="p">(</span><span class="n">good_records</span><span class="p">,</span> <span class="n">bad_records</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QueryFromZoneFile"><a class="viewcode-back" href="../../roster_config_manager.html#roster_config_manager.dns_query_lib.QueryFromZoneFile">[docs]</a><span class="k">def</span> <span class="nf">QueryFromZoneFile</span><span class="p">(</span><span class="n">zone_file_name</span><span class="p">,</span> <span class="n">dns_server</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">records_to_query</span><span class="p">,</span> 
+    <span class="n">view_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Queries a DNS server for a number of records contained within the</span>
+<span class="sd">  supplied zone file.</span>
+
+<span class="sd">  Inputs:</span>
+<span class="sd">    zone_file_name: string of zone file path. e.g. - &#39;/tmp/forward_zone_1.db&#39;</span>
+<span class="sd">    dns_server: string of IP Address or hostname of DNS server.</span>
+<span class="sd">    port: int of port to query DNS server on. </span>
+<span class="sd">    num_records_to_query: int of the number of records to randomly select and </span>
+<span class="sd">      query.</span>
+<span class="sd">    view_name: string of view that zone_file_name is in.</span>
+
+<span class="sd">  Outputs:</span>
+<span class="sd">    True if all records queried, query correctly.&quot;&quot;&quot;</span>
+  <span class="n">zone_name</span> <span class="o">=</span> <span class="n">zone_file_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">zone_file_handle</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">zone_file_name</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">zone_file_string</span> <span class="o">=</span> <span class="n">zone_file_handle</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">zone_file_handle</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+  <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">config_lib</span><span class="o">.</span><span class="n">QueryCheckError</span><span class="p">(</span><span class="s">&#39;Unable to open zone file &#39;</span>
+                                     <span class="s">&#39;</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">zone_file_name</span><span class="p">)</span>
+
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">zone_object</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">from_text</span><span class="p">(</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">zone_file_string</span><span class="p">),</span> <span class="n">check_origin</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+  <span class="k">except</span> <span class="n">dns</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">NoSOA</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">config_lib</span><span class="o">.</span><span class="n">QueryCheck</span><span class="p">(</span><span class="s">&#39;Zone has no SOA record.&#39;</span><span class="p">)</span>
+  <span class="k">except</span> <span class="n">dns</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">NoNS</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">config_lib</span><span class="o">.</span><span class="n">QueryCheckError</span><span class="p">(</span><span class="s">&#39;Zone has no A/AAAA record for NS&#39;</span><span class="p">)</span>
+
+  <span class="n">zone_origin</span> <span class="o">=</span> <span class="n">zone_object</span><span class="o">.</span><span class="n">origin</span>
+  <span class="k">try</span><span class="p">:</span>
+    <span class="n">all_zone_records_list</span> <span class="o">=</span> <span class="n">helpers_lib</span><span class="o">.</span><span class="n">CreateRecordsFromZoneObject</span><span class="p">(</span>
+        <span class="n">zone_object</span><span class="p">,</span> <span class="n">zone_name</span><span class="o">=</span><span class="n">zone_name</span><span class="p">,</span> <span class="n">view_name</span><span class="o">=</span><span class="n">view_name</span><span class="p">)</span>
+  <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnexpectedDataError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">config_lib</span><span class="o">.</span><span class="n">QueryCheckError</span><span class="p">(</span><span class="s">&#39;Unexpected Data - </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">())</span>
+  <span class="n">zone_records_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="c">#Generating list of random records to query</span>
+  <span class="k">if</span><span class="p">(</span> <span class="n">records_to_query</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">):</span>
+    <span class="n">zone_records_list</span> <span class="o">=</span> <span class="n">all_zone_records_list</span>
+  <span class="k">else</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">records_to_query</span><span class="p">):</span>
+      <span class="c">#If we&#39;ve run out of records to pop, break out of the loop</span>
+      <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_zone_records_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">):</span>
+        <span class="k">break</span>
+
+      <span class="n">random_record_index</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_zone_records_list</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+      <span class="n">random_record</span> <span class="o">=</span> <span class="n">all_zone_records_list</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">random_record_index</span><span class="p">)</span> 
+      <span class="n">zone_records_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">random_record</span><span class="p">)</span>
+
+  <span class="p">(</span><span class="n">good_records</span><span class="p">,</span> <span class="n">bad_records</span><span class="p">)</span> <span class="o">=</span> <span class="n">DnsQuery</span><span class="p">(</span>
+      <span class="n">zone_records_list</span><span class="p">,</span> <span class="n">dns_server</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">zone_origin</span><span class="p">)</span>
+
+  <span class="k">if</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">bad_records</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">):</span>
+    <span class="k">return</span> <span class="bp">False</span>
+  <span class="k">return</span> <span class="bp">True</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Roster Config Manager v0.18 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Purdue University.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

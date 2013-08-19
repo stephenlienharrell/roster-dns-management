@@ -33,7 +33,7 @@
 
 __copyright__ = 'Copyright (C) 2010, Purdue University'
 __license__ = 'BSD'
-__version__ = "#TRUNK#"
+__version__ = "0.18"
 
 
 def Uni2Puny(unicode_string=None):

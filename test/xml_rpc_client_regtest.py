@@ -36,7 +36,7 @@ The server must be running to run this test.
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.18'
 
 
 import os
@@ -256,14 +256,14 @@ class TestXMLServerClient(unittest.TestCase):
     self.assertRaises(SystemExit, roster_client_lib.CheckServerVersionMatch,
                       self.server_name)
     self.assertEqual(sys.stdout.flush(), 'user_tools version 7357 mismatch '
-                                         'with server version #TRUNK#\n')
+                                         'with server version 0.18\n')
     roster_client_lib.__version__ = client_version_save
 
     server_version_save = roster_server.server.__version__
     roster_server.server.__version__ = 7357
     self.assertRaises(SystemExit, roster_client_lib.CheckServerVersionMatch,
                       self.server_name)
-    self.assertEqual(sys.stdout.flush(), 'user_tools version #TRUNK# mismatch '
+    self.assertEqual(sys.stdout.flush(), 'user_tools version 0.18 mismatch '
                                          'with server version 7357\n')
     roster_server.server.__version__ = server_version_save
     sys.stdout = oldstdout

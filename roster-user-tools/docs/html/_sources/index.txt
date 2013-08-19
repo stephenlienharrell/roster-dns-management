@@ -1,0 +1,23 @@
+.. Roster User Tools documentation master file, created by
+   sphinx-quickstart on Mon Aug 19 13:04:15 2013.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to Roster User Tools's documentation!
+=============================================
+
+Contents:
+
+.. toctree::
+   :maxdepth: 4
+
+   roster_user_tools
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

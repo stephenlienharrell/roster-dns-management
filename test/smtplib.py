@@ -32,7 +32,7 @@
 
 __copyright__ = 'Copyright (C) 2012, Dovahkiin'
 __license__ = 'BAMF'
-__version__ = '#TRUNK#'
+__version__ = '0.18'
 
 import os
 import socket

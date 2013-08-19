@@ -32,7 +32,7 @@
 
 __copyright__ = 'Copyright (C) 2010, Purdue Univeristy'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.18'
 
 ## http://pypi.python.org/pypi/pam/
 import pam

@@ -45,7 +45,7 @@ This test requires BIND 9.9 with dig 9.9
 
 __copyright__ = 'Copyright (C) 2009, Purdue University'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.18'
 
 
 import getpass

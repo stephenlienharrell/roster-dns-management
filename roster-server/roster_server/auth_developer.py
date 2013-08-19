@@ -33,7 +33,7 @@ for user 'fakeuser' or password 'fakepass'"""
 
 __copyright__ = 'Copyright (C) 2010, Purdue Univeristy'
 __license__ = 'BSD'
-__version__ = '#TRUNK#'
+__version__ = '0.18'
 
 class AuthenticationMethod:
   """Roster Developer Authentication method"""
