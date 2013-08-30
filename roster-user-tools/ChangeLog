@@ -1,6 +1,24 @@
 Current Release
 
 2013-08-19 release-0.18
+- Added ability to upload options via file for dnsmkzone and dnsmkview
+- Added feature to automatically generate SOA and NS record on new zone creation
+- Fixed abillity to assign duplicate group record permissions at once via dnsmkusergroup
+- Fixed uncaught error when user tools could not connect to a server
+- Fixed dnsmkdnsserver to prevent assigning a dns_server to multiple dns_server_sets
+- Fixed dnslszone to properly use '--no-header' flag
+- Added ability to omit the data section in dnslsauditlog
+- Fixed dnslsview error where it would omit views without a dns_server_set assignment
+- Renamed user tools to standard naming convention
+- Changed ACL assignment from view to dns_server_set_view_assignments
+- Changed view options to sit on dns_server_set_assignments
+- Added dnslshostfile which allows the abillity to list all hosts in the /etc/hosts format
+- Fixed error in dnsmassadd from displaying records in the wrong view
+- Removed assignment of reverse ranges to slave zones
+- Added view ordering
+- Added metadata for dns_servers
+- Fixed error in dnsupnamedglobals deleting original imported file
+- Added commit request to dnsmassadd if flag is not given
 
 2012-08-02 release-0.17
 - Added autogenerating developer documentation when creating a release
