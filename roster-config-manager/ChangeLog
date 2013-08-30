@@ -1,4 +1,44 @@
 2013-08-19 release-0.18
+- Added more accurate named-checkzone/named-compilezone checks to dnscheckconfig
+- Updated dnscheckconfig to check different zone files concurrently
+- Updated dnsconfigsync to push files out server by server
+- Update dnstreeexport to export by DNS server instead of DNS server set
+- Added view ordering to named.conf
+- Added ACL sorting to tree exporter
+- Fixed bug where slave zones were not added to named.conf
+- Added DNS server info file to tree exporter. Each DNS server's BIND
+directory, test directory, SSH username, and server name in the Roster
+database, and export some of this information to a DNS server info file for
+use in the exporting process
+- Removed named_dir field in roster.conf
+- Updated RNDC port flag to dnsconfigsync.
+- Updated dnsconfigsync to swap DNS server's BIND directories atomically
+- Added email feature to dnsexportconfig to email exporting errors
+- Updated dnsexportconfig to export servers concurrently
+- Added dnsquerycheck
+- Fixed bug in dnsrecover that would overwrite previously recovered changes
+- Added dnsservercheck
+- Added dnsversioncheck
+- Updated the exporting system to allow 'named.ca' to be located within named
+directory
+- Fixed various tree exporting bugs
+- Added ability to export binary form of named.conf
+- Added "masterfile-format" option to binary named.conf 
+- Updated ACLs from views to DNS server set-view assignments
+- Fixed bug in tree exporter to prevent bracket loss in zone options
+- Fixed needless file creation in tree exporter
+- Fixed dnsconfigsync issue where zone name letters would be stripped off when
+compiling on the DNS server
+- Fixed exporter bugs that would not export or tar a view if it did not have
+any zones in it.
+- Fixed dnstreeexport to catch an error raised if no named globals option
+assigned to the DNS server set.
+- Fixed an undefined CoreError call within dnsexportconfig
+- Added general library, config_lib, for Config Manager, to facilitate easier
+adding of config-manager user tools in the future
+- Added showing ACL privledges to dnslsviews
+- Added zone and view checks to zone_importer_lib and it's usertool
+- Fixed dnsrecover to use a default config file, as well as require an id flag
 
 2012-08-02 release-0.17
 - Added autogenerating developer documentation when creating a release

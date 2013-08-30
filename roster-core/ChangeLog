@@ -1,4 +1,17 @@
 2013-08-19 release-0.18
+- Updated SCHEMA_FILE to include a unique key on zone_origin-zone_type-view_dep
+- Removed error that would allow a record to be made in a non-existent zone-view combination
+- Updated SCHEMA_FILE to include a unique key that prevents a dns_server being assigned to multiple dns_server_sets
+- Added config file values to enable multithreading
+- Added additional checking for duplicate records across views  and view dependencies
+- Removed abililty to create records in a slave zone
+- Changed ACL assignments from view to dns_server_set_view_assignments
+- Changed view options to sit on dns_server_set_view_assignments
+- Added root hint file support
+- Added view ordering
+- Added metadata for dns_servers
+- Added feature for User module to check targets against zone origins
+- Added ability to prevent unlocked_user from viewing dns_servers and dns_server_sets
 
 2012-08-02 release-0.17
 - Added functions to do classless reverse delegation

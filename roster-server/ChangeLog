@@ -1,4 +1,8 @@
 2013-08-19 release-0.18
+- Fixed Roster Server bug that would not reload permissions without a
+restart
+- Fixed Roster Server uncaught Python 2.7 exception
+- Added auth_developer authentication module
 
 2012-08-02 release-0.17
 - Added autogenerating developer documentation when creating a release
