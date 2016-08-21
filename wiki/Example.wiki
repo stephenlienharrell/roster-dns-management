@@ -1,0 +1,183 @@
+﻿#summary Instructions for setting up common DNS setups.
+
+<wiki:comment>
+Google Drawings:
+https://docs.google.com/leaf?id=0BxZBXx33-8suNDcyNWU2ZDctYjVjNi00OWQ5LWExMGItMmNkMTg5OWJhZWNj&hl=en_US
+</wiki:comment>
+
+= Introduction =
+Descriptions of some common DNS setups and the step-by-step instructions on how to do it with the [UserToolsUsage roster-user-tools].
+<wiki:toc max_depth="2" />
+= Common Setups =
+
+
+== Basic Setup ==
+=== Description ===
+A single DNS server serving records.
+
+
+[http://roster-dns-management.googlecode.com/svn/wiki/img/MasterNameServers.png]
+=== Commands ===
+  # Create a DNS server set:
+{{{
+$ dnsmkdnsserver dns_server_set -e server_set
+}}}
+  # Create a DNS server:
+{{{
+$ dnsmkdnsserver dns_server -d server
+}}}
+  # Assign the DNS server to the DNS server set:
+{{{
+$ dnsmkdnsserver assignment -d server -e server_set
+}}}
+  # Make a view
+{{{
+$ dnsmkview view -v public
+}}}
+  # Assign the view to the DNS server set:
+{{{
+$ dnsmkview dns_server_set -v public -e server_set -r 1
+}}}
+  # Assign the view to the any ACL/DNS server set combo:
+{{{
+$ dnsmkview acl -v public -a any -e server_set
+}}}
+  # Create a zone with the public view:
+{{{
+$ dnsmkzone forward -z example.com. --origin example.com. -v public -t master 
+}}}
+  # Create an SOA record for the public zone:
+{{{
+$ dnsmkrecord soa --admin-email admin.example.com. --expiry-seconds 60 --name-server ns.example.com. --retry-seconds 120 --refresh-seconds 80  --minimum-seconds 40 --serial-number 1337 -t example.com -v public -z example.com.
+}}}
+  # Create an A record:
+{{{
+$ dnsmkrecord a -t www -z example.com. -v any --assignment-ip 192.168.1.24
+}}}
+
+
+== Slave Name Server ==
+=== Description ===
+This consists of two DNS servers serving records with one as the primary (master) and one as the secondary (slave). The slave serves as a backup of the master.
+
+
+[http://roster-dns-management.googlecode.com/svn/wiki/img/SlaveNameServers.png]
+=== Commands ===
+  # Create a DNS server set:
+{{{
+$ dnsmkdnsserver dns_server_set -e server_set
+}}}
+  # Create a DNS server:
+{{{
+$ dnsmkdnsserver dns_server -d server
+}}}
+  # Assign the DNS server to the DNS server set:
+{{{
+$ dnsmkdnsserver assignment -d server -e server_set
+}}}
+  # Make a view
+{{{
+$ dnsmkview view -v public
+}}}
+  # Assign the view to the DNS server set:
+{{{
+$ dnsmkview dns_server_set -v public -e server_set -r 1
+}}}
+  # Assign the view to the any ACL/DNS server set combo:
+{{{
+$ dnsmkview acl -v public -a any -e server_set
+}}}
+  # Create a master zone:
+{{{
+$ dnsmkzone forward -z example.com. --origin example.com. -v public -t master 
+}}}
+  # Create a slave zone:
+{{{
+$ dnsmkzone forward -z example.com. --origin example.com. -v public -t slave 
+}}}
+  # Create an SOA record for the public zone:
+{{{
+$ dnsmkrecord soa --admin-email admin.example.com. --expiry-seconds 60 --name-server ns.example.com. --retry-seconds 120 --refresh-seconds 80  --minimum-seconds 40 --serial-number 1337 -t example.com -v public -z example.com.
+}}}
+  # Create an A record:
+{{{
+$ dnsmkrecord a -t www -z example.com. -v any --assignment-ip 192.168.1.24
+}}}
+
+
+== Stealth DNS ==
+=== Description ===
+The purpose of a stealth DNS setup or split zone is to control who can see what. For example, you want users with internal IP's to be able to view private hosts, but still have hosts the public can see.
+
+Creating records in Roster's any view will create records that will automatically show up in both private and public views while only being defined once.
+
+
+[http://roster-dns-management.googlecode.com/svn/wiki/img/StealthDNS.png]
+=== Commands ===
+  # Create a DNS server set:
+{{{
+$ dnsmkdnsserver dns_server_set -e server_set
+}}}
+  # Create a DNS server:
+{{{
+$ dnsmkdnsserver dns_server -d server
+}}}
+  # Assign the DNS server to the DNS server set:
+{{{
+$ dnsmkdnsserver assignment -d server -e server_set -r 1
+}}}
+  # Define an ACL that only allows local IP's:
+{{{
+$ dnsmkacl -a private --cidr-block 192.168.1.0/24 --allow
+}}}
+  # Make both the public and stealth views
+{{{
+$ dnsmkview view -v public
+$ dnsmkview view -v stealth
+}}}
+  # Assign the views to the DNS server set:
+{{{
+$ dnsmkview dns_server_set -v public -e server_set -r 1
+$ dnsmkview dns_server_set -v stealth -e server_set -r 2
+}}}
+  # Assign the views to their respective ACL/DNS server set combos:
+{{{
+$ dnsmkview acl -v public -a any -e server_set
+$ dnsmkview acl -v stealth -a private -e server_set
+}}}
+  # Create a zone with the public view:
+{{{
+$ dnsmkzone forward -z example.com. --origin example.com. -v public -t master 
+}}}
+  # create a zone with the stealth view:
+{{{
+$ dnsmkzone forward -z example.com. --origin example.com. -v stealth -t master
+}}}
+  # Create a reverse zone for local IP's:
+{{{
+$ dnsmkzone reverse -z example.com._rev --dont-make-any -v stealth -t master --origin 2.0.192.in-addr.arpa.
+}}}
+  # Create an SOA record for the public zone:
+{{{
+$ dnsmkrecord soa --admin-email admin.example.com. --expiry-seconds 60 --name-server ns.example.com. --retry-seconds 120 --refresh-seconds 80  --minimum-seconds 40 --serial-number 1337 -t example.com -v public -z example.com.
+}}}
+  # Create an SOA record for the stealth zone:
+{{{
+$ dnsmkrecord soa --admin-email admin.example.com. --expiry-seconds 60 --name-server ns.example.com. --retry-seconds 120 --refresh-seconds 80 --minimum-seconds 40 --serial-number 1337 -t example.com -v stealth -z example.com.
+}}}
+  # Create an SOA record for the reverse stealth zone:
+{{{
+$ dnsmkrecord soa --admin-email admin.example.com. --expiry-seconds 60 --name-server ns.example.com. --retry-seconds 120 --refresh-seconds 80  --minimum-seconds 40 --serial-number 1337 -t example.com -v stealth -z example.com._rev
+}}}
+  # Create an A record for everyone:
+{{{
+$ dnsmkrecord a -t www -z example.com. -v any --assignment-ip 192.168.1.24
+}}}
+  # Create an A record for everyone:
+{{{
+$ dnsmkrecord a -t ftp -z example.com. -v any --assignment-ip 192.168.1.26
+}}}
+  # Create an A record for local IP's:
+{{{
+$ dnsmkrecord a -t secret -z example.com. -v stealth --assignment-ip 192.168.1.32
+}}}

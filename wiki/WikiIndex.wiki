@@ -1,0 +1,28 @@
+= Roster DNS Management System =
+
+== About ==
+  * [About What is Roster?]
+  * Glossary of terms
+
+== Installation ==
+  * [Installation Install Roster Core and Roster Server] - Get started installing Roster.
+    * [Authentication Roster Authentication] - How to change Roster's authentication method from LDAP.
+    * [InitScriptInstallation Init Script Installation] - Configure the init script.
+    * [UserToolsInstallation User Tools Installation] - Bootstrap and use the user tools.
+    * [Example Example DNS Setups, Configurations, and Scenarios] - Various common DNS setups.
+
+== Tools ==
+  * [UserToolsUsage User Tools Usage] - Tools for managing and modifying the DNS configuration.
+  * [ConfigManagerUsage Config Manager Usage] - Tools for exporting the configurations to bind servers.
+  * [ConfigManagerHowto Backup and Restore Howto] - Howto about disaster recovery and Roster
+
+== Other ==
+  * [AccessLevelsAndPermissions Access Levels and Permissions] - Controlling user tool access based on group/user permissions.
+  * [RosterServerConfigFile Roster Config File Example] - This describes the Roster config file and it's arguments.
+
+== Developers ==
+  * [RosterCodeStyleGuide Roster Code Style Guide] - The code guidelines for all of Roster's code.
+  * [DeveloperDocumentation Developer Documentation] - Documentation for all of Roster's code
+
+== Need Help? ==
+  * [http://groups.google.com/group/roster-discussion Roster Discussion]
